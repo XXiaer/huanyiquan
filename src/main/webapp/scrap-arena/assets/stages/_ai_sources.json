@@ -1,0 +1,142 @@
+{
+  "foundry": {
+    "far": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-19-29.png",
+      "prompt": "DISTANT low industrial refinery skyline at night, flat side elevation, structures occupy ONLY the bottom third, upper two thirds empty, low and wide: squat factory blocks, cooling tower, short chimneys, gas tanks, thin power pylons, distant crane. Deep indigo #0A0A18 / dark violet #131328 silhouettes, sparse amber #E8A24B lit windows, thin sodium glow along the base. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no text, no watermark.",
+      "prepared": "_src/far_ai.png",
+      "crop_rows": [
+        513,
+        1024
+      ],
+      "content_cols": [
+        0,
+        1536
+      ],
+      "width_fill": 1.0,
+      "size": [
+        1536,
+        511
+      ]
+    },
+    "mid": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-09-51.png",
+      "prompt": "MID-GROUND industrial factory structures at night, flat side elevation, wide strip with flat bottom: riveted steel tanks, pipe racks, conveyor gantry, corrugated warehouse walls, a glowing furnace door, catwalks, a tall silo. Dark violet-blue metal #131328, warm amber #E8A24B rim light. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no text, no watermark.",
+      "prepared": "_src/mid_ai.png",
+      "crop_rows": [
+        160,
+        639
+      ],
+      "content_cols": [
+        17,
+        1520
+      ],
+      "width_fill": 0.979,
+      "size": [
+        1536,
+        479
+      ]
+    },
+    "near": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-29-09.png",
+      "prompt": "NEAR FOREGROUND small distant street furniture at night, flat side elevation. Props are SMALL: a very thin lamp post with a tiny caged lamp casting a narrow warm amber #E8A24B light cone, a short low chain-link fence, two small oil drums, a bollard, a cable coil. Clutter in the BOTTOM EIGHTH only; the lamp head reaches only ONE THIRD of the frame height; the rest of the frame EMPTY. Near-black indigo silhouettes. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no large objects, no text, no watermark.",
+      "prepared": "_src/near_ai.png",
+      "crop_rows": [
+        498,
+        855
+      ],
+      "content_cols": [
+        689,
+        960
+      ],
+      "width_fill": 0.176,
+      "size": [
+        1536,
+        357
+      ]
+    },
+    "sky": {
+      "procedural": "build_sky(pal) —— 竖向渐变 + 有序抖动 + 星点 + 月亮 + 地平线光污染 + 城市灯带",
+      "size": [
+        1536,
+        460
+      ]
+    },
+    "floor": {
+      "procedural": "build_floor(pal) —— 沥青底 + 颗粒 + 路缘石 + 虚线车道 + 伸缩缝 + 裂缝 + 井盖 + 水洼",
+      "size": [
+        1536,
+        80
+      ]
+    }
+  },
+  "coldstore": {
+    "far": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-19-54.png",
+      "prompt": "DISTANT low snowy industrial refrigeration plant skyline at night, flat side elevation, structures occupy ONLY the bottom third, upper two thirds empty, low and wide: squat sheds with pitched roofs, short silos, ice plant blocks, thin power pylons, slim chimney, all snow capped. Cold pale blue #2A3A66 / steel #1B2545, sparse cyan-white windows. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no text, no watermark.",
+      "prepared": "_src/far_ai.png",
+      "crop_rows": [
+        656,
+        992
+      ],
+      "content_cols": [
+        24,
+        1536
+      ],
+      "width_fill": 0.984,
+      "size": [
+        1536,
+        336
+      ]
+    },
+    "mid": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-35-42.png",
+      "prompt": "MID-GROUND cold storage industrial yard at night, flat side elevation, wide strip with flat bottom. Buildings IRREGULAR and of DIFFERENT HEIGHTS: different-sized sheds and freezer rooms with varied pitched and flat snow-capped roofs, one tall narrow silo, a pipe bridge crossing overhead, a rooftop vent stack, one corrugated wall with a single roll-up door, frosted railings and a ladder. NOT a repetitive facade of identical bays. Cold steel blue #2A3A66, pale moon-blue frost highlights, cyan #7FD4FF windows, thin blue mist. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no text, no watermark.",
+      "prepared": "_src/mid_ai.png",
+      "crop_rows": [
+        243,
+        753
+      ],
+      "content_cols": [
+        79,
+        1454
+      ],
+      "width_fill": 0.895,
+      "size": [
+        1536,
+        510
+      ]
+    },
+    "near": {
+      "raw": "Pixel_art_game_background_laye_2026-10-28T13-29-21.png",
+      "prompt": "NEAR FOREGROUND small distant street furniture at night, flat side elevation. Props are SMALL: a very thin lamp post with a tiny caged lamp casting a narrow pale cyan #7FD4FF light cone, a short low frozen chain-link fence, two small pallets, a bollard, a coiled hose. Clutter in the BOTTOM EIGHTH only; the lamp head reaches only ONE THIRD of the frame height; the rest of the frame EMPTY. Very dark cold indigo silhouettes, frost sparkle. Isolated on solid pure magenta #FF00FF background. No sky, no ground, no large objects, no text, no watermark.",
+      "prepared": "_src/near_ai.png",
+      "crop_rows": [
+        624,
+        917
+      ],
+      "content_cols": [
+        601,
+        749
+      ],
+      "width_fill": 0.096,
+      "size": [
+        1536,
+        293
+      ]
+    },
+    "sky": {
+      "procedural": "build_sky(pal) —— 竖向渐变 + 有序抖动 + 星点 + 月亮 + 地平线光污染 + 城市灯带",
+      "size": [
+        1536,
+        460
+      ]
+    },
+    "floor": {
+      "procedural": "build_floor(pal) —— 沥青底 + 颗粒 + 路缘石 + 虚线车道 + 伸缩缝 + 裂缝 + 井盖 + 水洼",
+      "size": [
+        1536,
+        80
+      ]
+    }
+  }
+}

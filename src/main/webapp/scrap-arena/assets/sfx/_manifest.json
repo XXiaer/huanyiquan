@@ -1,0 +1,127 @@
+{
+  "hit_light": {
+    "idx": 28,
+    "dur": 0.139,
+    "peak": 0.819,
+    "zcr": 0.167,
+    "bytes": 5390
+  },
+  "hit_heavy": {
+    "idx": 47,
+    "dur": 0.411,
+    "peak": 1.0,
+    "zcr": 0.079,
+    "bytes": 14904
+  },
+  "hit_special": {
+    "idx": 149,
+    "dur": 0.506,
+    "peak": 1.0,
+    "zcr": 0.044,
+    "bytes": 22190
+  },
+  "block": {
+    "idx": 119,
+    "dur": 0.28,
+    "peak": 0.729,
+    "zcr": 0.516,
+    "bytes": 9946
+  },
+  "hit_low": {
+    "idx": 8,
+    "dur": 0.371,
+    "peak": 1.0,
+    "zcr": 0.016,
+    "bytes": 15334
+  },
+  "ko": {
+    "idx": 3,
+    "dur": 0.846,
+    "bytes": 32680
+  },
+  "land": {
+    "idx": 7,
+    "dur": 0.68,
+    "bytes": 25796
+  },
+  "whoosh": {
+    "idx": 8,
+    "dur": 0.371,
+    "bytes": 15334
+  },
+  "horizon_intro": {
+    "idx": 0,
+    "dur": 1.335,
+    "bytes": 52652
+  },
+  "horizon_win": {
+    "idx": 7,
+    "dur": 0.68,
+    "bytes": 25796
+  },
+  "horizon_call": {
+    "idx": 9,
+    "dur": 0.688,
+    "bytes": 29178
+  },
+  "isolde_intro": {
+    "idx": 3,
+    "dur": 0.68,
+    "bytes": 25796
+  },
+  "isolde_win": {
+    "idx": 5,
+    "dur": 0.688,
+    "bytes": 29178
+  },
+  "isolde_call": {
+    "idx": 6,
+    "dur": 0.654,
+    "bytes": 28350
+  },
+  "nameless_intro": {
+    "idx": 9,
+    "dur": 0.688,
+    "bytes": 29178
+  },
+  "nameless_win": {
+    "idx": 48,
+    "dur": 0.617,
+    "bytes": 23412
+  },
+  "nameless_call": {
+    "idx": 53,
+    "dur": 1.529,
+    "bytes": 54802
+  },
+  "sylvi_intro": {
+    "idx": 7,
+    "dur": 0.688,
+    "bytes": 29178
+  },
+  "sylvi_win": {
+    "idx": 14,
+    "dur": 2.093,
+    "bytes": 89432
+  },
+  "sylvi_call": {
+    "idx": 26,
+    "dur": 0.689,
+    "bytes": 29602
+  },
+  "ikaria_intro": {
+    "idx": 3,
+    "dur": 0.68,
+    "bytes": 25796
+  },
+  "ikaria_win": {
+    "idx": 5,
+    "dur": 0.688,
+    "bytes": 29178
+  },
+  "ikaria_call": {
+    "idx": 27,
+    "dur": 0.617,
+    "bytes": 23412
+  }
+}

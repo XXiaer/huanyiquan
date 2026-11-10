@@ -1,0 +1,277 @@
+[
+  {
+    "id": "garden",
+    "cn": "临水庭园",
+    "en": "WATERSIDE GARDEN",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 366,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/garden/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/garden/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "shrine",
+    "cn": "朱红神苑",
+    "en": "VERMILION SHRINE",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 322,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/shrine/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/shrine/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "desert",
+    "cn": "赤沙荒野",
+    "en": "RED WASTELAND",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 268,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/desert/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/desert/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "pier",
+    "cn": "潮见栈桥",
+    "en": "TIDELINE PIER",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 396,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/pier/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/pier/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "snowpeak",
+    "cn": "雪岭关所",
+    "en": "SNOWPASS",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 234,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/snowpeak/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/snowpeak/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "gate",
+    "cn": "镇海城门",
+    "en": "SEAGATE FORTRESS",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 194,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/gate/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/gate/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "market",
+    "cn": "长街灯火",
+    "en": "MARKET STREET",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 398,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/market/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/market/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "station",
+    "cn": "北线道口",
+    "en": "NORTH CROSSING",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 280,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/station/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/station/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "colosseum",
+    "cn": "日冕斗技场",
+    "en": "SOLAR COLOSSEUM",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 422,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/colosseum/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/colosseum/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "arena",
+    "cn": "夜穹石庭",
+    "en": "NIGHT STONE ARENA",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 350,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/arena/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/arena/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  },
+  {
+    "id": "palace",
+    "cn": "金阶大殿",
+    "en": "GILDED HALL",
+    "mode": "flat",
+    "w": 2048,
+    "h": 540,
+    "groundY": 398,
+    "bottom": 540,
+    "layers": {
+      "sky": "assets/stages/kof/palace/bg.png",
+      "far": "",
+      "mid": "",
+      "near": "",
+      "floor": ""
+    },
+    "thumb": "assets/stages/kof/palace/thumb.png",
+    "parallax": {
+      "sky": 0.75,
+      "far": 0.16,
+      "mid": 0.34,
+      "near": 0.58,
+      "floor": 1.0
+    }
+  }
+]

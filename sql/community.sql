@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS community_message (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ kind VARCHAR(12) NOT NULL,
+ content VARCHAR(1000) NOT NULL DEFAULT '',
+ image VARCHAR(500) NOT NULL DEFAULT '',
+ item_id BIGINT NULL,
+ created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ KEY community_recent (id), KEY community_user (user_id, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

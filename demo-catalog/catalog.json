@@ -1,0 +1,1802 @@
+[
+  {
+    "key": "catalog-v1-001",
+    "title": "高等数学教材 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】高等数学教材，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/5e863cfb9113a8b4981c4749dfb26eb4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-002",
+    "title": "高等数学教材 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】高等数学教材，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/af4ec5f419f847747d572afbae9a6cc5.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-003",
+    "title": "线性代数笔记 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】线性代数笔记，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/993163d33f1d9c81a37807c62601ba04.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-004",
+    "title": "线性代数笔记 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】线性代数笔记，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f2e5e982179d57b62a11225c65f07166.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-005",
+    "title": "大学英语读本 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】大学英语读本，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dc72c572e9327c39b2cf00f0d4e7fc1d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-006",
+    "title": "大学英语读本 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】大学英语读本，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/9d92844e4f0be5864056a03dfa801cc2.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-007",
+    "title": "Python 编程入门 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】Python 编程入门，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f37db531377c6c02913eb8249cf429b0.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-008",
+    "title": "Python 编程入门 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】Python 编程入门，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cef527d5c0dc0a44d2a51613beea3de5.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-009",
+    "title": "Java 程序设计 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】Java 程序设计，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/93af347804ed0460e16d9ea72035a512.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-010",
+    "title": "Java 程序设计 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】Java 程序设计，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/64c541eedffe491f13c35bdc04456638.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-011",
+    "title": "数据结构习题集 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】数据结构习题集，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0c83ee82b4dfd387827878f3851ea229.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-012",
+    "title": "数据结构习题集 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】数据结构习题集，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c48bfc1281e822d57359e0008031bd7f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-013",
+    "title": "数据库原理教材 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】数据库原理教材，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/90cf9447575e397bdf3cbe92eeb11bc1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-014",
+    "title": "数据库原理教材 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】数据库原理教材，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/15eaf6a4ab19db92915140a7a949484d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-015",
+    "title": "操作系统复习笔记 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】操作系统复习笔记，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8843bdd87e44ef859acee5ed2d5693f9.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-016",
+    "title": "操作系统复习笔记 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】操作系统复习笔记，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/25729dae2b3e098811a13c3fdeb37660.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-017",
+    "title": "计算机网络教材 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】计算机网络教材，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8ab8e0bff15f10f219fa9ad30c2a170b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-018",
+    "title": "计算机网络教材 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】计算机网络教材，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ff5e3b23341d7adae1385ba5d11f28be.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-019",
+    "title": "大学物理辅导书 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】大学物理辅导书，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c2fd246bdaef0dec132a38ae643ab7e6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-020",
+    "title": "大学物理辅导书 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】大学物理辅导书，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/07d44f1fc3377196c0b4c3072c5258f6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-021",
+    "title": "概率论练习册 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】概率论练习册，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/917d8086e0557a66a5644105bd2eb6a0.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-022",
+    "title": "概率论练习册 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】概率论练习册，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f4b41513a7117ca9a004a423b5051e01.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-023",
+    "title": "考研英语单词书 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】考研英语单词书，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ba5e16269b0bf9fd15b6113f07df3265.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-024",
+    "title": "考研英语单词书 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】考研英语单词书，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dba78d0cb616b87c89f678c39f584010.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-025",
+    "title": "雅思词汇手册 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】雅思词汇手册，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e806fae08104670b43fa432cc510e904.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-026",
+    "title": "雅思词汇手册 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】雅思词汇手册，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/9cb44c30fdec2fb1ace51e64c42788fd.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-027",
+    "title": "四六级真题集 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】四六级真题集，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/079ccacfcb41a526981964aea05e0051.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-028",
+    "title": "四六级真题集 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】四六级真题集，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/bb7c0d4dd590258fe81999cead2593a7.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-029",
+    "title": "世界文学选集 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】世界文学选集，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/eb8930294eb36c7d8697a69ee45a2776.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-030",
+    "title": "世界文学选集 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】世界文学选集，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/49d403faf69ec763242a036d46d0f16d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-031",
+    "title": "摄影构图教程 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】摄影构图教程，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0bae3ed37ca51d914e8a1c532edfab36.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-032",
+    "title": "摄影构图教程 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】摄影构图教程，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4961393ed23e82cadfafda825ef1d202.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-033",
+    "title": "素描基础教材 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】素描基础教材，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/bc78c5c2f0696d35ae00f69bc2301da5.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-034",
+    "title": "素描基础教材 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】素描基础教材，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/6b1cbe196e48097539cd85af315b12c9.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-035",
+    "title": "经济学导论 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】经济学导论，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/071d6ccf21e6aa598f9ede7d0d937209.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-036",
+    "title": "经济学导论 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】经济学导论，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f42382f386c87f2038b7e96d11427f30.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-037",
+    "title": "心理学入门书 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】心理学入门书，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/40e2465681fcf0b46d4518f549167b76.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-038",
+    "title": "心理学入门书 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】心理学入门书，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/5a8b49540a846c72057bdc9c5bcf8ee6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-039",
+    "title": "校园手账本 · 经典款",
+    "category": "教材",
+    "condition": "九成新",
+    "description": "【示例商品】校园手账本，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f7d883c580f6c7ed16071c32db3894ae.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-040",
+    "title": "校园手账本 · 轻巧款",
+    "category": "教材",
+    "condition": "七成新",
+    "description": "【示例商品】校园手账本，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d86be8df4c8b6d76cc7788017c56b06c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-041",
+    "title": "无线蓝牙耳机 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】无线蓝牙耳机，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ba0ecb656154d407df76171a3924c6dc.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-042",
+    "title": "无线蓝牙耳机 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】无线蓝牙耳机，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7cfcadceb630d681262712f898dd4f5d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-043",
+    "title": "机械键盘 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】机械键盘，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/19c04e353d6b8c2746d4d842041696dd.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-044",
+    "title": "机械键盘 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】机械键盘，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/6661981fc4ea130dd42a2533c57d89e6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-045",
+    "title": "无线鼠标 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】无线鼠标，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/a1fe979dc6d82669237643369e0fa1cd.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-046",
+    "title": "无线鼠标 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】无线鼠标，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/76c64f6e729ab0da3ae9827203c95a47.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-047",
+    "title": "笔记本支架 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】笔记本支架，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/30a44afff19020175964df8f4c4f59b0.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-048",
+    "title": "笔记本支架 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】笔记本支架，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1220bb3a56883cb3dcce3f366685ea0d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-049",
+    "title": "USB 集线器 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】USB 集线器，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cacabf002851cbb5eb77911d03e10837.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-050",
+    "title": "USB 集线器 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】USB 集线器，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/2e7b3e4f8d5e5ce02b675213e5513bd1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-051",
+    "title": "手机桌面支架 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】手机桌面支架，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/70bba1cf7be1c7a160eda0212d61f2af.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-052",
+    "title": "手机桌面支架 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】手机桌面支架，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b385f7c2bdf08d68006b72b53912645a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-053",
+    "title": "便携充电宝 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】便携充电宝，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0d6976f209fb43a260878d977b075f90.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-054",
+    "title": "便携充电宝 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】便携充电宝，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4b3786def83832da84c9603ec09c84d1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-055",
+    "title": "游戏手柄 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】游戏手柄，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e7c23ef72b832a266f5a9a5d07151fa8.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-056",
+    "title": "游戏手柄 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】游戏手柄，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/962c76a45a14202310aeffb1b2d818d4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-057",
+    "title": "蓝牙音箱 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】蓝牙音箱，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f101617bde86adf0f80dc98506c1a9cb.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-058",
+    "title": "蓝牙音箱 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】蓝牙音箱，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/94ce49a3e566cc6eb4601f8145da49ce.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-059",
+    "title": "屏幕挂灯 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】屏幕挂灯，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/94d9db3bc94d88c92659e8a38d9a1060.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-060",
+    "title": "屏幕挂灯 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】屏幕挂灯，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c165a28faeb66a8dd94014a3f531bdab.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-061",
+    "title": "USB 小风扇 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】USB 小风扇，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/54c9ba73569562bb92d8469ed3609119.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-062",
+    "title": "USB 小风扇 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】USB 小风扇，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4001c7a84811914cb0a9c1acd2c476a1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-063",
+    "title": "电子阅读器 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】电子阅读器，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4ee36044a435eb60117d518408e98776.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-064",
+    "title": "电子阅读器 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】电子阅读器，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d676a9c45a2c49d26a5373f7b06ab449.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-065",
+    "title": "平板保护壳 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】平板保护壳，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0c58c50085c96a3681e5f89aca0b6843.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-066",
+    "title": "平板保护壳 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】平板保护壳，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8ecc85c8c8d91bd87367162c87fb5dda.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-067",
+    "title": "相机三脚架 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】相机三脚架，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/eabf70cfb4cca78e7dfa38ff6bbf6004.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-068",
+    "title": "相机三脚架 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】相机三脚架，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8c413b427b807921db6256edfe7daaec.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-069",
+    "title": "闪存盘 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】闪存盘，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/62ca15b7899b2ae2f086fd0c65f6057d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-070",
+    "title": "闪存盘 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】闪存盘，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/039057477a042eeb5289d14ca2f70802.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-071",
+    "title": "移动硬盘盒 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】移动硬盘盒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e954d2ff86d946ae3b1d6e87149a72f0.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-072",
+    "title": "移动硬盘盒 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】移动硬盘盒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cf84b65bd98cdbd021a65d22b25f9478.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-073",
+    "title": "数位板 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】数位板，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/46eb88c665ce65fc6016c4c23f92e39a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-074",
+    "title": "数位板 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】数位板，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7e468acbda2e1518df18a51129aa8f45.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-075",
+    "title": "电脑散热底座 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】电脑散热底座，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8aa1d5e42c8d24bec8745c9fe7821150.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-076",
+    "title": "电脑散热底座 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】电脑散热底座，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b427f48d12444121eff8eddd60ad19ee.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-077",
+    "title": "有线耳机 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】有线耳机，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/83b4eba797a6b7f0741e178bc253ef1c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-078",
+    "title": "有线耳机 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】有线耳机，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0e13be70f882236228560b90aeac2381.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-079",
+    "title": "运动相机配件 · 经典款",
+    "category": "数码",
+    "condition": "九成新",
+    "description": "【示例商品】运动相机配件，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/77dcc8abbdf346b4ca367dc6b4abcb13.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-080",
+    "title": "运动相机配件 · 轻巧款",
+    "category": "数码",
+    "condition": "七成新",
+    "description": "【示例商品】运动相机配件，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e34a767f9f61c01491513ea8fd195ad2.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-081",
+    "title": "羽毛球拍 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】羽毛球拍，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cefa20c9c599ee41b739871a88aceac6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-082",
+    "title": "羽毛球拍 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】羽毛球拍，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/16468ea7a5dd74f96005bd35a0ea8fbe.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-083",
+    "title": "羽毛球筒 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】羽毛球筒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/db447d7ea676326ed710ef466016b955.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-084",
+    "title": "羽毛球筒 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】羽毛球筒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/2e22094aba53ac27a5832005d789f84b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-085",
+    "title": "篮球 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】篮球，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/108ca9ea2109245e3affc6fc54578365.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-086",
+    "title": "篮球 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】篮球，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/27e81706f7b2e4749259a990f99c295d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-087",
+    "title": "足球 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】足球，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/708e35acd1f39c3be9a286236f713b08.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-088",
+    "title": "足球 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】足球，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/93544375b1e2aca3882f62cc6c8d67cd.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-089",
+    "title": "排球 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】排球，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/346c2a4cadad84151220a69ff7371a95.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-090",
+    "title": "排球 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】排球，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7767f272fd4954a43606bcf99576044e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-091",
+    "title": "瑜伽垫 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】瑜伽垫，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/087d8e3713fdf58e3da4b593d01fcf20.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-092",
+    "title": "瑜伽垫 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】瑜伽垫，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/18bfddc7031b9a8c5ce52820e9a119f5.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-093",
+    "title": "跳绳 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】跳绳，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/eeca7161485c8eeb2da437e3e20ef183.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-094",
+    "title": "跳绳 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】跳绳，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/13e139834e78064866648d6dcbc23c97.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-095",
+    "title": "护膝 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】护膝，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/13069b39ff368754f025e7a765225df4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-096",
+    "title": "护膝 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】护膝，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/268f0b6cd41149a6d0968f5f034fa382.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-097",
+    "title": "网球拍 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】网球拍，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e4c6422930d2d1049a126d006a14053e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-098",
+    "title": "网球拍 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】网球拍，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/37d6059e0e8f2c3df5593b0bff7b465d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-099",
+    "title": "乒乓球拍 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】乒乓球拍，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cee13f5409760dca0e11e173766ad575.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-100",
+    "title": "乒乓球拍 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】乒乓球拍，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4a8cbfc21ae85bf8738586344836e6b9.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-101",
+    "title": "弹力训练带 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】弹力训练带，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/673ec49f53f4a2c346218aba7442587a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-102",
+    "title": "弹力训练带 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】弹力训练带，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0bcb1f530d53eb56e037a9702b61778f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-103",
+    "title": "运动水壶 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】运动水壶，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/9c6979abc9902d955d7afe21d63cae30.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-104",
+    "title": "运动水壶 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】运动水壶，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/35f0ca1c62a1d48b2f081e6ded9f9ccc.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-105",
+    "title": "露营折叠椅 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】露营折叠椅，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/35ef6f4ec77908ed10ade8ef96e12afb.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-106",
+    "title": "露营折叠椅 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】露营折叠椅，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e7d4ca46ffcda7aac0f00e56bd772654.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-107",
+    "title": "登山杖 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】登山杖，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/fd865da0e85f17ad41df0083c1a053a6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-108",
+    "title": "登山杖 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】登山杖，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d3e05ea9fd2f21cc64c37085e5568a0c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-109",
+    "title": "骑行头盔 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】骑行头盔，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c2300dc255eb90d2dbbcb237c989afb1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-110",
+    "title": "骑行头盔 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】骑行头盔，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e6c059e38979e4c37b24fe79a33617d6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-111",
+    "title": "健身哑铃 · 经典款",
+    "category": "运动",
+    "condition": "九成新",
+    "description": "【示例商品】健身哑铃，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/698d67a0801023c843601d89b7da5229.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-112",
+    "title": "健身哑铃 · 轻巧款",
+    "category": "运动",
+    "condition": "七成新",
+    "description": "【示例商品】健身哑铃，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/9ee1ddf471d815051a1d8d31c6e3cba5.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-113",
+    "title": "护眼台灯 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】护眼台灯，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ff8ab7c141fbe7ffe7e4332b72ad8bf8.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-114",
+    "title": "护眼台灯 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】护眼台灯，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4b2404c178ff2331732d196343b62c7c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-115",
+    "title": "桌面收纳盒 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】桌面收纳盒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e9a746de5bf780ae531cab45c83834c4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-116",
+    "title": "桌面收纳盒 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】桌面收纳盒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/56058f0b77d44e5435d3d4baf44cdb70.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-117",
+    "title": "保温杯 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】保温杯，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/54d8ae16da3ca66736032ebab059c742.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-118",
+    "title": "保温杯 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】保温杯，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b8cd39b80c43b0c2e49b20a15543c063.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-119",
+    "title": "折叠衣架 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】折叠衣架，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d228a6a00c31230a6406b494d02b8b8d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-120",
+    "title": "折叠衣架 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】折叠衣架，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/fe192eb06d4ae3689e2cdd9ce866b1de.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-121",
+    "title": "床头置物架 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】床头置物架，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/23528e7391d706dcffafb2910cb352cb.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-122",
+    "title": "床头置物架 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】床头置物架，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7b48abcf78d0b91d82b67c0d435e9c3e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-123",
+    "title": "帆布购物袋 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】帆布购物袋，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0c4b2e5ac06682bea921ece09554d6cc.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-124",
+    "title": "帆布购物袋 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】帆布购物袋，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/35b1f060210c3cb916a47575c4db733c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-125",
+    "title": "雨伞 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】雨伞，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dd587de84e1a45627fea3a5121ed7352.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-126",
+    "title": "雨伞 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】雨伞，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1afc026822c197e30e68c72d00dff063.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-127",
+    "title": "手持小电扇 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】手持小电扇，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0eb7ee18efdb920b1ae9d641714c2f17.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-128",
+    "title": "手持小电扇 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】手持小电扇，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/742deb436bc48a60bb0546f136ba214e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-129",
+    "title": "宿舍地垫 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】宿舍地垫，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/5f49708ddf89f450e2fb70e25c457fe1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-130",
+    "title": "宿舍地垫 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】宿舍地垫，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cea9e92b3135cd7e7ae879624c24342b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-131",
+    "title": "书桌时钟 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】书桌时钟，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0f24338d78a0b027e52b59fcf95fa106.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-132",
+    "title": "书桌时钟 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】书桌时钟，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8dc0918a036abc9bc108bbdb59639aa7.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-133",
+    "title": "毛毯 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】毛毯，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/26847bfeb92b49f80556323bffde1606.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-134",
+    "title": "毛毯 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】毛毯，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dbc91cc9f89f20916b1610ae292c3322.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-135",
+    "title": "便携餐盒 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】便携餐盒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3a7190b303363c4af8bf74b7a7c4df01.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-136",
+    "title": "便携餐盒 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】便携餐盒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dd6fd6628ae8d16f41470ebd25409806.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-137",
+    "title": "香薰摆件 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】香薰摆件，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1a8f9e1d7ebe060c159591f78fbe7722.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-138",
+    "title": "香薰摆件 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】香薰摆件，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/aeb2b6653d05d5347b9295b2ef668be4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-139",
+    "title": "陶瓷马克杯 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】陶瓷马克杯，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/95ccc1b3b3d0a0ff3525b9849afeff18.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-140",
+    "title": "陶瓷马克杯 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】陶瓷马克杯，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e1e4769b2e97e8a461b09aa3da277bb3.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-141",
+    "title": "书立 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】书立，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/2b3e36d9010764c92702f6c2a7e0a04d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-142",
+    "title": "书立 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】书立，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3f3d06a39ce5925ff505af4bd34e2c6f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-143",
+    "title": "床上小桌板 · 经典款",
+    "category": "生活",
+    "condition": "九成新",
+    "description": "【示例商品】床上小桌板，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7660430bd4d2924f2e299a1bc9476c0d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-144",
+    "title": "床上小桌板 · 轻巧款",
+    "category": "生活",
+    "condition": "七成新",
+    "description": "【示例商品】床上小桌板，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b2da55fb46098c48ea4f3ba4656dcca6.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-145",
+    "title": "连帽卫衣 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】连帽卫衣，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/841e0f712757e88562c4cd80bb3b7696.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-146",
+    "title": "连帽卫衣 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】连帽卫衣，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1e6b75081b6e31f1314fcc81e2a4a689.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-147",
+    "title": "牛仔外套 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】牛仔外套，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/03374b6903c29150ea226154411be93e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-148",
+    "title": "牛仔外套 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】牛仔外套，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/e0b7b0cc68ddab6de6b2e8531298d986.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-149",
+    "title": "针织开衫 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】针织开衫，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8d8499d3e121103717876c4d7e01a946.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-150",
+    "title": "针织开衫 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】针织开衫，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ad58df82b868735e039cf610d044c091.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-151",
+    "title": "运动短袖 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】运动短袖，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c0a2dbd11ca6ef66bea75c80d4d47b0b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-152",
+    "title": "运动短袖 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】运动短袖，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/18a2a184710705b3942863501bcf386a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-153",
+    "title": "纯棉衬衫 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】纯棉衬衫，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d04b4644bdc81d7cff7c08dcfcea4ea3.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-154",
+    "title": "纯棉衬衫 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】纯棉衬衫，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/35c395a124d88a478f2d45ec12688b48.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-155",
+    "title": "休闲长裤 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】休闲长裤，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/93a5ba8e2f3d58dc1fe9d643aaf294fd.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-156",
+    "title": "休闲长裤 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】休闲长裤，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3cc639494375324d60037fcb96e78097.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-157",
+    "title": "帆布鞋 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】帆布鞋，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1183d156d77cd62511fff01337e28f5e.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-158",
+    "title": "帆布鞋 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】帆布鞋，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3ac2767f699cca6114a7c79de9e428b1.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-159",
+    "title": "棒球帽 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】棒球帽，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/fc1e00de3518b0bfce67ced67d0c8a76.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-160",
+    "title": "棒球帽 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】棒球帽，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/cec31a032c8b985506b8a160f057f621.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-161",
+    "title": "双肩背包 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】双肩背包，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/0be84829d43fca00d1bbe7eb5d5a61ff.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-162",
+    "title": "双肩背包 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】双肩背包，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3689260a73c3c0d2a8a8a94942c94ea4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-163",
+    "title": "斜挎包 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】斜挎包，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/5717939eaa6e74662e34dbfc5d041eea.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-164",
+    "title": "斜挎包 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】斜挎包，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/de68afec24749867c45310eec7618930.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-165",
+    "title": "围巾 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】围巾，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/33e7353b143af0405af8ad7e05e07146.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-166",
+    "title": "围巾 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】围巾，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/03d473af86aa0fcc1aafdcfa0817c499.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-167",
+    "title": "轻便雨衣 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】轻便雨衣，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b33a3fc5b2be47871973133906a6c277.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-168",
+    "title": "轻便雨衣 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】轻便雨衣，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/90c26c63acd7668b8bb153e4efd33d27.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-169",
+    "title": "运动外套 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】运动外套，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/fd25c4aff57de23a7874018c83b581d3.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-170",
+    "title": "运动外套 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】运动外套，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f1216b438aadc1d0aeda7821dd733939.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-171",
+    "title": "针织帽 · 经典款",
+    "category": "衣物",
+    "condition": "九成新",
+    "description": "【示例商品】针织帽，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f4006a807cc6c4834d787cf453518b3b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-172",
+    "title": "针织帽 · 轻巧款",
+    "category": "衣物",
+    "condition": "七成新",
+    "description": "【示例商品】针织帽，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/a25e1964f87bdeb91da5afd0c5ba1346.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-173",
+    "title": "拼图玩具 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】拼图玩具，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/a8c3317e73b047bee0ca0440fd6bb86a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-174",
+    "title": "拼图玩具 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】拼图玩具，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/8742d32ea3cd5105c79e3a9f79f447a4.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-175",
+    "title": "桌游卡牌 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】桌游卡牌，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/be7c4e31766281535b40a092e2a5a4dc.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-176",
+    "title": "桌游卡牌 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】桌游卡牌，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/3126b09bc5d01e1bf79b2de29e75eeef.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-177",
+    "title": "吉他调音器 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】吉他调音器，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/1c7617f320f96420bb7df57e0d87f26f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-178",
+    "title": "吉他调音器 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】吉他调音器，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/2add836131360577a023ae113ef7bb6f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-179",
+    "title": "尤克里里琴包 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】尤克里里琴包，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/205b7b349a8342a5dcae9a323dfaff2c.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-180",
+    "title": "尤克里里琴包 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】尤克里里琴包，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f91502d3a2db8dfcd88849b1c9e1c40a.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-181",
+    "title": "手工材料包 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】手工材料包，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/446a8977cffea0742779a5e19cb49c98.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-182",
+    "title": "手工材料包 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】手工材料包，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d55a9b06dfc0592d6757477f15742cc8.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-183",
+    "title": "水彩颜料 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】水彩颜料，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/ba9006fc28112fd1987193b0222bb9f2.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-184",
+    "title": "水彩颜料 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】水彩颜料，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/dc014e6ee16fc689c9da6237f895ab4f.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-185",
+    "title": "马克笔套装 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】马克笔套装，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/7878292f28dfdd05fa62e00460640cc9.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-186",
+    "title": "马克笔套装 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】马克笔套装，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/92ba103e0ef89d0507efdfbb4211b274.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-187",
+    "title": "画板 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】画板，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c7f4887fa7e6def10952ab60bb21df4b.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-188",
+    "title": "画板 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】画板，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/098de00c2987491bcc91d7f939e0f7e0.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-189",
+    "title": "胶片相册 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】胶片相册，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/71700290cb3eb4b703b90cf46e7a4fa7.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-190",
+    "title": "胶片相册 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】胶片相册，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/4ab240cc777d6d1a6a843f0baff6cc00.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-191",
+    "title": "多肉花盆 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】多肉花盆，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/77930f0fafa8da374438a19cd12bcd5d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-192",
+    "title": "多肉花盆 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】多肉花盆，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/90d1545ce19d535a1099751d2b3f2ead.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-193",
+    "title": "钥匙收纳包 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】钥匙收纳包，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b62cb51a51782bbe6849d609d58ed80d.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-194",
+    "title": "钥匙收纳包 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】钥匙收纳包，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/d79d0d3111ec9cc95a0b0ebf890cfe70.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-195",
+    "title": "便携工具盒 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】便携工具盒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/fe4af0710574b7681ef1bfe6f46d6e94.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-196",
+    "title": "便携工具盒 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】便携工具盒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/f534a0c6ac8457b98dabcdefdf343ac3.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-197",
+    "title": "礼品包装盒 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】礼品包装盒，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/916330f985503c3b87e0eb396dbdf0e7.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-198",
+    "title": "礼品包装盒 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】礼品包装盒，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/b4afa1ca31b5f1814fa22dc8ddcc6a67.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-199",
+    "title": "旅行收纳袋 · 经典款",
+    "category": "其他",
+    "condition": "九成新",
+    "description": "【示例商品】旅行收纳袋，经典款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/a4ad834d9bb98294becdc6d3dff8f4ea.png",
+    "want": "仅供参考"
+  },
+  {
+    "key": "catalog-v1-200",
+    "title": "旅行收纳袋 · 轻巧款",
+    "category": "其他",
+    "condition": "七成新",
+    "description": "【示例商品】旅行收纳袋，轻巧款，适合校园日常使用。展示图片为示意图，仅供浏览参考。",
+    "image": "/api/file/c9f62280f7c7780653e15600cf5de824.png",
+    "want": "仅供参考"
+  }
+]
