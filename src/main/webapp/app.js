@@ -1,5 +1,5 @@
 /* =========================================================================
-   换一圈 · 前端应用
+   换一圈 | 前端应用
    原生 JS，hash 路由，无构建步骤。接口全部走同源 /api。
    ========================================================================= */
 (function () {
@@ -9,7 +9,32 @@
 
     var CATS = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
     var CONDS = ['全新', '九成新', '七成新', '有使用痕迹'];
-    var CAT_ICON = {教材: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 5h7a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H4z M20 5h-3a3 3 0 0 0-3 3v11a3 3 0 0 1 3-3h3z"/></svg>', 数码: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 5h16v11H4z M2 19h20"/></svg>', 运动: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M6 18l8-8 M13 5c3-3 7 1 4 4s-7-1-4-4z M4 20l2-2"/></svg>', 生活: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 10h16l-2 10H6z M8 10l4-6 4 6"/></svg>', 衣物: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M8 4l4 2 4-2 5 4-3 3-2-1v10H8V10l-2 1-3-3z"/></svg>', 其他: '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10"/></svg>'};
+    // IconPark SVG subset (Apache-2.0). See assets/licenses/iconpark.txt.
+    var ICONS = {
+    "market": "<path d=\"M9 18V42H39V18L24 6L9 18Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M19 29V42H29V29H19Z\" fill=\"var(--icon-detail, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M9 42H39\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>",
+    "community": "<path d=\"M33 38H22V30H36V22H44V38H39L36 41L33 38Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M4 6H36V30H17L13 34L9 30H4V6Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M12 22H18\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>\n<path d=\"M12 14H24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>",
+    "trade": "<path d=\"M24 16H29V4L44 19L29 34V24H18V13L4 28L18 44V32H23\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "me": "<circle cx=\"24\" cy=\"12\" r=\"8\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M42 44C42 34.0589 33.9411 26 24 26C14.0589 26 6 34.0589 6 44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "notice": "<path d=\"M24 4C16.268 4 10 10.268 10 18V38H38V18C38 10.268 31.732 4 24 4Z\" fill=\"var(--icon-fill, var(--theme-soft))\"/>\n<path d=\"M10 38V18C10 10.268 16.268 4 24 4C31.732 4 38 10.268 38 18V38M4 38H44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 44C26.7614 44 29 41.7614 29 39V38H19V39C19 41.7614 21.2386 44 24 44Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "search": "<path d=\"M21 38C30.3888 38 38 30.3888 38 21C38 11.6112 30.3888 4 21 4C11.6112 4 4 11.6112 4 21C4 30.3888 11.6112 38 21 38Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M26.657 14.3431C25.2093 12.8954 23.2093 12 21.0001 12C18.791 12 16.791 12.8954 15.3433 14.3431\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M33.2216 33.2217L41.7069 41.707\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "heart": "<path d=\"M15 8C8.92487 8 4 12.9249 4 19C4 30 17 40 24 42.3262C31 40 44 30 44 19C44 12.9249 39.0751 8 33 8C29.2797 8 25.9907 9.8469 24 12.6738C22.0093 9.8469 18.7203 8 15 8Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "settings": "<path d=\"M34.0003 41L44 24L34.0003 7H14.0002L4 24L14.0002 41H34.0003Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z\" fill=\"var(--icon-detail, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
+    "book": "<path d=\"M5 7H16C20.4183 7 24 10.5817 24 15V42C24 38.6863 21.3137 36 18 36H5V7Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M43 7H32C27.5817 7 24 10.5817 24 15V42C24 38.6863 26.6863 36 30 36H43V7Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
+    "device": "<rect x=\"8\" y=\"8\" width=\"32\" height=\"20\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8 28L4 41H44L40 28\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M19.9 35H28.1L30 41H18L19.9 35Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "sports": "<path d=\"M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8.5459 11.2727C12.7883 14.9091 14.9095 19.1515 14.9095 24C14.9095 28.8485 12.7883 33.0909 8.5459 36.7272\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M39.4545 36.7272C35.212 33.0909 33.0908 28.8485 33.0908 24C33.0908 19.1515 35.212 14.9091 39.4545 11.2727\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M4 24H44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 4V44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "life": "<path d=\"M5 17H43L38.8 43H9.2L5 17Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M35 17C35 10.3726 30.0751 5 24 5C17.9249 5 13 10.3726 13 17\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<circle cx=\"17\" cy=\"26\" r=\"2\" fill=\"currentColor\"/>\n<path d=\"M18 33C18 33 20 36 24 36C28 36 30 33 30 33\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<circle cx=\"31\" cy=\"26\" r=\"2\" fill=\"currentColor\"/>",
+    "clothes": "<path d=\"M9 9L18 4H30L39 9L43 24L35 30V44H13V30L5 24L9 9Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M13 31L13 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M35 31L35 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "plant": "<path d=\"M37 24C37 38.0938 24 44 24 44C24 44 11 39.375 11 24C11 8.625 24 4 24 4C24 4 37 9.90625 37 24Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 36L29 31\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 29L19 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 23L29 18\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 44V14\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "box": "<rect x=\"6\" y=\"12\" width=\"36\" height=\"30\" rx=\"2\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M17.9497 24.0083L29.9497 24.0083\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M6 13L13 5H35L42 13\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "add": "<rect x=\"6\" y=\"6\" width=\"36\" height=\"36\" rx=\"3\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M24 16V32\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M16 24L32 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "auction": "<path d=\"M11.0745 37.0792C7.68854 38.5409 6.03602 40.5241 5.36485 41.9094C5.09915 42.4578 5.54601 43 6.15537 43H27.3865C28.1288 43 28.5986 42.2236 28.1659 41.6205C26.4167 39.182 23.7818 37.6426 22.3887 37.0682C22.2756 37.0216 22.1547 37 22.0323 37H11.4615C11.3291 37 11.1962 37.0267 11.0745 37.0792Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<rect x=\"14.7319\" y=\"18.8564\" width=\"10\" height=\"10\" transform=\"rotate(-60 14.7319 18.8564)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M27.3921 16.9277L28.3921 15.1957C27.4355 14.6434 26.2123 14.9711 25.66 15.9277L27.3921 16.9277ZM24.3921 22.1239L22.66 21.1239C22.1078 22.0805 22.4355 23.3037 23.3921 23.8559L24.3921 22.1239ZM26.3921 18.6598L39.3825 26.1598L41.3825 22.6957L28.3921 15.1957L26.3921 18.6598ZM38.3825 27.8918L25.3921 20.3918L23.3921 23.8559L36.3825 31.3559L38.3825 27.8918ZM26.1241 23.1239L29.1241 17.9277L25.66 15.9277L22.66 21.1239L26.1241 23.1239ZM39.7485 27.5258C39.4724 28.0041 38.8608 28.168 38.3825 27.8918L36.3825 31.3559C38.7739 32.7366 41.8319 31.9173 43.2126 29.5258L39.7485 27.5258ZM39.3825 26.1598C39.8608 26.4359 40.0246 27.0475 39.7485 27.5258L43.2126 29.5258C44.5933 27.1343 43.7739 24.0764 41.3825 22.6957L39.3825 26.1598Z\" fill=\"currentColor\"/>\n<rect x=\"21\" y=\"4\" width=\"14\" height=\"6\" rx=\"3\" transform=\"rotate(30 21 4)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<rect x=\"13\" y=\"17.8564\" width=\"14\" height=\"6\" rx=\"3\" transform=\"rotate(30 13 17.8564)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
+    "wish": "<path d=\"M21.4172 18.5828C19.3962 19.5481 18 21.6109 18 23.9999C18 27.3136 20.6863 29.9999 24 29.9999C26.389 29.9999 28.4519 28.6037 29.4172 26.5828\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M28.2793 11.7207C26.9392 11.2538 25.4992 11 24 11C16.8203 11 11 16.8203 11 24C11 31.1797 16.8203 37 24 37C31.1797 37 37 31.1797 37 24C37 22.5008 36.7462 21.0608 36.2793 19.7207\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M33.5675 6.43255C30.7255 4.88151 27.4657 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 20.5343 43.1185 17.2745 41.5675 14.4325\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M44 4L24 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "filter": "<path d=\"M6 9L20.4 25.8178V38.4444L27.6 42V25.8178L42 9H6Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
+    "next": "<path d=\"M19 12L31 24L19 36\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "close": "<path d=\"M8 8L40 40\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8 40L40 8\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+};
+    var CAT_ICON = {教材:navIcon('book'),数码:navIcon('device'),运动:navIcon('sports'),
+        生活:navIcon('life'),衣物:navIcon('clothes'),绿植:navIcon('plant'),其他:navIcon('box')};
 
     var OFFER_STATUS = {
         0: ['待响应', 'accent'],
@@ -72,10 +97,41 @@
         document.querySelectorAll('[data-theme]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.theme === value)); });
     }
     applyTheme(themeColor(), false);
+    function settingsGroup(title,links) {
+        return '<section class="settings-group"><h2>'+title+'</h2><div>'+links.map(function(link){
+            return '<a href="'+link[1]+'">'+link[0]+navIcon('next')+'</a>';
+        }).join('')+'</div></section>';
+    }
+
     function renderSettings() {
         var presets = [['青绿','#00baae'],['海蓝','#2878d4'],['紫罗兰','#7955c7'],['珊瑚','#d85b55'],['橙色','#cc7216'],['森林绿','#36865a']];
         var options = presets.map(function(p) { return '<button type="button" class="theme-swatch" data-act="theme-select" data-theme="'+p[1]+'" aria-label="'+p[0]+' '+p[1]+'" aria-pressed="'+String(themeColor()===p[1])+'"><span style="background:'+p[1]+'"></span><small>'+p[0]+'</small></button>'; }).join('');
-        $('#app').innerHTML = shell('settings','<div class="settings-page"><div class="settings-heading"><span>PERSONALIZE</span><h1>设置</h1><p>选一种你喜欢的颜色。</p></div><section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section></div>');
+        var account=settingsGroup('个人',[['个人资料','#/me'],['账号与安全','#/email']]);
+        var trade=settingsGroup('交易',[['消息通知','#/notifications'],['我的交换','#/exchange']]);
+        var local=settingsGroup('本机记录',[['收藏夹','#/favorites'],['浏览历史','#/history']]);
+        var exit=readToken()?'<button class="settings-signout" type="button" data-act="logout">退出登录</button>':'';
+        $('#app').innerHTML = shell('settings','<div class="settings-page redesigned-settings"><header class="redesign-heading"><h1>设置</h1></header>'+account+trade+local+'<section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section>'+exit+'</div>');
+    }
+
+    function shelfRead(key) {
+        try { var data=JSON.parse(localStorage.getItem('hq.shelf.'+key)||'[]');return Array.isArray(data)?data:[]; }catch(e){return [];}
+    }
+    function shelfWrite(key,items) {
+        try { localStorage.setItem('hq.shelf.'+key,JSON.stringify(items.slice(0,100)));return true; }catch(e){toast('浏览器无法保存记录','err');return false;}
+    }
+    function shelfRemember(key,it) {
+        return shelfWrite(key,[{id:Number(it.id),title:it.title,category:it.category,images:it.images}].concat(shelfRead(key).filter(function(x){return x.id!==Number(it.id);})));
+    }
+    function renderShelf() {
+        var key=location.hash==='#/history'?'history':'favorites';
+        var items=shelfRead(key);
+        var rows=items.map(function(it){return '<article class="card shelf-row"><a href="#/item/'+Number(it.id)+'">'+thumb(it)+'<span><b>'+esc(it.title)+'</b><small>'+esc(it.category)+'</small></span></a><button type="button" class="btn btn-ghost btn-sm" data-act="shelf-remove" data-key="'+key+'" data-id="'+Number(it.id)+'">移除</button></article>';}).join('');
+        $('#app').innerHTML=shell('settings','<div class="settings-page"><div class="settings-heading"><h1>收藏与历史</h1><p>在当前浏览器找回收藏和最近浏览的物品。</p></div><nav class="trade-sections" aria-label="收藏与历史"><a class="'+(key==='favorites'?'on':'')+'" href="#/favorites">收藏夹</a><a class="'+(key==='history'?'on':'')+'" href="#/history">浏览历史</a></nav>'+(rows||'<div class="card card-pad">'+(key==='favorites'?'还没有收藏的物品。':'还没有浏览记录。')+'</div>')+(key==='history'&&items.length?'<button class="theme-reset" data-act="shelf-clear">清空浏览历史</button>':'')+'</div>');
+    }
+    async function renderEmail() {
+        var data=await api('/user/email');
+        if(currentView.name!=='email')return;
+        $('#app').innerHTML=shell('settings','<div class="settings-page"><div class="settings-heading"><h1>邮箱认证</h1><p>验证后，邮箱会绑定到你的账号。</p></div><section class="settings-card"><h2>'+(data.email?'已认证':'尚未认证')+'</h2>'+(data.email?'<p>'+esc(data.email)+'</p>':'')+(data.available?'<form data-form="email-send"><label class="label" for="verify-email">邮箱地址</label><input class="input" id="verify-email" name="email" type="email" maxlength="254" required><button class="btn btn-sm" type="submit">发送验证码</button></form><form data-form="email-verify"><label class="label" for="verify-code">邮箱验证码</label><input class="input" id="verify-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required><button class="btn btn-primary btn-sm" type="submit">确认认证</button></form>':'<p>邮箱发信服务尚未开通。</p>')+'</section></div>');
     }
 
     function firstImage(images) {
@@ -266,32 +322,33 @@
     // ------------------------------------------------------------------ 骨架
 
     function navIcon(name) {
-        var paths={search:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z M16 16l4 4',market:'M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z',community:'M4 4h16v13H9l-5 4z',trade:'M4 8h15l-4-4 M20 16H5l4 4',me:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 3-6 8-6s8 2 8 6',notice:'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5z M10 20h4'};
-        return '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[name]+'"/></svg>';
+        return '<svg class="nav-icon line-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">'+ICONS[name]+'</svg>';
     }
     function tabbar(active) {
         if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        function t(key,icon,label){return '<button class="tab '+(active===key?'on':'')+'" data-act="go" data-to="#/'+key+'"><span class="ico">'+navIcon(icon)+'</span><span>'+label+'</span></button>';}
+        function t(key,icon,label){return '<button class="tab '+(active===key?'on':'')+'" data-act="go" data-to="#/'+key+'"><span class="ico">'+navIcon(icon)+(key==='notifications'?'<span class="notice-count" hidden></span>':'')+'</span><span>'+label+'</span></button>';}
         return '<nav class="tabbar" aria-label="主导航">'+t('market','market','首页')+t('community','community','社区')
-            +'<button class="tab tab-fab" data-act="go" data-to="#/publish"><span class="fab">＋</span><span>发布</span></button>'
-            +t('trade','trade','交易')+t('me','me','我的')+'</nav>';
+            +'<button class="tab tab-fab" data-act="go" data-to="#/publish"><span class="fab">'+navIcon('add')+'</span><span>发布</span></button>'
+            +t('notifications','notice','消息')+t('me','me','我的')+'</nav>';
     }
     function topnav(active) {
         if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        var items=[['market','首页'],['community','社区'],['trade','我的交易'],['wishes','求换专区']];
+        var items=[['market','首页'],['community','社区'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
         var html=items.map(function(i){return '<a href="#/'+i[0]+'" class="'+(active===i[0]?'on':'')+'">'+i[1]+'</a>';}).join('');
         if(state.me&&state.me.role===1)html+='<a href="#/admin">管理后台</a>';
         return '<nav class="topnav" aria-label="网站导航">'+html+'</nav>';
     }
-    function logoMarkup(){return '<svg class="brand-logo theme-logo" viewBox="0 0 64 64" aria-hidden="true"><rect x="3" y="3" width="58" height="58" rx="16" fill="var(--theme-color)"/><path d="M31 20h10l-4-4m4 4-4 4M33 44H23l4 4m-4-4 4-4M40 20c9 0 13 5 13 12S49 44 40 44h-7M24 44c-9 0-13-5-13-12s4-12 13-12h7" fill="none" stroke="var(--theme-on)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+    function logoMarkup() {
+        return '<img class="brand-logo" src="/assets/brand/brand-mascot-logo.png" alt="" width="48" height="48">';
+    }
     function shell(active,content) {
         setTimeout(refreshNoticeCount,0);
         var me=state.me;var account=me?'<button class="avatar" data-act="go" data-to="#/me" title="'+esc(me.nickname)+'">'+esc(me.nickname.slice(0,1))+'</button>':(readToken()?'<a class="header-account" href="#/me">个人中心</a>':'<a class="header-account" href="#/login">登录 / 注册</a>');
-        var search='<form class="header-search" data-form="search"><span>'+navIcon('search')+'</span><input name="keyword" aria-label="搜索闲置" placeholder="搜索校园里的好物" value="'+esc(state.home.keyword)+'"><button type="submit">搜索</button></form>';
-        return '<div class="site-utility"><div><span>重庆移通学院 · 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
+        var search='<form class="header-search" data-form="search"><a class="desktop-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索闲置" placeholder="搜索校园里的好物" value="'+esc(state.home.keyword)+'"><button type="submit">搜索</button></form>';
+        return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
             +'<header class="appbar"><div class="appbar-inner"><a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-name">换一圈<small>校园闲置 让好物流转</small></span></a>'
-            +search+'<div class="header-actions"><a class="settings-link" href="#/settings" aria-label="设置" title="设置">⚙</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">＋ 发布闲置</a></div></header>'
-            +'<main class="shell '+(active==='market'||active==='home'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
+            +search+'<div class="header-actions"><a class="settings-link shelf-link" href="#/favorites" aria-label="收藏与历史" title="收藏与历史">'+navIcon('heart')+'</a><a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">＋ 发布闲置</a></div></header>'
+            +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
     }
     function tradeTabs(active){return '<div class="trade-top"><div><h1>我的交易</h1><p>报价和交换进度，都在这里。</p></div></div><nav class="trade-sections" aria-label="交易分类"><a class="'+(active==='offers'?'on':'')+'" href="#/offers">报价</a><a class="'+(active==='exchange'?'on':'')+'" href="#/exchange">交换单</a></nav>';}
 
@@ -316,7 +373,7 @@
     // 两列商品卡：图片占满上半，标题两行，底部左侧信用分（红色强调）
     function pCard(it) {
         var locked=it.status&&it.status!==1, img=firstImage(it.images);
-        var face=img?'<img src="'+esc(img)+'" alt="'+esc(it.title)+'" loading="lazy">':(CAT_ICON[it.category]||CAT_ICON['其他']);
+        var face=img?'<img src="'+esc(img)+'" alt="'+esc(it.title)+'" width="300" height="225" loading="lazy">':(CAT_ICON[it.category]||CAT_ICON['其他']);
         return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
             +'<span class="pbadge">'+esc(it.isDemo?'示例展示':(locked?(it.statusText||'已换出'):it.conditionLevel))+'</span></div>'
             +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p><div class="pcard-bottom"><span class="swap-label">'+(it.isDemo?'仅供参考':'以物换物')+'</span><span class="pcard-category">'+esc(it.category)+'</span></div>'
@@ -365,7 +422,7 @@
         var isReg = mode === 'register';
         var body = '<div class="auth-wrap"><div class="auth-card">'
             + '<div class="auth-logo" aria-label="换一圈">' + logoMarkup() + '</div>'
-            + '<div class="auth-school">重庆移通学院 · 校园换物</div>'
+            + '<div class="auth-school">重庆移通学院 | 校园换物</div>'
             + '<h1>' + (isReg ? '注册新账号' : '欢迎回来') + '</h1>'
             + '<p class="lead">' + (isReg
                 ? '用学号注册，初始信用分 80。发一件闲置，就能开始找换法。'
@@ -413,11 +470,11 @@
         }
 
         var html = '<div class="row"><span class="dot ' + (server ? 'ok' : 'bad') + '"></span>'
-            + '<b>后端</b>' + (server ? '已连接' : '未启动 · 双击 start.bat')
+            + '<b>后端</b>' + (server ? '已连接' : '未启动 | 双击 start.bat')
             + '</div>'
             + '<div class="row"><span class="dot ' + (db ? 'ok' : 'bad') + '"></span>'
-            + '<b>数据库</b>' + (db ? '正常 · 在架 ' + onShelf + ' 件'
-                : '连不上 · 检查 MySQL 与 db.properties')
+            + '<b>数据库</b>' + (db ? '正常 | 在架 ' + onShelf + ' 件'
+                : '连不上 | 检查 MySQL 与 db.properties')
             + '</div>';
         if (server && !db && err) {
             html += '<div class="row" style="color:var(--ink-400);font-size:11px">' + esc(err) + '</div>';
@@ -428,20 +485,61 @@
 
     // ------------------------------------------------------------------ 集市
 
+    function campusServices() {
+        var services = [
+            ['27','校内上门','campus-search','校内可送'],
+            ['28','以物换物','home-feed',''],
+            ['29','好物估价','estimate',''],
+            ['30','教材专区','f-cat','教材'],
+            ['31','毕业季专场','campus-search','毕业季闲置'],
+            ['32','失物招领','lost-found','']
+        ];
+        return '<nav class="campus-services" aria-label="校园服务">'+services.map(function(service) {
+            return '<button type="button" data-act="'+service[2]+'" data-v="'+service[3]+'"><img src="/assets/brand/service-'+service[0]+'.png" width="52" height="52" alt=""><span>'+service[1]+'</span></button>';
+        }).join('')+'</nav>';
+    }
+
+    function openEstimate() {
+        openSheet('<h3>好物估价</h3><p class="sub">根据入手价和成色计算参考区间。</p><form data-form="estimate"><label class="label" for="estimate-price">入手价（元）</label><input class="input" id="estimate-price" name="price" type="number" min="1" max="100000" required><label class="label" for="estimate-condition">成色</label><select id="estimate-condition" class="select" name="condition"><option value="new">全新</option><option value="light">轻微使用</option><option value="used">有使用痕迹</option></select><button class="btn btn-primary" type="submit">计算参考区间</button><p class="hint" id="estimate-result" role="status"></p></form>');
+    }
+
+    function searchHistory() {
+        try { var list=JSON.parse(localStorage.getItem('hq.searchHistory')||'[]');return Array.isArray(list)?list.filter(function(term){return typeof term==='string';}):[]; }
+        catch(e){return [];}
+    }
+
+    function rememberSearch(term) {
+        if(!term)return;
+        try{localStorage.setItem('hq.searchHistory',JSON.stringify([term].concat(searchHistory().filter(function(old){return old!==term;})).slice(0,12)));}catch(e){}
+    }
+
+    function renderSearchPage(results) {
+        var term=state.home.keyword;
+        var history=searchHistory();
+        var suggestions=(history.length?history:['高数教材','宿舍收纳','羽毛球拍','机械键盘']).map(function(word){
+            return '<button type="button" data-act="search-term" data-v="'+esc(word)+'">'+esc(word)+'</button>';
+        }).join('');
+        var form='<form class="mobile-search search-page-form" data-form="search"><span class="mobile-search-icon">'+navIcon('search')+'</span><input name="keyword" type="search" aria-label="搜索校园闲置" placeholder="搜索校园闲置" value="'+esc(term)+'"><button type="submit">搜索</button></form>';
+        var landing='<section class="search-suggestions"><div class="redesign-heading"><h2>'+(history.length?'搜索历史':'试试这些关键词')+'</h2>'+(history.length?'<button class="link-btn" data-act="search-clear-history">清空历史</button>':'')+'</div><div class="search-terms">'+suggestions+'</div></section>';
+        $('#app').innerHTML=shell('market','<section class="redesign-page search-page"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">←</a><h1>搜索闲置</h1>'+(term?'<button class="link-btn" data-act="search-term" data-v="">清除关键词</button>':'')+'</header>'+form+(term?results:landing)+'</section>');
+    }
+
     function renderHome() {
         var h=state.home;
         var categories=[['','全部好物'],['教材','图书教材'],['数码','数码设备'],['运动','运动户外'],['生活','宿舍生活'],['衣物','服饰穿搭'],['绿植','绿植花卉'],['其他','兴趣好物']];
-        var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span>'+esc(c[1])+'</span><span class="desk-category-arrow">›</span></button>';}).join('');
-        var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span>'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><b>'+esc(c[1])+'</b></button>';}).join('');
-        var mobileSearch='<form class="mobile-search" data-form="search"><span class="mobile-search-icon">⌕</span><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
+        var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span>'+esc(c[1])+'</span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
+        var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
+        var mobileSearch='<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
         var signed=!!readToken();
-        var desktop='<section class="desktop-market"><div class="desktop-market-layout"><aside class="category-panel"><div class="category-panel-title">逛分类 <small>发现校园好物</small></div>'+desktopCats+'</aside><div class="desktop-center"><div class="market-hero"><div><span class="market-hero-eyebrow">CAMPUS EXCHANGE</span><h1>好东西，再转一圈。</h1><p>闲置不闲着，校园里总有人需要。</p><div class="hero-actions"><button data-act="go" data-to="#/publish">发布我的闲置 <span>↗</span></button><button class="hero-secondary" data-act="go" data-to="#/community">去社区逛逛</button></div></div><div class="hero-visual" aria-hidden="true"><span class="hero-ring hero-ring-a"></span><span class="hero-ring hero-ring-b"></span><div class="hero-logo">'+logoMarkup()+'</div><span class="hero-note note-one">闲置流转</span><span class="hero-note note-two">校园交换</span></div></div><div class="market-shortcuts"><button data-act="go" data-to="#/wishes"><b>想换什么？</b><span>去愿望池看看 →</span></button><button data-act="go" data-to="#/community"><b>校园社区</b><span>和同学聊聊 →</span></button><button data-act="go" data-to="#/trade"><b>换物进度</b><span>查看我的交易 →</span></button></div></div><aside class="market-account"><div class="account-avatar">'+(state.me?esc(state.me.nickname.slice(0,1)):'换')+'</div><h2>'+(signed?'欢迎回来':'你好，校园同学')+'</h2><p>让喜欢的东西继续发光</p><button class="account-main" data-act="go" data-to="'+(signed?'#/me':'#/login')+'">'+(signed?'进入个人中心':'登录 / 注册')+'</button><div class="account-links"><button data-act="go" data-to="#/trade"><b>交易</b><span>我的报价</span></button><button data-act="go" data-to="#/notifications"><b>消息</b><span>最新提醒</span></button></div><div class="account-tip"><b>安心换物小贴士</b><span>选择校园公共地点面交</span></div></aside></div></section>';
-        var mobile='<section class="mobile-market"><div class="mobile-greeting"><div><span>发现校园里的好物</span><h1>今天想换点什么？</h1></div><span class="mobile-school">校园闲置</span></div>'+mobileSearch+'<div class="mobile-categories">'+mobileCats+'</div><div class="mobile-story"><div><span>让闲置继续发光</span><b>你的闲置，<br>是别人的心动。</b></div><button data-act="go" data-to="#/publish">去发布 ↗</button></div><div class="mobile-tools"><button data-act="go" data-to="#/wishes"><span>✦</span><b>求换专区</b><small>找想要的</small></button><button data-act="go" data-to="#/community"><span>◌</span><b>校园社区</b><small>聊聊近况</small></button><button data-act="go" data-to="#/trade"><span>↻</span><b>我的交易</b><small>换物进度</small></button></div></section>';
-        var results='<section class="market-feed"><div class="feed-heading"><div><span class="feed-kicker">CAMPUS MARKET</span><h2>'+(h.keyword?'为你找到':'发现好物')+'</h2><p>'+(h.keyword?'“'+esc(h.keyword)+'” 的语义搜索结果':'来自同学们的闲置，等一个新的故事')+'</p></div><div class="feed-actions"><span class="feed-count">'+(h.keyword?'匹配 ':'在架 ')+h.total+'</span><button class="feed-filter" data-act="open-filter">筛选 <span aria-hidden="true">⌄</span></button><button class="feed-publish" data-act="go" data-to="#/publish">＋ 发布</button></div></div>'
+        var mascotImage='<img src="/assets/brand/mascot-wave-v2.png" width="1280" height="1280" alt="挥手的换一圈吉祥物猫猫" fetchpriority="high">';
+        var desktop='<section class="desktop-market"><div class="desktop-market-layout"><aside class="category-panel"><div class="category-panel-title">逛分类 <small>发现校园好物</small></div>'+desktopCats+'</aside><div class="desktop-center"><div class="market-hero mascot-hero"><div class="mascot-copy"><h1>好东西，再转一圈。</h1><p>闲置不闲着，校园里总有人需要。</p><div class="hero-actions"><button data-act="go" data-to="#/publish">发布我的闲置 <span>↗</span></button><button class="hero-secondary" data-act="go" data-to="#/community">去社区逛逛</button></div></div><figure class="mascot-portrait">'+mascotImage+'<figcaption><span></span>换一圈 | 校园伙伴</figcaption></figure></div>'+campusServices()+'<div class="market-shortcuts"><button data-act="go" data-to="#/wishes"><b>想换什么？</b><span>去愿望池看看 →</span></button><button data-act="go" data-to="#/community"><b>校园社区</b><span>和同学聊聊 →</span></button><button data-act="go" data-to="#/trade"><b>换物进度</b><span>查看我的交易 →</span></button></div></div><aside class="market-account"><div class="account-avatar">'+(state.me?esc(state.me.nickname.slice(0,1)):'换')+'</div><h2>'+(signed?'欢迎回来':'你好，校园同学')+'</h2><p>让喜欢的东西继续发光</p><button class="account-main" data-act="go" data-to="'+(signed?'#/me':'#/login')+'">'+(signed?'进入个人中心':'登录 / 注册')+'</button><div class="account-links"><button data-act="go" data-to="#/trade"><b>交易</b><span>我的报价</span></button><button data-act="go" data-to="#/notifications"><b>消息</b><span>最新提醒</span></button></div><div class="account-tip"><b>安心换物小贴士</b><span>选择校园公共地点面交</span></div></aside></div></section>';
+        var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈校园伙伴"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b><small>查看竞拍</small></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b><small>找想要的</small></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b><small>聊聊近况</small></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b><small>换物进度</small></button></div></section>';
+        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(h.keyword?'为你找到':'发现好物')+'</h2><p>'+(h.keyword?'“'+esc(h.keyword)+'” 的搜索结果':'校内同学发布的闲置')+'</p></div><div class="feed-actions"><span class="feed-count">'+(h.keyword?'匹配 ':'在架 ')+h.total+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">＋ 发布</button></div></div>'
             +(h.condition?'<div class="active-filter"><button class="chip on" data-act="f-cond" data-v="">成色：'+esc(h.condition)+' ×</button></div>':'')
-            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState('⌕','暂时没有找到好物','换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
+            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(navIcon('search'),'暂时没有找到好物','换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
-        $('#app').innerHTML=shell('market',desktop+mobile+results+'<footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 · 理性交流 · 安心面交</span></footer>');
+        if(location.hash==='#/search'){renderSearchPage(results);return;}
+        $('#app').innerHTML=shell('market',desktop+mobile+results+'<footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 | 理性交流 | 安心面交</span></footer>');
     }
 
     function openFilterSheet() {
@@ -488,7 +586,9 @@
     async function renderItem(id) {
         $('#app').innerHTML = shell('home', loading());
         var d = await api('/item/' + id);
+        if (currentView.name!=='item' || currentView.arg!==id) return;
         var it = d.item;
+        shelfRemember('history',it);
         var img = firstImage(it.images);
         var hero = img ? '<div class="hero"><img src="' + esc(img) + '" alt=""></div>'
             : '<div class="hero" data-cat="' + esc(it.category) + '">' + (CAT_ICON[it.category] || '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10"/></svg>') + '</div>';
@@ -529,7 +629,7 @@
             + '<div class="kv"><span class="k">想换</span><span class="v">'
             + esc((want.wantCategories || []).join('、') || want.wantCategory || '不限类别') + (want.expectDesc ? '，' + esc(want.expectDesc) : '') + '</span></div>'
             + '<div class="kv"><span class="k">发布</span><span class="v">' + fmtRel(it.createTime)
-            + ' · ' + esc(it.ownerBuilding || '未填宿舍楼') + '</span></div>'
+            + ' | ' + esc(it.ownerBuilding || '未填宿舍楼') + '</span></div>'
             + '</div>'
             + '<div class="card card-pad" style="margin-top:12px">'
             + '<button class="user-row as-link" data-act="go" data-to="#/user/' + it.ownerId + '">'
@@ -538,16 +638,24 @@
             + (it.ownerCredit >= 90
                 ? ' <span class="tag success">靠谱</span>'
                 : ' <span class="tag">信用良好</span>') + '</p>'
-            + '<p class="u-sub">' + esc(it.ownerBuilding || '') + ' · 查看主页 ›</p></div>'
+            + '<p class="u-sub">' + esc(it.ownerBuilding || '') + ' | 查看主页 ›</p></div>'
             + creditBadge({credit: it.ownerCredit})
             + '</button></div>'
             + '<p class="hint" style="margin-top:12px">' + esc(d.tip || '') + '</p>'
             + '<div class="action-bar">' + actions + '</div>';
 
-        $('#app').innerHTML = shell('home', content);
+        var saved=shelfRead('favorites').some(function(x){return x.id===id;});
+        $('#app').innerHTML = shell('home','<div class="shelf-action"><button class="btn btn-ghost btn-sm" data-act="shelf-toggle" data-id="'+id+'" aria-pressed="'+saved+'">'+(saved?'♥ 已收藏':'♡ 收藏物品')+'</button></div>'+content);
     }
 
     // ------------------------------------------------------------------ 发布
+
+    function renderPublishEntry() {
+        $('#app').innerHTML=shell('publish','<section class="redesign-page publish-entry"><header class="redesign-heading"><h1>发布</h1><a class="icon-action" aria-label="关闭发布" href="#/home">'+navIcon('close')+'</a></header>'
+            +'<a class="publish-choice publish-choice-main" href="#/publish/edit"><span><strong>发闲置</strong><small>拍张照片，找同学换点喜欢的</small></span><img src="/assets/brand/mascot-box.png" width="108" height="108" alt=""></a>'
+            +'<div class="publish-choice-grid"><a class="publish-choice" href="#/auction/new"><span><strong>发拍卖</strong><small>设置起拍价</small></span></a><a class="publish-choice" href="#/wishes"><span><strong>发心愿</strong><small>发布想换的物品</small></span></a></div>'
+            +'<button class="publish-choice" data-act="estimate"><span><strong>好物估价</strong><small>计算参考价格区间</small></span></button></section>');
+    }
 
     function renderPublish() {
         var catChips = CATS.map(function (c) {
@@ -561,17 +669,19 @@
             return '<button type="button" class="chip" data-act="p-want" data-v="' + esc(c) + '">' + c + '</button>';
         }).join('');
 
-        var content = '<div class="page-head"><h1>上架一件闲置</h1>'
+        var content = '<div class="page-head"><a class="link-btn" href="#/publish">返回发布</a><h1>发闲置</h1>'
             + '<p>上传图片并提交审核，5 分钟未处理将自动通过。</p></div>'
             + '<form data-form="publish" class="card card-pad">'
+            + '<div class="field"><label class="label">图片 <span class="opt">最多 3 张，每张 ≤2MB</span></label>'
+            + '<div class="chips" id="img-preview" style="margin-top:8px"></div><p class="hint">第一张会用作商品封面。</p></div>'
             + '<div class="field"><label class="label">名称 <span class="opt">≤30 字</span></label>'
-            + '<input class="input" name="title" maxlength="30" placeholder="例如 机械键盘 87 键红轴" required></div>'
+            + '<input class="input" name="title" aria-label="物品名称" maxlength="30" placeholder="例如 机械键盘 87 键红轴" required></div>'
             + '<div class="field"><label class="label">类别</label><div class="chips" id="cat-chips">' + catChips + '</div>'
             + '<input type="hidden" name="category"></div>'
             + '<div class="field"><label class="label">成色</label><div class="chips" id="cond-chips">' + condChips + '</div>'
             + '<input type="hidden" name="conditionLevel"></div>'
             + '<div class="field"><label class="label">描述 <span class="opt">≤300 字</span></label>'
-            + '<textarea class="textarea" name="description" maxlength="300" data-counter="desc" '
+            + '<textarea class="textarea" name="description" aria-label="物品描述" maxlength="300" data-counter="desc" '
             + 'placeholder="哪里旧了、配件齐不齐、能不能自提"></textarea>'
             + '<div class="hint" style="display:flex;justify-content:space-between">'
             + '<span>说清楚瑕疵，换得更快</span><span class="counter" id="desc-counter">0 / 300</span></div></div>'
@@ -579,11 +689,9 @@
             + '<input type="hidden" name="wantCategory">'
             + '<div class="hint">可多选。</div>'
             + '<div class="hint">必选。这是环匹配的原料：写清楚类别，系统才能把三个人的意向接起来。</div></div>'
-            + '<div class="field"><label class="label">交换模式</label><select class="select" name="matchMode"><option value="passive">参与闭环 · 等待自动匹配提醒</option><option value="active">参与闭环 · 仅主动找环</option><option value="one">仅一对一交换</option></select></div>'
+            + '<div class="field"><label class="label">交换模式</label><select class="select" name="matchMode" aria-label="交换模式"><option value="passive">参与闭环 | 等待自动匹配提醒</option><option value="active">参与闭环 | 仅主动找环</option><option value="one">仅一对一交换</option></select></div>'
             + '<div class="field"><label class="label">期望说明 <span class="opt">选填，≤100 字</span></label>'
-            + '<input class="input" name="expectDesc" maxlength="100" placeholder="例如 想换一副羽毛球拍，成色差不多就行"></div>'
-            + '<div class="field"><label class="label">图片 <span class="opt">必填，jpg / png，≤2MB</span></label>'
-            + '<div class="chips" id="img-preview" style="margin-top:8px"></div></div>'
+            + '<input class="input" name="expectDesc" aria-label="期望说明" maxlength="100" placeholder="例如 想换一副羽毛球拍，成色差不多就行"></div>'
             + '<button class="btn btn-primary btn-block" type="submit">提交审核</button>'
             + '</form>';
 
@@ -621,6 +729,18 @@
     }
 
     /** 上次没发完的内容还留着，别让用户白填一遍 */
+    function savePublishDraft(form) {
+        if(!form||form.dataset.editId||currentView.name!=='publish')return;
+        var fields=new FormData(form);
+        var draft={
+            title:fields.get('title'),description:fields.get('description'),expectDesc:fields.get('expectDesc'),
+            matchMode:fields.get('matchMode'),category:state.publish.category,
+            conditionLevel:state.publish.conditionLevel,wantCategory:state.publish.wantCategory,
+            images:state.publishImages.slice()
+        };
+        try{sessionStorage.setItem('hq.draft',JSON.stringify(draft));}catch(e){}
+    }
+
     function restorePublishDraft() {
         var raw = sessionStorage.getItem('hq.draft');
         if (!raw) return;
@@ -647,6 +767,8 @@
         markChip('#cat-chips', d.category);
         markChip('#cond-chips', d.conditionLevel);
         markMultiWant(d.wantCategory);
+        if(d.matchMode)form.elements.matchMode.value=d.matchMode;
+        if(Array.isArray(d.images)){state.publishImages=d.images.slice(0,3);renderImagePreview();}
         toast('已恢复上次没发完的内容');
     }
 
@@ -790,8 +912,8 @@
                 + '<span class="hint" style="margin:0">#' + e.id + '</span></div>'
                 + stepsHtml(e.status)
                 + '<p class="hint" style="margin:0">已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2)
-                + ' · 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2)
-                + (e.place ? ' · ' + esc(e.place) : '') + '</p>'
+                + ' | 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2)
+                + (e.place ? ' | ' + esc(e.place) : '') + '</p>'
                 + '</button>';
         }).join('');
 
@@ -822,7 +944,7 @@
                     : '<button class="name-link" data-act="go" data-to="#/user/' + d.userId + '">'
                       + esc(d.nickname || '同学') + '</button>')
                 + '</p>'
-                + '<p class="row-sub">给出「' + esc(d.giveTitle || '') + '」· 得到「' + esc(d.getTitle || '') + '」</p>'
+                + '<p class="row-sub">给出「' + esc(d.giveTitle || '') + '」 | 得到「' + esc(d.getTitle || '') + '」</p>'
                 + '</div>'
                 + '<div style="text-align:right;font-size:11px;color:var(--ink-400);flex:none;white-space:nowrap">'
                 + '<div>' + (d.confirmed ? '<span style="color:var(--success-600)">已确认</span>' : '待确认') + '</div>'
@@ -847,12 +969,12 @@
 
         var content = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
             + '<button class="btn btn-sm btn-ghost" data-act="go" data-to="#/exchange">← 返回</button>'
-            + '<span style="flex:1"></span><span class="hint">#' + e.id + ' · ' + (e.type === 3 ? '三方环' : '一对一') + '</span>'
+            + '<span style="flex:1"></span><span class="hint">#' + e.id + ' | ' + (e.type === 3 ? '三方环' : '一对一') + '</span>'
             + '</div>'
             + '<div class="page-head" style="margin-bottom:10px"><h1>' + esc(e.statusText) + '</h1>'
             + '<p>创建于 ' + fmtDate(e.createTime)
-            + ' · 已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2)
-            + ' · 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2) + '</p></div>'
+            + ' | 已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2)
+            + ' | 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2) + '</p></div>'
             + stepsHtml(e.status)
             + '<div class="card" style="margin-top:6px">' + rows + '</div>'
             + (e.type===3 ? '<div class="ring-flow-list">'+details.map(function(d){var recipient=details.find(function(x){return x.getItemId===d.giveItemId;});return '<div><b>'+esc(d.nickname)+'</b> 的「'+esc(d.giveTitle)+'」<span aria-hidden="true"> → </span><b>'+esc(recipient?recipient.nickname:'待确认')+'</b></div>';}).join('')+'</div><button class="btn btn-ghost" data-act="go" data-to="#/ring/'+e.id+'">进入三方协商房间</button>' : '')
@@ -868,10 +990,6 @@
     // ------------------------------------------------------------------ 他人主页
 
     async function renderUser(id) {
-        if (state.me && state.me.id === id) {
-            go('#/me');
-            return;
-        }
         $('#app').innerHTML = shell('home', loading());
 
         var u, reviews, items, pending = [];
@@ -907,13 +1025,13 @@
         var rate = (u.goodRate === null || u.goodRate === undefined) ? '—' : u.goodRate + '%';
         var pct = Math.max(3, Math.min(100, u.credit || 0));
 
-        var content = '<div class="card card-pad">'
+        var content = '<section class="redesign-page public-profile"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">←</a><h1>个人主页</h1><button type="button" class="link-btn" data-act="profile-share">分享</button></header><div class="card card-pad">'
             + '<div class="user-row">'
             + '<div class="avatar lg">' + esc((u.nickname || '同').slice(0, 1)) + '</div>'
             + '<div class="u-main"><p class="u-name" style="font-size:19px">' + esc(u.nickname)
             + ' <span class="tag ' + lvl.cls + '">' + esc(lvl.text) + '</span></p>'
-            + '<p class="u-sub">重庆移通学院 · ' + esc(u.college || '未填院系')
-            + ' · ' + esc(u.building || '未填宿舍楼') + '</p></div>'
+            + '<p class="u-sub">重庆移通学院 | ' + esc(u.college || '未填院系')
+            + ' | ' + esc(u.building || '未填宿舍楼') + '</p></div>'
             + creditBadge(u)
             + '</div>'
             + '<div class="credit-track"><div class="credit-fill" style="width:' + pct + '%"></div></div>'
@@ -928,13 +1046,14 @@
             + (reviewBtn ? '<div style="margin-top:14px">' + reviewBtn + '</div>' : '')
             + '</div>'
 
-            + '<div class="section-title"><h2>TA 的在架物品</h2>'
+            + '<div class="profile-switch" aria-label="个人主页内容"><button data-act="profile-tab" data-v="items" aria-pressed="true">宝贝 '+items.length+'</button><button data-act="profile-tab" data-v="reviews" aria-pressed="false">评价 '+reviews.length+'</button></div>'
+            + '<section data-profile-panel="items"><div class="section-title"><h2>在架物品</h2>'
             + '<span class="more">' + (items || []).length + ' 件</span></div>'
             + (items.length
                 ? '<div class="pgrid">' + items.map(pCard).join('') + '</div>'
                 : '<div class="card card-pad"><p class="hint" style="margin:0">TA 现在没有在架的物品。</p></div>')
 
-            + '<div class="section-title"><h2>收到的评价</h2>'
+            + '</section><section data-profile-panel="reviews" hidden><div class="section-title"><h2>收到的评价</h2>'
             + '<span class="more">' + (u.reviewCount || 0) + ' 条</span></div>'
             + (reviews.length ? '<div class="grid">' + reviews.map(function (r) {
                 return '<div class="card card-pad">'
@@ -951,7 +1070,7 @@
                 : '<div class="card card-pad"><p class="hint" style="margin:0">'
                   + '还没有人评价 TA。完成一次交换后就可以互评。</p></div>');
 
-        $('#app').innerHTML = shell('home', content);
+        $('#app').innerHTML = shell(state.me?.id===id?'me':'profile', content+'</section></section>');
     }
 
     // ------------------------------------------------------------------ 我的
@@ -1010,13 +1129,13 @@
                 + '<span class="hint">' + fmtDate(r.createTime) + '</span></div>';
         }).join('');
 
-        var content = '<div class="card card-pad" style="margin-bottom:14px">'
+        var content = '<section class="redesign-page my-page"><header class="redesign-heading"><h1>我的</h1><a class="icon-action" aria-label="设置" href="#/settings">'+navIcon('settings')+'</a></header><div class="card card-pad" style="margin-bottom:14px">'
             + '<div class="user-row">'
-            + '<div class="avatar lg">' + esc(me.nickname.slice(0, 1)) + '</div>'
+            + '<a class="avatar lg" href="#/user/'+Number(me.id)+'" aria-label="打开个人主页">' + esc(me.nickname.slice(0, 1)) + '</a>'
             + '<div class="u-main"><p class="u-name" style="font-size:18px">' + esc(me.nickname)
             + (me.role === 1 ? ' <span class="tag brand">管理员</span>' : '') + '</p>'
-            + '<p class="u-sub">重庆移通学院 · ' + esc(me.college || '未填院系')
-            + ' · ' + esc(me.building || '未填宿舍楼') + '</p>'
+            + '<p class="u-sub">重庆移通学院 | ' + esc(me.college || '未填院系')
+            + ' | ' + esc(me.building || '未填宿舍楼') + '</p>'
             + '</div></div>'
             + '<div class="stats" style="margin-top:14px">'
             + '<div class="stat"><p class="k">信用分</p><p class="v num">' + me.credit
@@ -1042,6 +1161,8 @@
             + '<button class="btn btn-ghost btn-sm" data-act="logout">退出登录</button>'
             + '</div></div>'
 
+            + '<div class="my-shortcuts"><a href="#/favorites"><b>'+shelfRead('favorites').length+'</b>我的收藏</a><a href="#/history"><b>'+shelfRead('history').length+'</b>浏览历史</a><a href="#/wishes">'+navIcon('wish')+'心愿单</a><a href="#/auction/mine">'+navIcon('auction')+'我的拍卖</a></div>'
+            + '<section class="card card-pad my-trades"><h2>我的交易</h2><div class="my-shortcuts"><a href="#/offers">'+navIcon('trade')+'我的报价</a><a href="#/exchange">'+navIcon('box')+'我的交换</a><a href="#/publish">'+navIcon('add')+'发布闲置</a></div></section>'
             + '<div class="section-title"><h2>我的物品</h2>'
             + '<div class="title-actions">'
             + '<span class="more">共 ' + (items || []).length + ' 件，在架 ' + onShelf.length + '</span>'
@@ -1063,28 +1184,28 @@
             + (reviewRows ? '<div class="list">' + reviewRows + '</div>'
                 : emptyState('⭐', '还没有评价', '完成一次交换后，对方可以给你打分'));
 
-        $('#app').innerHTML = shell('me', content);
+        $('#app').innerHTML = shell('me', content+'</section>');
     }
 
     function auctionCard(a, mode) {
-        var labels={active:'竞拍中',cancelled:'已取消',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '等待卖家结算' : '已结束 · 无报价'};
+        var labels={active:'竞拍中',cancelled:'已取消',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '等待卖家结算' : '已结束 | 无报价'};
         var end=String(a.endsAt || '').replace('T',' ').slice(0,16);
         var image=firstImage(a.image);
-        return '<article class="auction-card">'+(image?'<img class="auction-image" src="'+esc(image)+'" alt="'+esc(a.title)+'">':'<div class="auction-image auction-image-empty">历史拍品暂无图片</div>')+'<div class="auction-card-head"><span class="tag">'+esc(labels[a.state] || '未知')+'</span>'+(a.state==='active'||a.state==='ended'?'<span class="hint">截止 '+esc(end)+'</span>':'')+'</div><h2>'+esc(a.title)+'</h2><p>'+esc(a.description || '暂无描述')+'</p><div class="auction-price"><span>'+(a.bidCount?'当前最高':'起拍价')+'</span><b>¥'+esc(a.currentPrice)+'</b></div><div class="auction-meta">发布者：'+esc(a.seller)+' · '+a.bidCount+' 次出价'+(a.bidder?' · 最高出价：'+esc(a.bidder):'')+'</div>'
-         +(a.state==='settled'?'<p class="auction-result">已选报价：'+esc(a.winner)+' · ¥'+esc(a.selectedAmount)+'。请双方自行协商线下交付。</p>':'')
-         +(mode==='admin'&&a.state==='pending'?'<div class="btn-row"><button class="btn btn-sm" data-act="review-listing" data-kind="auctions" data-do="reject" data-id="'+a.id+'">驳回</button></div>':'')
+        return '<article class="auction-card">'+(image?'<img class="auction-image" src="'+esc(image)+'" alt="'+esc(a.title)+'">':'<div class="auction-image auction-image-empty">历史拍品暂无图片</div>')+'<div class="auction-card-head"><span class="tag">'+esc(labels[a.state] || '未知')+'</span>'+(a.state==='active'||a.state==='ended'?'<span class="hint">截止 '+esc(end)+'</span>':'')+'</div><h2>'+esc(a.title)+'</h2><p>'+esc(a.description || '暂无描述')+'</p><div class="auction-price"><span>'+(a.bidCount?'当前最高':'起拍价')+'</span><b>¥'+esc(a.currentPrice)+'</b></div><div class="auction-meta">发布者：'+esc(a.seller)+' | '+a.bidCount+' 次出价'+(a.bidder?' | 最高出价：'+esc(a.bidder):'')+'</div>'
+         +(a.state==='settled'?'<p class="auction-result">已选报价：'+esc(a.winner)+' | ¥'+esc(a.selectedAmount)+'。请双方自行协商线下交付。</p>':'')
+         +(mode==='admin'&&a.state==='pending'?'<div class="btn-row"><button class="btn btn-sm btn-primary" data-act="review-listing" data-kind="auctions" data-do="approve" data-id="'+a.id+'">通过</button><button class="btn btn-sm" data-act="review-listing" data-kind="auctions" data-do="reject" data-id="'+a.id+'">驳回</button></div>':'')
          +(mode==='admin'&&(a.state==='active'||a.state==='ended')?'<button class="btn btn-sm" data-act="auction-cancel" data-id="'+a.id+'">取消拍卖</button>':'')
-         +(false&&mode==='mine'&&(a.state==='active'||a.state==='ended')&&a.bidCount?'<button class="btn btn-primary btn-sm" data-act="auction-bids" data-id="'+a.id+'">查看报价并结算</button>':'')
-         +(false&&mode==='public'&&a.state==='active'?'<button class="btn btn-primary btn-sm" data-act="auction-bid" data-id="'+a.id+'">参与出价</button>':'')+'</article>';
+         +(mode==='mine'&&(a.state==='active'||a.state==='ended')&&a.bidCount?'<button class="btn btn-primary btn-sm" data-act="auction-bids" data-id="'+a.id+'">查看报价并结算</button>':'')
+         +(mode==='public'&&a.state==='active'?'<button class="btn btn-primary btn-sm" data-act="auction-bid" data-id="'+a.id+'">参与出价</button>':'')+'</article>';
     }
     async function renderAuctions(mine) {
         $('#app').innerHTML=shell('auctions',loading());
         var auctions=await api(mine?'/auction/mine':'/auction');
-        var content='<div class="auction-page-head"><div><span class="tag">HISTORY</span><h1>历史拍卖记录</h1><p>平台仅支持以物换物，现金竞拍已停用；历史记录保留。</p></div></div>'
+        var content='<div class="auction-page-head"><div><span class="tag">AUCTIONS</span><h1>'+(mine?'我的拍卖':'校园拍卖')+'</h1><p>人民币出价，成交后由双方线下协商交付。</p></div><div class="btn-row"><a class="btn btn-ghost" href="'+(mine?'#/auctions':'#/auction/mine')+'">'+(mine?'返回拍卖':'我的拍卖')+'</a><a class="btn btn-primary" href="#/auction/new">发起拍卖</a></div></div>'
           +(auctions.length?'<div class="auction-grid">'+auctions.map(function(a){return auctionCard(a,mine?'mine':'public');}).join('')+'</div>':'<div class="card card-pad">暂无拍卖。</div>');
         $('#app').innerHTML=shell('auctions',content);
     }
-    function renderAuctionNew() { go('#/auctions'); return;
+    function renderAuctionNew() {
         state.publishImages=[];
         $('#app').innerHTML=shell('auctions','<div class="auction-form"><div class="page-head"><h1>发起拍卖</h1><p>提交后由管理员审核，5 分钟未处理将自动通过，通过后开始计时。</p></div><form class="card card-pad" data-form="auction-new"><div class="field"><label class="label">拍品名称</label><input class="input" name="title" maxlength="80" required></div><div class="field"><label class="label">拍品描述</label><textarea class="textarea" name="description" maxlength="500"></textarea></div><div class="field"><label class="label">图片（必填，最多 3 张）</label><div class="chips" id="img-preview"></div></div><div class="field"><label class="label">起拍价（元）</label><input class="input" name="amount" type="number" min="0.01" max="1000000" step="0.01" required></div><div class="field"><label class="label">拍卖时长（小时，1–168）</label><input class="input" name="hours" type="number" value="24" min="1" max="168" required></div><button class="btn btn-primary" type="submit">提交审核</button></form></div>');
         renderImagePreview();
@@ -1122,7 +1243,7 @@
             var payload=await response.json();if(payload.code!==0)return;var n=Math.max(0,Number(payload.data.count)||0),latest=0;
             if(n){try{var listResponse=await fetch(BASE+'/api/notification',{credentials:'include',headers:{'X-Token':token}});if(listResponse.ok){var listPayload=await listResponse.json();if(listPayload.code===0&&Array.isArray(listPayload.data)){listPayload.data.forEach(function(item){if(!item.read)latest=Math.max(latest,Number(item.id)||0);});}}}catch(ignore){}}
             if(request!==noticeTracker.request || readToken()!==token)return;
-            document.querySelectorAll('.notice-count').forEach(function(el){el.textContent=n>99?'99+':String(n);el.hidden=n===0;el.setAttribute('aria-label',n+' 条未读消息');});document.title=(n?'('+n+') ':'')+'换一圈 · 重庆移通学院校园换物';
+            document.querySelectorAll('.notice-count').forEach(function(el){el.textContent=n>99?'99+':String(n);el.hidden=n===0;el.setAttribute('aria-label',n+' 条未读消息');});document.title=(n?'('+n+') ':'')+'换一圈 | 重庆移通学院校园换物';
             var isNew=n>0&&(!noticeTracker.initialized||(latest>noticeTracker.latest)||(latest===0&&n>noticeTracker.count));
             noticeTracker.initialized=true;noticeTracker.count=n;noticeTracker.latest=Math.max(noticeTracker.latest,latest);
             if(!n){noticeTracker.pending=0;closeNoticePopup();}else if(isNew || noticeTracker.pending)showNoticePopup(n);
@@ -1133,15 +1254,22 @@
     document.addEventListener('visibilitychange',function(){if(!document.hidden&&noticeTracker.pending)showNoticePopup(noticeTracker.pending);});
     async function renderNotifications() {
         var notices=await api('/notification');
-        var rows=notices.map(function(n){var target=/^#\/(offers|exchange(?:\/\d+)?|auctions|auction\/mine|chat\/\d+|cycle\/\d+|item\/\d+)$/.test(n.target)?n.target:'#/notifications';return '<a class="notice-row '+(n.read?'':'is-unread')+'" href="'+esc(target)+'" data-act="notice-open" data-id="'+n.id+'" data-to="'+esc(target)+'"><span class="notice-dot"></span><span class="notice-body"><b>'+esc(n.title)+'</b><span>'+esc(n.content)+'</span></span><time>'+esc(String(n.createdAt).replace('T',' ').slice(0,16))+'</time></a>';}).join('');
-        $('#app').innerHTML=shell('notifications','<div class="notice-header"><div><span class="tag">MESSAGE CENTER</span><h1>消息通知</h1><p>报价、交换与拍卖的最新进展。</p></div><div class="btn-row"><button class="btn btn-sm" data-act="go" data-to="#/chats">物品私聊</button><button class="btn btn-sm" data-act="notice-read">全部标为已读</button></div></div><div class="notice-list">'+(rows||'<div class="card card-pad">暂时没有消息。</div>')+'</div>');refreshNoticeCount();
+        var rows=notices.map(function(n){var target=/^#\/(offers|exchange(?:\/\d+)?|wishes(?:\/\d+)?|auctions|auction\/mine|chat\/\d+|cycle\/\d+|item\/\d+)$/.test(n.target)?n.target:'#/notifications';return '<a class="notice-row '+(n.read?'':'is-unread')+'" href="'+esc(target)+'" data-act="notice-open" data-id="'+n.id+'" data-to="'+esc(target)+'"><span class="notice-dot"></span><span class="notice-body"><b>'+esc(n.title)+'</b><span>'+esc(n.content)+'</span></span><time>'+esc(String(n.createdAt).replace('T',' ').slice(0,16))+'</time></a>';}).join('');
+        var conversations=await api('/conversation').catch(function(){return null;});
+        if(currentView.name!=='notifications')return;
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page messages-page"><header class="redesign-heading"><h1>消息</h1><a class="icon-action" aria-label="设置" href="#/settings">'+navIcon('settings')+'</a></header><div class="message-actions"><a class="btn btn-ghost" href="#/trade">交易消息</a><button class="btn btn-ghost" data-act="notice-read">全部标为已读</button></div><label class="label" for="message-filter">查找会话</label><input type="search" id="message-filter" class="input" placeholder="搜索同学昵称或物品"><h2>系统通知</h2><div class="notice-list">'+(rows||'<div class="card card-pad">暂时没有通知。</div>')+'</div><h2>私聊</h2><div class="conversation-list">'+(conversations?conversationRows(conversations):'<p class="hint">会话暂时加载失败，请刷新重试。</p>')+'</div></section>');refreshNoticeCount();
     }
 
     var roomTimer=null, roomBusy=false;
+    function conversationRows(list) {
+        return list.map(function(c){
+            return '<a class="conversation-row" href="#/chat/'+c.id+'"><span class="conversation-avatar">'+esc((c.peer||'同').slice(0,1))+'</span><span><b>'+esc(c.peer)+'</b><small>'+esc(c.lastText||'暂无文字消息')+'</small><small>'+esc(c.title)+'</small></span>'+navIcon('next')+'</a>';
+        }).join('')||'<div class="card card-pad">还没有私聊。</div>';
+    }
     async function renderChats() {
         var list=await api('/conversation');
-        var rows=list.map(function(c){return '<button class="conversation-row" data-act="go" data-to="#/chat/'+c.id+'"><span class="conversation-avatar">'+esc((c.peer||'同').slice(0,1))+'</span><span><b>'+esc(c.peer)+'</b><small>关于「'+esc(c.title)+'」</small><small>'+esc(c.lastText||'暂无文字消息')+'</small></span><span aria-hidden="true">›</span></button>';}).join('');
-        $('#app').innerHTML=shell('notifications','<div class="page-head"><h1>物品私聊</h1><p>围绕物品，与对方单独沟通。</p></div><div class="conversation-list">'+(rows||'<div class="card card-pad">还没有私聊。打开一件真实在架物品，即可联系发布者。</div>')+'</div>');
+        if(currentView.name!=='chats')return;
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page"><header class="redesign-heading"><h1>私聊</h1><a href="#/notifications">返回消息</a></header><div class="conversation-list">'+conversationRows(list)+'</div></section>');
     }
     function roomMessage(m) {
         var mine=state.me&&m.senderId===state.me.id;var img=m.kind==='image'?'<a href="'+esc(m.image)+'" target="_blank" rel="noopener"><img class="chat-image" src="'+esc(m.image)+'" alt="私聊图片"></a>':'';
@@ -1154,14 +1282,24 @@
         }catch(e){if(force)toast(e.message||'加载失败','err');}finally{roomBusy=false;}
     }
     async function renderRoom(id,ring) {
-        var title='三方协商房间',subtitle='仅本次闭环的三位参与者可见。',back='#/exchange/'+id;
-        if(!ring){var thread=await api('/conversation/'+id);title='关于「'+thread.title+'」';subtitle='与 '+(thread.sellerId===state.me.id?thread.buyer:thread.seller)+' 的私聊';back='#/chats';}
-        $('#app').innerHTML=shell('notifications','<div class="room-head"><div><button class="link-btn" data-act="go" data-to="'+esc(back)+'">← 返回</button><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></div><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><textarea name="content" maxlength="500" rows="2" placeholder="输入消息…" aria-label="消息内容" required></textarea><div class="chat-tools"><div>'+(ring?'':'<label class="chat-tool">发送图片<input type="file" accept="image/png,image/jpeg" data-act="room-image" hidden></label>')+'</div><button type="submit" class="btn btn-primary btn-sm">发送</button></div></form></section>');
-        await refreshRoom(true);if(currentView.arg===id&&['chat','ringChat'].includes(currentView.name))roomTimer=setInterval(function(){refreshRoom(false);},5000);
+        var title='三方协商房间', back='#/exchange/'+id, product='';
+        if(!ring){
+            var thread=await api('/conversation/'+id);
+            var peer=thread.sellerId===state.me.id?thread.buyerId:thread.sellerId;
+            title=thread.sellerId===state.me.id?thread.buyer:thread.seller;
+            back='#/notifications';
+            product='<a class="room-product" href="#/item/'+Number(thread.itemId)+'">'+thumb({title:thread.title,images:thread.images})+'<span><strong>'+esc(thread.title)+'</strong><small>查看物品详情</small></span>'+navIcon('next')+'</a>';
+        }
+        if(currentView.arg!==id)return;
+        var tools=ring?'':'<details class="room-attachments"><summary aria-label="打开附件面板">'+navIcon('add')+'</summary><div><label class="chat-tool">相册<input type="file" accept="image/png,image/jpeg" data-act="room-image" hidden></label><label class="chat-tool">拍摄<input type="file" accept="image/*" capture="environment" data-act="room-image" hidden></label><a class="chat-tool" href="#/item/'+Number(thread.itemId)+'">查看物品</a></div></details>';
+        var name=ring?esc(title):'<a href="#/user/'+Number(peer)+'">'+esc(title)+'</a>';
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page room-redesign"><header class="redesign-heading"><a class="icon-action" href="'+esc(back)+'" aria-label="返回">←</a><h1>'+name+'</h1></header>'+product+'<p class="room-safety">'+(ring?'仅本次闭环的三位参与者可见。':'面交时请选校内公共地点，确认物品状态后再交付。')+'</p><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><div class="room-input"><textarea name="content" maxlength="500" rows="2" placeholder="想跟 TA 说点什么" aria-label="消息内容" required></textarea><button type="submit" class="btn btn-primary btn-sm">发送</button></div>'+tools+'</form></section></section>');
+        await refreshRoom(true);
+        if(currentView.arg===id&&['chat','ringChat'].includes(currentView.name))roomTimer=setInterval(function(){refreshRoom(false);},5000);
     }
     async function renderWishes() {
-        var wishes=await api('/wish');var rows=wishes.map(function(w){return '<article class="wish-card"><div><span class="tag">'+esc(w.category||'求换')+'</span><span class="hint"> '+esc(w.nickname)+'</span></div><h2>'+esc(w.title)+'</h2><p>'+esc(w.content||'')+'</p><div class="btn-row">'+(state.me&&w.userId===state.me.id?'<button class="btn btn-sm" data-act="wish-close" data-id="'+w.id+'">关闭求换</button>':'<button class="btn btn-sm" data-act="go" data-to="#/user/'+w.userId+'">查看发布者</button>')+'</div></article>';}).join('');
-        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">WISH POOL</span><h1>说说你想换什么。</h1><p>还没有合适的闲置？先把愿望留下。</p></div><button class="btn" data-act="go" data-to="#/community">返回社区</button></div><form class="card card-pad wish-form" data-form="wish-new"><label class="label">我想要</label><input class="input" name="title" maxlength="100" placeholder="例如：一本高数习题集" required><label class="label">类别（选填）</label><select class="select" name="category"><option value="">不限</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select><label class="label">补充说明（选填）</label><textarea class="textarea" name="content" maxlength="500" placeholder="描述你想交换的物品或需求"></textarea><button class="btn btn-primary" type="submit">发布求换</button></form><div class="wish-grid">'+(rows||'<div class="card card-pad">暂无求换，来发布第一个愿望吧。</div>')+'</div>');
+        var matched=currentView.name==='wishes'?currentView.arg:null;var wishes=await api('/wish'+(matched?'/'+matched:''));var rows=wishes.map(function(w){return '<article class="wish-card"><div><span class="tag">'+esc(w.category||'求换')+'</span><span class="hint"> '+esc(w.nickname)+'</span></div><h2>'+esc(w.title)+'</h2><p>'+esc(w.content||'')+'</p><div class="btn-row">'+(state.me&&w.userId===state.me.id?'<button class="btn btn-sm" data-act="wish-close" data-id="'+w.id+'">关闭求换</button>':'<button class="btn btn-sm" data-act="go" data-to="#/user/'+w.userId+'">查看发布者</button>')+'</div></article>';}).join('');
+        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">WISH POOL</span><h1>说说你想换什么。</h1><p>写下想换的物品，匹配到在架物品时双方都会收到通知。</p></div><button class="btn" data-act="go" data-to="#/community">返回社区</button></div><form class="card card-pad wish-form" data-form="wish-new"><label class="label">我想要</label><input class="input" name="title" maxlength="100" placeholder="例如：一本高数习题集" required><label class="label">类别（选填）</label><select class="select" name="category"><option value="">不限</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select><label class="label">补充说明（选填）</label><textarea class="textarea" name="content" maxlength="500" placeholder="描述你想交换的物品或需求"></textarea><button class="btn btn-primary" type="submit">发布求换</button></form><div class="wish-grid">'+(rows||'<div class="card card-pad">暂无求换，来发布第一个愿望吧。</div>')+'</div>');
     }
 
     var communityTimer = null;
@@ -1182,7 +1320,13 @@
         } catch(e){ if(force) toast(e.message || '消息加载失败','err'); } finally { communityLoading=false; }
     }
     async function renderCommunity() {
-        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">CAMPUS CLUB</span><h1>一起聊聊。</h1><p>分享闲置，也分享校园生活。</p></div><div class="btn-row"><button class="btn" data-act="go" data-to="#/wishes">求换专区</button><button class="btn btn-primary" data-act="go" data-to="#/community/game">进入 Scrap Arena</button></div></div><div class="community-layout"><section class="chat-panel"><div class="chat-head"><div><b>校园公共聊天室</b><span>全校可见 · 最近 100 条</span></div><span class="chat-live">● 在线交流</span></div><div class="chat-messages" id="chat-messages" aria-live="polite"></div><form class="chat-compose" data-form="community-text"><textarea name="content" maxlength="500" rows="2" placeholder="分享今天的新鲜事…" aria-label="消息内容" required></textarea><div class="chat-tools"><div><label class="chat-tool">发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label><button type="button" class="chat-tool" data-act="community-share">分享物品</button></div><button type="submit" class="btn btn-primary btn-sm">发送</button></div></form></section><aside class="community-side"><span class="tag">ARCADE</span><h2>下课，<br>来一局。</h2><p>Scrap Arena · 双人同屏格斗</p><button class="btn" data-act="go" data-to="#/community/game">开始游戏 ↗</button><small>键盘操作 · 同一设备双人对战</small></aside></div>');
+        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">CAMPUS CLUB</span><h1>一起聊聊。</h1><p>分享闲置，也分享校园生活。</p></div><div class="btn-row"><button class="btn" data-act="go" data-to="#/wishes">求换专区</button><button class="btn btn-primary" data-act="go" data-to="#/community/game">进入 Scrap Arena</button></div></div><div class="community-layout"><section class="chat-panel"><div class="chat-head"><div><b>校园公共聊天室</b><span>全校可见 | 最近 100 条</span></div><span class="chat-live">● 在线交流</span></div><div class="chat-messages" id="chat-messages" aria-live="polite"></div><form class="chat-compose" data-form="community-text"><textarea name="content" maxlength="500" rows="2" placeholder="分享今天的新鲜事…" aria-label="消息内容" required></textarea><div class="chat-tools"><div><label class="chat-tool">发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label><button type="button" class="chat-tool" data-act="community-share">分享物品</button></div><button type="submit" class="btn btn-primary btn-sm">发送</button></div></form></section><aside class="community-side"><span class="tag">ARCADE</span><h2>下课，<br>来一局。</h2><p>Scrap Arena | 双人同屏格斗</p><button class="btn" data-act="go" data-to="#/community/game">开始游戏 ↗</button><small>键盘操作 | 同一设备双人对战</small></aside></div>');
+        var communityDraft=sessionStorage.getItem('hq.communityDraft');
+        if(communityDraft){
+            sessionStorage.removeItem('hq.communityDraft');
+            var compose=$('[data-form="community-text"] textarea');
+            if(compose){compose.value=communityDraft;compose.focus();}
+        }
         await refreshCommunity(true); if(currentView.name==='community') communityTimer=setInterval(function(){refreshCommunity(false);},5000);
     }
     function renderCommunityGame() {
@@ -1205,7 +1349,7 @@
                     + '<span style="flex:1"></span><span class="hint" style="margin:0">' + fmtRel(r.createTime) + '</span></div>'
                     + '<p style="margin:0 0 4px;font-size:14px">' + esc(r.reason) + '</p>'
                     + '<p class="hint" style="margin:0">举报人 ' + esc(r.reporterNickname || '匿名')
-                    + (r.targetTitle ? ' · 对象「' + esc(r.targetTitle) + '」' : '') + '</p>'
+                    + (r.targetTitle ? ' | 对象「' + esc(r.targetTitle) + '」' : '') + '</p>'
                     + '<div class="btn-row" style="margin-top:10px">'
                     + '<button class="btn btn-sm btn-primary" data-act="report-act" data-id="' + r.id + '" data-do="approve">认定违规</button>'
                     + '<button class="btn btn-sm btn-ghost" data-act="report-act" data-id="' + r.id + '" data-do="reject">驳回</button>'
@@ -1330,7 +1474,7 @@
             + '<div class="rule"><span>超时未确认交付</span><b class="down">−3</b></div>'
             + '<div class="rule"><span>物品被认定违规</span><b class="down">−5</b></div>'
             + '</div>'
-            + '<p class="hint" style="margin-top:12px">等级：优秀 ≥ 90 · 良好 ≥ 80 · 一般 ≥ 70 · 较低 ≥ 60 · 受限 &lt; 60</p>'
+            + '<p class="hint" style="margin-top:12px">等级：优秀 ≥ 90 | 良好 ≥ 80 | 一般 ≥ 70 | 较低 ≥ 60 | 受限 &lt; 60</p>'
             + '<p class="hint" style="margin:0">评价只在交换完成后开放，一单评一次，不能改。</p>');
     }
 
@@ -1389,11 +1533,11 @@
         var w = en ? {
             menu:'Menu', close:'Close menu', home:'Home', market:'Marketplace', publish:'List an item', account:'Sign in', language:'Language',
             eyebrow:'A LITTLE MORE LIFE FOR EVERY THING', title:'Good things.<br>Another round.', sub:'Swap what you have for what you love.', explore:'Explore the marketplace', how:'How it works',
-            feature1:'Pass it on.', desc1:'Give your unused things a new story.', feature2:'Find your match.', desc2:'Two people, or a circle of three.', feature3:'Meet on campus.', desc3:'Close by. Simple to exchange.', footer:'MADE FOR CAMPUS · MADE TO SHARE', langnote:'Language applies to this page.'
+            feature1:'Pass it on.', desc1:'Give your unused things a new story.', feature2:'Find your match.', desc2:'Two people, or a circle of three.', feature3:'Meet on campus.', desc3:'Close by. Simple to exchange.', footer:'MADE FOR CAMPUS | MADE TO SHARE', langnote:'Language applies to this page.'
         } : {
             menu:'展开菜单', close:'关闭菜单', home:'首页', market:'逛逛集市', publish:'发布闲置', account:'登录 / 注册', language:'语言',
             eyebrow:'让好物，继续发光', title:'好东西，<br>再转一圈。', sub:'你暂时不用的，正是别人想要的。', explore:'逛逛集市', how:'了解换物',
-            feature1:'闲置，出发。', desc1:'让好物开启下一段故事。', feature2:'换个可能。', desc2:'两人交换，或三人成环。', feature3:'就在校园。', desc3:'离得近，交换更简单。', footer:'校园换物 · 让分享发生', langnote:'语言切换适用于本页。'
+            feature1:'闲置，出发。', desc1:'让好物开启下一段故事。', feature2:'换个可能。', desc2:'两人交换，或三人成环。', feature3:'就在校园。', desc3:'离得近，交换更简单。', footer:'校园换物 | 让分享发生', langnote:'语言切换适用于本页。'
         };
         document.documentElement.lang = en ? 'en' : 'zh-CN';
         $('#app').innerHTML = '<div class="landing"><header class="land-header"><button class="land-menu-toggle" type="button" data-act="landing-menu" aria-expanded="false" aria-controls="landing-menu" aria-label="'+w.menu+'"><span></span><span></span></button><a class="land-brand" href="#/home"><span class="land-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8h16l-4-4M21 16H5l4 4"/></svg></span>换一圈<span class="land-brand-en">ROUND AGAIN</span></a><a class="land-header-link land-notices" href="#/notifications">'+(en?'Messages':'消息')+'<span class="notice-count" hidden></span></a><a class="land-header-link" href="#/market">'+w.market+' <span aria-hidden="true">↗</span></a></header>'
@@ -1405,20 +1549,21 @@
 
     var routes = [
         [/^#\/home$/, function () { return 'home'; }],
-        [/^#\/market$/, function () { return 'home'; }],
+        [/^#\/(?:market|search)$/, function () { return 'home'; }],
         [/^#\/auctions$/, function () { return 'auctions'; }],
         [/^#\/community$/, function () { return 'community'; }],
         [/^#\/notifications$/, function () { return 'notifications'; }],
         [/^#\/chats$/, function () { return 'chats'; }],
         [/^#\/chat\/(\d+)$/, function () { return 'chat'; }],
         [/^#\/ring\/(\d+)$/, function () { return 'ringChat'; }],
-        [/^#\/wishes$/, function () { return 'wishes'; }],
+        [/^#\/wishes(?:\/(\d+))?$/, function () { return 'wishes'; }],
         [/^#\/community\/game$/, function () { return 'communityGame'; }],
         [/^#\/auction\/new$/, function () { return 'auctionNew'; }],
         [/^#\/auction\/mine$/, function () { return 'auctionMine'; }],
         [/^#\/item\/(\d+)$/, function (m) { return 'item'; }],
         [/^#\/item\/(\d+)\/edit$/, function (m) { return 'itemEdit'; }],
-        [/^#\/publish$/, function () { return 'publish'; }],
+        [/^#\/publish$/, function () { return 'publishEntry'; }],
+        [/^#\/publish\/edit$/, function () { return 'publish'; }],
         [/^#\/offers$/, function () { return 'offers'; }],
         [/^#\/trade$/, function () { return 'offers'; }],
         [/^#\/cycle\/(\d+)$/, function (m) { return 'cycle'; }],
@@ -1426,6 +1571,8 @@
         [/^#\/exchange\/(\d+)$/, function (m) { return 'exchangeDetail'; }],
         [/^#\/user\/(\d+)$/, function () { return 'user'; }],
         [/^#\/me$/, function () { return 'me'; }],
+        [/^#\/(?:favorites|history)$/, function () { return 'shelf'; }],
+        [/^#\/email$/, function () { return 'email'; }],
         [/^#\/settings$/, function () { return 'settings'; }],
         [/^#\/admin$/, function () { return 'admin'; }],
         [/^#\/login$/, function () { return 'login'; }]
@@ -1449,6 +1596,7 @@
         currentView = view;
         setTimeout(refreshNoticeCount, 0);
 
+        if (view.name === 'shelf') { renderShelf();return; }
         if (view.name === 'landing') { renderLanding(); return; }
         if (view.name === 'login') {
             renderLogin(state.loginMode || 'login');
@@ -1469,10 +1617,11 @@
         }
 
         try {
-            if (view.name === 'settings') {
+            if (view.name === 'email') { await renderEmail(); } else if (view.name === 'settings') {
                 renderSettings();
             } else if (view.name === 'home') {
-                if(await loadHome(true)) renderHome();
+                if(location.hash==='#/search'&&!state.home.keyword){renderSearchPage('');}
+                else if(await loadHome(true))renderHome();
             } else if (view.name === 'auctions') {
                 await renderAuctions();
             } else if (view.name === 'auctionMine') {
@@ -1493,6 +1642,8 @@
                 await renderItem(view.arg);
             } else if (view.name === 'itemEdit') {
                 await renderItemEdit(view.arg);
+            } else if (view.name === 'publishEntry') {
+                renderPublishEntry();
             } else if (view.name === 'publish') {
                 renderPublish();
             } else if (view.name === 'offers') {
@@ -1530,6 +1681,55 @@
         if (!el) return;
         var act = el.dataset.act;
 
+        if(act==='skip-main'){ev.preventDefault();$('#main-content')?.focus();return;}
+        if(act==='search-clear-history'){
+            try{localStorage.removeItem('hq.searchHistory');}catch(e){}
+            renderSearchPage('');return;
+        }
+        if(act==='search-term'){
+            state.home.keyword=el.dataset.v;
+            rememberSearch(state.home.keyword);
+            if(await loadHome(true))renderHome();
+            return;
+        }
+        if(act==='profile-tab'){
+            var selected=el.dataset.v;
+            document.querySelectorAll('[data-profile-panel]').forEach(function(panel){panel.hidden=panel.dataset.profilePanel!==selected;});
+            document.querySelectorAll('[data-act="profile-tab"]').forEach(function(button){button.setAttribute('aria-pressed',String(button===el));});
+            return;
+        }
+        if(act==='profile-share'){
+            if(navigator.share){try{await navigator.share({title:'换一圈个人主页',url:location.href});return;}catch(e){if(e.name==='AbortError')return;}}
+            openSheet('<h3>分享个人主页</h3><label class="label" for="profile-link">主页链接</label><input class="input" id="profile-link" readonly value="'+esc(location.href)+'">');
+            $('#profile-link')?.select();
+            return;
+        }
+        if (act==='estimate') { openEstimate();return; }
+        if (act==='lost-found') {
+            sessionStorage.setItem('hq.communityDraft','【失物招领】物品：　地点：　时间：');
+            go('#/community');return;
+        }
+        if (act==='campus-search') {
+            state.home.keyword=el.dataset.v;
+            state.home.category='';
+            state.home.condition='';
+            if(await loadHome(true)){renderHome();document.querySelector('.market-feed')?.scrollIntoView();}
+            return;
+        }
+        if(act==='home-feed'){
+            ev.preventDefault();
+            document.querySelector('.market-feed')?.scrollIntoView({block:'start'});
+            return;
+        }
+        if(act==='shelf-toggle'){
+            var id=Number(el.dataset.id),items=shelfRead('favorites'),saved=items.some(function(x){return x.id===id;});
+            await withBusy(el,async function(){
+                var ok=saved?shelfWrite('favorites',items.filter(function(x){return x.id!==id;})):shelfRemember('favorites',(await api('/item/'+id)).item);
+                if(ok){el.setAttribute('aria-pressed',String(!saved));el.textContent=saved?'♡ 收藏物品':'♥ 已收藏';}
+            });return;
+        }
+        if(act==='shelf-remove'){var key=el.dataset.key;if(shelfWrite(key,shelfRead(key).filter(function(x){return x.id!==Number(el.dataset.id); })))renderShelf();return;}
+        if(act==='shelf-clear'){if(confirm('清空当前浏览器的浏览历史？')&&shelfWrite('history',[]))renderShelf();return;}
         if (act === 'theme-select') { applyTheme(el.dataset.theme, true); return; }
         if (act === 'theme-reset') { applyTheme(THEME_DEFAULT, true); return; }
         if (act === 'chat-start') { await withBusy(el,async function(){var t=await api('/conversation/start',{method:'POST',body:{itemId:Number(el.dataset.id)}});go('#/chat/'+t.id);});return; }
@@ -1552,7 +1752,7 @@
             openSheet('<h3>参与竞拍</h3><p class="sub">人民币出价，平台不提供支付。请遵守线下交易约定。</p><form data-form="auction-bid"><input type="hidden" name="id" value="' + esc(el.dataset.id) + '"><div class="field"><label class="label">出价（元）</label><input class="input" name="amount" type="number" min="0.01" step="0.01" required></div><button class="btn btn-primary btn-block" type="submit">确认出价</button></form>'); return;
         }
         if (act === 'review-listing') { await withBusy(el, async function(){ await api('/admin/'+el.dataset.kind+'/'+el.dataset.id+'/'+el.dataset.do,{method:'POST'}); toast(el.dataset.do==='approve'?'审核通过':'已驳回'); await renderAdmin(); }); return; }
-        if (act === 'auction-bids') { await withBusy(el, async function(){ var bids=await api('/auction/'+el.dataset.id+'/bids'); openSheet('<h3>选择报价结算</h3><p class="sub">可选择任意报价；确认后拍卖结束，双方线下交易。</p>'+(bids.length?bids.map(function(b){return '<div class="bid-row"><span>'+esc(b.bidder)+' · ¥'+esc(b.amount)+'</span><button class="btn btn-sm" data-act="auction-settle" data-id="'+el.dataset.id+'" data-bid="'+b.id+'">选择成交</button></div>';}).join(''):'<p>暂无报价</p>')); }); return; }
+        if (act === 'auction-bids') { await withBusy(el, async function(){ var bids=await api('/auction/'+el.dataset.id+'/bids'); openSheet('<h3>选择报价结算</h3><p class="sub">可选择任意报价；确认后拍卖结束，双方线下交易。</p>'+(bids.length?bids.map(function(b){return '<div class="bid-row"><span>'+esc(b.bidder)+' | ¥'+esc(b.amount)+'</span><button class="btn btn-sm" data-act="auction-settle" data-id="'+el.dataset.id+'" data-bid="'+b.id+'">选择成交</button></div>';}).join(''):'<p>暂无报价</p>')); }); return; }
         if (act === 'auction-settle') { if(!confirm('确认选择该报价成交？拍卖将结束，不能撤销。'))return; await withBusy(el,async function(){await api('/auction/'+el.dataset.id+'/settle',{method:'POST',body:{bidId:el.dataset.bid}});closeSheet();toast('已结算');await renderAuctions(true);});return; }
         if (act === 'auction-cancel') { if (!confirm('确定取消这场拍卖？已有出价将失效。')) return; await withBusy(el, async function () { await api('/admin/auctions/' + el.dataset.id + '/cancel', {method:'POST'}); toast('拍卖已取消'); await renderAdmin(); }); return; }
         if (act === 'mask-close') {
@@ -1598,7 +1798,7 @@
             });
             return;
         }
-        if (act === 'p-want') { var choices=state.publish.wantCategory ? state.publish.wantCategory.split(',') : []; var at=choices.indexOf(el.dataset.v); if(at>=0)choices.splice(at,1);else choices.push(el.dataset.v); state.publish.wantCategory=choices.join(',');markMultiWant(state.publish.wantCategory);return; }
+        if (act === 'p-want') { var choices=state.publish.wantCategory ? state.publish.wantCategory.split(',') : []; var at=choices.indexOf(el.dataset.v); if(at>=0)choices.splice(at,1);else choices.push(el.dataset.v); state.publish.wantCategory=choices.join(',');markMultiWant(state.publish.wantCategory);savePublishDraft(el.closest("form"));return; }
         if (act === 'p-cat' || act === 'p-cond') {
             var group = act === 'p-cat' ? 'category' : (act === 'p-cond' ? 'conditionLevel' : 'wantCategory');
             state.publish[group] = el.dataset.v;
@@ -1608,6 +1808,7 @@
             });
             var hidden = wrap.parentNode.querySelector('input[type=hidden]');
             if (hidden) hidden.value = el.dataset.v;
+            savePublishDraft(el.closest("form"));
             return;
         }
         if (act === 'cycle') {
@@ -1805,6 +2006,14 @@
             if (kind === 'auction-new') {
                 if (!state.publishImages.length) throw new ApiError('请上传拍品图片'); await api('/auction', {method:'POST', body:{title:fd.get('title'), description:fd.get('description'), amount:fd.get('amount'), hours:fd.get('hours'), image:state.publishImages.join(',')}}); toast('已提交审核'); go('#/auction/mine'); return;
             }
+            if (kind === 'estimate') {
+                var price=Number(fd.get('price')),range={new:[.70,.90],light:[.45,.70],used:[.20,.50]}[fd.get('condition')];
+                if(!Number.isFinite(price)||price<1||!range)throw new ApiError('请输入有效的入手价和成色');
+                $('#estimate-result').textContent='参考区间 ¥'+Math.round(price*range[0])+'–'+Math.round(price*range[1])+'，实际以双方协商为准。';
+                return;
+            }
+            if (kind === 'email-send') { await api('/user/email/send',{method:'POST',body:{email:fd.get('email')}});toast('验证码已发送，请查收');$('#verify-code')?.focus();return; }
+            if (kind === 'email-verify') { await api('/user/email/verify',{method:'POST',body:{code:fd.get('code')}});toast('邮箱认证成功');await renderEmail();return; }
             if (kind === 'auction-bid') {
                 await api('/auction/' + encodeURIComponent(fd.get('id')) + '/bid', {method:'POST', body:{amount:fd.get('amount')}}); closeSheet(); toast('出价成功'); await renderAuctions(); return;
             }
@@ -1899,7 +2108,8 @@
                 toast(rr.msg || '已提交', 'ok');
             } else if (kind === 'search') {
                 state.home.keyword = (fd.get('keyword') || '').trim();
-                if (currentView.name !== 'home') { go('#/market'); } else { if(await loadHome(true)) renderHome(); }
+                rememberSearch(state.home.keyword);
+                if(location.hash!=='#/search'){go('#/search');}else if(await loadHome(true)){renderHome();}
             }
         };
 
@@ -1965,6 +2175,7 @@
                     var r = await api('/upload', {method: 'POST', form: form});
                     state.publishImages.push(r.url);
                     renderImagePreview();
+                    savePublishDraft(document.querySelector('form[data-form=publish]'));
                 } catch (e) {
                     toast(e.message || '上传失败', 'err');
                 }
@@ -1983,7 +2194,7 @@
         }).join('');
         var add = state.publishImages.length < 3
             ? '<label class="thumb-add">＋<input type="file" accept="image/png,image/jpeg" multiple '
-              + 'data-act="pick-image" hidden></label>'
+              + 'data-act="pick-image" aria-label="添加物品图片" hidden></label>'
             : '';
         wrap.innerHTML = thumbs + add;
     }
@@ -1993,8 +2204,21 @@
         if (!el) return;
         state.publishImages.splice(Number(el.dataset.i), 1);
         renderImagePreview();
+        savePublishDraft(document.querySelector('form[data-form=publish]'));
     });
 
+    document.addEventListener('error',function(ev){
+        var img=ev.target;
+        if(img.tagName!=='IMG'||!img.parentElement?.matches('.pcard .pimg'))return;
+        img.outerHTML=CAT_ICON[img.parentElement.dataset.cat]||CAT_ICON['其他'];
+    },true);
+    document.addEventListener('input', function (ev) {
+        if(ev.target.form?.dataset.form==='publish')savePublishDraft(ev.target.form);
+        if(ev.target.id==='message-filter'){
+            var query=ev.target.value.trim().toLowerCase();
+            document.querySelectorAll('.messages-page .conversation-row').forEach(function(row){row.hidden=!row.textContent.toLowerCase().includes(query);});
+        }
+    });
     document.addEventListener('input', function (ev) { if (ev.target.id === 'theme-color') applyTheme(ev.target.value, true); });
 
     // ------------------------------------------------------------------ 启动
