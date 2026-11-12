@@ -154,4 +154,6 @@
 <servlet-mapping><servlet-name>conversationServlet</servlet-name><url-pattern>/api/conversation/*</url-pattern></servlet-mapping>
 <servlet><servlet-name>wishServlet</servlet-name><servlet-class>com.huanyiquan.servlet.WishServlet</servlet-class></servlet>
 <servlet-mapping><servlet-name>wishServlet</servlet-name><url-pattern>/api/wish/*</url-pattern></servlet-mapping>
+  <servlet><servlet-name>socialServlet</servlet-name><servlet-class>com.huanyiquan.servlet.SocialServlet</servlet-class></servlet>
+  <servlet-mapping><servlet-name>socialServlet</servlet-name><url-pattern>/api/social/*</url-pattern></servlet-mapping>
 </web-app>

@@ -1,0 +1,21 @@
+PASS fresh MySQL + Java; two browser accounts registered and logged in
+PASS existing original 908644 bytes, thumbnail 82039 bytes
+PASS invalid upload rejected, PNG uploaded, items published then approved
+PASS browser search/detail and offer picker; offer submitted and notification received
+PASS opening chat clears its stored notification and list red badge
+PASS camera file input, oversized photo converted and sent; no false receipt
+PASS real desktop-to-mobile and mobile-to-desktop chat
+PASS offer accepted, place saved, desktop and mobile each confirm receipt, exchange completed
+PASS mobile review submitted and visible from desktop account; duplicate receipt and review rejected
+PASS three-way matching, ring chat, three confirmations and three receipts
+PASS admin authorization, user search/suspend/restore, logs, exchanges and report status filters
+PASS auction submission, approval, bid validation and settlement
+PASS wish publish/list/close and community publish/read
+PASS report submission, moderation, item removal and read-all notifications
+PROBE /api/user/settings HTTP 200, code 400
+PROBE /api/social/favorite/check?itemId=1 HTTP 500, code non-JSON
+PROBE /api/social/follow HTTP 500, code non-JSON
+PROBE /api/item/deals HTTP 200, code 400
+PROBE /api/notification/summary HTTP 200, code 404
+PROBE /api/user/email HTTP 200, code 0
+PASS game entry asset responds

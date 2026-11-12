@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id BIGINT PRIMARY KEY,
+  settings_json JSON NOT NULL
+);
+CREATE TABLE IF NOT EXISTS social_favorite (
+  user_id BIGINT NOT NULL, item_id BIGINT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, item_id)
+);
+CREATE TABLE IF NOT EXISTS social_history (
+  user_id BIGINT NOT NULL, item_id BIGINT NOT NULL,
+  viewed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, item_id)
+);
+CREATE TABLE IF NOT EXISTS social_follow (
+  user_id BIGINT NOT NULL, target_id BIGINT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, target_id)
+);
+CREATE TABLE IF NOT EXISTS social_refresh (
+  user_id BIGINT NOT NULL, item_id BIGINT NOT NULL, refreshed_on DATE NOT NULL,
+  PRIMARY KEY (user_id, item_id)
+);

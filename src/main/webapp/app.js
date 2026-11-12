@@ -9,30 +9,52 @@
 
     var CATS = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
     var CONDS = ['全新', '九成新', '七成新', '有使用痕迹'];
-    // IconPark SVG subset (Apache-2.0). See assets/licenses/iconpark.txt.
+    // Shared desktop icon artwork, using the mascot palette.
+    var mint = 'var(--desktop-icon-mint)';
+    var gold = 'var(--desktop-icon-gold)';
+    var pink = 'var(--desktop-icon-pink)';
+    var paper = 'var(--desktop-icon-paper)';
+    var path = (d, fill = 'none') => `<path d="${d}" fill="${fill}"/>`;
+    var circle = (x, y, r, fill = 'none') => `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`;
+    var rect = (x, y, w, h, r, fill = 'none') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}"/>`;
     var ICONS = {
-    "market": "<path d=\"M9 18V42H39V18L24 6L9 18Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M19 29V42H29V29H19Z\" fill=\"var(--icon-detail, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M9 42H39\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>",
-    "community": "<path d=\"M33 38H22V30H36V22H44V38H39L36 41L33 38Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M4 6H36V30H17L13 34L9 30H4V6Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M12 22H18\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>\n<path d=\"M12 14H24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>",
-    "trade": "<path d=\"M24 16H29V4L44 19L29 34V24H18V13L4 28L18 44V32H23\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "me": "<circle cx=\"24\" cy=\"12\" r=\"8\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M42 44C42 34.0589 33.9411 26 24 26C14.0589 26 6 34.0589 6 44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "notice": "<path d=\"M24 4C16.268 4 10 10.268 10 18V38H38V18C38 10.268 31.732 4 24 4Z\" fill=\"var(--icon-fill, var(--theme-soft))\"/>\n<path d=\"M10 38V18C10 10.268 16.268 4 24 4C31.732 4 38 10.268 38 18V38M4 38H44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 44C26.7614 44 29 41.7614 29 39V38H19V39C19 41.7614 21.2386 44 24 44Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "search": "<path d=\"M21 38C30.3888 38 38 30.3888 38 21C38 11.6112 30.3888 4 21 4C11.6112 4 4 11.6112 4 21C4 30.3888 11.6112 38 21 38Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M26.657 14.3431C25.2093 12.8954 23.2093 12 21.0001 12C18.791 12 16.791 12.8954 15.3433 14.3431\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M33.2216 33.2217L41.7069 41.707\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "heart": "<path d=\"M15 8C8.92487 8 4 12.9249 4 19C4 30 17 40 24 42.3262C31 40 44 30 44 19C44 12.9249 39.0751 8 33 8C29.2797 8 25.9907 9.8469 24 12.6738C22.0093 9.8469 18.7203 8 15 8Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "settings": "<path d=\"M34.0003 41L44 24L34.0003 7H14.0002L4 24L14.0002 41H34.0003Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z\" fill=\"var(--icon-detail, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
-    "book": "<path d=\"M5 7H16C20.4183 7 24 10.5817 24 15V42C24 38.6863 21.3137 36 18 36H5V7Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M43 7H32C27.5817 7 24 10.5817 24 15V42C24 38.6863 26.6863 36 30 36H43V7Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
-    "device": "<rect x=\"8\" y=\"8\" width=\"32\" height=\"20\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8 28L4 41H44L40 28\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M19.9 35H28.1L30 41H18L19.9 35Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "sports": "<path d=\"M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8.5459 11.2727C12.7883 14.9091 14.9095 19.1515 14.9095 24C14.9095 28.8485 12.7883 33.0909 8.5459 36.7272\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M39.4545 36.7272C35.212 33.0909 33.0908 28.8485 33.0908 24C33.0908 19.1515 35.212 14.9091 39.4545 11.2727\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M4 24H44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 4V44\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "life": "<path d=\"M5 17H43L38.8 43H9.2L5 17Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M35 17C35 10.3726 30.0751 5 24 5C17.9249 5 13 10.3726 13 17\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<circle cx=\"17\" cy=\"26\" r=\"2\" fill=\"currentColor\"/>\n<path d=\"M18 33C18 33 20 36 24 36C28 36 30 33 30 33\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<circle cx=\"31\" cy=\"26\" r=\"2\" fill=\"currentColor\"/>",
-    "clothes": "<path d=\"M9 9L18 4H30L39 9L43 24L35 30V44H13V30L5 24L9 9Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M13 31L13 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M35 31L35 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "plant": "<path d=\"M37 24C37 38.0938 24 44 24 44C24 44 11 39.375 11 24C11 8.625 24 4 24 4C24 4 37 9.90625 37 24Z\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 36L29 31\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 29L19 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 23L29 18\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M24 44V14\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "box": "<rect x=\"6\" y=\"12\" width=\"36\" height=\"30\" rx=\"2\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M17.9497 24.0083L29.9497 24.0083\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M6 13L13 5H35L42 13\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "add": "<rect x=\"6\" y=\"6\" width=\"36\" height=\"36\" rx=\"3\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M24 16V32\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M16 24L32 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "auction": "<path d=\"M11.0745 37.0792C7.68854 38.5409 6.03602 40.5241 5.36485 41.9094C5.09915 42.4578 5.54601 43 6.15537 43H27.3865C28.1288 43 28.5986 42.2236 28.1659 41.6205C26.4167 39.182 23.7818 37.6426 22.3887 37.0682C22.2756 37.0216 22.1547 37 22.0323 37H11.4615C11.3291 37 11.1962 37.0267 11.0745 37.0792Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<rect x=\"14.7319\" y=\"18.8564\" width=\"10\" height=\"10\" transform=\"rotate(-60 14.7319 18.8564)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<path d=\"M27.3921 16.9277L28.3921 15.1957C27.4355 14.6434 26.2123 14.9711 25.66 15.9277L27.3921 16.9277ZM24.3921 22.1239L22.66 21.1239C22.1078 22.0805 22.4355 23.3037 23.3921 23.8559L24.3921 22.1239ZM26.3921 18.6598L39.3825 26.1598L41.3825 22.6957L28.3921 15.1957L26.3921 18.6598ZM38.3825 27.8918L25.3921 20.3918L23.3921 23.8559L36.3825 31.3559L38.3825 27.8918ZM26.1241 23.1239L29.1241 17.9277L25.66 15.9277L22.66 21.1239L26.1241 23.1239ZM39.7485 27.5258C39.4724 28.0041 38.8608 28.168 38.3825 27.8918L36.3825 31.3559C38.7739 32.7366 41.8319 31.9173 43.2126 29.5258L39.7485 27.5258ZM39.3825 26.1598C39.8608 26.4359 40.0246 27.0475 39.7485 27.5258L43.2126 29.5258C44.5933 27.1343 43.7739 24.0764 41.3825 22.6957L39.3825 26.1598Z\" fill=\"currentColor\"/>\n<rect x=\"21\" y=\"4\" width=\"14\" height=\"6\" rx=\"3\" transform=\"rotate(30 21 4)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>\n<rect x=\"13\" y=\"17.8564\" width=\"14\" height=\"6\" rx=\"3\" transform=\"rotate(30 13 17.8564)\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
-    "wish": "<path d=\"M21.4172 18.5828C19.3962 19.5481 18 21.6109 18 23.9999C18 27.3136 20.6863 29.9999 24 29.9999C26.389 29.9999 28.4519 28.6037 29.4172 26.5828\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M28.2793 11.7207C26.9392 11.2538 25.4992 11 24 11C16.8203 11 11 16.8203 11 24C11 31.1797 16.8203 37 24 37C31.1797 37 37 31.1797 37 24C37 22.5008 36.7462 21.0608 36.2793 19.7207\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M33.5675 6.43255C30.7255 4.88151 27.4657 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 20.5343 43.1185 17.2745 41.5675 14.4325\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M44 4L24 24\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "filter": "<path d=\"M6 9L20.4 25.8178V38.4444L27.6 42V25.8178L42 9H6Z\" fill=\"var(--icon-fill, var(--theme-soft))\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linejoin=\"round\"/>",
-    "next": "<path d=\"M19 12L31 24L19 36\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-    "close": "<path d=\"M8 8L40 40\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M8 40L40 8\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
-};
+        market: path('M4 10 12 4l8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z', mint) + path('M9 20v-6h6v6', gold),
+        community: path('M10 15h5l4 3v-4a4 4 0 0 0 2-3.5V9', paper)
+            + path('M3 7a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H8l-4 3v-3a3 3 0 0 1-1-2Z', mint)
+            + path('M7 9h7'),
+        trade: path('M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4'),
+        me: circle(12, 7.5, 3.5, gold) + path('M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1Z', mint),
+        notice: path('M5 16h14l-2-3V9a5 5 0 0 0-10 0v4Z', mint) + path('M10 19a2 2 0 0 0 4 0', gold),
+        search: circle(10.5, 10.5, 5.8, mint) + path('m15 15 4.7 4.7'),
+        heart: path('M12 20S4 15.3 4 9.8a4.2 4.2 0 0 1 8-1.7 4.2 4.2 0 0 1 8 1.7C20 15.3 12 20 12 20Z', pink),
+        settings: path('m10 3-.8 2.4-2 .9-2.4-.5-2 3.4L4.5 11v2l-1.7 1.8 2 3.4 2.4-.5 2 .9L10 21h4l.8-2.4 2-.9 2.4.5 2-3.4-1.7-1.8v-2l1.7-1.8-2-3.4-2.4.5-2-.9L14 3Z', mint)
+            + circle(12, 12, 2.8, gold),
+        book: rect(5, 3.5, 14, 17, 2, mint) + path('M5 17.5h14M13 4v7l2-1.5 2 1.5V4', gold),
+        device: rect(5, 4.5, 14, 10, 2, mint) + path('m5 14.5-2 4.2c-.2.6.2 1.3 1 1.3h16c.8 0 1.2-.7 1-1.3l-2-4.2Z', paper) + path('M10 17h4'),
+        sports: circle(12, 12, 8, gold) + path('M4 12h16M12 4v16M6 7c4 2 4 8 0 10m12-10c-4 2-4 8 0 10'),
+        life: path('M5 8h14l1 12H4Z', mint) + path('M8 9V7a4 4 0 0 1 8 0v2') + circle(12, 14, 1.8, gold),
+        clothes: path('m8 4-5 3-1 5 4 2 2-2v8h8v-8l2 2 4-2-1-5-5-3a4 4 0 0 1-8 0Z', pink),
+        plant: path('M12 14c-5 0-7-4-7-8 5 0 7 4 7 8Zm0 0c0-6 3-10 7-10 0 6-3 10-7 10Z', mint) + path('M7 15h10l-1 5H8Z', gold),
+        box: path('m4 8 8-4 8 4v9l-8 4-8-4Z', mint) + path('m4 8 8 4 8-4m-8 4v9m-4-11 8-4'),
+        add: rect(4, 4, 16, 16, 4, mint) + path('M12 8v8m-4-4h8'),
+        auction: path('m8 13-4 5m0 2h10m-2-9 7 5') + path('m8 4 7 5-3 4-7-5Z', gold),
+        wish: path('M4 7h16v12H4Z', mint) + path('m4 7 8 6 8-6') + circle(17.5, 5.5, 2.4, gold),
+        filter: path('M4 6h16M4 12h16M4 18h16') + circle(9, 6, 2, mint) + circle(15, 12, 2, mint) + circle(8, 18, 2, mint),
+        camera: path('M4 8h4l1.5-2h5L16 8h4v11H4Z', mint) + circle(12, 13.5, 3, paper),
+        back: path('M19 12H5m5-5-5 5 5 5'),
+        next: path('m9 6 6 6-6 6'),
+        close: path('m6 6 12 12M18 6 6 18'),
+        door: path('M5 20V5h11v15', paper) + path('m6 5 8 2v13l-8-1Z', mint) + circle(11, 13, .7, gold) + path('M3 20h18'),
+        appraise: circle(10.2, 10.2, 6.5, mint) + path('m15 15 4.5 4.5') + path('m8 8 4-1 2 2-4 4-2-2Z', gold),
+        grad: path('m2.5 9 9.5-4 9.5 4-9.5 4Z', mint) + path('M6 11v5a9 9 0 0 0 12 0v-5m3.5-2v6') + circle(21.5, 16.7, .9, gold),
+        lost: circle(8, 8, 4, gold) + path('m11 11 8 8m-3-3 2-2m-4 0 2-2') + circle(8, 8, 1, paper),
+        star: path('m12 3 2.7 5.7 6.3.9-4.5 4.5 1 6.4-5.5-3-5.5 3 1-6.4L3 9.6l6.3-.9Z', gold),
+        flag: path('M5 21V4m0 1h13l-2.5 4L18 13H5', pink),
+        arrow: path('M5 12h14m-5-5 5 5-5 5'),
+        down: path('M12 5v14m-5-5 5 5 5-5'),
+        external: path('M6 18 18 6m-8 0h8v8'),
+        menu: path('M4 8h16M4 16h16')
+    };
     var CAT_ICON = {教材:navIcon('book'),数码:navIcon('device'),运动:navIcon('sports'),
         生活:navIcon('life'),衣物:navIcon('clothes'),绿植:navIcon('plant'),其他:navIcon('box')};
 
@@ -52,7 +74,7 @@
         publishImages: [],
         offersTab: 'received',
         meFilter: 'all',
-        adminTab: 'items'
+        adminTab: 'dashboard', adminUserQuery: '', adminReportStatus: 0
     };
 
     // ------------------------------------------------------------------ 工具
@@ -147,7 +169,7 @@
         var img = firstImage(it.images);
         var inner = img
             ? '<img src="' + esc(img) + '" alt="' + esc(it.title) + '">'
-            : (CAT_ICON[it.category] || '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10"/></svg>');
+            : (CAT_ICON[it.category] || navIcon('box'));
         return '<div class="' + (cls || 'thumb') + '" data-cat="' + esc(it.category) + '">' + inner + '</div>';
     }
 
@@ -232,7 +254,7 @@
 
     async function api(path, opt) {
         opt = opt || {};
-        var init = {method: opt.method || 'GET', credentials: 'include', headers: {}};
+        var init = {method: opt.method || 'GET', credentials: 'include', headers: {}, signal: opt.signal};
         if (opt.form) {
             init.body = opt.form;
         } else if (opt.body !== undefined) {
@@ -248,6 +270,7 @@
         try {
             res = await fetch(BASE + '/api' + path, init);
         } catch (e) {
+            if (e.name === 'AbortError') throw e;
             throw new ApiError('连不上服务器，确认后端已经在 8080 端口启动', 0);
         }
         var issued = res.headers.get('X-Token');
@@ -322,20 +345,26 @@
     // ------------------------------------------------------------------ 骨架
 
     function navIcon(name) {
-        return '<svg class="nav-icon line-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">'+ICONS[name]+'</svg>';
+        return '<svg class="nav-icon line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+ICONS[name]+'</svg>';
     }
     function tabbar(active) {
         if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        function t(key,icon,label){return '<button class="tab '+(active===key?'on':'')+'" data-act="go" data-to="#/'+key+'"><span class="ico">'+navIcon(icon)+(key==='notifications'?'<span class="notice-count" hidden></span>':'')+'</span><span>'+label+'</span></button>';}
+        function t(key,icon,label){
+            var selected=active===key;
+            return '<button class="tab '+(selected?'on':'')+'"'+(selected?' aria-current="page"':'')+' data-act="go" data-to="#/'+key+'"><span class="ico">'+navIcon(icon)+(key==='notifications'?'<span class="notice-count" hidden></span>':'')+'</span><span>'+label+'</span></button>';
+        }
         return '<nav class="tabbar" aria-label="主导航">'+t('market','market','首页')+t('community','community','社区')
-            +'<button class="tab tab-fab" data-act="go" data-to="#/publish"><span class="fab">'+navIcon('add')+'</span><span>发布</span></button>'
+            +'<button class="tab tab-fab'+(active==='publish'?' on':'')+'"'+(active==='publish'?' aria-current="page"':'')+' data-act="go" data-to="#/publish"><span class="fab">'+navIcon('add')+'</span><span>发布</span></button>'
             +t('notifications','notice','消息')+t('me','me','我的')+'</nav>';
     }
     function topnav(active) {
         if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        var items=[['market','首页'],['community','社区'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
-        var html=items.map(function(i){return '<a href="#/'+i[0]+'" class="'+(active===i[0]?'on':'')+'">'+i[1]+'</a>';}).join('');
-        if(state.me&&state.me.role===1)html+='<a href="#/admin">管理后台</a>';
+        var items=[['market','首页'],['community','社区'],['relay','换物接力'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
+        if (state.me && state.me.role === 1) items.push(['admin','管理后台']);
+        var html = items.map(function (item) {
+            var selected = active === item[0];
+            return '<a href="#/' + item[0] + '"' + (selected ? ' class="on" aria-current="page"' : '') + '>' + item[1] + '</a>';
+        }).join('');
         return '<nav class="topnav" aria-label="网站导航">'+html+'</nav>';
     }
     function logoMarkup() {
@@ -347,7 +376,7 @@
         var search='<form class="header-search" data-form="search"><a class="desktop-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索闲置" placeholder="搜索校园里的好物" value="'+esc(state.home.keyword)+'"><button type="submit">搜索</button></form>';
         return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
             +'<header class="appbar"><div class="appbar-inner"><a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-name">换一圈<small>校园闲置 让好物流转</small></span></a>'
-            +search+'<div class="header-actions"><a class="settings-link shelf-link" href="#/favorites" aria-label="收藏与历史" title="收藏与历史">'+navIcon('heart')+'</a><a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">＋ 发布闲置</a></div></header>'
+            +search+'<div class="header-actions"><a class="settings-link shelf-link" href="#/favorites" aria-label="收藏与历史" title="收藏与历史">'+navIcon('heart')+'</a><a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">'+navIcon('add')+' 发布闲置</a></div></header>'
             +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
     }
     function tradeTabs(active){return '<div class="trade-top"><div><h1>我的交易</h1><p>报价和交换进度，都在这里。</p></div></div><nav class="trade-sections" aria-label="交易分类"><a class="'+(active==='offers'?'on':'')+'" href="#/offers">报价</a><a class="'+(active==='exchange'?'on':'')+'" href="#/exchange">交换单</a></nav>';}
@@ -371,12 +400,16 @@
     // ------------------------------------------------------------------ 组件
 
     // 两列商品卡：图片占满上半，标题两行，底部左侧信用分（红色强调）
+    function demoReferencePrice(item) {
+        return item.isDemo && Number(item.price) > 0 ? '参考价 ¥' + (Number(item.price) / 100).toFixed(2) : '';
+    }
+
     function pCard(it) {
         var locked=it.status&&it.status!==1, img=firstImage(it.images);
-        var face=img?'<img src="'+esc(img)+'" alt="'+esc(it.title)+'" width="300" height="225" loading="lazy">':(CAT_ICON[it.category]||CAT_ICON['其他']);
+        var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="225" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
         return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
             +'<span class="pbadge">'+esc(it.isDemo?'示例展示':(locked?(it.statusText||'已换出'):it.conditionLevel))+'</span></div>'
-            +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p><div class="pcard-bottom"><span class="swap-label">'+(it.isDemo?'仅供参考':'以物换物')+'</span><span class="pcard-category">'+esc(it.category)+'</span></div>'
+            +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p><div class="pcard-bottom"><span class="swap-label">'+(it.isDemo?(demoReferencePrice(it)||'仅供参考'):'以物换物')+'</span><span class="pcard-category">'+esc(it.category)+'</span></div>'
             +'<div class="pcard-owner"><span class="pcard-owner-avatar">'+esc((it.ownerNickname||'同').slice(0,1))+'</span><span>'+esc(it.ownerNickname||'校园同学')+'</span><span class="pcard-credit">信用 '+(it.ownerCredit===undefined?'-':it.ownerCredit)+'</span></div></div></button>';
     }
 
@@ -395,22 +428,19 @@
         return '<span class="credit ' + creditCls(u.credit) + '">信用 <b class="num">' + v + '</b></span>';
     }
 
-    function stepsHtml(status) {
-        var map = [
-            ['待确认', status === 1],
-            ['待交付', status === 2],
-            ['已完成', status === 3]
-        ];
+    function stepsHtml(exchange) {
+        var status = exchange.status;
+        var firstStep = window.exchangeNeedsConfirmation(exchange) ? 1 : 2;
+        var labels = ['待确认', '待交付', '已完成'];
         if (status >= 4) {
             return '<div class="steps"><div class="step" style="flex:1">'
                 + '<span style="color:var(--danger-600);font-weight:600">'
                 + (status === 4 ? '已失效' : '已超时关闭') + '</span></div></div>';
         }
-        var now = status === 1 ? 0 : (status === 2 ? 1 : 2);
-        var html = '<div class="steps">';
-        for (var i = 0; i < map.length; i++) {
-            var cls = i < now ? 'done' : (i === now ? 'now' : '');
-            html += '<div class="step ' + cls + '">' + map[i][0] + '</div>';
+        var html = '<div class="steps" aria-label="交换进度">';
+        for (var step = firstStep; step <= labels.length; step++) {
+            var cls = step < status ? 'done' : (step === status ? 'now' : '');
+            html += '<div class="step ' + cls + '"' + (step === status ? ' aria-current="step"' : '') + '>' + labels[step - 1] + '</div>';
         }
         return html + '</div>';
     }
@@ -485,22 +515,23 @@
 
     // ------------------------------------------------------------------ 集市
 
-    function campusServices() {
+    function campusServices(useClay) {
         var services = [
-            ['27','校内上门','campus-search','校内可送'],
-            ['28','以物换物','home-feed',''],
-            ['29','好物估价','estimate',''],
-            ['30','教材专区','f-cat','教材'],
-            ['31','毕业季专场','campus-search','毕业季闲置'],
-            ['32','失物招领','lost-found','']
+            ['door','校内配送','campus-search','校内可送','按关键词搜索'],
+            ['trade','以物换物','home-feed',''],
+            ['appraise','好物估价','estimate',''],
+            ['book','教材专区','f-cat','教材'],
+            ['grad','毕业季闲置','campus-search','毕业','按关键词搜索'],
+            ['lost','失物招领','lost-found','','去社区发帖']
         ];
-        return '<nav class="campus-services" aria-label="校园服务">'+services.map(function(service) {
-            return '<button type="button" data-act="'+service[2]+'" data-v="'+service[3]+'"><img src="/assets/brand/service-'+service[0]+'.png" width="52" height="52" alt=""><span>'+service[1]+'</span></button>';
+        return '<nav class="campus-services" aria-label="校园服务">'+services.map(function(service, index) {
+            var icon=useClay?'<img src="/assets/brand/service-'+(27+index)+'.png" width="38" height="38" alt="">':navIcon(service[0]);
+            return '<button type="button" data-act="'+service[2]+'" data-v="'+service[3]+'"><span class="campus-service-icon">'+icon+'</span><span>'+service[1]+'</span>'+(service[4]?'<small>'+service[4]+'</small>':'')+'</button>';
         }).join('')+'</nav>';
     }
 
     function openEstimate() {
-        openSheet('<h3>好物估价</h3><p class="sub">根据入手价和成色计算参考区间。</p><form data-form="estimate"><label class="label" for="estimate-price">入手价（元）</label><input class="input" id="estimate-price" name="price" type="number" min="1" max="100000" required><label class="label" for="estimate-condition">成色</label><select id="estimate-condition" class="select" name="condition"><option value="new">全新</option><option value="light">轻微使用</option><option value="used">有使用痕迹</option></select><button class="btn btn-primary" type="submit">计算参考区间</button><p class="hint" id="estimate-result" role="status"></p></form>');
+        openSheet('<h3>好物估价</h3><p class="sub">根据入手价和成色计算参考区间。</p><form class="estimate-form" data-form="estimate"><label class="label" for="estimate-price">入手价（元）</label><input class="input" id="estimate-price" name="price" type="number" min="1" max="100000" required><label class="label" for="estimate-condition">成色</label><select id="estimate-condition" class="select" name="condition"><option value="new">全新</option><option value="light">轻微使用</option><option value="used">有使用痕迹</option></select><button class="btn btn-primary" type="submit">计算参考区间</button><p class="hint" id="estimate-result" role="status"></p></form>');
     }
 
     function searchHistory() {
@@ -521,7 +552,7 @@
         }).join('');
         var form='<form class="mobile-search search-page-form" data-form="search"><span class="mobile-search-icon">'+navIcon('search')+'</span><input name="keyword" type="search" aria-label="搜索校园闲置" placeholder="搜索校园闲置" value="'+esc(term)+'"><button type="submit">搜索</button></form>';
         var landing='<section class="search-suggestions"><div class="redesign-heading"><h2>'+(history.length?'搜索历史':'试试这些关键词')+'</h2>'+(history.length?'<button class="link-btn" data-act="search-clear-history">清空历史</button>':'')+'</div><div class="search-terms">'+suggestions+'</div></section>';
-        $('#app').innerHTML=shell('market','<section class="redesign-page search-page"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">←</a><h1>搜索闲置</h1>'+(term?'<button class="link-btn" data-act="search-term" data-v="">清除关键词</button>':'')+'</header>'+form+(term?results:landing)+'</section>');
+        $('#app').innerHTML=shell('market','<section class="redesign-page search-page"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">'+navIcon('back')+'</a><h1>搜索闲置</h1>'+(term?'<button class="link-btn" data-act="search-term" data-v="">清除关键词</button>':'')+'</header>'+form+(term?results:landing)+'</section>');
     }
 
     function renderHome() {
@@ -530,16 +561,22 @@
         var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span>'+esc(c[1])+'</span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
         var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
         var mobileSearch='<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
-        var signed=!!readToken();
-        var mascotImage='<img src="/assets/brand/mascot-wave-v2.png" width="1280" height="1280" alt="挥手的换一圈吉祥物猫猫" fetchpriority="high">';
-        var desktop='<section class="desktop-market"><div class="desktop-market-layout"><aside class="category-panel"><div class="category-panel-title">逛分类 <small>发现校园好物</small></div>'+desktopCats+'</aside><div class="desktop-center"><div class="market-hero mascot-hero"><div class="mascot-copy"><h1>好东西，再转一圈。</h1><p>闲置不闲着，校园里总有人需要。</p><div class="hero-actions"><button data-act="go" data-to="#/publish">发布我的闲置 <span>↗</span></button><button class="hero-secondary" data-act="go" data-to="#/community">去社区逛逛</button></div></div><figure class="mascot-portrait">'+mascotImage+'<figcaption><span></span>换一圈 | 校园伙伴</figcaption></figure></div>'+campusServices()+'<div class="market-shortcuts"><button data-act="go" data-to="#/wishes"><b>想换什么？</b><span>去愿望池看看 →</span></button><button data-act="go" data-to="#/community"><b>校园社区</b><span>和同学聊聊 →</span></button><button data-act="go" data-to="#/trade"><b>换物进度</b><span>查看我的交易 →</span></button></div></div><aside class="market-account"><div class="account-avatar">'+(state.me?esc(state.me.nickname.slice(0,1)):'换')+'</div><h2>'+(signed?'欢迎回来':'你好，校园同学')+'</h2><p>让喜欢的东西继续发光</p><button class="account-main" data-act="go" data-to="'+(signed?'#/me':'#/login')+'">'+(signed?'进入个人中心':'登录 / 注册')+'</button><div class="account-links"><button data-act="go" data-to="#/trade"><b>交易</b><span>我的报价</span></button><button data-act="go" data-to="#/notifications"><b>消息</b><span>最新提醒</span></button></div><div class="account-tip"><b>安心换物小贴士</b><span>选择校园公共地点面交</span></div></aside></div></section>';
+        var mascotImage='<img src="/assets/brand/mascot-wave-320.webp" width="320" height="320" alt="挥手的换一圈吉祥物猫猫" decoding="async">';
+        var shortcuts=[['#/offers','trade','我的报价'],['#/exchange','trade','我的交换'],['#/favorites','heart','收藏与历史']].map(function(link){
+            return '<a class="desk-category" href="'+link[0]+'"><span class="desk-category-icon">'+navIcon(link[1])+'</span>'+link[2]+'</a>';
+        }).join('');
+        var desktop='<aside class="category-panel desktop-market" aria-label="集市侧栏"><h2 class="category-panel-title">逛分类</h2>'+desktopCats
+            +'<nav class="desktop-market-shortcuts" aria-label="快捷入口"><h2 class="category-panel-title">快捷入口</h2>'+shortcuts+'</nav></aside>'
+            +'<section class="desktop-market desktop-center"><div class="market-hero mascot-hero"><div class="mascot-copy"><h1>好东西，再转一圈。</h1><p>闲置不闲着，校园里总有人需要。</p></div><figure class="mascot-portrait">'+mascotImage+'</figure></div>'+campusServices(true)+'</section>';
         var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈校园伙伴"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b><small>查看竞拍</small></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b><small>找想要的</small></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b><small>聊聊近况</small></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b><small>换物进度</small></button></div></section>';
-        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(h.keyword?'为你找到':'发现好物')+'</h2><p>'+(h.keyword?'“'+esc(h.keyword)+'” 的搜索结果':'校内同学发布的闲置')+'</p></div><div class="feed-actions"><span class="feed-count">'+(h.keyword?'匹配 ':'在架 ')+h.total+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">＋ 发布</button></div></div>'
-            +(h.condition?'<div class="active-filter"><button class="chip on" data-act="f-cond" data-v="">成色：'+esc(h.condition)+' ×</button></div>':'')
-            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(navIcon('search'),'暂时没有找到好物','换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
+        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(h.keyword?'为你找到':'发现好物')+'</h2><p>'+(h.keyword?'“'+esc(h.keyword)+'” 的搜索结果':'校内同学发布的闲置')+'</p></div><div class="feed-actions"><span class="feed-count">'+(h.keyword?'匹配 ':'在架 ')+h.total+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
+            +((h.category||h.condition)?'<div class="active-filter'+(h.condition?'':' category-only')+'" aria-label="已选筛选">'
+                +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
+                +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')+'</div>':'')
+            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(location.hash==='#/search'?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物','换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
         if(location.hash==='#/search'){renderSearchPage(results);return;}
-        $('#app').innerHTML=shell('market',desktop+mobile+results+'<footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 | 理性交流 | 安心面交</span></footer>');
+        $('#app').innerHTML=shell('market','<div class="market-home">'+desktop+mobile+results+'</div><footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 | 理性交流 | 安心面交</span></footer>');
     }
 
     function openFilterSheet() {
@@ -561,19 +598,44 @@
     }
 
     var homeLoadToken = 0;
+    var homeRequest;
     async function loadHome(reset) {
         var token=++homeLoadToken;
+        if (homeRequest) homeRequest.abort();
+        homeRequest = new AbortController();
+        var options = {signal: homeRequest.signal};
         var h = state.home;
         if (reset) {
             h.page = 1;
             h.items = [];
         }
-        var q = (h.keyword ? '/item/search' : '/item/list') + '?page=' + h.page + '&size=20';
-        if (h.category) q += '&category=' + encodeURIComponent(h.category);
-        if (h.condition) q += '&conditionLevel=' + encodeURIComponent(h.condition);
-        if (h.keyword) q += '&q=' + encodeURIComponent(h.keyword);
-        var data = await api(q);
-        if(token!==homeLoadToken || currentView.name!=='home') return false;
+        var params = '?page=' + h.page + '&size=20';
+        if (h.category) params += '&category=' + encodeURIComponent(h.category);
+        if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
+        var keyword = encodeURIComponent(h.keyword);
+        var useKeyword = !!h.keyword && !reset && h.keywordFallback;
+        var listPath = '/item/list' + params + (keyword ? '&keyword=' + keyword : '');
+        var data;
+        try {
+            data = await api(keyword && !useKeyword ? '/item/search' + params + '&q=' + keyword : listPath, options);
+        } catch (error) {
+            if (error.name === 'AbortError') return false;
+            if (!keyword || useKeyword || error.code !== 503) throw error;
+            if (token !== homeLoadToken || currentView.name !== 'home') return false;
+            if (!reset && h.page > 1) {
+                h.page = 1;
+                h.items = [];
+                listPath = listPath.replace(/\?page=\d+/, '?page=1');
+            }
+            try { data = await api(listPath, options); }
+            catch (fallbackError) {
+                if (fallbackError.name === 'AbortError') return false;
+                throw fallbackError;
+            }
+            useKeyword = true;
+        }
+        if (token !== homeLoadToken || currentView.name !== 'home') return false;
+        h.keywordFallback = useKeyword;
         h.items = h.items.concat(data.list || []);
         h.total = data.total || 0;
         h.hasMore = !!data.hasMore;
@@ -591,7 +653,7 @@
         shelfRemember('history',it);
         var img = firstImage(it.images);
         var hero = img ? '<div class="hero"><img src="' + esc(img) + '" alt=""></div>'
-            : '<div class="hero" data-cat="' + esc(it.category) + '">' + (CAT_ICON[it.category] || '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10"/></svg>') + '</div>';
+            : '<div class="hero hero-no-image" data-cat="' + esc(it.category) + '">' + (CAT_ICON[it.category] || navIcon('box')) + '<span>暂无物品照片</span></div>';
 
         var actions;
         if (it.isDemo) {
@@ -616,8 +678,9 @@
         }
 
         var want = d.want || {};
-        var content = hero
+        var content = '<div class="item-detail-media">' + hero + '</div><div class="item-detail-info">'
             + '<h1 class="detail-title">' + esc(it.title) + '</h1>'
+            + (demoReferencePrice(it) ? '<p class="swap-label">' + demoReferencePrice(it) + '</p>' : '')
             + '<div class="detail-meta">'
             + '<span class="tag brand">' + esc(it.category) + '</span>'
             + '<span class="tag">' + esc(it.conditionLevel) + '</span>'
@@ -642,10 +705,10 @@
             + creditBadge({credit: it.ownerCredit})
             + '</button></div>'
             + '<p class="hint" style="margin-top:12px">' + esc(d.tip || '') + '</p>'
-            + '<div class="action-bar">' + actions + '</div>';
+            + '<div class="action-bar">' + actions + '</div></div>';
 
         var saved=shelfRead('favorites').some(function(x){return x.id===id;});
-        $('#app').innerHTML = shell('home','<div class="shelf-action"><button class="btn btn-ghost btn-sm" data-act="shelf-toggle" data-id="'+id+'" aria-pressed="'+saved+'">'+(saved?'♥ 已收藏':'♡ 收藏物品')+'</button></div>'+content);
+        $('#app').innerHTML = shell('home','<section class="item-detail"><div class="shelf-action"><button class="btn btn-ghost btn-sm" data-act="shelf-toggle" data-id="'+id+'" aria-pressed="'+saved+'">'+(navIcon('heart')+(saved?' 已收藏':' 收藏物品'))+'</button></div>'+content+'</section>');
     }
 
     // ------------------------------------------------------------------ 发布
@@ -653,8 +716,8 @@
     function renderPublishEntry() {
         $('#app').innerHTML=shell('publish','<section class="redesign-page publish-entry"><header class="redesign-heading"><h1>发布</h1><a class="icon-action" aria-label="关闭发布" href="#/home">'+navIcon('close')+'</a></header>'
             +'<a class="publish-choice publish-choice-main" href="#/publish/edit"><span><strong>发闲置</strong><small>拍张照片，找同学换点喜欢的</small></span><img src="/assets/brand/mascot-box.png" width="108" height="108" alt=""></a>'
-            +'<div class="publish-choice-grid"><a class="publish-choice" href="#/auction/new"><span><strong>发拍卖</strong><small>设置起拍价</small></span></a><a class="publish-choice" href="#/wishes"><span><strong>发心愿</strong><small>发布想换的物品</small></span></a></div>'
-            +'<button class="publish-choice" data-act="estimate"><span><strong>好物估价</strong><small>计算参考价格区间</small></span></button></section>');
+            +'<div class="publish-choice-grid"><a class="publish-choice" href="#/auction/new">'+navIcon('auction')+'<span><strong>发拍卖</strong><small>设置起拍价</small></span></a><a class="publish-choice" href="#/wishes">'+navIcon('wish')+'<span><strong>发心愿</strong><small>发布想换的物品</small></span></a></div>'
+            +'<button class="publish-choice" data-act="estimate">'+navIcon('appraise')+'<span><strong>好物估价</strong><small>计算参考价格区间</small></span></button></section>');
     }
 
     function renderPublish() {
@@ -669,9 +732,9 @@
             return '<button type="button" class="chip" data-act="p-want" data-v="' + esc(c) + '">' + c + '</button>';
         }).join('');
 
-        var content = '<div class="page-head"><a class="link-btn" href="#/publish">返回发布</a><h1>发闲置</h1>'
+        var content = '<section class="redesign-page publish-editor"><div class="page-head"><div class="redesign-heading"><a class="icon-action" href="#/publish" aria-label="关闭编辑">'+navIcon('close')+'</a><h1>发闲置</h1><button class="btn btn-primary btn-sm" form="publish-form" type="submit">提交审核</button></div>'
             + '<p>上传图片并提交审核，5 分钟未处理将自动通过。</p></div>'
-            + '<form data-form="publish" class="card card-pad">'
+            + '<form id="publish-form" data-form="publish" class="card card-pad"><p class="publish-error" role="alert" tabindex="-1" hidden></p>'
             + '<div class="field"><label class="label">图片 <span class="opt">最多 3 张，每张 ≤2MB</span></label>'
             + '<div class="chips" id="img-preview" style="margin-top:8px"></div><p class="hint">第一张会用作商品封面。</p></div>'
             + '<div class="field"><label class="label">名称 <span class="opt">≤30 字</span></label>'
@@ -684,7 +747,7 @@
             + '<textarea class="textarea" name="description" aria-label="物品描述" maxlength="300" data-counter="desc" '
             + 'placeholder="哪里旧了、配件齐不齐、能不能自提"></textarea>'
             + '<div class="hint" style="display:flex;justify-content:space-between">'
-            + '<span>说清楚瑕疵，换得更快</span><span class="counter" id="desc-counter">0 / 300</span></div></div>'
+            + '<span>说清楚瑕疵，换得更快</span><span class="counter" id="desc-counter">0 / 300</span></div><div class="chips publish-templates"><button type="button" class="chip" data-act="publish-template" data-v="成色与瑕疵：">成色说明</button><button type="button" class="chip" data-act="publish-template" data-v="入手来源：">入手来源</button><button type="button" class="chip" data-act="publish-template" data-v="转出原因：">转出原因</button></div></div>'
             + '<div class="field"><label class="label">想换什么</label><div class="chips" id="want-chips">' + wantChips + '</div>'
             + '<input type="hidden" name="wantCategory">'
             + '<div class="hint">可多选。</div>'
@@ -693,11 +756,11 @@
             + '<div class="field"><label class="label">期望说明 <span class="opt">选填，≤100 字</span></label>'
             + '<input class="input" name="expectDesc" aria-label="期望说明" maxlength="100" placeholder="例如 想换一副羽毛球拍，成色差不多就行"></div>'
             + '<button class="btn btn-primary btn-block" type="submit">提交审核</button>'
-            + '</form>';
+            + '</form></section>';
 
         state.publishImages = [];
         state.publish = {category: '', conditionLevel: '', wantCategory: ''};
-        $('#app').innerHTML = shell('home', content);
+        $('#app').innerHTML = shell('publish', content);
         renderImagePreview();
         restorePublishDraft();
     }
@@ -833,6 +896,18 @@
 
     // ------------------------------------------------------------------ 三方环
 
+    async function renderRelay() {
+        var items = (await api('/item/mine?status=1')).filter(function(item) { return item.allowCycle && !item.isDemo; });
+        if (currentView.name !== 'relay') return;
+        var rows = items.map(function(item) {
+            return '<a class="relay-item" href="#/cycle/'+Number(item.id)+'"><span>'+esc(item.title)+'</span><span>查看换法</span></a>';
+        }).join('');
+        $('#app').innerHTML = shell('relay','<section class="relay-desktop"><div class="page-head"><h1>换物接力</h1>'
+            +'<p>关联你的在架闲置，写清想换的物品。形成闭环后，系统会通知三方。</p></div>'
+            +'<a class="btn btn-primary" href="#/wishes">发布接力心愿</a><h2>我的接力物品</h2>'
+            +(rows || '<p>还没有可接力的在架物品。</p><a href="#/publish">去发布闲置</a>')+'</section>');
+    }
+
     async function renderCycle(itemId) {
         $('#app').innerHTML = shell('home', loading());
         var rings = await api('/cycle/' + itemId);
@@ -910,9 +985,10 @@
                 + '<span class="tag ghost">' + (e.type === 3 ? '三方环' : '一对一') + '</span>'
                 + '<span style="flex:1"></span>'
                 + '<span class="hint" style="margin:0">#' + e.id + '</span></div>'
-                + stepsHtml(e.status)
-                + '<p class="hint" style="margin:0">已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2)
-                + ' | 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2)
+                + stepsHtml(e)
+                + '<p class="hint" style="margin:0">' + (window.exchangeNeedsConfirmation(e)
+                    ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2) + ' | ' : '')
+                + '已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2)
                 + (e.place ? ' | ' + esc(e.place) : '') + '</p>'
                 + '</button>';
         }).join('');
@@ -929,60 +1005,68 @@
     async function renderExchangeDetail(id) {
         $('#app').innerHTML = shell('exchange', loading());
         var e = await api('/exchange/' + id);
-        var mine = e.mine || {};
-        var details = e.details || [];
+        if (currentView.name !== 'exchangeDetail' || currentView.arg !== id) return;
+        var summary = window.exchangeSummary(e);
+        var mine = summary.mine;
+        var details = summary.people;
 
         var rows = details.map(function (d) {
-            var isMe = mine.userId === d.userId;
+            var isMe = summary.isMe(d);
+            var recipient = summary.recipientFor(d);
             return '<div class="list-row" style="cursor:default">'
                 + '<div class="avatar" style="width:32px;height:32px;border-radius:11px">'
                 + esc((d.nickname || '同').slice(0, 1)) + '</div>'
                 + '<div class="row-main">'
                 + '<p class="row-title" style="font-size:14px">'
                 + (isMe
-                    ? esc(d.nickname || '同学') + ' <span class="tag brand">我</span>'
+                    ? esc(d.nickname || '同学') + ' <span class="exchange-self">我</span>'
                     : '<button class="name-link" data-act="go" data-to="#/user/' + d.userId + '">'
                       + esc(d.nickname || '同学') + '</button>')
                 + '</p>'
-                + '<p class="row-sub">给出「' + esc(d.giveTitle || '') + '」 | 得到「' + esc(d.getTitle || '') + '」</p>'
+                + '<p class="row-sub">给出「' + esc(d.giveTitle || '物品') + '」'
+                + (recipient ? '给 ' + esc(summary.isMe(recipient) ? '我' : recipient.nickname || '同学') : '')
+                + ' | 收到「' + esc(d.getTitle || '物品') + '」</p>'
                 + '</div>'
-                + '<div style="text-align:right;font-size:11px;color:var(--ink-400);flex:none;white-space:nowrap">'
-                + '<div>' + (d.confirmed ? '<span style="color:var(--success-600)">已确认</span>' : '待确认') + '</div>'
+                + '<div class="exchange-person-status">'
+                + (summary.needsConfirmation ? '<div>' + (d.confirmed ? '<span style="color:var(--success-600)">已确认</span>' : '待确认') + '</div>' : '')
                 + '<div>' + (d.delivered ? '<span style="color:var(--success-600)">已交付</span>' : '待交付') + '</div>'
                 + '</div></div>';
         }).join('');
 
         var actions = '';
-        if (e.status === 1) {
-            actions = '<button class="btn btn-primary btn-block" data-act="ex-confirm" data-id="' + e.id + '">'
-                + (mine.confirmed ? '已确认，等其他人' : '同意闭环交换') + '</button>';
-        } else if (e.status === 2) {
-            actions = '<button class="btn btn-primary btn-block" data-act="ex-done" data-id="' + e.id + '">'
-                + (mine.delivered ? '已交换，等其他人' : '我已交换') + '</button>';
+        if (summary.canConfirm) {
+            actions = '<button class="btn btn-primary" data-act="ex-confirm" data-id="' + e.id + '">确认参与</button>';
+        } else if (summary.canReceive) {
+            actions = '<button class="btn btn-primary" data-act="ex-done" data-id="' + e.id + '">确认收货</button>';
         } else if (e.status === 3) {
-            actions = '<button class="btn btn-accent btn-block" data-act="open-review" data-id="' + e.id + '">给对方打个分</button>';
+            actions = '<button class="btn btn-primary" data-act="open-review" data-id="' + e.id + '">评价参与者</button>';
         }
-        if (e.status === 1 || e.status === 2) {
+        if (summary.active) {
             actions += '<button class="btn btn-ghost" data-act="open-place" data-id="' + e.id + '">约面交</button>'
-                + '<button class="btn btn-ghost" data-act="ex-cancel" data-id="' + e.id + '">取消</button>';
+                + '<button class="btn btn-ghost exchange-cancel" data-act="ex-cancel" data-id="' + e.id + '">取消交换</button>';
         }
 
-        var content = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-            + '<button class="btn btn-sm btn-ghost" data-act="go" data-to="#/exchange">← 返回</button>'
-            + '<span style="flex:1"></span><span class="hint">#' + e.id + ' | ' + (e.type === 3 ? '三方环' : '一对一') + '</span>'
-            + '</div>'
-            + '<div class="page-head" style="margin-bottom:10px"><h1>' + esc(e.statusText) + '</h1>'
-            + '<p>创建于 ' + fmtDate(e.createTime)
-            + ' | 已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2)
-            + ' | 已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2) + '</p></div>'
-            + stepsHtml(e.status)
-            + '<div class="card" style="margin-top:6px">' + rows + '</div>'
-            + (e.type===3 ? '<div class="ring-flow-list">'+details.map(function(d){var recipient=details.find(function(x){return x.getItemId===d.giveItemId;});return '<div><b>'+esc(d.nickname)+'</b> 的「'+esc(d.giveTitle)+'」<span aria-hidden="true"> → </span><b>'+esc(recipient?recipient.nickname:'待确认')+'</b></div>';}).join('')+'</div><button class="btn btn-ghost" data-act="go" data-to="#/ring/'+e.id+'">进入三方协商房间</button>' : '')
-            + (e.place ? '<div class="card card-pad" style="margin-top:12px">'
-                + '<div class="kv"><span class="k">面交点</span><span class="v">' + esc(e.place) + '</span></div>'
-                + (e.dealTime ? '<div class="kv"><span class="k">时间</span><span class="v">' + esc(e.dealTime) + '</span></div>' : '')
-                + '</div>' : '')
-            + '<div class="action-bar" style="flex-wrap:wrap">' + actions + '</div>';
+        var handoff = mine ? '<section class="exchange-handoff" aria-label="我的物品交接">'
+            + '<div><span>我给出</span><strong>' + esc(mine.giveTitle || '物品') + '</strong>'
+            + (summary.recipient ? '<small>交给 ' + esc(summary.recipient.nickname || '同学') + '</small>' : '') + '</div>'
+            + '<div><span>我收到</span><strong>' + esc(mine.getTitle || '物品') + '</strong>'
+            + (summary.sender ? '<small>来自 ' + esc(summary.sender.nickname || '同学') + '</small>' : '') + '</div></section>' : '';
+        var content = '<article class="exchange-detail"><header class="exchange-heading">'
+            + '<a class="exchange-back" href="#/exchange">' + navIcon('back') + ' 返回交换单</a>'
+            + '<p class="hint">#' + e.id + ' | ' + (e.type === 3 ? '三方成环' : '一对一交换')
+            + (e.createTime ? ' | 创建于 ' + fmtDate(e.createTime) : '') + '</p>'
+            + '<h1>' + esc(e.statusText) + '</h1><p class="exchange-next">' + esc(summary.next) + '</p>'
+            + stepsHtml(e)
+            + '<p class="exchange-counts">' + (summary.needsConfirmation
+                ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || details.length) + ' | ' : '')
+            + '已收货 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || details.length) + '</p></header>'
+            + handoff
+            + '<div class="exchange-detail-grid"><section class="exchange-people"><h2>参与者</h2>' + rows
+            + (e.type === 3 ? '<a class="btn btn-ghost" href="#/ring/' + e.id + '">进入三方协商房间</a>' : '') + '</section>'
+            + '<section class="exchange-meet"><h2>面交安排</h2>'
+            + '<div class="kv"><span class="k">地点</span><span class="v">' + esc(e.place || '待约定') + '</span></div>'
+            + '<div class="kv"><span class="k">时间</span><span class="v">' + esc(e.dealTime || '待约定') + '</span></div>'
+            + (actions ? '<div class="exchange-actions">' + actions + '</div>' : '') + '</section></div></article>';
 
         $('#app').innerHTML = shell('trade', content);
     }
@@ -1008,7 +1092,7 @@
                 pending = [];
             }
         } catch (e) {
-            $('#app').innerHTML = shell('home', emptyState('<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M16 16l4 4"/></svg>', '找不到这位同学',
+            $('#app').innerHTML = shell('home', emptyState(navIcon('search'), '找不到这位同学',
                 e.message || '主页链接可能已经失效',
                 '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/home">回集市</button>'));
             return;
@@ -1025,7 +1109,7 @@
         var rate = (u.goodRate === null || u.goodRate === undefined) ? '—' : u.goodRate + '%';
         var pct = Math.max(3, Math.min(100, u.credit || 0));
 
-        var content = '<section class="redesign-page public-profile"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">←</a><h1>个人主页</h1><button type="button" class="link-btn" data-act="profile-share">分享</button></header><div class="card card-pad">'
+        var content = '<section class="redesign-page public-profile"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">'+navIcon('back')+'</a><h1>个人主页</h1><button type="button" class="link-btn" data-act="profile-share">分享</button></header><div class="card card-pad">'
             + '<div class="user-row">'
             + '<div class="avatar lg">' + esc((u.nickname || '同').slice(0, 1)) + '</div>'
             + '<div class="u-main"><p class="u-name" style="font-size:19px">' + esc(u.nickname)
@@ -1063,7 +1147,7 @@
                     + '<div style="flex:1;min-width:0"><p style="font-size:14px;margin:0">'
                     + esc(r.fromNickname || '同学') + '</p>'
                     + '<p class="hint" style="margin:2px 0 0">' + fmtDate(r.createTime) + '</p></div>'
-                    + '<span style="color:var(--theme-ink);font-size:13px;white-space:nowrap">' + '★'.repeat(r.score) + '</span></div>'
+                    + '<span style="color:var(--theme-ink);font-size:13px;white-space:nowrap">' + navIcon('star').repeat(r.score) + '</span></div>'
                     + '<p style="font-size:13px;line-height:1.7;margin:10px 0 0;color:var(--ink-700)">'
                     + esc(r.content || '没有留文字') + '</p></div>';
             }).join('') + '</div>'
@@ -1124,7 +1208,7 @@
                 + '<div class="row-main"><p class="row-title" style="font-size:14px">'
                 + '<button class="name-link" data-act="go" data-to="#/user/' + r.fromUser + '">'
                 + esc(r.fromNickname || '同学') + '</button>'
-                + ' <span style="color:var(--theme-ink)">' + '★'.repeat(r.score) + '</span></p>'
+                + ' <span style="color:var(--theme-ink)">' + navIcon('star').repeat(r.score) + '</span></p>'
                 + '<p class="row-sub">' + esc(r.content || '没有留文字') + '</p></div>'
                 + '<span class="hint">' + fmtDate(r.createTime) + '</span></div>';
         }).join('');
@@ -1166,7 +1250,7 @@
             + '<div class="section-title"><h2>我的物品</h2>'
             + '<div class="title-actions">'
             + '<span class="more">共 ' + (items || []).length + ' 件，在架 ' + onShelf.length + '</span>'
-            + '<button class="plus-link" data-act="go" data-to="#/publish">＋ 上架</button>'
+            + '<button class="plus-link" data-act="go" data-to="#/publish">'+navIcon('add')+' 上架</button>'
             + '</div></div>'
             + '<div class="segmented" style="margin-bottom:10px">'
             + [['all', '全部'], ['1', '在架'], ['4', '已下架'], ['3', '已换出']].map(function (t) {
@@ -1175,7 +1259,7 @@
             }).join('')
             + '</div>'
             + (itemRows ? '<div class="grid">' + itemRows + '</div>'
-                : emptyState('<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z M4 7l8 4 8-4 M12 11v10"/></svg>',
+                : emptyState(navIcon('box'),
                     state.meFilter === 'all' ? '还没有发布过物品' : '这个状态下没有物品',
                     state.meFilter === 'all' ? '先发一件，换物的第一步' : '切换上面的分类看看',
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">去发布</button>'))
@@ -1227,7 +1311,7 @@
         if(document.hidden || !document.querySelector('.appbar .notice-link')) { noticeTracker.pending=count;return; }
         noticeTracker.pending=0;closeNoticePopup();
         var popup=document.createElement('div');popup.id='notice-popup';popup.className='notice-popup';popup.setAttribute('role','status');popup.setAttribute('aria-live','polite');
-        popup.innerHTML='<span class="notice-popup-icon" aria-hidden="true">'+navIcon('notice')+'</span><div class="notice-popup-content"><strong>您有 '+count+' 条未读消息</strong><span>有新动态，记得查收。</span><a href="#/notifications">查看消息 →</a></div><button type="button" class="notice-popup-close" aria-label="关闭消息提醒">×</button>';
+        popup.innerHTML='<span class="notice-popup-icon" aria-hidden="true">'+navIcon('notice')+'</span><div class="notice-popup-content"><strong>您有 '+count+' 条未读消息</strong><span>有新动态，记得查收。</span><a href="#/notifications">查看消息 '+navIcon('arrow')+'</a></div><button type="button" class="notice-popup-close" aria-label="关闭消息提醒">'+navIcon('close')+'</button>';
         document.body.appendChild(popup);positionNoticePopup();
         popup.querySelector('button').addEventListener('click',closeNoticePopup);
         popup.querySelector('a').addEventListener('click',closeNoticePopup);
@@ -1273,7 +1357,7 @@
     }
     function roomMessage(m) {
         var mine=state.me&&m.senderId===state.me.id;var img=m.kind==='image'?'<a href="'+esc(m.image)+'" target="_blank" rel="noopener"><img class="chat-image" src="'+esc(m.image)+'" alt="私聊图片"></a>':'';
-        return '<article class="chat-message '+(mine?'is-mine':'')+'"><div class="chat-avatar">'+esc((m.nickname||'?').slice(0,1))+'</div><div class="chat-message-body"><div class="chat-meta"><b>'+esc(m.nickname)+'</b><time>'+esc(String(m.createdAt).replace('T',' ').slice(5,16))+'</time></div><div class="chat-bubble">'+img+(m.content?'<p class="chat-text">'+esc(m.content)+'</p>':'')+'</div></div></article>';
+        return '<article class="chat-message '+(mine?'is-mine':'')+'"><a class="chat-avatar" href="#/user/'+Number(m.senderId)+'" aria-label="查看'+esc(m.nickname||'同学')+'的主页">'+esc((m.nickname||'?').slice(0,1))+'</a><div class="chat-message-body"><div class="chat-meta"><b>'+esc(m.nickname)+'</b><time>'+esc(String(m.createdAt).replace('T',' ').slice(5,16))+'</time></div><div class="chat-bubble">'+img+(m.content?'<p class="chat-text">'+esc(m.content)+'</p>':'')+'</div></div></article>';
     }
     async function refreshRoom(force) {
         if(roomBusy||!['chat','ringChat'].includes(currentView.name))return;roomBusy=true;
@@ -1290,16 +1374,18 @@
             back='#/notifications';
             product='<a class="room-product" href="#/item/'+Number(thread.itemId)+'">'+thumb({title:thread.title,images:thread.images})+'<span><strong>'+esc(thread.title)+'</strong><small>查看物品详情</small></span>'+navIcon('next')+'</a>';
         }
-        if(currentView.arg!==id)return;
-        var tools=ring?'':'<details class="room-attachments"><summary aria-label="打开附件面板">'+navIcon('add')+'</summary><div><label class="chat-tool">相册<input type="file" accept="image/png,image/jpeg" data-act="room-image" hidden></label><label class="chat-tool">拍摄<input type="file" accept="image/*" capture="environment" data-act="room-image" hidden></label><a class="chat-tool" href="#/item/'+Number(thread.itemId)+'">查看物品</a></div></details>';
+        if(currentView.arg!==id||currentView.name!==(ring?'ringChat':'chat'))return;
+        var tools=ring?'':'<details class="room-attachments"><summary aria-label="打开附件面板">'+navIcon('add')+'</summary><div><label class="chat-tool">相册<input type="file" accept="image/png,image/jpeg" data-act="room-image"></label><label class="chat-tool">拍摄<input type="file" accept="image/*" capture="environment" data-act="room-image"></label><a class="chat-tool" href="#/item/'+Number(thread.itemId)+'">查看物品</a></div></details>';
         var name=ring?esc(title):'<a href="#/user/'+Number(peer)+'">'+esc(title)+'</a>';
-        $('#app').innerHTML=shell('notifications','<section class="redesign-page room-redesign"><header class="redesign-heading"><a class="icon-action" href="'+esc(back)+'" aria-label="返回">←</a><h1>'+name+'</h1></header>'+product+'<p class="room-safety">'+(ring?'仅本次闭环的三位参与者可见。':'面交时请选校内公共地点，确认物品状态后再交付。')+'</p><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><div class="room-input"><textarea name="content" maxlength="500" rows="2" placeholder="想跟 TA 说点什么" aria-label="消息内容" required></textarea><button type="submit" class="btn btn-primary btn-sm">发送</button></div>'+tools+'</form></section></section>');
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page room-redesign"><header class="redesign-heading"><a class="icon-action" href="'+esc(back)+'" aria-label="返回">'+navIcon('back')+'</a><h1>'+name+'</h1></header>'+product+'<p class="room-safety">'+(ring?'仅本次闭环的三位参与者可见。':'面交时请选校内公共地点，确认物品状态后再交付。')+'</p><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><div class="room-input"><textarea name="content" maxlength="500" rows="2" placeholder="想跟 TA 说点什么" aria-label="消息内容" required></textarea><button type="submit" class="btn btn-primary btn-sm">发送</button></div>'+tools+'</form></section></section>');
         await refreshRoom(true);
         if(currentView.arg===id&&['chat','ringChat'].includes(currentView.name))roomTimer=setInterval(function(){refreshRoom(false);},5000);
     }
     async function renderWishes() {
+        var offered=(await api('/item/mine?status=1')).filter(function(item){return item.allowCycle && !item.isDemo;});
+        var offerOptions=offered.map(function(item){return '<option value="'+Number(item.id)+'">'+esc(item.title)+'</option>';}).join('');
         var matched=currentView.name==='wishes'?currentView.arg:null;var wishes=await api('/wish'+(matched?'/'+matched:''));var rows=wishes.map(function(w){return '<article class="wish-card"><div><span class="tag">'+esc(w.category||'求换')+'</span><span class="hint"> '+esc(w.nickname)+'</span></div><h2>'+esc(w.title)+'</h2><p>'+esc(w.content||'')+'</p><div class="btn-row">'+(state.me&&w.userId===state.me.id?'<button class="btn btn-sm" data-act="wish-close" data-id="'+w.id+'">关闭求换</button>':'<button class="btn btn-sm" data-act="go" data-to="#/user/'+w.userId+'">查看发布者</button>')+'</div></article>';}).join('');
-        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">WISH POOL</span><h1>说说你想换什么。</h1><p>写下想换的物品，匹配到在架物品时双方都会收到通知。</p></div><button class="btn" data-act="go" data-to="#/community">返回社区</button></div><form class="card card-pad wish-form" data-form="wish-new"><label class="label">我想要</label><input class="input" name="title" maxlength="100" placeholder="例如：一本高数习题集" required><label class="label">类别（选填）</label><select class="select" name="category"><option value="">不限</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select><label class="label">补充说明（选填）</label><textarea class="textarea" name="content" maxlength="500" placeholder="描述你想交换的物品或需求"></textarea><button class="btn btn-primary" type="submit">发布求换</button></form><div class="wish-grid">'+(rows||'<div class="card card-pad">暂无求换，来发布第一个愿望吧。</div>')+'</div>');
+        $('#app').innerHTML=shell('wishes','<div class="community-head"><div><span class="tag">WISH POOL</span><h1>说说你想换什么。</h1><p>写下想换的物品，匹配到在架物品时双方都会收到通知。</p></div><button class="btn" data-act="go" data-to="#/community">返回社区</button></div><form class="card card-pad wish-form" data-form="wish-new"><label class="label">我想要</label><input class="input" name="title" maxlength="100" placeholder="例如：一本高数习题集" required><label class="label">类别（选填）</label><select class="select" name="category"><option value="">不限</option>'+CATS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select><label class="label" for="wish-offer">我拿什么换</label><select class="select" id="wish-offer" name="offeredItemId"><option value="">不关联物品，发布普通心愿</option>'+offerOptions+'</select><label class="label">补充说明（选填）</label><textarea class="textarea" name="content" maxlength="500" placeholder="描述你想交换的物品或需求"></textarea><button class="btn btn-primary" type="submit">发布求换</button></form><div class="wish-grid">'+(rows||'<div class="card card-pad">暂无求换，来发布第一个愿望吧。</div>')+'</div>');
     }
 
     var communityTimer = null;
@@ -1320,12 +1406,16 @@
         } catch(e){ if(force) toast(e.message || '消息加载失败','err'); } finally { communityLoading=false; }
     }
     async function renderCommunity() {
-        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">CAMPUS CLUB</span><h1>一起聊聊。</h1><p>分享闲置，也分享校园生活。</p></div><div class="btn-row"><button class="btn" data-act="go" data-to="#/wishes">求换专区</button><button class="btn btn-primary" data-act="go" data-to="#/community/game">进入 Scrap Arena</button></div></div><div class="community-layout"><section class="chat-panel"><div class="chat-head"><div><b>校园公共聊天室</b><span>全校可见 | 最近 100 条</span></div><span class="chat-live">● 在线交流</span></div><div class="chat-messages" id="chat-messages" aria-live="polite"></div><form class="chat-compose" data-form="community-text"><textarea name="content" maxlength="500" rows="2" placeholder="分享今天的新鲜事…" aria-label="消息内容" required></textarea><div class="chat-tools"><div><label class="chat-tool">发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label><button type="button" class="chat-tool" data-act="community-share">分享物品</button></div><button type="submit" class="btn btn-primary btn-sm">发送</button></div></form></section><aside class="community-side"><span class="tag">ARCADE</span><h2>下课，<br>来一局。</h2><p>Scrap Arena | 双人同屏格斗</p><button class="btn" data-act="go" data-to="#/community/game">开始游戏 ↗</button><small>键盘操作 | 同一设备双人对战</small></aside></div>');
+        $('#app').innerHTML=shell('community','<div class="community-head"><div><span class="tag">CAMPUS CLUB</span><h1>一起聊聊。</h1><p>分享闲置，也分享校园生活。</p></div><div class="btn-row"><button class="btn" data-act="go" data-to="#/wishes">求换专区</button><button class="btn btn-primary" data-act="go" data-to="#/community/game">进入 Scrap Arena</button></div></div><div class="community-layout"><section class="chat-panel"><div class="chat-head"><div><b>校园公共聊天室</b><span>全校可见 | 最近 100 条</span></div><span class="chat-live">● 在线交流</span></div><div class="chat-messages" id="chat-messages" aria-live="polite"></div><form class="chat-compose" data-form="community-text"><textarea name="content" maxlength="500" rows="2" placeholder="分享今天的新鲜事…" aria-label="消息内容" required></textarea><div class="chat-tools"><div><label class="chat-tool">发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label><button type="button" class="chat-tool" data-act="community-share">分享物品</button></div><button type="submit" class="btn btn-primary btn-sm">发送</button></div></form></section><aside class="community-side"><span class="tag">ARCADE</span><h2>下课，<br>来一局。</h2><p>Scrap Arena | 双人同屏格斗</p><button class="btn" data-act="go" data-to="#/community/game">开始游戏 '+navIcon('external')+'</button><small>键盘操作 | 同一设备双人对战</small></aside></div>');
         var communityDraft=sessionStorage.getItem('hq.communityDraft');
         if(communityDraft){
             sessionStorage.removeItem('hq.communityDraft');
             var compose=$('[data-form="community-text"] textarea');
-            if(compose){compose.value=communityDraft;compose.focus();}
+            if(compose){
+                compose.insertAdjacentHTML('beforebegin','<p class="community-draft-note">失物招领草稿。补充物品、地点和时间后，可发到校园公共聊天室。</p>');
+                compose.value=communityDraft;
+                compose.focus();
+            }
         }
         await refreshCommunity(true); if(currentView.name==='community') communityTimer=setInterval(function(){refreshCommunity(false);},5000);
     }
@@ -1335,13 +1425,28 @@
 
     // ------------------------------------------------------------------ 后台
 
+    var adminSections = [
+        ['dashboard','运营概览'], ['items','物品审核'], ['auctions','拍卖管理'],
+        ['report','举报处理'], ['users','账号管理'], ['exchanges','交换记录'], ['activity','操作日志']
+    ];
+    var adminRenderVersion = 0;
+
+    function adminTable(columns, rows) {
+        if (!rows.length) return '<p class="admin-empty">暂无记录</p>';
+        return '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
+            + columns.map(function (label) { return '<th scope="col">'+esc(label)+'</th>'; }).join('')
+            + '</tr></thead><tbody>' + rows.map(function (row) {
+                return '<tr>'+row.map(function (cell) { return '<td>'+cell+'</td>'; }).join('')+'</tr>';
+            }).join('') + '</tbody></table></div>';
+    }
+
     async function renderAdmin() {
-        $('#app').innerHTML = shell('me', loading());
+        var version = ++adminRenderVersion;
         var tab = state.adminTab;
         var body = '';
 
         if (tab === 'report') {
-            var reports = await api('/admin/report?status=0');
+            var reports = await api('/admin/report?status='+state.adminReportStatus);
             var rows = (reports || []).map(function (r) {
                 return '<div class="card card-pad" style="margin-bottom:10px">'
                     + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'
@@ -1350,18 +1455,42 @@
                     + '<p style="margin:0 0 4px;font-size:14px">' + esc(r.reason) + '</p>'
                     + '<p class="hint" style="margin:0">举报人 ' + esc(r.reporterNickname || '匿名')
                     + (r.targetTitle ? ' | 对象「' + esc(r.targetTitle) + '」' : '') + '</p>'
-                    + '<div class="btn-row" style="margin-top:10px">'
+                    + (state.adminReportStatus === 0 ? '<div class="btn-row" style="margin-top:10px">'
                     + '<button class="btn btn-sm btn-primary" data-act="report-act" data-id="' + r.id + '" data-do="approve">认定违规</button>'
                     + '<button class="btn btn-sm btn-ghost" data-act="report-act" data-id="' + r.id + '" data-do="reject">驳回</button>'
-                    + '</div></div>';
+                    + '</div>' : (r.handleNote ? '<p class="hint">'+esc(r.handleNote)+'</p>' : '')) + '</div>';
             }).join('');
-            body = rows || emptyState('<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M12 3v18 M3 12h18 M6 6l12 12 M18 6L6 18"/></svg>', '没有待处理的举报', '平台挺干净的');
+            body = '<div class="admin-toolbar">' + ['待处理','已认定','已驳回'].map(function(label, index) {
+                return '<button class="chip '+(state.adminReportStatus === index ? 'on' : '')+'" data-act="admin-report-status" data-v="'+index+'">'+label+'</button>';
+            }).join('') + '</div>' + (rows || '<p class="admin-empty">此状态暂无举报</p>');
         } else if (tab === 'items') {
             var items = await api('/admin/items');
             body = items.length ? items.map(function(it) { var img=firstImage(it.images); return '<article class="auction-card">'+(img?'<img class="auction-image" src="'+esc(img)+'" alt="">':'')+'<h2>'+esc(it.title)+'</h2><p>'+esc(it.description || '')+'</p><p class="hint">发布者：'+esc(it.ownerNickname)+'</p><div class="btn-row"><button class="btn btn-sm btn-primary" data-act="review-listing" data-kind="items" data-do="approve" data-id="'+it.id+'">通过</button><button class="btn btn-sm" data-act="review-listing" data-kind="items" data-do="reject" data-id="'+it.id+'">驳回</button></div></article>'; }).join('') : '<div class="card card-pad">没有待审核物品</div>';
         } else if (tab === 'auctions') {
             var auctions = await api('/admin/auctions');
             body = auctions.length ? auctions.map(function(a) { return auctionCard(a, 'admin'); }).join('') : '<div class="card card-pad">暂无拍卖</div>';
+        } else if (tab === 'users') {
+            var users = await api('/admin/users?q='+encodeURIComponent(state.adminUserQuery));
+            body = '<form class="admin-toolbar" data-form="admin-user-search"><input class="input" name="q" maxlength="60" aria-label="按学号或昵称查找" placeholder="输入学号或昵称" value="'+esc(state.adminUserQuery)+'"><button class="btn btn-primary">搜索</button></form>'
+                + adminTable(['学号','昵称','信用分','身份','状态','操作'], users.map(function(u) {
+                    var action = u.status === 1 ? 'suspend' : 'restore';
+                    return [esc(u.studentNo), esc(u.nickname), u.credit, u.role === 1 ? '管理员' : '普通用户',
+                        u.status === 1 ? '正常' : '已停用', u.role === 0
+                            ? '<button class="btn btn-sm btn-ghost" data-act="admin-user-status" data-id="'+Number(u.id)+'" data-do="'+action+'">'+(action === 'suspend' ? '停用' : '恢复')+'</button>' : '—'];
+                }));
+        } else if (tab === 'exchanges') {
+            var exchanges = await api('/admin/exchanges');
+            var statuses = ['','待确认','待交付','已完成','已失效','已超时关闭'];
+            body = adminTable(['交换单','类型','状态','面交地点','创建时间'], exchanges.map(function(e) {
+                return ['#'+Number(e.id),e.type === 3 ? '三方成环' : '一对一', statuses[e.status] || '未知',esc(e.place || '待约定'),esc(e.createTime)];
+            }));
+        } else if (tab === 'activity') {
+            var activity = await api('/admin/activity');
+            var types = {ITEM:'物品', USER:'账号', OFFER:'报价', EXCHANGE:'交换单', REPORT:'举报'};
+            body = adminTable(['时间','操作者','对象','记录'], activity.map(function(entry) {
+                return [esc(entry.createTime),entry.actor == null ? '系统' : '#'+Number(entry.actor),
+                    esc(types[entry.type] || entry.type)+' #'+Number(entry.target),esc(entry.remark)];
+            }));
         } else {
             var d = await api('/admin/dashboard');
             var hot = (d.hotCategories || []).map(function (h, i) {
@@ -1391,26 +1520,37 @@
                 + '</div>';
         }
 
-        var content = '<div class="page-head"><h1>运营后台</h1><p>举报处理与平台数据。</p></div>'
-            + '<div class="segmented" style="margin-bottom:14px">'
-            + '<button class="' + (tab === 'report' ? 'on' : '') + '" data-act="admin-tab" data-v="report">举报</button>'
-            + '<button class="' + (tab === 'dashboard' ? 'on' : '') + '" data-act="admin-tab" data-v="dashboard">看板</button>'
-            + '<button class="' + (tab === 'items' ? 'on' : '') + '" data-act="admin-tab" data-v="items">物品审核</button>'
-            + '<button class="' + (tab === 'auctions' ? 'on' : '') + '" data-act="admin-tab" data-v="auctions">拍卖管理</button>'
-            + '</div>' + body;
+        if (version !== adminRenderVersion || currentView.name !== 'admin' || tab !== state.adminTab) return;
+        var navigation = adminSections.map(function(section) {
+            var selected = tab === section[0];
+            return '<button class="'+(selected?'on':'')+'" aria-pressed="'+selected+'" data-act="admin-tab" data-v="'+section[0]+'">'+section[1]+'</button>';
+        }).join('');
+        var title = adminSections.find(function(section) { return section[0] === tab; })[1];
+        var content = '<div class="admin-workspace"><nav class="admin-side" aria-label="运营后台"><h1>运营后台</h1>'+navigation
+            +'</nav><section class="admin-main"><header class="admin-heading"><h2>'+title+'</h2>'
+            +'<button class="btn btn-ghost btn-sm" data-act="admin-refresh">刷新</button></header>'+body+'</section></div>';
 
         $('#app').innerHTML = shell('admin', content);
     }
 
     // ------------------------------------------------------------------ 弹层
 
+    var sheetTrigger=null;
     function openSheet(html) {
-        $('#modal').innerHTML = '<div class="mask" data-act="mask-close"><div class="sheet">'
-            + '<div class="sheet-grip"></div>' + html + '</div></div>';
+        if(!$('#modal .sheet'))sheetTrigger=document.activeElement;
+        $('#modal').innerHTML='<div class="mask" data-act="mask-close"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-heading" tabindex="-1"><div class="sheet-grip"></div><button class="sheet-close icon-action" type="button" data-act="sheet-close" aria-label="关闭">'+navIcon('close')+'</button>'+html+'</div></div>';
+        var panel=$('#modal .sheet');
+        var heading=panel.querySelector('h1,h2,h3');
+        if(heading)heading.id='sheet-heading';
+        else{panel.removeAttribute('aria-labelledby');panel.setAttribute('aria-label','操作面板');}
+        panel.focus();
     }
 
     function closeSheet() {
-        $('#modal').innerHTML = '';
+        if(!$('#modal .sheet'))return;
+        $('#modal').innerHTML='';
+        if(sheetTrigger?.isConnected)sheetTrigger.focus();
+        sheetTrigger=null;
     }
 
     async function openOfferSheet(itemId) {
@@ -1498,7 +1638,7 @@
             + '<input type="hidden" name="score" id="review-score" value="5">'
             + '<div class="stars" id="review-stars" style="margin-bottom:14px">'
             + [1, 2, 3, 4, 5].map(function (n) {
-                return '<span class="star ' + (n <= 5 ? 'on' : '') + '" data-act="set-star" data-n="' + n + '">★</span>';
+                return '<span class="star ' + (n <= 5 ? 'on' : '') + '" data-act="set-star" data-n="' + n + '">'+navIcon('star')+'</span>';
             }).join('') + '</div>'
             + '<div class="field"><label class="label">说两句 <span class="opt">选填，≤100 字</span></label>'
             + '<input class="input" name="content" maxlength="100" placeholder="守时、描述属实、沟通顺畅…"></div>'
@@ -1540,9 +1680,9 @@
             feature1:'闲置，出发。', desc1:'让好物开启下一段故事。', feature2:'换个可能。', desc2:'两人交换，或三人成环。', feature3:'就在校园。', desc3:'离得近，交换更简单。', footer:'校园换物 | 让分享发生', langnote:'语言切换适用于本页。'
         };
         document.documentElement.lang = en ? 'en' : 'zh-CN';
-        $('#app').innerHTML = '<div class="landing"><header class="land-header"><button class="land-menu-toggle" type="button" data-act="landing-menu" aria-expanded="false" aria-controls="landing-menu" aria-label="'+w.menu+'"><span></span><span></span></button><a class="land-brand" href="#/home"><span class="land-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8h16l-4-4M21 16H5l4 4"/></svg></span>换一圈<span class="land-brand-en">ROUND AGAIN</span></a><a class="land-header-link land-notices" href="#/notifications">'+(en?'Messages':'消息')+'<span class="notice-count" hidden></span></a><a class="land-header-link" href="#/market">'+w.market+' <span aria-hidden="true">↗</span></a></header>'
+        $('#app').innerHTML = '<div class="landing"><header class="land-header"><button class="land-menu-toggle" type="button" data-act="landing-menu" aria-expanded="false" aria-controls="landing-menu" aria-label="'+w.menu+'">'+navIcon('menu')+'</button><a class="land-brand" href="#/home"><span class="land-brand-mark" aria-hidden="true">'+navIcon('trade')+'</span>换一圈<span class="land-brand-en">ROUND AGAIN</span></a><a class="land-header-link land-notices" href="#/notifications">'+(en?'Messages':'消息')+'<span class="notice-count" hidden></span></a><a class="land-header-link" href="#/market">'+w.market+' <span aria-hidden="true">'+navIcon('external')+'</span></a></header>'
         + '<div class="land-scrim" data-act="landing-menu-close" hidden></div><aside class="land-drawer" id="landing-menu" aria-label="'+w.menu+'" hidden><div class="land-drawer-top"><b>MENU / 菜单</b><button data-act="landing-menu-close" aria-label="'+w.close+'">×</button></div><nav><a href="#/home">'+w.home+'</a><a href="#/market">'+w.market+'</a><a href="#/publish">'+w.publish+'</a><a href="#/community">'+(en ? 'Community' : '校园社区')+'</a><a href="#/notifications">'+(en ? 'Notifications' : '消息通知')+' <span class="notice-count" hidden></span></a><a href="#/admin">'+(en ? 'Admin' : '管理后台')+'</a><a href="#/login">'+w.account+'</a></nav><div class="land-language"><span>'+w.language+'</span><div><button data-act="landing-lang" data-lang="zh" aria-pressed="'+(!en)+'">中文</button><button data-act="landing-lang" data-lang="en" aria-pressed="'+en+'">EN</button></div><small>'+w.langnote+'</small></div></aside>'
-        + '<main><section class="land-hero"><div class="land-hero-copy"><p class="land-eyebrow">'+w.eyebrow+'</p><h1>'+w.title+'</h1><p class="land-sub">'+w.sub+'</p><div class="land-actions"><a class="land-primary" href="#/market">'+w.explore+' <span aria-hidden="true">↗</span></a><button class="land-secondary" data-act="landing-how">'+w.how+' <span aria-hidden="true">↓</span></button></div></div><div class="land-illustration" aria-hidden="true"><div class="land-orbit orbit-one"></div><div class="land-orbit orbit-two"></div><div class="land-art-card art-one"><svg viewBox="0 0 100 100"><path d="M22 28h48v46H22zM30 20h48v46M34 41h24M34 52h24"/></svg></div><div class="land-art-card art-two"><svg viewBox="0 0 100 100"><path d="M20 38h60v38H20zM32 38v-8a18 18 0 0 1 36 0v8M35 52h30"/></svg></div><div class="land-art-card art-three"><svg viewBox="0 0 100 100"><path d="M25 40c4-18 15-25 25-25s21 7 25 25v30H25zM35 70v10m30-10v10M37 48h26"/></svg></div><div class="land-art-center"><svg viewBox="0 0 64 64"><path d="M12 24h39l-9-9M52 40H13l9 9"/></svg></div><span class="land-art-label">GOOD THINGS<br>GO AROUND.</span></div></section><section class="land-features" id="landing-how"><div class="land-section-head"><span>01 / THE IDEA</span><h2>'+w.how+'<span>.</span></h2></div><div class="land-feature-grid"><article><span>01</span><h3>'+w.feature1+'</h3><p>'+w.desc1+'</p></article><article><span>02</span><h3>'+w.feature2+'</h3><p>'+w.desc2+'</p></article><article><span>03</span><h3>'+w.feature3+'</h3><p>'+w.desc3+'</p></article></div></section></main><footer class="land-footer"><b>换一圈</b><span>'+w.footer+'</span><a href="#/market">'+w.explore+' ↗</a></footer></div>';
+        + '<main><section class="land-hero"><div class="land-hero-copy"><p class="land-eyebrow">'+w.eyebrow+'</p><h1>'+w.title+'</h1><p class="land-sub">'+w.sub+'</p><div class="land-actions"><a class="land-primary" href="#/market">'+w.explore+' <span aria-hidden="true">'+navIcon('external')+'</span></a><button class="land-secondary" data-act="landing-how">'+w.how+' <span aria-hidden="true">'+navIcon('down')+'</span></button></div></div><div class="land-illustration" aria-hidden="true"><div class="land-orbit orbit-one"></div><div class="land-orbit orbit-two"></div><div class="land-art-card art-one">'+navIcon('book')+'</div><div class="land-art-card art-two">'+navIcon('life')+'</div><div class="land-art-card art-three">'+navIcon('clothes')+'</div><div class="land-art-center">'+navIcon('trade')+'</div><span class="land-art-label">GOOD THINGS<br>GO AROUND.</span></div></section><section class="land-features" id="landing-how"><div class="land-section-head"><span>01 / THE IDEA</span><h2>'+w.how+'<span>.</span></h2></div><div class="land-feature-grid"><article><span>01</span><h3>'+w.feature1+'</h3><p>'+w.desc1+'</p></article><article><span>02</span><h3>'+w.feature2+'</h3><p>'+w.desc2+'</p></article><article><span>03</span><h3>'+w.feature3+'</h3><p>'+w.desc3+'</p></article></div></section></main><footer class="land-footer"><b>换一圈</b><span>'+w.footer+'</span><a href="#/market">'+w.explore+' ↗</a></footer></div>';
     }
 
     // ------------------------------------------------------------------ 路由
@@ -1563,9 +1703,11 @@
         [/^#\/item\/(\d+)$/, function (m) { return 'item'; }],
         [/^#\/item\/(\d+)\/edit$/, function (m) { return 'itemEdit'; }],
         [/^#\/publish$/, function () { return 'publishEntry'; }],
+        [/^#\/publish\/success\/(\d+)$/, function () { return 'publishSuccess'; }],
         [/^#\/publish\/edit$/, function () { return 'publish'; }],
         [/^#\/offers$/, function () { return 'offers'; }],
         [/^#\/trade$/, function () { return 'offers'; }],
+        [/^#\/relay$/, function () { return 'relay'; }],
         [/^#\/cycle\/(\d+)$/, function (m) { return 'cycle'; }],
         [/^#\/exchange$/, function () { return 'exchange'; }],
         [/^#\/exchange\/(\d+)$/, function (m) { return 'exchangeDetail'; }],
@@ -1642,12 +1784,16 @@
                 await renderItem(view.arg);
             } else if (view.name === 'itemEdit') {
                 await renderItemEdit(view.arg);
+            } else if (view.name === 'publishSuccess') {
+                $('#app').innerHTML=shell('publish','<section class="redesign-page publish-success"><img src="/assets/brand/mascot-success.png" width="144" height="144" alt=""><h1>已提交审核</h1><p>通过后会出现在集市。</p><div class="btn-row"><a class="btn btn-primary" href="#/publish/edit">再发一件</a><a class="btn btn-ghost" href="#/item/'+view.arg+'">去看看</a></div></section>');
             } else if (view.name === 'publishEntry') {
                 renderPublishEntry();
             } else if (view.name === 'publish') {
                 renderPublish();
             } else if (view.name === 'offers') {
                 await renderOffers();
+            } else if (view.name === 'relay') {
+                await renderRelay();
             } else if (view.name === 'cycle') {
                 await renderCycle(view.arg);
             } else if (view.name === 'exchange') {
@@ -1681,8 +1827,18 @@
         if (!el) return;
         var act = el.dataset.act;
 
+        if(act==='publish-template'){
+            var description=el.form.elements.description;
+            var insertion=(description.value?'\n':'')+el.dataset.v;
+            if(description.value.length+insertion.length>description.maxLength){toast('描述已接近字数上限','err');return;}
+            description.value+=insertion;
+            description.dispatchEvent(new Event('input',{bubbles:true}));
+            description.focus();
+            return;
+        }
         if(act==='skip-main'){ev.preventDefault();$('#main-content')?.focus();return;}
         if(act==='search-clear-history'){
+            if(!confirm('清空本机搜索历史？'))return;
             try{localStorage.removeItem('hq.searchHistory');}catch(e){}
             renderSearchPage('');return;
         }
@@ -1713,7 +1869,7 @@
             state.home.keyword=el.dataset.v;
             state.home.category='';
             state.home.condition='';
-            if(await loadHome(true)){renderHome();document.querySelector('.market-feed')?.scrollIntoView();}
+            go('#/search');
             return;
         }
         if(act==='home-feed'){
@@ -1725,7 +1881,7 @@
             var id=Number(el.dataset.id),items=shelfRead('favorites'),saved=items.some(function(x){return x.id===id;});
             await withBusy(el,async function(){
                 var ok=saved?shelfWrite('favorites',items.filter(function(x){return x.id!==id;})):shelfRemember('favorites',(await api('/item/'+id)).item);
-                if(ok){el.setAttribute('aria-pressed',String(!saved));el.textContent=saved?'♡ 收藏物品':'♥ 已收藏';}
+                if(ok){el.setAttribute('aria-pressed',String(!saved));el.innerHTML=navIcon('heart')+(saved?' 收藏物品':' 已收藏');}
             });return;
         }
         if(act==='shelf-remove'){var key=el.dataset.key;if(shelfWrite(key,shelfRead(key).filter(function(x){return x.id!==Number(el.dataset.id); })))renderShelf();return;}
@@ -1755,6 +1911,7 @@
         if (act === 'auction-bids') { await withBusy(el, async function(){ var bids=await api('/auction/'+el.dataset.id+'/bids'); openSheet('<h3>选择报价结算</h3><p class="sub">可选择任意报价；确认后拍卖结束，双方线下交易。</p>'+(bids.length?bids.map(function(b){return '<div class="bid-row"><span>'+esc(b.bidder)+' | ¥'+esc(b.amount)+'</span><button class="btn btn-sm" data-act="auction-settle" data-id="'+el.dataset.id+'" data-bid="'+b.id+'">选择成交</button></div>';}).join(''):'<p>暂无报价</p>')); }); return; }
         if (act === 'auction-settle') { if(!confirm('确认选择该报价成交？拍卖将结束，不能撤销。'))return; await withBusy(el,async function(){await api('/auction/'+el.dataset.id+'/settle',{method:'POST',body:{bidId:el.dataset.bid}});closeSheet();toast('已结算');await renderAuctions(true);});return; }
         if (act === 'auction-cancel') { if (!confirm('确定取消这场拍卖？已有出价将失效。')) return; await withBusy(el, async function () { await api('/admin/auctions/' + el.dataset.id + '/cancel', {method:'POST'}); toast('拍卖已取消'); await renderAdmin(); }); return; }
+        if (act === 'sheet-close') { closeSheet();return; }
         if (act === 'mask-close') {
             if (ev.target === el) closeSheet();
             return;
@@ -1782,9 +1939,27 @@
             return;
         }
         if (act === 'f-cat' || act === 'f-cond') {
-            if (act === 'f-cat') state.home.category = el.dataset.v;
-            else state.home.condition = el.dataset.v;
-            if(await loadHome(true)) { renderHome(); if ($('#modal').innerHTML) openFilterSheet(); }
+            var key = act === 'f-cat' ? 'category' : 'condition';
+            var previous = state.home[key];
+            var feed = $('.market-feed');
+            state.home[key] = el.dataset.v;
+            if (feed) {
+                feed.setAttribute('aria-busy', 'true');
+                feed.querySelector('.feed-count').textContent = '正在筛选…';
+            }
+            var request = loadHome(true);
+            var filterToken = homeLoadToken;
+            try {
+                if (await request) { renderHome(); if ($('#modal').innerHTML) openFilterSheet(); }
+            } catch (error) {
+                if (filterToken === homeLoadToken && currentView.name === 'home') {
+                    state.home[key] = previous;
+                    if (feed?.isConnected) feed.querySelector('.feed-count').textContent = '筛选失败';
+                    toast(error.message || '筛选失败，请重试', 'err');
+                }
+            } finally {
+                if (filterToken === homeLoadToken && feed?.isConnected) feed.removeAttribute('aria-busy');
+            }
             return;
         }
         if (act === 'open-filter') {
@@ -1885,23 +2060,39 @@
             await render();
             return;
         }
+        if (act === 'admin-refresh' || act === 'admin-report-status') {
+            if (act === 'admin-report-status') state.adminReportStatus = Number(el.dataset.v);
+            await withBusy(el, renderAdmin);
+            return;
+        }
+        if (act === 'admin-user-status') {
+            var action = el.dataset.do;
+            if (!confirm(action === 'suspend' ? '确认停用该账号？该用户将无法登录。' : '确认恢复该账号？')) return;
+            await withBusy(el, async function () {
+                await api('/admin/users/'+el.dataset.id+'/'+action, {method:'POST'});
+                toast(action === 'suspend' ? '账号已停用' : '账号已恢复', 'ok');
+                await renderAdmin();
+            });
+            return;
+        }
         if (act === 'offers-tab' || act === 'admin-tab') {
             if (act === 'offers-tab') state.offersTab = el.dataset.v;
-            else state.adminTab = el.dataset.v;
+            else { state.adminTab = el.dataset.v; await withBusy(el, renderAdmin); return; }
             await render();
             return;
         }
         if (act === 'ex-confirm' || act === 'ex-done') {
+            if (act === 'ex-done' && !confirm('确认已完成面交，收到的物品无误？确认后不可撤回。')) return;
             await withBusy(el, async function () {
                 var r = await api('/exchange/' + el.dataset.id + (act === 'ex-confirm' ? '/confirm' : '/done'),
                     {method: 'POST'});
-                toast(r.msg || '已确认', 'ok');
+                toast(r && r.msg || '已确认', 'ok');
                 await render();
             });
             return;
         }
         if (act === 'ex-cancel') {
-            if (!confirm('取消后整单失效，三件物品解锁回在架。确定吗？')) return;
+            if (!confirm('取消后交换单将关闭，相关物品会回到在架状态。确定取消吗？')) return;
             await withBusy(el, async function () {
                 await api('/exchange/' + el.dataset.id + '/cancel', {method: 'POST', body: {reason: '当事人取消'}});
                 toast('已取消', 'ok');
@@ -1997,12 +2188,14 @@
         ev.preventDefault();
         var kind = form.dataset.form;
         var fd = new FormData(form);
-        var btn = form.querySelector('button[type=submit]');
+        var btn = ev.submitter || form.querySelector('button[type=submit]');
+        var publishError=form.querySelector('.publish-error');
+        if(publishError){publishError.hidden=true;publishError.textContent='';}
 
         var run = async function () {
             if (kind === 'room-text') {var roomId=currentView.arg,ringRoom=currentView.name==='ringChat';await api('/conversation/'+(ringRoom?'ring/':'')+roomId,{method:'POST',body:{kind:'text',content:fd.get('content')}});form.reset();await refreshRoom(true);return;}
-            if (kind === 'wish-new') {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content')}});toast('求换已发布');await renderWishes();return;}
-            if (kind === 'community-text') { await api('/community',{method:'POST',body:{kind:'text',content:fd.get('content')}}); form.reset(); await refreshCommunity(true); return; }
+            if (kind === 'wish-new') {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});toast('求换已发布');await renderWishes();return;}
+            if (kind === 'community-text') { await api('/community',{method:'POST',body:{kind:'text',content:fd.get('content')}}); form.reset(); form.querySelector('.community-draft-note')?.remove(); await refreshCommunity(true); return; }
             if (kind === 'auction-new') {
                 if (!state.publishImages.length) throw new ApiError('请上传拍品图片'); await api('/auction', {method:'POST', body:{title:fd.get('title'), description:fd.get('description'), amount:fd.get('amount'), hours:fd.get('hours'), image:state.publishImages.join(',')}}); toast('已提交审核'); go('#/auction/mine'); return;
             }
@@ -2073,7 +2266,7 @@
                 var r = await api(editing ? '/item/'+editing : '/item', {method: editing ? 'PUT' : 'POST', body: body});
                 sessionStorage.removeItem('hq.draft');
                 toast('已提交审核', 'ok');
-                go('#/item/' + (editing || r.itemId));
+                go(editing?'#/item/'+editing:'#/publish/success/'+r.itemId);
             } else if (kind === 'place') {
                 await api('/exchange/' + fd.get('exchangeId') + '/place', {method: 'PUT', body: {
                     place: fd.get('place'), dealTime: fd.get('dealTime')
@@ -2106,6 +2299,9 @@
                 }});
                 closeSheet();
                 toast(rr.msg || '已提交', 'ok');
+            } else if (kind === 'admin-user-search') {
+                state.adminUserQuery = (fd.get('q') || '').trim();
+                await renderAdmin();
             } else if (kind === 'search') {
                 state.home.keyword = (fd.get('keyword') || '').trim();
                 rememberSearch(state.home.keyword);
@@ -2129,6 +2325,8 @@
                 errBox.textContent = msg;
                 errBox.classList.add('show');
                 checkChain();
+            } else if(publishError){
+                publishError.textContent=msg;publishError.hidden=false;publishError.focus();
             } else {
                 toast(msg, 'err');
             }
@@ -2150,7 +2348,21 @@
     });
 
     document.addEventListener('change', async function (ev) {
-        if (ev.target.dataset.act === 'room-image') {var input=ev.target,file=input.files&&input.files[0];if(!file)return;if(file.size>2*1024*1024){toast('图片不能超过 2MB','err');input.value='';return;}var body=new FormData();body.append('file',file);input.disabled=true;try{var uploaded=await api('/upload',{method:'POST',form:body});await api('/conversation/'+currentView.arg,{method:'POST',body:{kind:'image',image:uploaded.url}});await refreshRoom(true);}catch(e){toast(e.message||'发送失败','err');}finally{input.disabled=false;input.value='';}return;}
+        if (ev.target.dataset.act === 'room-image') {
+            var input = ev.target, file = input.files && input.files[0], conversationId = currentView.arg;
+            if (!file) return;
+            input.disabled = true;
+            try {
+                var body = new FormData();
+                body.append('file', await window.prepareUploadImage(file));
+                var uploaded = await api('/upload', {method:'POST', form:body});
+                if (currentView.name !== 'chat' || currentView.arg !== conversationId) return;
+                await api('/conversation/' + conversationId, {method:'POST', body:{kind:'image', image:uploaded.url}});
+                await refreshRoom(true);
+            } catch (e) { toast(e.message || '发送失败', 'err'); }
+            finally { input.disabled = false; input.value = ''; }
+            return;
+        }
         if (ev.target.dataset.act === 'community-image') {
             var input=ev.target, file=input.files && input.files[0]; if(!file)return;
             if(file.size>2*1024*1024){toast('图片不能超过 2MB','err');input.value='';return;}
@@ -2165,13 +2377,9 @@
                     break;
                 }
                 var f = files[i];
-                if (f.size > 2 * 1024 * 1024) {
-                    toast('单张不能超过 2MB', 'err');
-                    continue;
-                }
-                var form = new FormData();
-                form.append('file', f);
                 try {
+                    var form = new FormData();
+                    form.append('file', await window.prepareUploadImage(f));
                     var r = await api('/upload', {method: 'POST', form: form});
                     state.publishImages.push(r.url);
                     renderImagePreview();
@@ -2193,8 +2401,8 @@
                 + '<button type="button" data-act="rm-image" data-i="' + i + '">✕</button></div>';
         }).join('');
         var add = state.publishImages.length < 3
-            ? '<label class="thumb-add">＋<input type="file" accept="image/png,image/jpeg" multiple '
-              + 'data-act="pick-image" aria-label="添加物品图片" hidden></label>'
+            ? '<label class="thumb-add">'+navIcon('camera')+'<input type="file" accept="image/png,image/jpeg" multiple '
+              + 'data-act="pick-image" aria-label="添加物品图片"></label>'
             : '';
         wrap.innerHTML = thumbs + add;
     }
@@ -2223,6 +2431,17 @@
 
     // ------------------------------------------------------------------ 启动
 
+    document.addEventListener('keydown',function(ev){
+        var panel=$('#modal .sheet');
+        if(!panel)return;
+        if(ev.key==='Escape'){ev.preventDefault();closeSheet();return;}
+        if(ev.key!=='Tab')return;
+        var elements=Array.from(panel.querySelectorAll('a[href],button,input,select,textarea,summary')).filter(function(el){return !el.disabled&&el.getClientRects().length;});
+        if(!elements.length){ev.preventDefault();return;}
+        var first=elements[0],last=elements[elements.length-1],active=document.activeElement;
+        if(ev.shiftKey&&(active===first||active===panel)){ev.preventDefault();last.focus();}
+        else if(!ev.shiftKey&&active===last){ev.preventDefault();first.focus();}
+    });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { var drawer = $('#landing-menu'); if (drawer && !drawer.hidden) { drawer.hidden = true; $('.land-scrim').hidden = true; $('.land-menu-toggle').setAttribute('aria-expanded', 'false'); $('.land-menu-toggle').focus(); } } });
     window.addEventListener('hashchange', function () {
         if(location.hash==='#/notifications') { noticeTracker.pending=0;closeNoticePopup(); }
