@@ -27,3 +27,21 @@
 每页先按 frontend-design 定一句设计方向。完成修改后验证构建或本地运行，用 Playwright 截取 430px 页面并查看截图，再依次执行 Impeccable critique、修复和 polish。按对应章节逐项核对，记录参考图、实际调整、发现及修复和核对结果。无截图时明确记录「本页未做截图自审」。
 
 全部页面完成后，依次执行 Impeccable audit、web-design-guidelines 审查和资料包自查，合并报告每项通过情况和前端改动文件列表。
+
+## 发布到 GitHub
+
+每完成一个小版本（一批页面或一组修复，能自测通过）就发布一次，不要攒着：
+
+```powershell
+pwsh scripts/publish-github.ps1 -Message "vX 这次改了什么"
+```
+
+细节：
+
+- 只提交本目录内的改动，不会扫到大仓 `F:\ai-projects` 里的其他项目。
+- 无改动时秒退，不会空推；重复跑安全。
+- 本项目在大仓里时走 subtree 导出推 `XXiaer/huanyiquan` 的 `main`；如果本项目被单独 clone 出来，脚本自动改成普通 `commit + push origin`。
+- 推送失败直接重跑，已传对象不会重传。网络不稳是常态，别改成 force push。
+- 前置条件：本机有 `~/.ssh/id_ed25519_github` 且公钥已在 GitHub 账号里（这台机器已配好）。
+- 提交会落在父仓库的 `main` 上；想让 gitcode 那条线也收到，需要另外 push 到 `origin`。
+
