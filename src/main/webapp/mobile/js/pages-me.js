@@ -328,12 +328,12 @@
         <div class="set-sub">
           <div class="set-sub__card" style="padding:4px 15px">
             <div class="set-row" style="padding:0"><span style="flex:1">登录学号</span><span class="set-row__val">${esc(me ? me.studentNo : '')}</span></div>
-            <div class="set-row" style="padding:0"><span style="flex:1">绑定邮箱</span><span class="set-row__val">${esc(emailState && emailState.verified ? emailState.email : '未绑定')}</span></div>
+            <div class="set-row" style="padding:0"><span style="flex:1">绑定邮箱</span><span class="set-row__val">${esc(emailState && emailState.email ? emailState.email : '未绑定')}</span></div>
           </div>
           <div class="label" style="margin-top:18px">绑定 / 验证邮箱</div>
-          <input class="field" id="emailIn" placeholder="name@example.com" value="${esc(emailState && emailState.email ? emailState.email : '')}">
+          <input class="field" id="emailIn" type="email" autocomplete="email" placeholder="name@example.com" value="${esc(emailState && emailState.email ? emailState.email : '')}">
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input class="field" id="codeIn" placeholder="邮箱验证码" style="flex:1">
+            <input class="field" id="codeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="邮箱验证码" style="flex:1">
             <button class="btn" id="sendCode" style="height:50px;padding:0 14px;font-size:13px">发验证码</button>
           </div>
           <button class="btn btn--block" id="verifyEmail" style="margin-top:10px">验证邮箱</button>
@@ -341,23 +341,33 @@
           <input class="field" id="oldPwd" type="password" placeholder="原密码">
           <input class="field" id="newPwd" type="password" placeholder="新密码（6-20 位）" style="margin-top:8px">
           <button class="btn btn--block" id="pwdGo" style="margin-top:10px">修改密码</button>
-          <div class="set-sub__tip">邮箱用于找回密码和接收重要交易通知。验证码会发送到你的邮箱，10 分钟内有效。</div>
+          <div class="set-sub__tip">${emailState?.available ? '验证码会发送到你的邮箱，10 分钟内有效。' : '邮件服务暂不可用。'}</div>
         </div></div>`;
-      document.getElementById('sendCode').addEventListener('click', async () => {
-        const email = document.getElementById('emailIn').value.trim();
-        if (!email) { toast('先填邮箱'); return; }
+      const sendCode = document.getElementById('sendCode');
+      const verifyEmail = document.getElementById('verifyEmail');
+      sendCode.disabled = !emailState?.available;
+      sendCode.addEventListener('click', async () => {
+        const input = document.getElementById('emailIn');
+        const email = input.value.trim();
+        if (!email || !input.checkValidity()) { toast('请输入有效邮箱'); return; }
+        sendCode.disabled = true;
         try {
-          const r = await api.post('/api/user/email/send', { email });
-          if (r && r.devCode) {
-            document.getElementById('codeIn').value = r.devCode;
-            toast('本地演示验证码：' + r.devCode + '（已自动填入）', 3200);
-          } else toast('验证码已发送，请查收邮箱');
-        } catch (e) { toast(e.message); }
+          await api.post('/api/user/email/send', { email });
+          toast('验证码已发送，请查收邮箱');
+          document.getElementById('codeIn')?.focus();
+          window.setTimeout(() => { sendCode.disabled = false; }, 60000);
+        } catch (e) { sendCode.disabled = false; toast(e.message); }
       });
-      document.getElementById('verifyEmail').addEventListener('click', async () => {
+      verifyEmail.addEventListener('click', async () => {
         const code = document.getElementById('codeIn').value.trim();
-        if (!code) { toast('填一下验证码'); return; }
-        try { await api.post('/api/user/email/verify', { code }); toast('邮箱验证成功'); } catch (e) { toast(e.message); }
+        if (!/^\d{6}$/.test(code)) { toast('请输入 6 位验证码'); return; }
+        verifyEmail.disabled = true;
+        try {
+          await api.post('/api/user/email/verify', { code });
+          toast('邮箱验证成功');
+          await renderRoute();
+        } catch (e) { toast(e.message); }
+        finally { verifyEmail.disabled = false; }
       });
       document.getElementById('pwdGo').addEventListener('click', async () => {
         const oldPassword = document.getElementById('oldPwd').value;
@@ -574,34 +584,113 @@
   PAGES.login = {
     noTab: true,
     async render(view) {
-      view.innerHTML = `
-      <div class="login-page">
-        <img class="login-logo" src="assets/brand/mascot-logo.png" alt="换一圈">
-        <h1>换一圈</h1>
-        <p class="sub">重庆移通学院 | 校园以物换物</p>
-        <div class="login-card">
-          <input id="lgNo" placeholder="学号（10 位数字）" autocomplete="username">
-          <input id="lgPwd" type="password" placeholder="密码" autocomplete="current-password">
-        </div>
-        <button class="btn btn--block" id="lgGo">登录</button>
-        <button class="btn btn--block demo" id="lgDemo">用演示账号试试</button>
-        <p class="to-reg">还没有账号？<a href="#/register">注册一个</a></p>
-      </div>`;
-      const doLogin = async (no, pwd) => {
-        try {
-          await api.post('/api/user/login', { studentNo: no, password: pwd });
-          window.__me = null;
-          toast('登录成功');
-          setTimeout(() => { location.hash = '#/home'; }, 350);
-        } catch (e) { toast(e.message); }
+      const methods = {
+        student: ['账号密码', '/api/user/login'],
+        email: ['邮箱密码', '/api/user/login/email/password'],
+        code: ['邮箱验证码', '/api/user/login/email/code'],
       };
-      document.getElementById('lgGo').addEventListener('click', () => {
-        doLogin(document.getElementById('lgNo').value.trim(), document.getElementById('lgPwd').value);
-      });
-      document.getElementById('lgDemo').addEventListener('click', () => doLogin('2021210001', '123456'));
-      document.getElementById('lgPwd').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') document.getElementById('lgGo').click();
-      });
+      let method = '';
+      let email = '';
+      let sending = false;
+      let sentUntil = 0;
+      let submitting = false;
+      function render() {
+        const icons = {student:'me', email:'message'};
+        view.innerHTML = `
+          <main class="mobile-login">
+            <header class="mobile-login__top">
+              ${method ? '<button type="button" id="lgBack" aria-label="返回登录方式">' + icon('back', 22) + '</button>' : ''}
+              <a href="#/home">先逛逛</a>
+            </header>
+            <div class="mobile-login__brand">
+              <img src="assets/brand/mascot-logo.png" alt="">
+              <span>换一圈</span>
+            </div>
+            <section class="mobile-login__actions" aria-label="登录换一圈">
+              ${!method ? `
+                <h1>登录换一圈</h1>
+                <div class="mobile-login__choices" role="group" aria-label="登录方式">
+                  ${['code', 'email', 'student'].map(key => `<button class="${key === 'code' ? 'primary' : ''}" type="button" data-method="${key}">${key === 'code' ? '' : icon(icons[key], 19)}${methods[key][0]}登录</button>`).join('')}
+                  <a href="#/register">注册账号</a>
+                </div>` : `
+                <h1>${methods[method][0]}登录</h1>
+            <form id="lgForm">
+              <div class="login-card">
+                ${method === 'student'
+                  ? '<input name="studentNo" placeholder="学号（10 位数字）" aria-label="学号" autocomplete="username" required>'
+                  : '<input name="email" type="email" placeholder="已绑定的邮箱" aria-label="邮箱" autocomplete="username" required>'}
+                ${method === 'code'
+                  ? '<div class="entry-code"><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6 位邮箱验证码" aria-label="邮箱验证码" required><button class="btn btn--ghost" id="lgSend" type="button">发送验证码</button></div>'
+                  : '<input name="password" type="password" placeholder="密码" aria-label="密码" autocomplete="current-password" required>'}
+              </div>
+              <button class="btn btn--block" type="submit">登录</button>
+            </form>
+            <p class="entry-switch">还没有账号？<a href="#/register">注册账号</a></p>
+            `}
+          </section></main>`;
+        if (!method) {
+          view.querySelectorAll('[data-method]').forEach(button => {
+            button.onclick = () => {
+              method = button.dataset.method;
+              render();
+              view.querySelector('input')?.focus();
+            };
+          });
+          return;
+        }
+        const form = view.querySelector('#lgForm');
+        const emailInput = form.elements.namedItem('email');
+        if (emailInput) emailInput.value = email;
+        view.querySelector('#lgBack').onclick = () => {
+          if (submitting || sending) return;
+          if (emailInput) email = emailInput.value;
+          method = '';
+          render();
+        };
+        const send = view.querySelector('#lgSend');
+        if (send) {
+          const refreshSend = () => {
+            send.disabled = sending || Date.now() < sentUntil;
+            send.textContent = send.disabled ? '稍后可重发' : '发送验证码';
+          };
+          refreshSend();
+          if (sentUntil > Date.now()) setTimeout(refreshSend, sentUntil - Date.now());
+          send.onclick = async () => {
+            if (!emailInput.reportValidity()) return;
+            sending = true;
+            refreshSend();
+            try {
+              await api.post('/api/user/login/email/send', {email:emailInput.value.trim()});
+              sentUntil = Date.now() + 60000;
+              toast('如果该邮箱已绑定账号，请查收验证码');
+              form.elements.namedItem('code').focus();
+            } catch (e) { toast(e.message); }
+            finally {
+              sending = false;
+              refreshSend();
+              setTimeout(refreshSend, Math.max(0, sentUntil - Date.now()));
+            }
+          };
+        }
+        const doLogin = async (data) => {
+          if (submitting) return;
+          submitting = true;
+          const submit = form.querySelector('[type="submit"]');
+          submit.disabled = true;
+          try {
+            await api.post(methods[method][1], data);
+            window.__me = null;
+            toast('登录成功');
+            location.hash = '#/home';
+          } catch (e) { toast(e.message); }
+          finally { submitting = false; submit.disabled = false; }
+        };
+        form.onsubmit = e => {
+          e.preventDefault();
+          doLogin(Object.fromEntries(new FormData(form)));
+        };
+      }
+      render();
     },
   };
 
@@ -610,20 +699,36 @@
     noTab: true,
     async render(view) {
       view.innerHTML = `
-      <div class="login-page">
-        <img class="login-logo" src="assets/brand/mascot-logo.png" alt="换一圈">
-        <h1>加入换一圈</h1>
-        <p class="sub">用校园身份注册，和同校同学换起来</p>
+      <main class="entry-screen"><div class="entry-brand"><img src="/assets/brand/brand-mascot-logo.png" alt=""><span>换一圈</span></div><div class="entry-panel"><div class="entry-art"><div class="entry-portrait"><img src="/assets/brand/mascot-box.png" alt="抱着箱子的换一圈吉祥物"></div><p>校园闲置，让好物流转</p></div><section class="entry-content">
+        <h1>注册账号</h1>
+        <p class="entry-intro">使用学号和邮箱创建校园账号</p>
         <div class="login-card">
-          <input id="rgNo" placeholder="学号（10 位数字）" maxlength="10">
-          <input id="rgNick" placeholder="昵称" maxlength="20">
-          <input id="rgPwd" type="password" placeholder="密码（6-20 位）" maxlength="20">
-          <input id="rgCollege" placeholder="学院（如：通信与信息工程学院）">
-          <input id="rgBuilding" placeholder="书院 / 宿舍楼（如：缤果大街）">
+          <input id="rgNo" aria-label="学号" placeholder="学号（10 位数字）" maxlength="10">
+          <input id="rgNick" aria-label="昵称" placeholder="昵称" maxlength="20">
+          <input id="rgPwd" aria-label="密码" type="password" placeholder="密码（6-20 位）" maxlength="20">
+          <input id="rgEmail" aria-label="邮箱" type="email" autocomplete="email" placeholder="邮箱" required>
+          <div class="entry-code"><input id="rgCode" aria-label="邮箱验证码" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 位邮箱验证码">
+          <button class="btn btn--ghost" id="rgSend" type="button">发送验证码</button></div>
+          <input id="rgCollege" aria-label="学院（选填）" placeholder="学院（如：通信与信息工程学院）">
+          <input id="rgBuilding" aria-label="书院或宿舍楼（选填）" placeholder="书院 / 宿舍楼（如：缤果大街）">
         </div>
         <button class="btn btn--block" id="rgGo">注册并登录</button>
-        <p class="to-reg">已有账号？<a href="#/login">直接登录</a></p>
-      </div>`;
+        <p class="entry-switch">已有账号？<a href="#/login">直接登录</a></p>
+      </section></div></main>`;
+      const send = document.getElementById('rgSend');
+      send.addEventListener('click', async () => {
+        const studentNo = document.getElementById('rgNo').value.trim();
+        const email = document.getElementById('rgEmail');
+        if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号'); return; }
+        if (!email.reportValidity()) return;
+        send.disabled = true;
+        try {
+          await api.post('/api/user/register/email/send', {studentNo, email:email.value.trim()});
+          toast('验证码已发送，请查收邮箱');
+          document.getElementById('rgCode')?.focus();
+          setTimeout(() => { send.disabled = false; }, 60000);
+        } catch (error) { send.disabled = false; toast(error.message); }
+      });
       document.getElementById('rgGo').addEventListener('click', async () => {
         const studentNo = document.getElementById('rgNo').value.trim();
         const nickname = document.getElementById('rgNick').value.trim();
@@ -631,9 +736,15 @@
         if (!/^\d{10}$/.test(studentNo)) { toast('学号是 10 位数字'); return; }
         if (!nickname) { toast('起个昵称'); return; }
         if (password.length < 6) { toast('密码至少 6 位'); return; }
+        const email = document.getElementById('rgEmail');
+        const code = document.getElementById('rgCode').value.trim();
+        if (!email.reportValidity()) return;
+        if (!/^[0-9]{6}$/.test(code)) { toast('请输入 6 位邮箱验证码'); return; }
+        const submit = document.getElementById('rgGo');
+        submit.disabled = true;
         try {
           await api.post('/api/user/register', {
-            studentNo, nickname, password,
+            studentNo, nickname, password, email:email.value.trim(), code,
             college: document.getElementById('rgCollege').value.trim(),
             building: document.getElementById('rgBuilding').value.trim(),
           });
@@ -642,6 +753,7 @@
           toast('注册成功，已登录');
           setTimeout(() => { location.hash = '#/home'; }, 400);
         } catch (e) { toast(e.message); }
+        finally { submit.disabled = false; }
       });
     },
   };

@@ -161,16 +161,16 @@
     const sold = item.status === 3;
     const shownPrice = item.tradeMode === 3 && item.auctionCurrentPrice
       ? item.auctionCurrentPrice : item.price;
-    const priceText = api.yuan(shownPrice);
+    const priceText = item.isDemo && !window.campusExchange.supports(item,1) ? '' : api.yuan(shownPrice);
     let tag = '';
     if (item.isDemo) {
-      tag = '<span class="card__tag card__tag--swap">示例展示</span>';
+      tag = `<span class="card__tag card__tag--swap">${window.campusExchange.demoLabel(item)}</span>`;
     } else if (item.tradeMode === 2) {
       tag = `<span class="card__tag card__tag--swap">${icon('swapRing', 12)}以物换物</span>`;
     } else if (item.tradeMode === 3) {
       tag = `<span class="card__tag card__tag--auction">${icon('auction', 12)}拍卖中${item.auctionEndsAt ? ' | ' + remainText(item.auctionEndsAt) : ''}</span>`;
     }
-    const swapWant = item.tradeMode === 2 && (item.wantText || item.expectDesc)
+    const swapWant = window.campusExchange.supports(item,2) && (item.wantText || item.expectDesc)
       ? `<p class="card__want">想换：${esc(String(item.wantText || item.expectDesc).replace(/^想换[:：]?/, ''))}</p>` : '';
     return `
       <a class="card" href="#/item/${item.id}">
@@ -181,11 +181,11 @@
         </div>
         <div class="card__body">
           <h3 class="card__title">${displayItemTitle(item)}</h3>
-          <p class="card__heat">${item.isDemo ? '官网参考价' : heatText(item)}</p>
+          <p class="card__heat">${item.isDemo ? (priceText ? '官网参考价' : '仅供浏览') : heatText(item)}</p>
           ${swapWant}
           <div class="card__price">
             ${priceText ? `<span class="price"><em>¥</em><b>${priceText}</b></span>` : `<span class="price"><b>想换</b></span>`}
-            ${item.originalPrice && item.originalPrice > item.price ? `<s>¥${api.yuan(item.originalPrice)}</s>` : ''}
+            ${priceText && item.originalPrice && item.originalPrice > item.price ? `<s>¥${api.yuan(item.originalPrice)}</s>` : ''}
             <span class="card__wantnum">${item.tradeMode === 3 ? (item.auctionBidCount || 0) + ' 次出价' : want}</span>
           </div>
           <div class="card__seller">

@@ -154,6 +154,16 @@
 <servlet-mapping><servlet-name>conversationServlet</servlet-name><url-pattern>/api/conversation/*</url-pattern></servlet-mapping>
 <servlet><servlet-name>wishServlet</servlet-name><servlet-class>com.huanyiquan.servlet.WishServlet</servlet-class></servlet>
 <servlet-mapping><servlet-name>wishServlet</servlet-name><url-pattern>/api/wish/*</url-pattern></servlet-mapping>
+  <servlet><servlet-name>tradeThumbnailsServlet</servlet-name><servlet-class>com.huanyiquan.servlet.TradeThumbnailsServlet</servlet-class></servlet>
+  <servlet-mapping><servlet-name>tradeThumbnailsServlet</servlet-name><url-pattern>/api/item/trade-thumbnails</url-pattern></servlet-mapping>
+  <servlet><servlet-name>followersServlet</servlet-name><servlet-class>com.huanyiquan.servlet.FollowersServlet</servlet-class></servlet>
+  <servlet-mapping><servlet-name>followersServlet</servlet-name><url-pattern>/api/social/followers</url-pattern><url-pattern>/api/social/follow</url-pattern></servlet-mapping>
   <servlet><servlet-name>socialServlet</servlet-name><servlet-class>com.huanyiquan.servlet.SocialServlet</servlet-class></servlet>
   <servlet-mapping><servlet-name>socialServlet</servlet-name><url-pattern>/api/social/*</url-pattern></servlet-mapping>
+  <servlet><servlet-name>authEntryServlet</servlet-name><servlet-class>com.huanyiquan.servlet.AuthEntryServlet</servlet-class></servlet>
+  <servlet-mapping><servlet-name>authEntryServlet</servlet-name><url-pattern>/api/user/register</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>authEntryServlet</servlet-name><url-pattern>/api/user/register/email/send</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>authEntryServlet</servlet-name><url-pattern>/api/user/login/email/send</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>authEntryServlet</servlet-name><url-pattern>/api/user/login/email/code</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>authEntryServlet</servlet-name><url-pattern>/api/user/login/email/password</url-pattern></servlet-mapping>
 </web-app>

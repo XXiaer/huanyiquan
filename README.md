@@ -672,3 +672,20 @@ atexit.register(lambda p=profile: shutil.rmtree(p, ignore_errors=True))
 在已有数据库上，先备份，再依次执行 `sql/notifications_demo.sql` 与 `sql/community_exchange.sql`；迁移中的 `ALTER TABLE` 不可重复执行。200 条示例商品由 `scripts/generate_demo_catalog.py` 和 `demo-catalog/seed.py` 生成及幂等导入，均标记为不可交易的示例。向量检索使用服务器本地的量化 BGE 中文模型和 `semantic/server.py`，不向外部发送查询；服务只监听 127.0.0.1:18084。
 
 物品可多选期望品类，选择仅一对一、主动找环或等待自动匹配；被动匹配仅发送候选通知，不替用户创建交换单。三方闭环需全部确认后进入交付，参与者可通过独立协商房间沟通。私聊按物品和双方独立隔离；求换信息不等同于已上架物品。校园实名认证、跨校区认证、积分兑换、N 人闭环及交付照片担保尚未实现。
+
+## 搜索与语义检索
+
+搜索走 `GET /api/item/search`，返回结构不变，`searchMode` 说明本次是 `semantic` 还是 `keyword`。语义侧车不可用时接口不再报 503，而是自动按关键词检索，前端无需改动。
+
+侧车启动：Windows 双击 `semantic\run_local.bat`（首次会自动建 `semantic\.venv` 并装依赖），Linux 用 `semantic/server.py`。连接信息一律从 `DB_URL` 解析主机、端口、库名，不再写死 3306；健康检查 `http://127.0.0.1:18084/health` 出现 `"ready": true` 后才开始提供语义结果。
+
+截断参数决定「搜得准不准、结果多不多」，都可用环境变量覆盖，不必改代码：
+
+| 变量 | 默认 | 作用 |
+| --- | --- | --- |
+| `SEMANTIC_SCORE_FLOOR` | 0.45 | 相关度绝对下限，低于它的条目直接不返回 |
+| `SEMANTIC_SCORE_MARGIN` | 0.05 | 允许低于首条多少分，控制结果集宽度 |
+| `SEMANTIC_KEEP` | 30 | 单次最多返回条数 |
+| `SEMANTIC_REFRESH_SECONDS` | 30 | 索引重建间隔 |
+
+旧版只有一个 0.35 的固定阈值，无关条目也普遍落在 0.35 至 0.45，导致每次搜索都返回几十条噪声。改为「绝对下限 + 相对首条容差 + 条数上限」后，具体商品查询从平均 22 条降到 2 条，无对应商品的查询返回空列表，正确条目仍全部保留。标定脚本 `semantic/_probe/bench_rank.py`，端到端验证 `semantic/_probe/verify_search.py`，两者只读本地数据，可重复运行。

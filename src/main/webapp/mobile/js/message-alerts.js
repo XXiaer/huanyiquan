@@ -37,7 +37,12 @@
     popup.querySelector('div > span').textContent = alert.text;
     const link = popup.querySelector('a');
     link.href = alert.href;
-    link.addEventListener('click', dismiss);
+    link.addEventListener('click', () => {
+      if (alert.href === '#/followers') {
+        api.post('/api/notification/' + alert.id + '/read', {}).then(refreshMessageAlerts).catch(() => {});
+      }
+      dismiss();
+    });
     popup.querySelector('button').addEventListener('click', dismiss);
     document.body.append(popup);
     timer = setTimeout(dismiss, 8000);
@@ -53,18 +58,28 @@
       const system = (Array.isArray(notices) ? notices : []).filter(n => !n.read);
       unread = system.length;
       updateUnreadBadge();
+      document.querySelectorAll('[data-message-category]').forEach(row => {
+        const hasUnread = system.some(n => !String(n.target || '').startsWith('#/chat/') && (n.category || 'notice') === row.dataset.messageCategory);
+        row.querySelector('.msg-unread-dot').hidden = !hasUnread;
+      });
       const alerts = system.map(n => ({
-        key: 'notice:' + n.id, version: String(n.id), date: n.createdAt || '',
+        id: n.id, key: 'notice:' + n.id, version: String(n.id), date: n.createdAt || '',
         title: n.title || '新通知', text: n.content || '',
-        href: /^#\/chat\/\d+$/.test(n.target || '') ? n.target : '#/notifications',
+        href: /^#\/(?:chat\/\d+|followers)$/.test(n.target || '') ? n.target : '#/notifications',
       }));
-      const newest = alerts.filter(a => previous.get(a.key) !== a.version && a.href !== active)
-        .sort((a, b) => b.date.localeCompare(a.date))[0];
+      const inMessages = active === '#/messages' || active.startsWith('#/notifications');
+      const newest = alerts.filter(a => previous.get(a.key) !== a.version && a.href !== active
+          && (!inMessages || a.href === '#/followers'))
+        .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)[0];
       previous = new Map(alerts.map(a => [a.key, a.version]));
-      if (newest && active !== '#/messages' && !active.startsWith('#/notifications')) show(newest);
+      if (newest) show(newest);
       else if (!alerts.some(a => a.key === document.getElementById("messagePopup")?.dataset.alertKey)) dismiss();
     } catch (e) {
       if (e.code === 401) {
+        if (/^#\/(?:messages|notifications(?:\/\w+)?|followers|chat\/\d+)$/.test(location.hash)) {
+          document.getElementById('view').replaceChildren();
+          location.replace('#/login');
+        }
         previous.clear();
         unread = 0;
         updateUnreadBadge();

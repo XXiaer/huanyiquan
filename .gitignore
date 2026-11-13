@@ -3,3 +3,6 @@ uploads/
 *.log
 .idea/
 *.iml
+semantic/.venv/
+semantic/_probe/uploads/
+__pycache__/

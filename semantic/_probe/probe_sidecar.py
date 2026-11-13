@@ -109,7 +109,8 @@ def main():
             print((ROOT / "semantic" / "_probe" / "sidecar.log").read_text(encoding="utf-8", errors="replace")[-3000:])
             return
 
-        for q in ["高等数学课本", "机械键盘", "电饭煲", "iPhone 13", "毕业季卖书", "kindle"]:
+        for q in ["高等数学课本", "机械键盘", "电饭煲", "iPhone 13", "毕业季卖书", "kindle",
+                  "羽毛球拍", "有没有人能出一本高数课本，最好九成新"]:
             code, body = http_get(base + "/search?q=" + urllib.parse.quote(q))
             data = json.loads(body)
             rows = data.get("results", [])

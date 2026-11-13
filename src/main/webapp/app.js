@@ -286,6 +286,7 @@
         if (res.status === 401 || (data && data.code === 401)) {
             state.me = null;
             writeToken('');
+            if (opt.optionalAuth) throw new ApiError((data && data.msg) || '请先登录', 401);
             // 记下当前页面，重新登录后跳回来
             if (location.hash && location.hash !== '#/login') {
                 sessionStorage.setItem('hq.returnTo', location.hash);
@@ -359,7 +360,7 @@
     }
     function topnav(active) {
         if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        var items=[['market','首页'],['community','社区'],['relay','换物接力'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
+        var items=[['market','首页'],['idle','校园闲置'],['community','社区'],['relay','换物接力'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
         if (state.me && state.me.role === 1) items.push(['admin','管理后台']);
         var html = items.map(function (item) {
             var selected = active === item[0];
@@ -377,7 +378,7 @@
         return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
             +'<header class="appbar"><div class="appbar-inner"><a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-name">换一圈<small>校园闲置 让好物流转</small></span></a>'
             +search+'<div class="header-actions"><a class="settings-link shelf-link" href="#/favorites" aria-label="收藏与历史" title="收藏与历史">'+navIcon('heart')+'</a><a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">'+navIcon('add')+' 发布闲置</a></div></header>'
-            +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
+            +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'||active==='idle'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
     }
     function tradeTabs(active){return '<div class="trade-top"><div><h1>我的交易</h1><p>报价和交换进度，都在这里。</p></div></div><nav class="trade-sections" aria-label="交易分类"><a class="'+(active==='offers'?'on':'')+'" href="#/offers">报价</a><a class="'+(active==='exchange'?'on':'')+'" href="#/exchange">交换单</a></nav>';}
 
@@ -408,8 +409,8 @@
         var locked=it.status&&it.status!==1, img=firstImage(it.images);
         var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="225" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
         return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
-            +'<span class="pbadge">'+esc(it.isDemo?'示例展示':(locked?(it.statusText||'已换出'):it.conditionLevel))+'</span></div>'
-            +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p><div class="pcard-bottom"><span class="swap-label">'+(it.isDemo?(demoReferencePrice(it)||'仅供参考'):'以物换物')+'</span><span class="pcard-category">'+esc(it.category)+'</span></div>'
+            +'<span class="pbadge">'+esc(it.isDemo?window.campusExchange.demoLabel(it):(locked?(it.statusText||'已换出'):it.conditionLevel))+'</span></div>'
+            +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p><div class="pcard-bottom"><span class="swap-label">'+(it.isDemo?(window.campusExchange.supports(it,1)?(demoReferencePrice(it)||'仅供参考'):'以物换物'):window.campusExchange.mode(it)===1?'¥'+(Number(it.price)/100).toFixed(2):window.campusExchange.mode(it)===3?'拍卖':'以物换物')+'</span><span class="pcard-category">'+esc(it.category)+'</span></div>'
             +'<div class="pcard-owner"><span class="pcard-owner-avatar">'+esc((it.ownerNickname||'同').slice(0,1))+'</span><span>'+esc(it.ownerNickname||'校园同学')+'</span><span class="pcard-credit">信用 '+(it.ownerCredit===undefined?'-':it.ownerCredit)+'</span></div></div></button>';
     }
 
@@ -450,36 +451,43 @@
     function renderLogin(mode) {
         mode = mode || 'login';
         var isReg = mode === 'register';
-        var body = '<div class="auth-wrap"><div class="auth-card">'
-            + '<div class="auth-logo" aria-label="换一圈">' + logoMarkup() + '</div>'
-            + '<div class="auth-school">重庆移通学院 | 校园换物</div>'
-            + '<h1>' + (isReg ? '注册新账号' : '欢迎回来') + '</h1>'
-            + '<p class="lead">' + (isReg
-                ? '用学号注册，初始信用分 80。发一件闲置，就能开始找换法。'
-                : '校园里最缺的那件东西，可能正躺在别人的柜子里。') + '</p>'
+        var method = isReg ? 'student' : (state.loginMethod || 'student');
+        var methods = {student:'账号密码', email:'邮箱密码', code:'邮箱验证码'};
+        var body = '<main class="entry-screen"><div class="entry-brand"><img src="/assets/brand/brand-mascot-logo.png" alt=""><span>换一圈</span></div><div class="entry-panel"><div class="entry-art"><div class="entry-portrait"><img src="/assets/brand/mascot-box.png" alt="抱着箱子的换一圈吉祥物"></div><p>校园闲置，让好物流转</p></div><section class="entry-content">'
+            + '<h1>' + (isReg ? '注册账号' : '欢迎回来') + '</h1>'
+            + '<p class="entry-intro">' + (isReg ? '使用学号和邮箱创建校园账号' : '登录换一圈，继续逛校园好物') + '</p>'
             + '<form data-form="' + (isReg ? 'register' : 'login') + '">'
-            + '<div class="field"><label class="label">学号 <span class="opt">10 位数字</span></label>'
+            + (isReg ? '' : '<div class="entry-methods" role="group" aria-label="登录方式">' + Object.keys(methods).map(function (key) {
+                return '<button type="button" class="btn ' + (key === method ? 'btn-primary' : 'btn-ghost') + '" data-act="login-method" data-v="' + key + '" aria-pressed="' + (key === method) + '">' + methods[key] + '</button>';
+            }).join('') + '</div>')
+            + (method === 'student' ? '<div class="field"><label class="label">学号 <span class="opt">10 位数字</span></label>'
             + '<input class="input" name="studentNo" autocomplete="username" inputmode="numeric" '
             + 'maxlength="10" placeholder="例如 2021210001" required></div>'
+                : '<div class="field"><label class="label" for="login-email">邮箱</label><input class="input" id="login-email" type="email" name="email" autocomplete="username" required></div>')
             + (isReg ? '<div class="field"><label class="label">昵称</label>'
                 + '<input class="input" name="nickname" placeholder="别人看到的名字" maxlength="20" required></div>' : '')
-            + '<div class="field"><label class="label">密码</label>'
-            + '<input class="input" type="password" name="password" autocomplete="current-password" placeholder="6-20 位" required></div>'
+            + (method === 'code'
+                ? '<div class="field"><label class="label" for="login-code">验证码</label><div class="entry-code"><input class="input" id="login-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required><button type="button" class="btn btn-ghost" data-act="login-email-send">发送验证码</button></div></div>'
+                : '<div class="field"><label class="label">密码</label>'
+            + '<input class="input" type="password" name="password" autocomplete="' + (isReg ? 'new-password' : 'current-password') + '" placeholder="请输入密码" required></div>')
             + (isReg ? '<div class="field"><label class="label">院系 <span class="opt">选填</span></label>'
                 + '<input class="input" name="college" placeholder="例如 计算机学院"></div>'
                 + '<div class="field"><label class="label">宿舍楼 <span class="opt">选填，用于就近面交</span></label>'
                 + '<input class="input" name="building" placeholder="例如 紫荆 3 号楼"></div>' : '')
+            + (isReg ? '<div class="field"><label class="label" for="register-email">邮箱</label>'
+                + '<input class="input" id="register-email" type="email" name="email" autocomplete="email" required></div>'
+                + '<div class="field"><label class="label" for="register-code">邮箱验证码</label>'
+                + '<div class="entry-code"><input class="input" id="register-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>'
+                + '<button class="btn btn-ghost" type="button" data-act="register-email-send">发送验证码</button></div></div>' : '')
             + '<div class="form-error" id="form-error"></div>'
             + '<button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">'
             + (isReg ? '注册' : '登录') + '</button>'
             + '</form>'
-            + '<div class="auth-switch">' + (isReg ? '已有账号？' : '还没有账号？')
+            + '<div class="entry-switch">' + (isReg ? '已有账号？' : '还没有账号？')
             + '<button data-act="auth-mode" data-mode="' + (isReg ? 'login' : 'register') + '">'
             + (isReg ? '去登录' : '去注册') + '</button></div>'
-            + '<div class="chain" id="chain-status"></div>'
-            + '</div></div>';
+            + '</section></div></main>';
         $('#app').innerHTML = body;
-        checkChain();
     }
 
     /** 打开登录页就探一次：后端通没通、数据库连没连 */
@@ -557,6 +565,7 @@
 
     function renderHome() {
         var h=state.home;
+        var idle=location.hash==='#/idle';
         var categories=[['','全部好物'],['教材','图书教材'],['数码','数码设备'],['运动','运动户外'],['生活','宿舍生活'],['衣物','服饰穿搭'],['绿植','绿植花卉'],['其他','兴趣好物']];
         var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span>'+esc(c[1])+'</span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
         var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
@@ -567,16 +576,20 @@
         }).join('');
         var desktop='<aside class="category-panel desktop-market" aria-label="集市侧栏"><h2 class="category-panel-title">逛分类</h2>'+desktopCats
             +'<nav class="desktop-market-shortcuts" aria-label="快捷入口"><h2 class="category-panel-title">快捷入口</h2>'+shortcuts+'</nav></aside>'
-            +'<section class="desktop-market desktop-center"><div class="market-hero mascot-hero"><div class="mascot-copy"><h1>好东西，再转一圈。</h1><p>闲置不闲着，校园里总有人需要。</p></div><figure class="mascot-portrait">'+mascotImage+'</figure></div>'+campusServices(true)+'</section>';
+            +'<section class="desktop-market desktop-center"><div class="market-hero mascot-hero"><div class="mascot-copy"><h1>'+(idle?'校园闲置':'好东西，再转一圈。')+'</h1><p>'+(idle?'浏览校内同学标价出售的物品。':'用手里的闲置，换一件你需要的好物。')+'</p></div><figure class="mascot-portrait">'+mascotImage+'</figure></div>'+campusServices(true)+'</section>';
         var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈校园伙伴"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b><small>查看竞拍</small></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b><small>找想要的</small></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b><small>聊聊近况</small></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b><small>换物进度</small></button></div></section>';
-        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(h.keyword?'为你找到':'发现好物')+'</h2><p>'+(h.keyword?'“'+esc(h.keyword)+'” 的搜索结果':'校内同学发布的闲置')+'</p></div><div class="feed-actions"><span class="feed-count">'+(h.keyword?'匹配 ':'在架 ')+h.total+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
+        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(location.hash==='#/search'?'为你找到':idle?'校园闲置':'以物换物')+'</h2><p>'+(location.hash==='#/search'?'“'+esc(h.keyword)+'” 的搜索结果':idle?'标价出售':'可交换的校园好物')+'</p></div><div class="feed-actions"><span class="feed-count">'+(location.hash==='#/search'?'匹配 '+h.total:'已展示 '+h.items.length)+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
             +((h.category||h.condition)?'<div class="active-filter'+(h.condition?'':' category-only')+'" aria-label="已选筛选">'
                 +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
                 +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')+'</div>':'')
-            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(location.hash==='#/search'?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物','换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
+            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(location.hash==='#/search'?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物',location.hash==='#/search' && h.searchConditions?.length ? '没有商品同时满足这些条件，可修改搜索词放宽条件。':'换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
-        if(location.hash==='#/search'){renderSearchPage(results);return;}
-        $('#app').innerHTML=shell('market','<div class="market-home">'+desktop+mobile+results+'</div><footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 | 理性交流 | 安心面交</span></footer>');
+        if(location.hash==='#/search'){
+            var conditions=(h.searchConditions||[]).map(function(label){return '<span class="chip on">'+esc(label)+'</span>';}).join('');
+            renderSearchPage((conditions ? '<div class="active-filter" aria-label="已识别搜索条件">'+conditions+'</div>' : '')+results);
+            return;
+        }
+        $('#app').innerHTML=shell(idle?'idle':'market','<div class="market-home">'+desktop+mobile+results+'</div><footer class="market-footer"><b>换一圈</b><span>让闲置，遇见新的喜欢。</span><span>校园换物 | 理性交流 | 安心面交</span></footer>');
     }
 
     function openFilterSheet() {
@@ -612,6 +625,22 @@
         var params = '?page=' + h.page + '&size=20';
         if (h.category) params += '&category=' + encodeURIComponent(h.category);
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
+        if (location.hash !== '#/search') {
+            try {
+                var batch = await window.campusExchange.browse(
+                    function (page) { return api('/item/list' + params.replace(/page=\d+/, 'page=' + page), options); },
+                    location.hash === '#/idle' ? 1 : 2, h.page);
+                if (token !== homeLoadToken || currentView.name !== 'home') return false;
+                h.page = batch.page;
+                h.items = h.items.concat(batch.rows);
+                h.total = h.items.length;
+                h.hasMore = batch.hasMore;
+                return true;
+            } catch (error) {
+                if (error.name === 'AbortError') return false;
+                throw error;
+            }
+        }
         var keyword = encodeURIComponent(h.keyword);
         var useKeyword = !!h.keyword && !reset && h.keywordFallback;
         var listPath = '/item/list' + params + (keyword ? '&keyword=' + keyword : '');
@@ -639,7 +668,7 @@
         h.items = h.items.concat(data.list || []);
         h.total = data.total || 0;
         h.hasMore = !!data.hasMore;
-        h.emptyTip = data.emptyTip;
+        h.searchConditions = data.conditions || [];
         return true;
     }
 
@@ -657,7 +686,7 @@
 
         var actions;
         if (it.isDemo) {
-            actions = '<div class="card card-pad">这是平台演示样品，仅供浏览，不参与交换。</div>';
+            actions = '<div class="card card-pad">这是平台演示样品，仅供浏览。</div>';
         } else if (d.isMine) {
             if (it.status === 4) {
                 // 已下架的物品，主人可以在详情页直接重新上架，不用绕回「我的」
@@ -680,8 +709,9 @@
         var want = d.want || {};
         var content = '<div class="item-detail-media">' + hero + '</div><div class="item-detail-info">'
             + '<h1 class="detail-title">' + esc(it.title) + '</h1>'
-            + (demoReferencePrice(it) ? '<p class="swap-label">' + demoReferencePrice(it) + '</p>' : '')
+            + (demoReferencePrice(it) && window.campusExchange.supports(it,1) ? '<p class="swap-label">' + demoReferencePrice(it) + '</p>' : '')
             + '<div class="detail-meta">'
+            + (it.isDemo ? '<span class="tag brand">'+window.campusExchange.demoLabel(it)+'</span>' : '')
             + '<span class="tag brand">' + esc(it.category) + '</span>'
             + '<span class="tag">' + esc(it.conditionLevel) + '</span>'
             + '<span class="tag ghost">' + esc(it.statusText || '') + '</span>'
@@ -689,8 +719,8 @@
             + '</div>'
             + '<div class="card card-pad" style="margin-top:12px">'
             + (it.description ? '<div class="kv"><span class="k">描述</span><span class="v">' + esc(it.description) + '</span></div>' : '')
-            + '<div class="kv"><span class="k">想换</span><span class="v">'
-            + esc((want.wantCategories || []).join('、') || want.wantCategory || '不限类别') + (want.expectDesc ? '，' + esc(want.expectDesc) : '') + '</span></div>'
+            + (!it.isDemo || window.campusExchange.supports(it,2) ? '<div class="kv"><span class="k">想换</span><span class="v">'
+            + esc(it.isDemo ? (it.wantText || '同类校园好物') : ((want.wantCategories || []).join('、') || want.wantCategory || '不限类别') + (want.expectDesc ? '，' + want.expectDesc : '')) + '</span></div>' : '')
             + '<div class="kv"><span class="k">发布</span><span class="v">' + fmtRel(it.createTime)
             + ' | ' + esc(it.ownerBuilding || '未填宿舍楼') + '</span></div>'
             + '</div>'
@@ -897,15 +927,18 @@
     // ------------------------------------------------------------------ 三方环
 
     async function renderRelay() {
-        var items = (await api('/item/mine?status=1')).filter(function(item) { return item.allowCycle && !item.isDemo; });
+        var items = [];
+        var fallback = '<p>还没有可接力的在架物品。</p><a href="#/publish">去发布物品</a>';
+        try {
+            items = (await api('/item/mine?status=1', {optionalAuth:true})).filter(function(item) { return item.allowCycle && !item.isDemo; });
+        } catch (error) {
+            fallback = error.code === 401 ? '<p>登录后可查看自己的接力物品。</p><a href="#/login">去登录</a>' : '<p role="status">'+esc(error.message)+'</p>';
+        }
         if (currentView.name !== 'relay') return;
         var rows = items.map(function(item) {
-            return '<a class="relay-item" href="#/cycle/'+Number(item.id)+'"><span>'+esc(item.title)+'</span><span>查看换法</span></a>';
+            return '<a href="#/cycle/'+Number(item.id)+'"><b>'+esc(item.title)+'</b><span>查看换法</span></a>';
         }).join('');
-        $('#app').innerHTML = shell('relay','<section class="relay-desktop"><div class="page-head"><h1>换物接力</h1>'
-            +'<p>关联你的在架闲置，写清想换的物品。形成闭环后，系统会通知三方。</p></div>'
-            +'<a class="btn btn-primary" href="#/wishes">发布接力心愿</a><h2>我的接力物品</h2>'
-            +(rows || '<p>还没有可接力的在架物品。</p><a href="#/publish">去发布闲置</a>')+'</section>');
+        $('#app').innerHTML = shell('relay',window.campusExchange.relay({wish:'#/wishes', rows:rows, fallback:fallback}));
     }
 
     async function renderCycle(itemId) {
@@ -1306,15 +1339,25 @@
         if(window.innerWidth < 900) { popup.style.removeProperty('right');popup.style.removeProperty('top');return; }
         if(anchor) { var r=anchor.getBoundingClientRect(); popup.style.right=Math.max(12,window.innerWidth-r.right-12)+'px'; popup.style.top=Math.max(12,r.bottom+14)+'px'; }
     }
-    function showNoticePopup(count) {
+    function showNoticePopup(count, notice) {
         if(!count || location.hash==='#/notifications')return;
-        if(document.hidden || !document.querySelector('.appbar .notice-link')) { noticeTracker.pending=count;return; }
+        if(document.hidden || !document.querySelector('.appbar .notice-link')) { noticeTracker.pending=count;noticeTracker.pendingNotice=notice;return; }
         noticeTracker.pending=0;closeNoticePopup();
         var popup=document.createElement('div');popup.id='notice-popup';popup.className='notice-popup';popup.setAttribute('role','status');popup.setAttribute('aria-live','polite');
         popup.innerHTML='<span class="notice-popup-icon" aria-hidden="true">'+navIcon('notice')+'</span><div class="notice-popup-content"><strong>您有 '+count+' 条未读消息</strong><span>有新动态，记得查收。</span><a href="#/notifications">查看消息 '+navIcon('arrow')+'</a></div><button type="button" class="notice-popup-close" aria-label="关闭消息提醒">'+navIcon('close')+'</button>';
+        if(notice && notice.target==='#/followers'){
+            popup.querySelector('strong').textContent=notice.title;
+            popup.querySelector('.notice-popup-content > span').textContent=notice.content;
+            popup.querySelector('a').href='#/followers';
+        }
         document.body.appendChild(popup);positionNoticePopup();
         popup.querySelector('button').addEventListener('click',closeNoticePopup);
-        popup.querySelector('a').addEventListener('click',closeNoticePopup);
+        popup.querySelector('a').addEventListener('click',function(){
+            if(notice && notice.target==='#/followers'){
+                api('/notification/'+Number(notice.id)+'/read',{method:'POST'}).then(refreshNoticeCount).catch(function(){});
+            }
+            closeNoticePopup();
+        });
         noticeTracker.timer=setTimeout(closeNoticePopup,8000);
     }
     async function refreshNoticeCount() {
@@ -1324,24 +1367,31 @@
         var request=++noticeTracker.request;
         try {
             var response=await fetch(BASE+'/api/notification/unread',{credentials:'include',headers:{'X-Token':token}});if(!response.ok)return;
-            var payload=await response.json();if(payload.code!==0)return;var n=Math.max(0,Number(payload.data.count)||0),latest=0;
-            if(n){try{var listResponse=await fetch(BASE+'/api/notification',{credentials:'include',headers:{'X-Token':token}});if(listResponse.ok){var listPayload=await listResponse.json();if(listPayload.code===0&&Array.isArray(listPayload.data)){listPayload.data.forEach(function(item){if(!item.read)latest=Math.max(latest,Number(item.id)||0);});}}}catch(ignore){}}
+            var payload=await response.json();if(payload.code!==0)return;var n=Math.max(0,Number(payload.data.count)||0),latest=0,latestNotice=null;
+            if(n){try{var listResponse=await fetch(BASE+'/api/notification',{credentials:'include',headers:{'X-Token':token}});if(listResponse.ok){var listPayload=await listResponse.json();if(listPayload.code===0&&Array.isArray(listPayload.data)){listPayload.data.forEach(function(item){if(!item.read && Number(item.id)>latest){latest=Number(item.id);latestNotice=item;}});}}}catch(ignore){}}
             if(request!==noticeTracker.request || readToken()!==token)return;
             document.querySelectorAll('.notice-count').forEach(function(el){el.textContent=n>99?'99+':String(n);el.hidden=n===0;el.setAttribute('aria-label',n+' 条未读消息');});document.title=(n?'('+n+') ':'')+'换一圈 | 重庆移通学院校园换物';
             var isNew=n>0&&(!noticeTracker.initialized||(latest>noticeTracker.latest)||(latest===0&&n>noticeTracker.count));
             noticeTracker.initialized=true;noticeTracker.count=n;noticeTracker.latest=Math.max(noticeTracker.latest,latest);
-            if(!n){noticeTracker.pending=0;closeNoticePopup();}else if(isNew || noticeTracker.pending)showNoticePopup(n);
+            if(!n){noticeTracker.pending=0;closeNoticePopup();}else if(isNew || noticeTracker.pending)showNoticePopup(n,latestNotice || noticeTracker.pendingNotice);
         }catch(e){ /* 提醒服务暂时不可用时保留页面状态 */ }
     }
     window.addEventListener('resize',positionNoticePopup);
     window.addEventListener('scroll',positionNoticePopup,{passive:true});
-    document.addEventListener('visibilitychange',function(){if(!document.hidden&&noticeTracker.pending)showNoticePopup(noticeTracker.pending);});
+    document.addEventListener('visibilitychange',function(){if(!document.hidden&&noticeTracker.pending)showNoticePopup(noticeTracker.pending,noticeTracker.pendingNotice);});
+    async function renderFollowers() {
+        var users = await api('/social/followers');
+        if(currentView.name!=='followers')return;
+        var rows=users.map(function(u){return '<a class="notice-row" href="#/user/'+Number(u.id)+'"><span class="notice-body"><b>'+esc(u.nickname)+'</b><span>'+esc(u.college || '重庆移通学院')+'</span></span></a>';}).join('');
+        $('#app').innerHTML=shell('me','<section class="redesign-page"><header class="redesign-heading"><h1>谁关注了我</h1></header><div class="notice-list">'+(rows||'<p class="hint">还没有同学关注你。</p>')+'</div></section>');
+    }
+
     async function renderNotifications() {
         var notices=await api('/notification');
-        var rows=notices.map(function(n){var target=/^#\/(offers|exchange(?:\/\d+)?|wishes(?:\/\d+)?|auctions|auction\/mine|chat\/\d+|cycle\/\d+|item\/\d+)$/.test(n.target)?n.target:'#/notifications';return '<a class="notice-row '+(n.read?'':'is-unread')+'" href="'+esc(target)+'" data-act="notice-open" data-id="'+n.id+'" data-to="'+esc(target)+'"><span class="notice-dot"></span><span class="notice-body"><b>'+esc(n.title)+'</b><span>'+esc(n.content)+'</span></span><time>'+esc(String(n.createdAt).replace('T',' ').slice(0,16))+'</time></a>';}).join('');
+        var rows=notices.map(function(n){var target=/^#\/(offers|exchange(?:\/\d+)?|wishes(?:\/\d+)?|auctions|auction\/mine|chat\/\d+|followers|cycle\/\d+|item\/\d+)$/.test(n.target)?n.target:'#/notifications';return '<a class="notice-row '+(n.read?'':'is-unread')+'" href="'+esc(target)+'" data-act="notice-open" data-id="'+n.id+'" data-to="'+esc(target)+'"><span class="notice-dot"></span><span class="notice-body"><b>'+esc(n.title)+'</b><span>'+esc(n.content)+'</span></span><time>'+esc(String(n.createdAt).replace('T',' ').slice(0,16))+'</time></a>';}).join('');
         var conversations=await api('/conversation').catch(function(){return null;});
         if(currentView.name!=='notifications')return;
-        $('#app').innerHTML=shell('notifications','<section class="redesign-page messages-page"><header class="redesign-heading"><h1>消息</h1><a class="icon-action" aria-label="设置" href="#/settings">'+navIcon('settings')+'</a></header><div class="message-actions"><a class="btn btn-ghost" href="#/trade">交易消息</a><button class="btn btn-ghost" data-act="notice-read">全部标为已读</button></div><label class="label" for="message-filter">查找会话</label><input type="search" id="message-filter" class="input" placeholder="搜索同学昵称或物品"><h2>系统通知</h2><div class="notice-list">'+(rows||'<div class="card card-pad">暂时没有通知。</div>')+'</div><h2>私聊</h2><div class="conversation-list">'+(conversations?conversationRows(conversations):'<p class="hint">会话暂时加载失败，请刷新重试。</p>')+'</div></section>');refreshNoticeCount();
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page messages-page"><header class="redesign-heading"><h1>消息</h1><a class="icon-action" aria-label="设置" href="#/settings">'+navIcon('settings')+'</a></header><div class="message-actions"><a class="btn btn-ghost" href="#/followers">谁关注了我</a><a class="btn btn-ghost" href="#/trade">交易消息</a><button class="btn btn-ghost" data-act="notice-read">全部标为已读</button></div><label class="label" for="message-filter">查找会话</label><input type="search" id="message-filter" class="input" placeholder="搜索同学昵称或物品"><h2>系统通知</h2><div class="notice-list">'+(rows||'<div class="card card-pad">暂时没有通知。</div>')+'</div><h2>私聊</h2><div class="conversation-list">'+(conversations?conversationRows(conversations):'<p class="hint">会话暂时加载失败，请刷新重试。</p>')+'</div></section>');refreshNoticeCount();
     }
 
     var roomTimer=null, roomBusy=false;
@@ -1688,8 +1738,9 @@
     // ------------------------------------------------------------------ 路由
 
     var routes = [
+        [/^#\/followers$/, function () { return 'followers'; }],
         [/^#\/home$/, function () { return 'home'; }],
-        [/^#\/(?:market|search)$/, function () { return 'home'; }],
+        [/^#\/(?:market|idle|search)$/, function () { return 'home'; }],
         [/^#\/auctions$/, function () { return 'auctions'; }],
         [/^#\/community$/, function () { return 'community'; }],
         [/^#\/notifications$/, function () { return 'notifications'; }],
@@ -1744,7 +1795,7 @@
             renderLogin(state.loginMode || 'login');
             return;
         }
-        if (!state.me && view.name !== 'home' && view.name !== 'settings' && view.name !== 'auctions' && view.name !== 'item' && view.name !== 'user') {
+        if (!state.me && view.name !== 'home' && view.name !== 'relay' && view.name !== 'settings' && view.name !== 'auctions' && view.name !== 'item' && view.name !== 'user') {
             try {
                 state.me = await api('/user/me');
             } catch (e) {
@@ -1768,6 +1819,8 @@
                 await renderAuctions();
             } else if (view.name === 'auctionMine') {
                 await renderAuctions(true);
+            } else if (view.name === 'followers') {
+                await renderFollowers();
             } else if (view.name === 'notifications') {
                 await renderNotifications();
             } else if (view.name === 'chats') { await renderChats();
@@ -1826,6 +1879,21 @@
         var el = ev.target.closest('[data-act]');
         if (!el) return;
         var act = el.dataset.act;
+
+        if (act === 'register-email-send') {
+            var email = el.form.elements.email;
+            var studentNo = el.form.elements.studentNo.value.trim();
+            if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号', 'err'); return; }
+            if (!email.reportValidity()) return;
+            el.disabled = true;
+            try {
+                await api('/user/register/email/send', {method:'POST', body:{studentNo:studentNo,email:email.value.trim()}});
+                toast('验证码已发送，请查收邮箱', 'ok');
+                el.form?.elements.code.focus();
+                setTimeout(function() { el.disabled = false; }, 60000);
+            } catch (error) { el.disabled = false; toast(error.message, 'err'); }
+            return;
+        }
 
         if(act==='publish-template'){
             var description=el.form.elements.description;
@@ -1923,6 +1991,28 @@
         }
         if (act === 'check-chain') {
             await checkChain();
+            return;
+        }
+        if (act === 'login-method') {
+            var previousEmail = $('#login-email')?.value;
+            state.loginMethod = el.dataset.v;
+            renderLogin('login');
+            if (previousEmail && $('#login-email')) $('#login-email').value = previousEmail;
+            return;
+        }
+        if (act === 'login-email-send') {
+            var loginEmail = $('#login-email');
+            if (!loginEmail.reportValidity()) return;
+            el.disabled = true;
+            try {
+                await api('/user/login/email/send', {method:'POST', body:{email:loginEmail.value.trim()}});
+                toast('如果该邮箱已绑定账号，请查收验证码');
+                $('#login-code')?.focus();
+                setTimeout(function () { el.disabled = false; }, 60000);
+            } catch (error) {
+                el.disabled = false;
+                toast(error.message, 'err');
+            }
             return;
         }
         if (act === 'auth-mode') {
@@ -2210,16 +2300,15 @@
             if (kind === 'auction-bid') {
                 await api('/auction/' + encodeURIComponent(fd.get('id')) + '/bid', {method:'POST', body:{amount:fd.get('amount')}}); closeSheet(); toast('出价成功'); await renderAuctions(); return;
             }
-            if (kind === 'login' || kind === 'register') {
+            if (kind === 'register' || (kind === 'login' && (!state.loginMethod || state.loginMethod === 'student'))) {
                 var no = String(fd.get('studentNo') || '').trim();
                 if (!/^\d{10}$/.test(no) && !(kind === 'login' && no === 'admin')) {
                     throw new ApiError('学号是 10 位数字，例如 2021210001');
                 }
             }
             if (kind === 'login') {
-                var u = await api('/user/login', {method: 'POST', body: {
-                    studentNo: fd.get('studentNo'), password: fd.get('password')
-                }});
+                var loginPath = {student:'/user/login', email:'/user/login/email/password', code:'/user/login/email/code'}[state.loginMethod || 'student'];
+                var u = await api(loginPath, {method:'POST', body:Object.fromEntries(fd)});
                 if (u.token) {
                     writeToken(u.token);
                 }
@@ -2240,7 +2329,8 @@
             } else if (kind === 'register') {
                 await api('/user/register', {method: 'POST', body: {
                     studentNo: fd.get('studentNo'), nickname: fd.get('nickname'),
-                    password: fd.get('password'), college: fd.get('college'), building: fd.get('building')
+                    password: fd.get('password'), college: fd.get('college'), building: fd.get('building'),
+                    email: fd.get('email'), code: fd.get('code')
                 }});
                 toast('注册成功，请登录', 'ok');
                 state.loginMode = 'login';

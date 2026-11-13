@@ -20,6 +20,8 @@
     [/^\/relay$/, 'relay', () => ({})],
     [/^\/cycle\/(\d+)$/, 'cycle', (m) => ({ id: Number(m[1]) })],
     [/^\/exchange\/(\d+)$/, 'exchangeDetail', (m) => ({ id: Number(m[1]) })],
+    [/^\/idle$/, 'market', () => ({ idle: true })],
+    [/^\/idle\/category\/(.*)$/, 'market', m => ({ idle: true, category: decodeURIComponent(m[1]) })],
     [/^\/market$/, 'market', () => ({})],
     [/^\/community$/, 'community', () => ({})],
     [/^\/community\/game$/, 'communityGame', () => ({})],
@@ -38,6 +40,7 @@
     [/^\/lost$/, 'lostFound', () => ({})],
     [/^\/collection$/, 'collection', () => ({})],
     [/^\/history$/, 'history', () => ({})],
+    [/^\/followers$/, 'follows', () => ({ followers:true })],
     [/^\/follows$/, 'follows', () => ({})],
     [/^\/credit\/(\d+)$/, 'creditCenter', (m) => ({ id: Number(m[1]) })],
     [/^\/help$/, 'helpCenter', () => ({})],
@@ -61,7 +64,7 @@
   }
 
   async function renderRoute() {
-    const { name, params } = resolve();
+    const { name, params, hash } = resolve();
     const view = document.getElementById('view');
     const page = window.PAGES[name];
 
@@ -86,9 +89,15 @@
     try {
       await page.render(view, params);
     } catch (e) {
+      if (hash !== resolve().hash) return;
+      if (e.code === 401 && ['messages','notifications','follows'].includes(name)) {
+        location.replace('#/login');
+        return;
+      }
       console.error(e);
       view.innerHTML = `<div class="empty">加载失败：${esc(e.message)}</div>`;
     }
+    if (hash !== resolve().hash) return;
     renderTabbar(page.noTab ? false : (page.tab || null), window.__unread || 0);
     view.style.paddingBottom = page.noTab ? '0' : '';
     if (!page.keepScroll) window.scrollTo(0, 0);

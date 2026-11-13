@@ -5,7 +5,7 @@ recipient, code = json.load(sys.stdin)
 sender = os.environ['SMTP_FROM']
 message = EmailMessage()
 message['From'], message['To'] = sender, recipient
-message['Subject'] = '换一圈 · 邮箱验证码'
+message['Subject'] = '换一圈邮箱验证码'
 message.set_content(f'你的邮箱验证码为 {code}，10 分钟内有效。若非本人操作，请忽略。')
 host = os.environ['SMTP_HOST']
 tls = os.environ.get('SMTP_MODE', 'ssl') == 'ssl'

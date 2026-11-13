@@ -3,19 +3,16 @@
   PAGES.relay = {
     tab: 'home',
     async render(view) {
+      const route = location.hash;
       let items = [];
-      let error = '';
-      try { items = (await api.get('/api/item/mine', {status: 1})).filter(item => item.allowCycle && !item.isDemo); }
-      catch (e) { error = e.code === 401 ? '登录后可查看自己的接力物品。' : e.message; }
-      view.innerHTML = `${window.renderRelayTabs()}
-        <main class="relay-mobile"><h1>换物接力</h1>
-          <p>选一件愿意拿出来换的闲置，写清你想要什么。三个人都能换到想要的物品时，系统会通知三方。</p>
-          <a class="btn" href="#/publish/edit/wish">发布接力心愿</a>
-          <h2>我的接力物品</h2>
-          ${error ? `<p role="status">${esc(error)}</p><a href="#/login">去登录</a>` : items.length ? items.map(item =>
-            `<a class="relay-item" href="#/cycle/${Number(item.id)}"><span>${esc(item.title)}</span><span>查看换法</span></a>`
-          ).join('') : '<p>还没有可接力的在架物品。</p><a href="#/publish/edit/idle">去发布闲置</a>'}
-        </main>`;
+      let fallback = '<p>还没有可接力的在架物品。</p><a href="#/publish/edit/idle">去发布物品</a>';
+      try { items = (await api.get('/api/item/mine', {status:1})).filter(item => item.allowCycle && !item.isDemo); }
+      catch (error) {
+        fallback = error.code === 401 ? '<p>登录后可查看自己的接力物品。</p><a href="#/login">去登录</a>' : `<p role="status">${esc(error.message)}</p>`;
+      }
+      if (location.hash !== route) return;
+      const rows = items.map(item => `<a href="#/cycle/${Number(item.id)}"><b>${esc(item.title)}</b><span>查看换法</span></a>`).join('');
+      view.innerHTML = window.renderRelayTabs() + window.campusExchange.relay({wish:'#/publish/edit/wish', rows, fallback});
     },
   };
   PAGES.cycle = {

@@ -16,6 +16,7 @@
   /* ============================================================ 首页 */
   const homeTabs = (section = "home") => `<nav class="home-top-tabs" aria-label="校园导航">
     <a href="#/home" ${section === 'home' ? 'aria-current="page"' : ''}>首页</a>
+    <a href="#/idle" ${section === 'idle' ? 'aria-current="page"' : ''}>校园闲置</a>
     <a href="#/community" ${section === 'community' ? 'aria-current="page"' : ''}>集市</a>
     <a href="#/relay" ${section === 'relay' ? 'aria-current="page"' : ''}>换物接力</a>
   </nav>`;
@@ -23,12 +24,12 @@
   const HOME_CATEGORIES = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
   const HOME_SEARCH_TOPICS = ['小家电', '考研资料'];
   const SERVICES = [
-    { name: '同楼闲置', href: '#/door', hint: '按宿舍楼找' },
-    { name: '以物换物', href: '#/market' },
+    { name: '同楼闲置', href: '#/door' },
+    { name: '以物换物', href: '#/home' },
     { name: '好物估价', href: '#/appraise' },
     { name: '教材专区', href: '#/category/教材' },
-    { name: '毕业好物', href: '#/search/' + encodeURIComponent('毕业'), hint: '按关键词搜', resetSearch: true },
-    { name: '寻物启事', href: '#/lost', hint: '查看或发布' },
+    { name: '毕业好物', href: '#/search/' + encodeURIComponent('毕业'), resetSearch: true },
+    { name: '寻物启事', href: '#/lost' },
   ];
   window.__homeChannel = window.__homeChannel || '推荐';
 
@@ -37,13 +38,17 @@
     async render(view) {
       let list = [];
       let deals = [];
+      let batch;
+      const load = page => api.get('/api/item/list', {page, size:40});
+      const route = location.hash;
       try {
         const [d, dd] = await Promise.all([
-          api.get('/api/item/list', { page: 1, size: 40 }),
+          window.campusExchange.browse(load, 2),
           api.get('/api/item/deals', { size: 8 }).catch(() => []),
         ]);
-        list = d.list || [];
-        deals = dd || [];
+        batch = d;
+        list = d.rows;
+        deals = (dd || []).filter(window.campusExchange.isSwapOnly);
       } catch (e) { toast(e.message); }
 
       let followedItems = null;
@@ -58,9 +63,13 @@
         ? list.slice().sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)))
         : list);
 
+      if (location.hash !== route) return;
       view.innerHTML = `
       <main class="mobile-home"><div class="home-head">
-        ${homeTabs()}
+        <div class="home-guest-nav">
+          ${homeTabs()}
+          <a class="home-guest-login" href="#/login" hidden>登录</a>
+        </div>
         <form class="home-search" role="search">
           ${icon('scan', 20)}
           <input name="keyword" type="search" aria-label="搜索校园闲置" placeholder="搜索校园里的好物" maxlength="200">
@@ -74,15 +83,24 @@
           
         </div>
         <div class="services" aria-label="校园服务">
-          ${SERVICES.map((s, i) => `<a href="${s.href}" ${s.resetSearch ? 'data-reset-search' : ''}><i><img src="assets/brand/illustrated-${['door', 'swapRing', 'appraise', 'book', 'grad', 'lost'][i]}.png" width="36" height="36" alt=""></i><span>${s.name}</span>${s.hint ? `<small>${s.hint}</small>` : ''}</a>`).join('')}
+          ${SERVICES.map((s, i) => `<a href="${s.href}" ${s.resetSearch ? 'data-reset-search' : ''}><i><img src="assets/brand/illustrated-${['door', 'swapRing', 'appraise', 'book', 'grad', 'lost'][i]}.png" width="36" height="36" alt=""></i><span>${s.name}</span></a>`).join('')}
         </div>
       </div>
 
-      ${feed.length ? `<section class="home-feed" aria-label="校园闲置">${waterfall(feed)}</section>` : mascotEmpty('这个频道还没有宝贝，去发布第一件吧', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/idle', text: '发布闲置' })}
+      <section class="home-feed" aria-label="以物换物"><h1 class="swap-feed-title"><img src="assets/brand/swap-wordmark.webp" width="48" height="12" alt="以物换物"></h1>
+        <div data-swap-results>${feed.length ? waterfall(feed) : mascotEmpty('暂时没有可交换的物品', 'assets/brand/mascot-wave-complete.png')}</div>
+        ${batch?.hasMore && window.__homeChannel !== '关注' ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}
+      </section>
       ${deals.length ? `<div class="deal-ticker">
         <span class="label">${icon('fire', 12)}成交动态</span>
         <div class="rail" id="dealTicker"></div>
       </div>` : ''}</main>`;
+
+      bindBrowseMore(view, load, 2, batch, window.__homeChannel === '新发');
+      const login = view.querySelector('.home-guest-login');
+      api.get('/api/user/me').catch(error => {
+        if (error.code === 401) login.hidden = false;
+      });
 
       /* 成交动态轮播 */
       const ticker = document.getElementById('dealTicker');
@@ -145,29 +163,30 @@
   PAGES.messages = {
     tab: 'message',
     async render(view) {
+      const route = location.hash;
       let notifs = [];
       let convs = [];
       let summary = { trade: 0, notice: 0, follow: 0, total: 0 };
-      try {
-        const r = await Promise.all([
-          api.get('/api/notification').catch(() => []),
-          api.get('/api/conversation').catch(() => []),
-        ]);
-        notifs = r[0] || [];
-        convs = r[1] || [];
-        notifs.filter(n => !n.read && !String(n.target || '').startsWith('#/chat/')).forEach(n => {
-          const category = n.category || 'notice';
-          summary[category] = (summary[category] || 0) + 1;
-        });
-        const chatCounts = new Map();
-        notifs.filter(n => !n.read && /^#\/chat\/\d+$/.test(n.target || '')).forEach(n => {
-          chatCounts.set(n.target, (chatCounts.get(n.target) || 0) + 1);
-        });
-        convs = convs.map(c => ({...c, unread: chatCounts.get('#/chat/' + c.id) || 0}));
-        summary.total = notifs.filter(n => !n.read).length;
-        const blocked = JSON.parse(localStorage.getItem('blocked') || '[]').map((x) => Number(x.id));
-        if (blocked.length) convs = convs.filter((c) => blocked.indexOf(Number(c.peerId)) < 0);
-      } catch (e) { /* 未登录留空 */ }
+      const r = await Promise.all([
+        api.get('/api/notification'),
+        api.get('/api/conversation'),
+      ]);
+      notifs = r[0] || [];
+      convs = r[1] || [];
+      notifs.filter(n => !n.read && !String(n.target || '').startsWith('#/chat/')).forEach(n => {
+        const category = n.category || 'notice';
+        summary[category] = (summary[category] || 0) + 1;
+      });
+      const chatCounts = new Map();
+      notifs.filter(n => !n.read && /^#\/chat\/\d+$/.test(n.target || '')).forEach(n => {
+        chatCounts.set(n.target, (chatCounts.get(n.target) || 0) + 1);
+      });
+      convs = convs.map(c => ({...c, unread: chatCounts.get('#/chat/' + c.id) || 0}));
+      summary.total = notifs.filter(n => !n.read).length;
+      const blocked = JSON.parse(localStorage.getItem('blocked') || '[]').map((x) => Number(x.id));
+      if (blocked.length) convs = convs.filter((c) => blocked.indexOf(Number(c.peerId)) < 0);
+      if (route !== location.hash) return;
+      const unreadDot = count => '<i class="msg-unread-dot" role="img" aria-label="有未读消息"' + (count ? '' : ' hidden') + '></i>';
 
       const byCat = (c) => notifs.filter(n => (n.category || 'notice') === c && !String(n.target || '').startsWith('#/chat/'));
       const tradeNew = byCat('trade')[0];
@@ -194,34 +213,36 @@
         </div>
 
         <div class="msg-sys">
-          <div class="msg-row" data-go="#/notifications/trade">
+          <div class="msg-row" data-message-category="trade" data-go="#/notifications/trade">
             <div class="msg-row__ico msg-row__ico--a">${icon('bag', 23)}</div>
             <div class="msg-row__main">
               <div class="msg-row__title">交易消息</div>
               <div class="msg-row__sub">${esc(tradeNew ? tradeNew.content : '出价、交换与交付状态变化都在这')}</div>
               <div class="msg-row__time">${tradeNew ? fmtTime(tradeNew.createdAt) : ''}</div>
             </div>
+            <div class="msg-row__right">${unreadDot(summary.trade)}</div>
           </div>
-          <div class="msg-row" data-go="#/notifications/notice">
-            <div class="msg-row__ico msg-row__ico--b">${icon('gift', 23)}${summary.notice ? '<i class="dot-red"></i>' : ''}</div>
+          <div class="msg-row" data-message-category="notice" data-go="#/notifications/notice">
+            <div class="msg-row__ico msg-row__ico--b">${icon('gift', 23)}</div>
             <div class="msg-row__main">
-              <div class="msg-row__title">通知消息${summary.notice ? `<span class="badge badge--red">${summary.notice}条未读</span>` : ''}</div>
+              <div class="msg-row__title">通知消息</div>
               <div class="msg-row__sub">${esc(noticeNew ? noticeNew.content : '系统通知与互动提醒')}</div>
               <div class="msg-row__time">${noticeNew ? fmtTime(noticeNew.createdAt) : ''}</div>
             </div>
-            <div class="msg-row__right"><span class="msg-row__mute">${icon('mute', 17)}</span></div>
+            <div class="msg-row__right">${unreadDot(summary.notice)}</div>
           </div>
-          <div class="msg-row" data-go="#/notifications/follow">
-            <div class="msg-row__ico msg-row__ico--c">${icon('eye', 23)}${summary.follow ? '<i class="dot-red"></i>' : ''}</div>
+          <div class="msg-row" data-message-category="follow" data-go="#/notifications/follow">
+            <div class="msg-row__ico msg-row__ico--c">${icon('eye', 23)}</div>
             <div class="msg-row__main">
               <div class="msg-row__title">关注上新</div>
               <div class="msg-row__sub">${esc(followNew ? followNew.content : '关注的同学发布了新闲置会出现在这里')}</div>
               <div class="msg-row__time">${followNew ? fmtTime(followNew.createdAt) : ''}</div>
             </div>
-            <div class="msg-row__right"><span class="msg-row__mute">${icon('mute', 17)}</span></div>
+            <div class="msg-row__right">${unreadDot(summary.follow)}</div>
           </div>
         </div>
 
+        <a class="msg-followers-link" href="#/followers">谁关注了我 ${icon('right', 16)}</a>
         ${recent.length ? `<div class="msg-group">${icon('clock', 15)}<span>最近的消息</span></div>${recent.map(convRow).join('')}` : ''}
         ${older.length ? `<div class="msg-group">${icon('clock', 15)}<span>1 个月以前的消息</span></div>${older.map(convRow).join('')}` : ''}
         ${!convs.length ? mascotEmpty('还没有会话，去商品页跟同学聊聊', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去集市看看' }) : ''}
@@ -944,25 +965,46 @@
   }
 
   /* ============================================================ 集市 / 分类 */
+  function bindBrowseMore(view, load, mode, batch, newest = false) {
+    const button = view.querySelector('[data-swap-more]');
+    const results = view.querySelector('[data-swap-results]');
+    if (!button) return;
+    let rows = batch.rows.slice();
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        batch = await window.campusExchange.browse(load, mode, batch.page + 1);
+        if (!results.isConnected) return;
+        rows = rows.concat(batch.rows);
+        if (newest) rows.sort((a,b) => String(b.createTime).localeCompare(String(a.createTime)));
+        results.innerHTML = waterfall(rows);
+        button.hidden = !batch.hasMore;
+      } catch (error) { toast(error.message); }
+      finally { button.disabled = false; }
+    };
+  }
+
   PAGES.market = {
     tab: 'home',
     async render(view, params) {
-      let list = [];
-      try {
-        const d = await api.get('/api/item/list', { category: params.category, page: 1, size: 40 });
-        list = d.list || [];
-      } catch (e) { toast(e.message); }
+      const route = location.hash;
+      const mode = params.idle ? 1 : 2;
+      const load = page => api.get('/api/item/list', { category: params.category, page, size:40 });
+      let batch;
+      try { batch = await window.campusExchange.browse(load, mode); }
+      catch (error) { toast(error.message); }
+      if (route !== location.hash) return;
+      const prefix = params.idle ? '#/idle/category/' : '#/category/';
       view.innerHTML = `
-      <div class="topbar">
-        <div class="topbar__title topbar__title--lg">${params.category ? esc(params.category) : '集市'}</div>
-        <div class="topbar__spacer"></div>
-        <a class="btn btn--ghost btn--sm" href="#/publish/edit/idle">${icon('plus', 15)}发布</a>
-      </div>
-      <div class="r-chips">
-        ${['全部', '教材', '数码', '运动', '生活', '衣物', '绿植', '其他'].map((c) =>
-          `<a class="chip${(params.category || '全部') === c ? ' on' : ''}" href="#/category/${encodeURIComponent(c === '全部' ? '' : c)}">${c}</a>`).join('')}
-      </div>
-      ${list.length ? waterfall(list) : mascotEmpty('这个分类还没有宝贝', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/idle', text: '发一件' })}`;
+        ${homeTabs(params.idle ? 'idle' : 'home')}
+        <h1 class="swap-feed-title">${params.idle ? '校园闲置' : '以物换物'}</h1>
+        <div class="r-chips">
+          ${['全部', ...HOME_CATEGORIES].map(c =>
+            `<a class="chip${(params.category || '全部') === c ? ' on' : ''}" href="${prefix + encodeURIComponent(c === '全部' ? '' : c)}">${c}</a>`).join('')}
+        </div>
+        <div data-swap-results>${batch?.rows.length ? waterfall(batch.rows) : mascotEmpty('这个分类暂时没有物品', 'assets/brand/mascot-wave-complete.png')}</div>
+        ${batch?.hasMore ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}`;
+      bindBrowseMore(view, load, mode, batch);
     },
   };
 
@@ -1035,7 +1077,7 @@
       }
       const it = data.item;
       const pics = api.pics(it);
-      const price = api.yuan(it.price);
+      const price = it.isDemo && !window.campusExchange.supports(it,1) ? '' : api.yuan(it.price);
       const wants = data.want || {};
       const wantText = it.wantText || wants.expectDesc || it.expectDesc || (wants.wantCategories || []).join("、") || wants.wantCategory || "不限类别";
       const isSwap = it.tradeMode === 2 || (!it.tradeMode && !price);
@@ -1051,10 +1093,11 @@
         <div class="item-price">
           <div class="item-price__row">
             ${price ? `<span class="price"><em>¥</em><b>${price}</b></span>` : `<span class="price item-want"><small>想换</small><b>${esc(wantText)}</b></span>`}
-            ${it.originalPrice && it.originalPrice > it.price ? `<s>¥${api.yuan(it.originalPrice)}</s>` : ''}
-            ${it.isDemo ? '<span class="badge badge--gray">官网参考价</span>' : ''}
+            ${price && it.originalPrice && it.originalPrice > it.price ? `<s>¥${api.yuan(it.originalPrice)}</s>` : ''}
+            ${it.isDemo && price ? '<span class="badge badge--gray">官网参考价</span>' : ''}
             ${auction ? `<span class="badge badge--orange">拍卖中 | 当前 ¥${Number(auction.currentPrice).toFixed(0)}</span>` : ''}
           </div>
+          ${it.isDemo && price && window.campusExchange.supports(it,2) ? `<p class="item-price__meta">想换：${esc(wantText)}</p>` : ''}
           <div class="item-price__meta">
             <span>${it.viewCount || 0} 浏览</span>
             <span>${it.offerCount || 0} 人想要</span>
@@ -1067,7 +1110,7 @@
           <p>${esc(it.description || '同学没写描述，可以直接问问。')}</p>
           <div class="item-tags">
             <span class="badge badge--gray">${esc(it.category)}</span>
-            <span class="badge badge--gray">${it.isDemo ? '示例展示' : isSwap ? '以物换物' : it.tradeMode === 3 ? '拍卖' : '出售'}</span>
+            <span class="badge badge--gray">${it.isDemo ? window.campusExchange.demoLabel(it) : isSwap ? '以物换物' : it.tradeMode === 3 ? '拍卖' : '出售'}</span>
             ${it.brand ? `<span class="badge badge--gray">${esc(it.brand)}</span>` : ''}
             ${it.isDemo ? '' : `<span class="badge badge--green">${esc(it.delivery || '仅面交')}</span>`}
           </div>
@@ -1338,12 +1381,14 @@
       const filter = window.__searchFilter || {};
       let list = [];
       let users = [];
+      let conditions = [];
 
       if (tab !== 'users') {
         const query = { page: 1, size: 40, category: filter.category, conditionLevel: filter.condition };
         try {
           const d = await api.get('/api/item/search', { ...query, q: kw });
           list = d.list || [];
+          conditions = d.conditions || [];
         } catch (e) {
           try {
             const d = await api.get('/api/item/list', { ...query, keyword: kw, sort });
@@ -1414,6 +1459,8 @@
         ${filter.meet ? '<span class="chip on">只看可面交</span>' : ''}
       </div>
 
+      ${conditions.length ? `<div class="r-chips" aria-label="已识别搜索条件">${conditions.map(label => `<span class="chip on">${esc(label)}</span>`).join('')}</div>` : ''}
+      ${!list.length && conditions.length ? '<p class="r-chips">没有商品同时满足这些条件，可修改搜索词放宽条件。</p>' : ''}
       ${bodyHtml}`;
 
       view.querySelectorAll('[data-tab]').forEach((a) => a.addEventListener('click', () => {
