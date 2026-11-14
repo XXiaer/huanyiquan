@@ -27,19 +27,21 @@
   }
 
   function relay({ wish, rows, fallback }) {
-    return `<section class="relay-layout">
-      <header class="relay-intro">
+    return `<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><b>换物接力</b></nav>
+      <section class="relay-layout amz-relay-page">
+      <header class="relay-intro amz-deals-banner">
         <div>
+          <span class="amz-deal-kicker">THREE-WAY SWAP · 三方换物闭环</span>
           <h1>换物接力</h1>
           <p>两个人换不到，就找第三位同学一起换。三件物品形成闭环后，系统会通知三方。</p>
-          <a class="relay-primary" href="${wish}">发布接力心愿</a>
+          <a class="btn btn-primary relay-primary" href="${wish}">发布接力心愿</a>
         </div>
-        <img src="/assets/brand/mascot-box.png" alt="" width="160" height="160">
+        <img src="/assets/brand/mascot-box.png" alt="" width="140" height="140">
       </header>
       <ol class="relay-process" aria-label="接力流程">
-        <li><b>选一件好物</b><span>关联愿意拿来交换的物品</span></li>
-        <li><b>写下想换的</b><span>明确你希望收到什么</span></li>
-        <li><b>等三方匹配</b><span>闭环后再一起确认</span></li>
+        <li><b>1. 选一件好物</b><span>关联愿意拿来交换的物品</span></li>
+        <li><b>2. 写下想换的</b><span>明确你希望收到什么</span></li>
+        <li><b>3. 等三方匹配</b><span>闭环后再一起确认</span></li>
       </ol>
       <section class="relay-inventory">
         <h2>我的接力物品</h2>
