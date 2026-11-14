@@ -100,6 +100,7 @@
 
   /* ============================================================ 估价 */
   PAGES.appraise = {
+    noTab: true,
     async render(view) {
       view.innerHTML = `
       ${topbar('AI 好物估价')}
