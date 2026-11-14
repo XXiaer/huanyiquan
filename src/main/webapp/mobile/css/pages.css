@@ -1333,7 +1333,8 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .home-top-tabs a[aria-current] { color: #161616; font-weight: 850; }
 .home-search { display: flex; align-items: center; gap: 8px; margin: 3px 9px 0; padding: 2px; padding-left: 13px; min-height: 44px; border: 2px solid #202020; border-radius: 999px; color: #6b6b6b; }
 .home-search input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: #161616; }
-.home-search button { display: grid; place-items: center; width: 51px; min-height: 40px; border-radius: 999px; background: #202020; color: white; }
+.home-search button[type="submit"] { display: grid; place-items: center; width: 51px; min-height: 40px; border-radius: 999px; background: #202020; color: white; }
+.home-search .scan-btn, .home-search .cam-btn { width: 32px; min-height: 36px; background: transparent; color: var(--ink-700); border-radius: 0; }
 .mobile-home .channels { justify-content: flex-start; gap: clamp(9px, 3.4vw, 15px); }
 .mobile-home .channels a.on { color: #161616; font-weight: 850; }
 .mobile-home .channels a.on::after { display: none; }
