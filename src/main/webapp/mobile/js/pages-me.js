@@ -87,7 +87,7 @@
         </div>
 
         <section class="member-panel">
-          <div class="member-banner"><h2>唤唤会员</h2></div>
+          <div class="member-banner"><img class="member-banner__art" src="assets/brand/member-title-art.png" alt="唤唤会员"><h2>唤唤会员</h2></div>
         <div class="me-stats">
           <a href="#/collection"><b>${stats.favorite || 0}</b><span>我的收藏</span></a>
           <a href="#/history"><b>${stats.history || 0}</b><span>历史浏览</span></a>

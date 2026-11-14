@@ -1362,12 +1362,29 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .item-seller-rail img { width: 92px; height: 86px; border-radius: 8px; object-fit: cover; }
 .item-seller-rail span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
 
-.member-panel { margin: 0 13px 12px; border: 1px solid #eee7e9; border-radius: 15px; overflow: hidden; background: #fff; }
+.member-panel { margin: 14px 13px 12px; border: 1px solid #eee7e9; border-radius: 15px; overflow: hidden; background: #fff; }
 /* Display the pink panel from the approved banner artwork. */
 .member-banner {
   position: relative;
   aspect-ratio: 7.65;
   background: #f8dfe5 url("../assets/brand/member-banner-designs.png") 50% 4% / 130.7% auto no-repeat;
+}
+.member-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #fae2e8 0%, #fae2e8 38%, rgba(250, 226, 232, 0) 58%);
+  pointer-events: none;
+}
+.member-banner__art {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 36px;
+  width: auto;
+  z-index: 1;
+  object-fit: contain;
 }
 .member-banner h2 {
   position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden;
