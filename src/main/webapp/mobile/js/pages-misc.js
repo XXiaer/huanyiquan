@@ -178,12 +178,28 @@
         }));
       });
       const goBtn = document.getElementById('apGo');
+      const photoBox = document.getElementById('apPhotoBox');
+      const resultBox = document.getElementById('apResult');
       goBtn.addEventListener('click', async () => {
         const title = document.getElementById('apTitle').value.trim();
         const orig = Number(document.getElementById('apOrig').value || 0);
         if (!photoDataUrl && !cate && !title) { toast('请拍照或选择分类'); return; }
         goBtn.disabled = true;
-        goBtn.textContent = 'AI 识别估价中…';
+        goBtn.textContent = '正在估价中…';
+        photoBox.classList.add('is-scanning');
+        resultBox.innerHTML = `
+          <div class="ap-loading">
+            <div class="ap-loading__stage">
+              <span class="ap-loading__ring"></span>
+              <span class="ap-loading__ring ap-loading__ring--delay"></span>
+              <img class="ap-loading__mascot" src="assets/brand/mascot-search.png" alt="正在估价中">
+            </div>
+            <div class="ap-loading__title">
+              <span>正在估价中</span>
+              <i class="ap-loading__dots"><b></b><b></b><b></b></i>
+            </div>
+          </div>`;
+        resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         try {
           const res = await api.post('/api/ai/appraise', {
             image: photoDataUrl || '',
@@ -192,7 +208,7 @@
             origPrice: orig > 0 ? Math.round(orig) : 0,
             title,
           });
-          document.getElementById('apResult').innerHTML = `
+          resultBox.innerHTML = `
             <div class="appraise-result-card">
               <div class="appraise-result-card__name">${esc(res.name || title || cate)}</div>
               <div class="appraise-result-card__price"><em>¥</em><b>${res.lowPrice} – ${res.highPrice}</b></div>
@@ -212,7 +228,7 @@
                 const ps = list.map((i) => i.price).sort((a, b) => a - b);
                 const lo = ps[Math.floor(ps.length * 0.25)];
                 const hi = ps[Math.floor(ps.length * 0.75)];
-                document.getElementById('apResult').innerHTML = `
+                resultBox.innerHTML = `
                   <div class="appraise-result-card">
                     <div class="appraise-result-card__price"><em>¥</em><b>${api.yuan(lo)} – ${api.yuan(hi)}</b></div>
                     <div class="appraise-result-card__tags"><span class="badge badge--green">${list.length} 件样本</span></div>
@@ -222,8 +238,10 @@
               }
             } catch (ignore) {}
           }
+          resultBox.innerHTML = '';
           toast(e.message || '估价失败，请重试');
         } finally {
+          photoBox.classList.remove('is-scanning');
           goBtn.disabled = false;
           goBtn.textContent = 'AI 估价';
         }
