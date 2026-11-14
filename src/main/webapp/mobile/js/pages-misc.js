@@ -103,18 +103,18 @@
     async render(view) {
       view.innerHTML = `
       ${topbar('好物估价')}
-      <div style="padding:0 13px 30px">
-        <div class="tool-card">
+      <div class="m-subpage">
+        <div class="tool-card tool-card--elevated">
           <div class="label">分类</div>
           <div class="pe-chips" id="apCate">${['教材', '数码', '运动', '生活', '衣物', '绿植', '其他']
             .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
           <div class="label" style="margin-top:16px">成色</div>
           <div class="pe-chips" id="apCond">${['全新', '九成新', '七成新', '有使用痕迹']
             .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
-          <div class="label" style="margin-top:16px">原价（选填）</div>
-          <input class="field" id="apOrig" type="number" placeholder="入手时多少钱">
-          <div id="apResult" style="margin-top:18px;font-size:14px;color:var(--ink-500)" aria-live="polite"></div>
-          <button class="btn btn--block" id="apGo" style="margin-top:16px">估个价</button>
+          <div class="label" style="margin-top:16px">原价</div>
+          <input class="field" id="apOrig" type="number" placeholder="¥ 入手原价（选填）">
+          <div id="apResult" aria-live="polite"></div>
+          <button class="btn btn--block" id="apGo" style="margin-top:16px">立即估价</button>
         </div>
       </div>`;
       let cate = '', cond = '';
@@ -135,17 +135,23 @@
             if (same.length >= 3) list = same;
           }
           if (!list.length) {
-            document.getElementById('apResult').textContent = '这个分类还没有在架价格可以参考';
+            document.getElementById('apResult').innerHTML = `<div class="appraise-result-card appraise-result-card--empty">暂无参考数据</div>`;
             return;
           }
           const ps = list.map((i) => i.price).sort((a, b) => a - b);
           const lo = ps[Math.floor(ps.length * 0.25)];
           const hi = ps[Math.floor(ps.length * 0.75)];
           const orig = Number(document.getElementById('apOrig').value || 0);
-          document.getElementById('apResult').innerHTML =
-            `<div class="price" style="font-size:26px"><em>¥</em><b>${api.yuan(lo)} – ${api.yuan(hi)}</b></div>
-             <div style="font-size:12px;color:var(--ink-500);margin-top:6px">参考同分类 ${list.length} 件在架商品的价格区间${cond ? '，成色 ' + cond : ''}${orig ? '，约为原价的 ' + Math.round(lo / (orig * 100) * 100) + '%–' + Math.round(hi / (orig * 100) * 100) + '%' : ''}</div>
-             <a class="btn btn--ghost btn--sm" style="margin-top:12px" href="#/publish/edit/idle">按这个价去发布</a>`;
+          document.getElementById('apResult').innerHTML = `
+            <div class="appraise-result-card">
+              <div class="appraise-result-card__price"><em>¥</em><b>${api.yuan(lo)} – ${api.yuan(hi)}</b></div>
+              <div class="appraise-result-card__tags">
+                <span class="badge badge--green">${list.length} 件样本</span>
+                ${cond ? `<span class="badge badge--gray">${esc(cond)}</span>` : ''}
+                ${orig ? `<span class="badge badge--orange">${Math.round(lo / (orig * 100) * 100)}%–${Math.round(hi / (orig * 100) * 100)}%</span>` : ''}
+              </div>
+              <a class="btn btn--ghost btn--sm" href="#/publish/edit/idle">按此价发布</a>
+            </div>`;
         } catch (e) { toast(e.message); }
       });
     },
@@ -155,10 +161,14 @@
   const MINE_MAP = {
     onshelf: { title: '我发布的' },
     sold: { title: '我卖出的' },
-    offers: { title: '我买到的' },
+    offers: { title: '我的报价' },
     exchange: { title: '我的交换' },
     reviews: { title: '我收到的评价' },
   };
+  function dealTabsHtml(active) {
+    const items = [['onshelf', '我发布的'], ['sold', '我卖出的'], ['offers', '我的报价'], ['exchange', '我的交换']];
+    return `<nav class="deal-tabs">${items.map(([k, label]) => `<a class="${active === k ? 'on' : ''}" href="#/me/${k}">${label}</a>`).join('')}</nav>`;
+  }
 
   PAGES.mineList = {
     tab: 'me',
@@ -176,36 +186,46 @@
           return d && (d.title || d.desc || d.content) ? { kind: k, d } : null;
         }).filter(Boolean) : [];
         view.innerHTML = `
-          ${topbar(conf.title, { right: `<a href="#/publish/edit/idle" style="font-size:13px;font-weight:600;color:var(--green-700)">＋ 发布</a>` })}
-          <div style="padding:2px 13px 20px">
-            ${drafts.length ? `<div class="sect-title" style="padding:2px 2px 9px"><h2 style="font-size:15px">草稿箱</h2></div>
+          ${topbar(conf.title, { right: `<a href="#/publish/edit/idle" style="font-size:13px;font-weight:700;color:var(--green-700)">＋ 发布</a>` })}
+          ${dealTabsHtml(params.kind)}
+          <div class="m-subpage">
+            ${drafts.length ? `<div class="deal-group-title">草稿箱</div>
               ${drafts.map(({ kind, d }) => `
-                <div class="list-block" style="margin:0 0 8px;border-radius:12px;padding:10px">
-                  <div class="main" style="margin-left:0">
-                    <b>${esc(d.title || d.content || '未命名草稿')}</b>
-                    <p>${kind === 'wish' ? '心愿草稿' : kind === 'auction' ? '拍卖草稿' : '闲置草稿'} | 自动保存</p>
+                <div class="deal-card">
+                  <div class="deal-card__body">
+                    <div class="deal-card__info">
+                      <div class="deal-card__head">
+                        <b>${esc(d.title || d.content || '未命名草稿')}</b>
+                        <span class="badge badge--orange">${kind === 'wish' ? '心愿草稿' : kind === 'auction' ? '拍卖草稿' : '闲置草稿'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div style="display:flex;flex-direction:column;gap:6px;flex:none">
-                    <a class="chip on" href="#/publish/edit/${kind}">继续</a>
+                  <div class="deal-card__foot">
                     <button class="chip" data-draft="${kind}">删除</button>
+                    <a class="chip on" href="#/publish/edit/${kind}">继续编辑</a>
                   </div>
                 </div>`).join('')}
-              <div class="sect-title" style="padding:8px 2px 9px"><h2 style="font-size:15px">已发布</h2></div>` : ''}
+              <div class="deal-group-title">已发布</div>` : ''}
             ${list.length ? list.map((i) => `
-              <div class="list-block" style="margin:0 0 8px;border-radius:12px;padding:10px">
-                <img src="${api.firstPic(i)}" alt="">
-                <div class="main">
-                  <b>${esc(i.title)}</b>
-                  <p>${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '想换'} | ${esc(i.conditionLevel)} | ${esc(i.statusText)}</p>
-                  <div class="meta">${fmtTime(i.updateTime)} 更新 | ${i.viewCount || 0} 浏览</div>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:6px;flex:none">
+              <div class="deal-card">
+                <a class="deal-card__body" href="#/item/${i.id}">
+                  <img class="deal-card__thumb" src="${api.firstPic(i)}" alt="">
+                  <div class="deal-card__info">
+                    <div class="deal-card__head">
+                      <b>${esc(i.title)}</b>
+                      <span class="badge ${i.status === 1 ? 'badge--green' : 'badge--gray'}">${esc(i.statusText)}</span>
+                    </div>
+                    <div class="deal-card__price">${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '以物换物'}</div>
+                    <div class="deal-card__meta">${esc(i.conditionLevel)} | ${i.viewCount || 0} 浏览 | ${fmtTime(i.updateTime)}</div>
+                  </div>
+                </a>
+                <div class="deal-card__foot">
                   ${params.kind === 'onshelf'
                     ? `${i.tradeMode !== 3 ? `<a class="chip" href="#/item/${i.id}/edit">编辑</a>` : ''}
                        <button class="chip" data-off="${i.id}">下架</button>
-                       <button class="chip on" data-spark="${i.id}">擦亮</button>
-                       <a class="chip" href="#/cycle/${i.id}">寻找换法</a>`
-                    : `<a class="chip" href="#/item/${i.id}">看看</a>`}
+                       <a class="chip" href="#/cycle/${i.id}">找环</a>
+                       <button class="chip on" data-spark="${i.id}">擦亮</button>`
+                    : `<a class="chip" href="#/item/${i.id}">查看详情</a>`}
                 </div>
               </div>`).join('') : mascotEmpty(params.kind === 'sold' ? '还没有卖出的宝贝' : '还没有发布过闲置', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/idle', text: '去发布' })}
           </div>`;
@@ -265,9 +285,17 @@
         const mode = window.__offersMode || 'received';
         const rows = mode === 'received' ? received : offers;
         const labels = ['待回应', '已接受', '已拒绝', '已过期', '已撤回', '已还价'];
-        view.innerHTML = `${topbar('我的报价')}<div style="padding:8px 13px 20px">
+        view.innerHTML = `${topbar('我的报价')}${dealTabsHtml('offers')}<div class="m-subpage">
           <div class="pf-chips"><button class="chip ${mode === 'received' ? 'on' : ''}" data-offer-tab="received">收到的</button><button class="chip ${mode === 'sent' ? 'on' : ''}" data-offer-tab="sent">发出的</button></div>
-          ${rows.length ? rows.map(o => `<div class="community-card" style="margin:10px 0"><div style="display:flex;justify-content:space-between"><b>${esc(o.myTitle || '闲置')} → ${esc(o.targetTitle || '闲置')}</b><span class="badge badge--green">${esc(labels[o.status] || '已处理')}</span></div><p style="margin:8px 0;color:var(--ink-700)">${esc(o.message || '')}</p>${o.status === 0 ? `<div style="display:flex;gap:8px">${mode === 'received' ? `<button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button><button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}</div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-320.webp', {href:'#/market',text:'去集市看看'})}</div>`;
+          ${rows.length ? rows.map(o => `
+            <div class="deal-card">
+              <div class="deal-card__head">
+                <b>${esc(o.myTitle || '闲置')} ⇄ ${esc(o.targetTitle || '闲置')}</b>
+                <span class="badge ${o.status === 1 ? 'badge--green' : o.status === 0 ? 'badge--orange' : 'badge--gray'}">${esc(labels[o.status] || '已处理')}</span>
+              </div>
+              ${o.message ? `<div class="deal-card__note">${esc(o.message)}</div>` : ''}
+              ${o.status === 0 ? `<div class="deal-card__foot">${mode === 'received' ? `<button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button><button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}
+            </div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-320.webp', {href:'#/market',text:'去集市看看'})}</div>`;
         view.querySelectorAll('[data-offer-tab]').forEach(b => b.addEventListener('click', () => { window.__offersMode = b.dataset.offerTab; renderRoute(); }));
         view.querySelectorAll('[data-offer-id]').forEach(b => b.addEventListener('click', async () => {
           if (b.dataset.action === 'counter') {
@@ -284,23 +312,30 @@
 
       view.innerHTML = `
         ${topbar('我的交换')}
-        <div style="padding:2px 13px 20px">
+        ${dealTabsHtml('exchange')}
+        <div class="m-subpage">
           ${exchanges.length ? exchanges.map((e) => `
-            <div class="community-card" style="margin:0 0 9px">
-              <div style="display:flex;align-items:center;justify-content:space-between">
-                <b style="font-size:15px">交换单 #${e.id} | ${e.type === 3 ? '三方成环' : '一对一'}</b>
-                <span class="badge ${e.status === 3 ? 'badge--green' : e.status === 1 || e.status === 2 ? 'badge--orange' : 'badge--gray'}">${esc(e.statusText || '进行中')}</span>
+            <div class="deal-card">
+              <div class="deal-card__head">
+                <b>交换单 #${e.id}</b>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="badge badge--gray">${e.type === 3 ? '三方成环' : '一对一'}</span>
+                  <span class="badge ${e.status === 3 ? 'badge--green' : e.status === 1 || e.status === 2 ? 'badge--orange' : 'badge--gray'}">${esc(e.statusText || '进行中')}</span>
+                </div>
               </div>
-              <p style="font-size:13px;color:var(--ink-500);margin-top:6px">${esc(e.place || '面交点待约定')} | ${esc(e.dealTime || '时间待约定')}</p>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-                <span style="font-size:11px;color:var(--ink-500)">${window.exchangeNeedsConfirmation(e) ? `${e.confirmedCount || 0}/${e.needConfirm || 0} 已确认 | ` : ''}${e.deliveredCount || 0}/${e.needConfirm || 0} 已收货</span>
+              <div class="deal-card__kv">
+                <span>${esc(e.place || '面交点待约定')}</span>
+                <span>${esc(e.dealTime || '时间待约定')}</span>
+              </div>
+              <div class="deal-card__foot deal-card__foot--split">
+                <span class="deal-card__meta">${window.exchangeNeedsConfirmation(e) ? `确认 ${e.confirmedCount || 0}/${e.needConfirm || 0} | ` : ''}收货 ${e.deliveredCount || 0}/${e.needConfirm || 0}</span>
                 <div style="display:flex;gap:6px">
                   ${e.status === 1 ? `<button class="chip on" data-confirm="${e.id}">确认参与</button>` : ''}
                   ${e.status === 2 ? `<button class="chip on" data-done="${e.id}">确认收货</button>` : ''}
-                  <a class="chip" href="#/exchange/${e.id}">查看</a>
+                  <a class="chip" href="#/exchange/${e.id}">详情</a>
                 </div>
               </div>
-            </div>`).join('') : mascotEmpty('还没有交换单，发起一次以物换物吧', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去逛逛' })}
+            </div>`).join('') : mascotEmpty('还没有交换单', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去逛逛' })}
         </div>`;
 
       view.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
@@ -509,9 +544,6 @@
       } catch (e) { error = e.message; }
       view.innerHTML = `
         ${topbar('同楼闲置')}
-        <p class="campus-service-note">${building
-          ? `当前按「${esc(building)}」筛选。面交地点请与发布者协商。`
-          : '当前显示全校闲置。登录并设置宿舍楼后，可按同楼筛选。'}</p>
         ${error ? `<div class="empty" role="status">${esc(error)} <button class="btn btn--ghost btn--sm" id="doorRetry">重试</button></div>`
           : list.length ? waterfall(list) : mascotEmpty(building ? '这栋楼暂时没有闲置' : '暂时没有在架闲置', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去集市看看' })}`;
       view.querySelector('#doorRetry')?.addEventListener('click', () => renderRoute());
@@ -528,13 +560,19 @@
       const lost = list.filter((w) => String(w.title || '').indexOf('【失物】') === 0);
       view.innerHTML = `
         ${topbar('寻物启事', { right: '<button class="campus-service-publish" id="lostNew">发布启事</button>' })}
-        <p class="campus-service-note">查看同学发布的寻物信息，也可以登记自己丢失的物品。</p>
-        <div style="padding:0 14px 20px">
+        <div class="m-subpage">
           ${error ? `<div class="empty" role="status">${esc(error)} <button class="btn btn--ghost btn--sm" id="lostRetry">重试</button></div>` : lost.length ? lost.map((w) => `
-            <div class="community-card" style="margin:0 0 9px">
-              <div style="font-size:16px;font-weight:600">${esc(String(w.title || '').replace('【失物】', ''))}</div>
-              <p style="font-size:13px;color:var(--ink-500);margin-top:6px">${esc(w.content || '')}</p>
-              <div style="font-size:11px;color:var(--ink-500);margin-top:8px">${fmtTime(w.createdAt)} | ${esc(w.nickname || '同学')}</div>
+            <div class="lost-card">
+              <div class="lost-card__head">
+                <span class="badge badge--orange">寻物</span>
+                <span class="lost-card__time">${fmtTime(w.createdAt)}</span>
+              </div>
+              <div class="lost-card__title">${esc(String(w.title || '').replace('【失物】', ''))}</div>
+              ${w.content ? `<div class="lost-card__desc">${esc(w.content)}</div>` : ''}
+              <div class="lost-card__foot">
+                ${avatar({ nickname: w.nickname || '同学', id: w.userId || 1, avatar: w.avatar }, 22)}
+                <span>${esc(w.nickname || '同学')}</span>
+              </div>
             </div>`).join('') : mascotEmpty('还没有失物信息', 'assets/brand/mascot-wave-320.webp')}
         </div>`;
       view.querySelector('#lostRetry')?.addEventListener('click', () => renderRoute());

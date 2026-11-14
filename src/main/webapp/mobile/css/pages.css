@@ -703,7 +703,7 @@
   width: 100%; max-width: var(--page-w); z-index: 55;
   display: flex; align-items: center; gap: 8px;
   height: 48px; padding: 0 13px;
-  background: rgba(255,255,255,.96); backdrop-filter: blur(12px);
+  background: rgba(255,255,255,.98);
   border-bottom: .5px solid var(--line); transition: transform .22s ease;
 }
 .pf-mini.show { transform: translate(-50%, 0); }
@@ -975,7 +975,7 @@
   width: 100%; max-width: var(--page-w);
   display: flex; align-items: center; gap: 10px;
   padding: 8px 13px calc(8px + var(--safe-b));
-  background: rgba(255,255,255,.96); backdrop-filter: blur(12px);
+  background: rgba(255,255,255,.98);
   border-top: .5px solid var(--line); z-index: 60;
 }
 .item-bar .ic { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10px; color: var(--ink-500); width: 44px; }
@@ -1420,3 +1420,116 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
   font-size: 14px;
   font-weight: 700;
 }
+
+/* v1.02 移动端卡片与交互细节精修 */
+.auction-feed .auction-card {
+  border-color: var(--line);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(10, 92, 81, .04);
+  transition: transform .15s ease, box-shadow .18s ease;
+}
+.auction-feed .auction-card:active {
+  transform: scale(.985);
+}
+.pcard, .gcard, .mcard, .wish-card {
+  transition: transform .15s ease;
+}
+.pcard:active, .gcard:active, .mcard:active {
+  transform: scale(.985);
+}
+.relay-item {
+  border-bottom-color: var(--line-soft);
+}
+.skeleton {
+  background: linear-gradient(90deg, #f2f5f4 25%, #f8fbfa 37%, #f2f5f4 63%);
+  background-size: 400% 100%;
+  animation: mShimmer 1.3s ease infinite;
+  border-radius: 12px;
+}
+@keyframes mShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+@keyframes mPageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+#view > * {
+  animation: mPageIn .15s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  #view > *, .skeleton { animation: none !important; }
+}
+
+/* v1.02 移动端二级页面与我的交易四入口精修 */
+.m-subpage { padding: 6px 13px 24px; display: grid; gap: 10px; }
+.deal-tabs {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  padding: 6px 13px 10px; background: #fff; border-bottom: .5px solid var(--line-soft);
+}
+.deal-tabs a {
+  display: grid; place-items: center; min-height: 36px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; color: var(--ink-500); background: var(--fill);
+  transition: background-color .15s ease, color .15s ease;
+}
+.deal-tabs a.on { background: var(--green-700); color: #fff; }
+.deal-group-title { font-size: 13px; font-weight: 700; color: var(--ink-500); padding: 4px 2px 0; }
+.deal-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 13px; box-shadow: 0 2px 10px rgba(10, 92, 81, .04);
+  display: grid; gap: 10px;
+}
+.deal-card__body { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.deal-card__thumb {
+  width: 74px; height: 74px; border-radius: 12px; object-fit: cover;
+  flex: none; background: var(--fill); border: 1px solid var(--line-soft);
+}
+.deal-card__info { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.deal-card__head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.deal-card__head b {
+  font-size: 15px; font-weight: 700; color: var(--ink-900); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.deal-card__price {
+  font-size: 16px; font-weight: 800; color: var(--green-700);
+  font-variant-numeric: tabular-nums;
+}
+.deal-card__meta { font-size: 12px; color: var(--ink-500); font-variant-numeric: tabular-nums; }
+.deal-card__note { font-size: 13px; color: var(--ink-700); line-height: 1.45; }
+.deal-card__kv {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  padding: 9px 10px; border-radius: 12px; background: var(--green-50);
+  font-size: 12px; color: var(--ink-700);
+}
+.deal-card__foot {
+  display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px;
+  padding-top: 8px; border-top: .5px solid var(--line-soft);
+}
+.deal-card__foot--split { justify-content: space-between; }
+
+.lost-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px; box-shadow: 0 2px 10px rgba(10, 92, 81, .04);
+  display: grid; gap: 8px;
+}
+.lost-card__head { display: flex; align-items: center; justify-content: space-between; }
+.lost-card__time { font-size: 12px; color: var(--ink-500); font-variant-numeric: tabular-nums; }
+.lost-card__title { font-size: 16px; font-weight: 700; color: var(--ink-900); line-height: 1.35; }
+.lost-card__desc { font-size: 13px; color: var(--ink-700); line-height: 1.5; }
+.lost-card__foot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-500); padding-top: 4px; }
+
+.tool-card--elevated {
+  border: 1px solid var(--line); border-radius: 16px; padding: 16px;
+  background: #fff; box-shadow: 0 2px 10px rgba(10, 92, 81, .04);
+}
+.appraise-result-card {
+  margin-top: 16px; padding: 14px; border-radius: 14px;
+  background: var(--green-50); border: 1px solid var(--green-100);
+  display: grid; gap: 10px; justify-items: start;
+}
+.appraise-result-card--empty { color: var(--ink-500); font-size: 14px; }
+.appraise-result-card__price { color: var(--green-700); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.appraise-result-card__price em { font-style: normal; font-size: 16px; margin-right: 2px; }
+.appraise-result-card__tags { display: flex; flex-wrap: wrap; gap: 6px; }

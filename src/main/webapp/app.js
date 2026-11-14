@@ -252,9 +252,24 @@
         this.code = code;
     }
 
+    var _apiCache = new Map();
+    var _apiInFlight = new Map();
+    function _isCacheableGet(method, path, opt) {
+        return method === 'GET' && !opt.noCache && path.indexOf('/notification') !== 0 && path.indexOf('/chat') !== 0;
+    }
+
     async function api(path, opt) {
         opt = opt || {};
-        var init = {method: opt.method || 'GET', credentials: 'include', headers: {}, signal: opt.signal};
+        var method = (opt.method || 'GET').toUpperCase();
+        if (_isCacheableGet(method, path, opt)) {
+            var hit = _apiCache.get(path);
+            if (hit && hit.exp > Date.now()) return hit.data;
+            if (_apiInFlight.has(path)) return _apiInFlight.get(path);
+        } else if (method !== 'GET') {
+            _apiCache.clear();
+        }
+        var run = (async function () {
+        var init = {method: method, credentials: 'include', headers: {}, signal: opt.signal};
         if (opt.form) {
             init.body = opt.form;
         } else if (opt.body !== undefined) {
@@ -299,7 +314,17 @@
         if (!res.ok || (data && data.code !== 0)) {
             throw new ApiError((data && data.msg) || '请求失败（' + res.status + '）', (data && data.code) || res.status);
         }
-        return data ? data.data : null;
+        var out = data ? data.data : null;
+        if (_isCacheableGet(method, path, opt)) {
+            _apiCache.set(path, { data: out, exp: Date.now() + 12000 });
+        }
+        return out;
+        })();
+        if (_isCacheableGet(method, path, opt)) {
+            _apiInFlight.set(path, run);
+            try { return await run; } finally { _apiInFlight.delete(path); }
+        }
+        return run;
     }
 
     function readToken() {
@@ -376,11 +401,11 @@
         var me=state.me;var account=me?'<button class="avatar" data-act="go" data-to="#/me" title="'+esc(me.nickname)+'">'+esc(me.nickname.slice(0,1))+'</button>':(readToken()?'<a class="header-account" href="#/me">个人中心</a>':'<a class="header-account" href="#/login">登录 / 注册</a>');
         var search='<form class="header-search" data-form="search"><a class="desktop-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索闲置" placeholder="搜索校园里的好物" value="'+esc(state.home.keyword)+'"><button type="submit">搜索</button></form>';
         return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
-            +'<header class="appbar"><div class="appbar-inner"><a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-name">换一圈<small>校园闲置 让好物流转</small></span></a>'
+            +'<header class="appbar"><div class="appbar-inner"><a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-name">换一圈</span></a>'
             +search+'<div class="header-actions"><a class="settings-link shelf-link" href="#/favorites" aria-label="收藏与历史" title="收藏与历史">'+navIcon('heart')+'</a><a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a><a class="notice-link" href="#/notifications" aria-label="消息通知">'+navIcon('notice')+'<span class="notice-text">消息</span><span class="notice-count" hidden></span></a>'+account+'</div></div><div class="header-nav-wrap">'+topnav(active)+'<a class="header-publish" href="#/publish">'+navIcon('add')+' 发布闲置</a></div></header>'
             +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'||active==='idle'?'shell-market':'')+'">'+content+'</main>'+tabbar(active);
     }
-    function tradeTabs(active){return '<div class="trade-top"><div><h1>我的交易</h1><p>报价和交换进度，都在这里。</p></div></div><nav class="trade-sections" aria-label="交易分类"><a class="'+(active==='offers'?'on':'')+'" href="#/offers">报价</a><a class="'+(active==='exchange'?'on':'')+'" href="#/exchange">交换单</a></nav>';}
+    function tradeTabs(active){return '<div class="trade-top"><h1>我的交易</h1><nav class="trade-sections" aria-label="交易分类"><a class="'+(active==='offers'?'on':'')+'" href="#/offers">报价</a><a class="'+(active==='exchange'?'on':'')+'" href="#/exchange">交换单</a></nav></div>';}
 
     function emptyState(icon, title, sub, actionHtml) {
         return '<div class="empty"><div class="ico">' + icon + '</div><p>' + esc(title) + '</p>'
@@ -910,14 +935,14 @@
                 + '</div>';
         }).join('');
 
-        var content = tradeTabs('offers') + '<div class="page-head trade-page-head"><h1>报价</h1>'
-            + '<p>对方接受后，两件物品会立刻锁定，进入待交付。</p></div>'
-            + '<div class="segmented" style="margin-bottom:14px">'
+        var content = tradeTabs('offers')
+            + '<div class="trade-toolbar">'
+            + '<div class="segmented">'
             + '<button class="' + (tab === 'received' ? 'on' : '') + '" data-act="offers-tab" data-v="received">收到的</button>'
             + '<button class="' + (tab === 'sent' ? 'on' : '') + '" data-act="offers-tab" data-v="sent">我发出的</button>'
-            + '</div>'
-            + (rows ? '<div class="grid">' + rows + '</div>'
-                : emptyState('✉', tab === 'received' ? '还没有人报价' : '你还没报过价',
+            + '</div></div>'
+            + (rows ? '<div class="desk-grid-2">' + rows + '</div>'
+                : emptyState('✉', tab === 'received' ? '还没有人报价' : '你还没报过价', '',
                     tab === 'received' ? '把物品描述写清楚，报价会来的' : '去集市挑一件喜欢的，用你的闲置去换',
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/home">去集市逛逛</button>'));
 
@@ -1038,10 +1063,9 @@
                 + '</button>';
         }).join('');
 
-        var content = tradeTabs('exchange') + '<div class="page-head trade-page-head"><h1>交换单</h1>'
-            + '<p>点进单子能看到谁给谁什么。到货后记得点「我已交换」。</p></div>'
-            + (rows ? '<div class="grid">' + rows + '</div>'
-                : emptyState('♻', '还没有交换单', '接受一个报价，或者凑成一个三方环，就会出现在这里',
+        var content = tradeTabs('exchange')
+            + (rows ? '<div class="desk-grid-2">' + rows + '</div>'
+                : emptyState('♻', '还没有交换单', '',
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/home">去集市</button>'));
 
         $('#app').innerHTML = shell('trade', content);
@@ -1208,14 +1232,14 @@
         $('#app').innerHTML = shell('me', loading());
         var me = await api('/user/me');
         state.me = me;
-        var items = await api('/item/mine');
-        var reviews = await api('/review/user/' + me.id);
-        var pending = [];
-        try {
-            pending = (await api('/review/pending')) || [];
-        } catch (e) {
-            pending = [];
-        }
+        var results = await Promise.all([
+            api('/item/mine'),
+            api('/review/user/' + me.id),
+            api('/review/pending').catch(function () { return []; })
+        ]);
+        var items = results[0];
+        var reviews = results[1];
+        var pending = results[2] || [];
         state.pending = pending;
 
         var onShelf = (items || []).filter(function (i) {
@@ -1258,62 +1282,72 @@
                 + '<span class="hint">' + fmtDate(r.createTime) + '</span></div>';
         }).join('');
 
-        var content = '<section class="redesign-page my-page"><header class="redesign-heading"><h1>我的</h1><a class="icon-action" aria-label="设置" href="#/settings">'+navIcon('settings')+'</a></header><div class="card card-pad" style="margin-bottom:14px">'
+        var content = '<section class="desk-me-layout">'
+            + '<aside class="desk-me-side">'
+            + '<div class="card card-pad">'
             + '<div class="user-row">'
             + '<a class="avatar lg" href="#/user/'+Number(me.id)+'" aria-label="打开个人主页">' + esc(me.nickname.slice(0, 1)) + '</a>'
             + '<div class="u-main"><p class="u-name" style="font-size:18px">' + esc(me.nickname)
             + (me.role === 1 ? ' <span class="tag brand">管理员</span>' : '') + '</p>'
-            + '<p class="u-sub">重庆移通学院 | ' + esc(me.college || '未填院系')
+            + '<p class="u-sub">' + esc(me.college || '重庆移通学院')
             + ' | ' + esc(me.building || '未填宿舍楼') + '</p>'
             + '</div></div>'
             + '<div class="stats" style="margin-top:14px">'
             + '<div class="stat"><p class="k">信用分</p><p class="v num">' + me.credit
             + '<small>' + esc(creditLevelOf(me.credit).text) + '</small></p></div>'
             + '<div class="stat"><p class="k">成交</p><p class="v num">' + (me.dealCount || 0) + '<small>单</small></p></div>'
-            + '<div class="stat"><p class="k">收到的评价</p><p class="v num">' + (me.reviewCount || 0) + '<small>条</small></p></div>'
+            + '<div class="stat"><p class="k">评价</p><p class="v num">' + (me.reviewCount || 0) + '<small>条</small></p></div>'
             + '<div class="stat"><p class="k">平均分</p><p class="v num">'
             + (me.avgScore ? me.avgScore : '<span style="font-size:15px;color:var(--ink-400)">暂无</span>')
             + '</p></div>'
             + '</div>'
             + '<div class="credit-track"><div class="credit-fill" style="width:'
             + Math.max(3, Math.min(100, me.credit || 0)) + '%"></div></div>'
-            + '<div class="credit-scale"><span>0</span><span>60 受限线</span><span>100</span></div>'
-            + '<div class="credit-links">'
-            + '<button class="link-btn" data-act="credit-rule">信用分怎么算 ›</button>'
+            + '<div class="credit-links" style="margin-top:10px">'
+            + '<button class="link-btn" data-act="credit-rule">信用规则 ›</button>'
             + (pending.length
-                ? '<button class="link-btn accent" data-act="pending-review">有 ' + pending.length + ' 单待评价 ›</button>'
-                : '<span class="hint" style="margin:0">没有待评价的交换</span>')
+                ? '<button class="link-btn accent" data-act="pending-review">' + pending.length + ' 单待评价 ›</button>'
+                : '')
             + '</div>'
             + '<div class="btn-row" style="margin-top:14px">'
             + '<button class="btn btn-ghost btn-sm" data-act="open-profile">改资料</button>'
-            + (me.role === 1 ? '<button class="btn btn-ghost btn-sm" data-act="go" data-to="#/admin">管理后台</button>' : '')
-            + '<button class="btn btn-ghost btn-sm" data-act="logout">退出登录</button>'
+            + '<a class="btn btn-ghost btn-sm" href="#/settings">设置</a>'
+            + (me.role === 1 ? '<button class="btn btn-ghost btn-sm" data-act="go" data-to="#/admin">后台</button>' : '')
+            + '<button class="btn btn-ghost btn-sm" data-act="logout">退出</button>'
             + '</div></div>'
+            + '<nav class="card desk-me-nav" aria-label="快捷入口">'
+            + '<a href="#/offers">'+navIcon('trade')+'<span>我的报价</span></a>'
+            + '<a href="#/exchange">'+navIcon('box')+'<span>我的交换</span></a>'
+            + '<a href="#/auction/mine">'+navIcon('auction')+'<span>我的拍卖</span></a>'
+            + '<a href="#/wishes">'+navIcon('wish')+'<span>心愿单</span></a>'
+            + '<a href="#/favorites">'+navIcon('heart')+'<span>我的收藏</span><b>'+shelfRead('favorites').length+'</b></a>'
+            + '<a href="#/history">'+navIcon('search')+'<span>浏览历史</span><b>'+shelfRead('history').length+'</b></a>'
+            + '</nav>'
+            + '</aside>'
 
-            + '<div class="my-shortcuts"><a href="#/favorites"><b>'+shelfRead('favorites').length+'</b>我的收藏</a><a href="#/history"><b>'+shelfRead('history').length+'</b>浏览历史</a><a href="#/wishes">'+navIcon('wish')+'心愿单</a><a href="#/auction/mine">'+navIcon('auction')+'我的拍卖</a></div>'
-            + '<section class="card card-pad my-trades"><h2>我的交易</h2><div class="my-shortcuts"><a href="#/offers">'+navIcon('trade')+'我的报价</a><a href="#/exchange">'+navIcon('box')+'我的交换</a><a href="#/publish">'+navIcon('add')+'发布闲置</a></div></section>'
-            + '<div class="section-title"><h2>我的物品</h2>'
-            + '<div class="title-actions">'
-            + '<span class="more">共 ' + (items || []).length + ' 件，在架 ' + onShelf.length + '</span>'
-            + '<button class="plus-link" data-act="go" data-to="#/publish">'+navIcon('add')+' 上架</button>'
-            + '</div></div>'
-            + '<div class="segmented" style="margin-bottom:10px">'
+            + '<div class="desk-me-main">'
+            + '<div class="desk-me-bar">'
+            + '<h1>我的物品</h1>'
+            + '<div class="desk-me-bar-right">'
+            + '<div class="segmented">'
             + [['all', '全部'], ['1', '在架'], ['4', '已下架'], ['3', '已换出']].map(function (t) {
                 return '<button class="' + (String(state.meFilter) === t[0] ? 'on' : '')
                     + '" data-act="me-filter" data-v="' + t[0] + '">' + t[1] + '</button>';
             }).join('')
             + '</div>'
-            + (itemRows ? '<div class="grid">' + itemRows + '</div>'
+            + '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'
+            + '</div></div>'
+            + (itemRows ? '<div class="desk-grid-2">' + itemRows + '</div>'
                 : emptyState(navIcon('box'),
-                    state.meFilter === 'all' ? '还没有发布过物品' : '这个状态下没有物品',
-                    state.meFilter === 'all' ? '先发一件，换物的第一步' : '切换上面的分类看看',
+                    state.meFilter === 'all' ? '还没有发布过物品' : '暂无该状态物品',
+                    '',
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">去发布</button>'))
 
-            + '<div class="section-title"><h2>收到的评价</h2></div>'
-            + (reviewRows ? '<div class="list">' + reviewRows + '</div>'
-                : emptyState('⭐', '还没有评价', '完成一次交换后，对方可以给你打分'));
+            + '<div class="section-title" style="margin-top:26px"><h2>收到的评价</h2></div>'
+            + (reviewRows ? '<div class="desk-grid-2">' + reviewRows + '</div>'
+                : emptyState('⭐', '还没有评价', ''));
 
-        $('#app').innerHTML = shell('me', content+'</section>');
+        $('#app').innerHTML = shell('me', content+'</div></section>');
     }
 
     function auctionCard(a, mode) {

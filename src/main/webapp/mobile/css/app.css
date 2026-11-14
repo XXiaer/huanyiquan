@@ -93,9 +93,7 @@ h1, h2, h3, h4, p { margin: 0; }
   height: calc(var(--nav-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
   display: flex; align-items: flex-start;
-  background: rgba(255, 255, 255, .92);
-  backdrop-filter: saturate(180%) blur(16px);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  background: rgba(255, 255, 255, .98);
   border-top: .5px solid rgba(10, 92, 81, .1);
 }
 .tabbar__item {

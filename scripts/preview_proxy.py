@@ -5,8 +5,13 @@ from urllib.error import HTTPError,URLError
 from pathlib import Path
 import os
 ROOT=Path(__file__).resolve().parents[1]/'src/main/webapp'
+OPENER=build_opener(ProxyHandler({}))
 class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
+ def end_headers(self):
+  if not (self.path.startswith('/api/') or self.path.startswith('/uploads/')):
+   self.send_header('Cache-Control','no-cache')
+  super().end_headers()
  def do_GET(self):
   if self.path.startswith('/api/') or self.path.startswith('/uploads/'):self.proxy()
   else:super().do_GET()
@@ -17,11 +22,11 @@ class Handler(SimpleHTTPRequestHandler):
   body=self.rfile.read(int(self.headers.get('Content-Length',0))) if self.command in ('POST','PUT') else None
   headers={k:self.headers[k] for k in ('Content-Type','Cookie','X-Token') if k in self.headers}
   req=Request('http://118.89.177.23:8081'+self.path,data=body,headers=headers,method=self.command)
-  try:r=build_opener(ProxyHandler({})).open(req,timeout=30)
+  try:r=OPENER.open(req,timeout=30)
   except HTTPError as e:r=e
   except URLError:self.send_error(502);return
   data=r.read();self.send_response(r.status)
-  for k in ('Content-Type','Set-Cookie','X-Token'):
+  for k in ('Content-Type','Set-Cookie','X-Token','Cache-Control','ETag','Last-Modified'):
    v=r.headers.get(k)
    if v:self.send_header(k,v)
   self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data)

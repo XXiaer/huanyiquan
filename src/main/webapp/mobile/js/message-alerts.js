@@ -92,6 +92,10 @@
   };
 
   window.addEventListener('hashchange', dismiss);
-  document.addEventListener('visibilitychange', refreshMessageAlerts);
-  setInterval(refreshMessageAlerts, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshMessageAlerts();
+  });
+  setInterval(() => {
+    if (!document.hidden) refreshMessageAlerts();
+  }, 20000);
 })();
