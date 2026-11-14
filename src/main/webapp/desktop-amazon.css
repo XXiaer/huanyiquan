@@ -191,8 +191,11 @@
         padding: 0 5px;
         font-size: 11px;
     }
+    .header-actions .settings-link,
+    .header-actions .settings-link .nav-icon {
+        color: #ffffff !important;
+    }
     .header-actions .settings-link {
-        color: #ffffff;
         padding: 8px;
         border: 1px solid transparent;
         border-radius: 3px;
@@ -820,7 +823,7 @@
     .amz-acct-card small { display: block; font-size: 12px; color: var(--amz-muted); line-height: 1.4; }
 
     /* 所有二级页统一亚马逊白底边框卡质感 */
-    :is(.card, .settings-page .card, .admin-table-wrap, .auction-card, .wish-card, .chat-panel, .conversation-list, .relay-layout .relay-intro, .relay-inventory-list > a, .publish-success) {
+    :is(.card, .settings-page .card, .admin-table-wrap, .auction-card, .wish-card, .chat-panel, .conversation-list, .relay-inventory-list > a, .publish-success) {
         background: #ffffff !important;
         border: 1px solid var(--amz-border) !important;
         border-radius: 8px !important;
@@ -1092,7 +1095,8 @@
     .amz-order-actions { display: flex; gap: 8px; flex: none; }
 
     /* 拍卖 / 求换 / 社区 / 接力横幅与栅格 */
-    .amz-deals-banner {
+    .amz-deals-banner,
+    .relay-layout .relay-intro.amz-deals-banner {
         background: linear-gradient(135deg, #06302a 0%, #0a5c51 100%) !important;
         color: #ffffff !important;
         border: 0 !important;
