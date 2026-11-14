@@ -1,0 +1,884 @@
+/* =========================================================================
+   换一圈 · 桌面端 Amazon 亚马逊电商官网风格设计系统
+   保持森林绿品牌色 (#06302A / #0A5C51 / #0C7263) + 暖橙 (#F08C1A) + 吉祥物 + 全功能
+   ========================================================================= */
+
+@media (max-width: 899px) {
+    .amz-deliver,
+    .amz-search-cat,
+    .amz-nav-item,
+    .amz-cart,
+    .amz-all-btn,
+    .amz-sub-right,
+    .amz-footer,
+    .amz-breadcrumb,
+    .amz-buybox,
+    .amz-account-head,
+    .amz-account-grid {
+        display: none !important;
+    }
+}
+
+@media (min-width: 900px) {
+    :root {
+        --amz-nav-dark: #06302a;
+        --amz-nav-sub: #0a5c51;
+        --amz-canvas: #eaeded;
+        --amz-card: #ffffff;
+        --amz-border: #d5d9d9;
+        --amz-ink: #0f1111;
+        --amz-muted: #565959;
+        --amz-link: #007185;
+        --amz-link-green: #0a5c51;
+        --amz-orange: #f08c1a;
+        --amz-orange-hover: #e27e0d;
+        --amz-yellow: #ffd814;
+        --amz-yellow-border: #fcd200;
+        --amz-price-red: #b12704;
+    }
+
+    html, body {
+        background: var(--amz-canvas);
+        color: var(--amz-ink);
+        font-family: "PingFang SC", "Microsoft YaHei UI", "Amazon Ember", Arial, sans-serif;
+    }
+
+    /* ---------------- 1. 亚马逊双层顶部导航栏 ---------------- */
+    .appbar {
+        position: sticky;
+        top: 0;
+        z-index: 90;
+        background: var(--amz-nav-dark);
+        border-bottom: 0;
+        color: #ffffff;
+    }
+
+    .appbar-inner {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 0 18px;
+        min-height: 62px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        color: #ffffff;
+        flex: none;
+    }
+    .brand:hover { border-color: rgba(255, 255, 255, .85); }
+    .brand-logo { width: 34px; height: 34px; border-radius: 6px; background: #fff; padding: 2px; }
+    .brand-name { color: #ffffff; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+
+    .amz-deliver {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        color: #ffffff;
+        flex: none;
+        line-height: 1.2;
+    }
+    .amz-deliver:hover { border-color: rgba(255, 255, 255, .85); }
+    .amz-deliver .nav-icon { width: 18px; height: 18px; color: #ffffff; margin-top: 6px; }
+    .amz-deliver small { display: block; font-size: 11px; color: #cccccc; font-weight: 400; }
+    .amz-deliver b { display: block; font-size: 13px; color: #ffffff; font-weight: 700; }
+
+    /* 三段式亚马逊搜索条 */
+    .header-search.amz-search {
+        flex: 1;
+        min-width: 280px;
+        max-width: none;
+        height: 40px;
+        display: flex;
+        align-items: stretch;
+        background: #ffffff;
+        border: 0;
+        border-radius: 6px;
+        overflow: hidden;
+        padding: 0;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+    }
+    .header-search.amz-search:focus-within {
+        box-shadow: 0 0 0 3px #f08c1a;
+    }
+    .amz-search-cat {
+        height: 40px;
+        padding: 0 10px;
+        border: 0;
+        border-right: 1px solid #cdcdcd;
+        background: #e6e6e6;
+        color: #555555;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        outline: none;
+    }
+    .amz-search-cat:hover { background: #dadada; color: #0f1111; }
+    .desktop-search-icon { display: none; }
+    .header-search.amz-search input {
+        flex: 1;
+        border: 0;
+        padding: 0 12px;
+        font-size: 14px;
+        color: #0f1111;
+        background: #ffffff;
+        outline: none;
+    }
+    .header-search.amz-search button {
+        width: 48px;
+        min-width: 48px;
+        height: 40px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: var(--amz-orange);
+        color: #06302a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .header-search.amz-search button:hover { background: var(--amz-orange-hover); }
+    .header-search.amz-search button span { display: none; }
+    .header-search.amz-search button .nav-icon { width: 20px; height: 20px; stroke-width: 2.3; }
+
+    /* 右侧账户、订单、消息、收藏夹 */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: none;
+    }
+    .header-actions .avatar,
+    .header-actions .header-account,
+    .header-actions .shelf-link:not(.amz-cart),
+    .header-actions .notice-link:not(.amz-nav-item) {
+        display: none;
+    }
+    .amz-nav-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        color: #ffffff !important;
+        line-height: 1.25;
+        white-space: nowrap;
+    }
+    .amz-nav-item:hover { border-color: rgba(255, 255, 255, .85); }
+    .amz-nav-item small { font-size: 11px; color: #d6e4e0; font-weight: 400; }
+    .amz-nav-item b { font-size: 13px; color: #ffffff; font-weight: 700; }
+    .amz-nav-item .notice-count {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        background: var(--amz-orange);
+        color: #06302a;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 0 5px;
+        font-size: 11px;
+    }
+    .header-actions .settings-link {
+        color: #ffffff;
+        padding: 8px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+    }
+    .header-actions .settings-link:hover { border-color: rgba(255, 255, 255, .85); background: transparent; }
+
+    .amz-cart {
+        display: inline-flex !important;
+        align-items: flex-end;
+        gap: 4px;
+        padding: 6px 10px !important;
+        position: relative;
+        color: #ffffff !important;
+    }
+    .amz-cart .nav-icon { width: 26px; height: 26px; color: #ffffff; }
+    .amz-cart-num {
+        position: absolute;
+        top: 2px;
+        left: 22px;
+        min-width: 16px;
+        height: 16px;
+        line-height: 16px;
+        text-align: center;
+        border-radius: 999px;
+        background: var(--amz-orange);
+        color: #06302a;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 0 4px;
+    }
+    .amz-cart-label { font-size: 13px; font-weight: 700; color: #ffffff; }
+
+    /* 第二层：次深森林绿频道导航 */
+    .header-nav-wrap {
+        max-width: none;
+        background: var(--amz-nav-sub);
+        padding: 0 18px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .amz-all-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+    .amz-all-btn:hover { border-color: rgba(255, 255, 255, .85); }
+    .topnav {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        overflow-x: auto;
+    }
+    .topnav a {
+        color: #ffffff !important;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        white-space: nowrap;
+        box-shadow: none !important;
+    }
+    .topnav a:hover { border-color: rgba(255, 255, 255, .85); }
+    .topnav a.on {
+        font-weight: 800;
+        background: rgba(255, 255, 255, .14);
+        border-color: rgba(255, 255, 255, .35);
+    }
+    .amz-sub-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+    }
+    .amz-sub-link {
+        background: transparent;
+        border: 1px solid transparent;
+        color: #ffd814;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .amz-sub-link:hover { border-color: rgba(255, 255, 255, .85); }
+    .header-publish {
+        background: var(--amz-orange) !important;
+        color: #06302a !important;
+        border-radius: 4px !important;
+        min-height: 28px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+    }
+    .header-publish:hover { background: var(--amz-orange-hover) !important; }
+
+    /* ---------------- 2. 主体容器 ---------------- */
+    .shell {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 16px 20px 48px;
+    }
+    .shell.shell-market {
+        padding-top: 0;
+    }
+
+    /* ---------------- 3. 亚马逊首页 Hero + 4列重叠白卡矩阵 ---------------- */
+    .market-home.amz-home-layout {
+        display: block;
+    }
+    .amz-home-stage {
+        position: relative;
+        margin: 0 -20px;
+        padding-bottom: 20px;
+    }
+    .amz-hero {
+        background: linear-gradient(135deg, #06302a 0%, #0a5c51 55%, #0f9b84 100%);
+        color: #ffffff;
+        padding: 36px 48px 155px;
+        position: relative;
+        overflow: hidden;
+    }
+    .amz-hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 150px;
+        background: linear-gradient(to bottom, rgba(234, 237, 237, 0) 0%, #eaeded 100%);
+        pointer-events: none;
+    }
+    .amz-hero-inner {
+        max-width: 1380px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        position: relative;
+        z-index: 1;
+    }
+    .amz-hero-kicker {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, .14);
+        color: #dcf2ec;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    .amz-hero-copy h1 {
+        margin: 0 0 10px;
+        font-size: 42px;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -.02em;
+        line-height: 1.15;
+    }
+    .amz-hero-copy p {
+        margin: 0 0 20px;
+        font-size: 16px;
+        color: #e6f4f0;
+    }
+    .amz-hero-btns { display: flex; gap: 12px; }
+    .amz-btn-orange {
+        background: var(--amz-orange) !important;
+        color: #06302a !important;
+        border: 1px solid #d97a0d !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        padding: 9px 20px;
+    }
+    .amz-btn-orange:hover { background: var(--amz-orange-hover) !important; }
+    .amz-btn-outline {
+        background: rgba(255, 255, 255, .14) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, .5) !important;
+        border-radius: 8px !important;
+        padding: 9px 20px;
+    }
+    .amz-btn-outline:hover { background: rgba(255, 255, 255, .24) !important; }
+    .amz-hero-mascot img {
+        width: 185px;
+        height: 185px;
+        object-fit: contain;
+        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .25));
+    }
+
+    /* 4 列重叠白卡区 */
+    .amz-quad-grid {
+        position: relative;
+        z-index: 2;
+        max-width: 1460px;
+        margin: -115px auto 0;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+    }
+    .amz-quad-card {
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 360px;
+    }
+    .amz-quad-card h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--amz-ink);
+        line-height: 1.3;
+    }
+    .amz-quad-2x2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        flex: 1;
+    }
+    .amz-quad-2x2 > button,
+    .amz-quad-2x2 > a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 8px;
+        background: #f3f7f6;
+        border: 1px solid #e6ecea;
+        border-radius: 4px;
+        color: var(--amz-ink);
+        cursor: pointer;
+        text-align: center;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+    .amz-quad-2x2 > button:hover,
+    .amz-quad-2x2 > a:hover {
+        background: #e7f3ef;
+        border-color: #b7d7ce;
+    }
+    .amz-q-ico {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        color: var(--amz-nav-sub);
+    }
+    .amz-q-ico svg { width: 28px; height: 28px; }
+    .amz-quad-2x2 b { font-size: 12px; font-weight: 600; color: var(--amz-ink); }
+    .amz-quad-more {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--amz-link);
+        margin-top: auto;
+    }
+    .amz-quad-more:hover { color: var(--amz-price-red); text-decoration: underline; }
+
+    .amz-acct-mini {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+        background: #f5f9f7;
+        border: 1px solid #e2ece8;
+        border-radius: 6px;
+        flex: 1;
+    }
+    .amz-acct-mini b { display: block; font-size: 15px; color: var(--amz-ink); margin-bottom: 4px; }
+    .amz-acct-mini span { font-size: 12px; color: var(--amz-muted); line-height: 1.45; }
+
+    /* 首页下方通栏推荐货架 */
+    .amz-shelf-wrap {
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        padding: 20px 22px 24px;
+        margin-top: 6px;
+    }
+
+    /* ---------------- 4. 筛选与搜索结果页（左侧 240px 属性栏 + 右侧网格） ---------------- */
+    .market-home.amz-browse-layout {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        gap: 20px;
+        padding-top: 16px;
+        align-items: start;
+    }
+    .amz-browse-layout .category-panel {
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        border-radius: 4px;
+        padding: 16px 14px;
+        position: sticky;
+        top: 114px;
+    }
+    .amz-browse-layout .category-panel-title,
+    .amz-side-group h3 {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--amz-ink);
+        margin: 0 0 8px;
+        padding: 0 6px;
+    }
+    .amz-side-group {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid #e7e7e7;
+    }
+    .amz-browse-layout .desk-category {
+        min-height: 32px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: var(--amz-ink);
+    }
+    .amz-browse-layout .desk-category:hover {
+        background: transparent;
+        color: var(--amz-price-red);
+    }
+    .amz-browse-layout .desk-category.on {
+        background: #edf7f4;
+        color: var(--amz-nav-sub);
+        font-weight: 800;
+    }
+    .amz-browse-main {
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        padding: 18px 20px;
+    }
+
+    .feed-heading {
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #e7e7e7;
+    }
+    .feed-heading h2 { font-size: 20px; font-weight: 800; color: var(--amz-ink); }
+    .feed-heading p { font-size: 13px; color: var(--amz-muted); }
+
+    /* ---------------- 5. 亚马逊标准商品卡片 ---------------- */
+    .pgrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+    }
+    .pcard {
+        border: 1px solid #e7e7e7 !important;
+        border-radius: 6px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        text-align: left;
+        transition: border-color .15s ease, box-shadow .15s ease !important;
+    }
+    .pcard:hover {
+        transform: none !important;
+        border-color: #a6b7b3 !important;
+        box-shadow: 0 4px 12px rgba(10, 92, 81, .10) !important;
+    }
+    .pcard .pimg {
+        background: #f7f8f8 !important;
+        border-bottom: 1px solid #f0f2f2;
+    }
+    .pcard .pbadge {
+        background: var(--amz-nav-sub);
+        color: #ffffff;
+        border-radius: 3px;
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+    .pcard .pbody { padding: 12px 14px 14px; display: grid; gap: 6px; }
+    .pcard .ptitle {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--amz-ink);
+        line-height: 1.4;
+        margin: 0;
+    }
+    .pcard:hover .ptitle { color: var(--amz-price-red); }
+    .amz-rating { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .amz-stars { color: var(--amz-orange); letter-spacing: 1px; font-size: 13px; }
+    .amz-rating-num { color: var(--amz-link); font-weight: 600; }
+    .amz-price {
+        display: inline-flex;
+        align-items: flex-start;
+        color: var(--amz-ink);
+        font-variant-numeric: tabular-nums;
+    }
+    .amz-price em { font-style: normal; font-size: 12px; margin-top: 3px; margin-right: 1px; }
+    .amz-price b { font-size: 21px; font-weight: 700; line-height: 1; }
+    .amz-price sup { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .amz-prime-tag {
+        margin-left: auto;
+        color: var(--amz-nav-sub);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ---------------- 6. 亚马逊三栏商品详情页 + Buy Box ---------------- */
+    .amz-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0 14px;
+        font-size: 12px;
+        color: var(--amz-muted);
+    }
+    .amz-breadcrumb a { color: var(--amz-muted); }
+    .amz-breadcrumb a:hover { color: var(--amz-price-red); text-decoration: underline; }
+    .amz-breadcrumb b { color: var(--amz-ink); font-weight: 600; }
+
+    .item-detail.amz-detail-3col {
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        border-radius: 6px;
+        padding: 24px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 290px !important;
+        gap: 28px !important;
+        align-items: start;
+    }
+    .item-detail .hero {
+        border: 1px solid #e7e7e7;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 16px;
+    }
+    .item-detail .detail-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--amz-ink);
+        line-height: 1.35;
+        margin: 0 0 8px;
+    }
+    .amz-detail-seller {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 13px;
+    }
+    .amz-detail-seller .link-btn { color: var(--amz-link); font-weight: 600; padding: 0; }
+    .amz-hr { border: 0; border-top: 1px solid #e7e7e7; margin: 14px 0; }
+    .amz-detail-price {
+        display: block;
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--amz-price-red);
+        margin-bottom: 10px;
+        font-variant-numeric: tabular-nums;
+    }
+    .amz-specs { display: grid; gap: 6px; font-size: 14px; }
+    .amz-specs .kv { display: grid; grid-template-columns: 92px 1fr; gap: 10px; }
+    .amz-specs .k { font-weight: 700; color: var(--amz-ink); }
+    .amz-specs .v { color: var(--amz-ink); }
+    .amz-bullets h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--amz-ink); }
+    .amz-bullets ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; color: var(--amz-ink); line-height: 1.5; }
+
+    /* Buy Box 右栏独立盒子 */
+    .amz-buybox {
+        border: 1px solid var(--amz-border);
+        border-radius: 8px;
+        padding: 18px;
+        background: #ffffff;
+        position: sticky;
+        top: 118px;
+    }
+    .amz-buybox-price {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--amz-ink);
+        margin-bottom: 8px;
+        font-variant-numeric: tabular-nums;
+    }
+    .amz-buybox-stock {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #007600;
+    }
+    .amz-buybox-ship {
+        margin: 0 0 14px;
+        font-size: 13px;
+        color: var(--amz-muted);
+        line-height: 1.45;
+    }
+    .amz-buybox-actions {
+        display: grid !important;
+        gap: 10px !important;
+        position: static !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    .amz-buybox-actions .btn-primary,
+    .amz-buybox-actions .btn-accent {
+        background: var(--amz-yellow) !important;
+        border: 1px solid var(--amz-yellow-border) !important;
+        color: #0f1111 !important;
+        border-radius: 999px !important;
+        font-weight: 700 !important;
+    }
+    .amz-buybox-actions .btn-primary:hover { background: #f7ca00 !important; }
+    .amz-buybox-actions .btn-ghost {
+        background: var(--amz-orange) !important;
+        border: 1px solid #d97a0d !important;
+        color: #06302a !important;
+        border-radius: 999px !important;
+        font-weight: 700 !important;
+    }
+    .amz-buybox-actions .btn-ghost:last-child:not(:nth-child(2)) {
+        background: #ffffff !important;
+        border: 1px solid var(--amz-border) !important;
+        color: var(--amz-muted) !important;
+    }
+    .amz-buybox-seller {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--amz-muted);
+    }
+
+    /* ---------------- 7. 亚马逊“您的账户”九宫格 + 订单/二级页面统一风格 ---------------- */
+    .amz-account-head h1 {
+        margin: 0 0 14px;
+        font-size: 26px;
+        font-weight: 600;
+        color: var(--amz-ink);
+    }
+    .amz-account-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+    .amz-acct-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid var(--amz-border);
+        border-radius: 8px;
+        color: var(--amz-ink);
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+    .amz-acct-card:hover {
+        background: #f7fafa;
+        border-color: var(--amz-nav-sub);
+    }
+    .amz-acct-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: #edf7f4;
+        color: var(--amz-nav-sub);
+        display: grid;
+        place-items: center;
+        flex: none;
+    }
+    .amz-acct-card b { display: block; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .amz-acct-card small { display: block; font-size: 12px; color: var(--amz-muted); line-height: 1.4; }
+
+    /* 所有二级页统一亚马逊白底边框卡质感 */
+    :is(.card, .settings-page .card, .admin-table-wrap, .auction-card, .wish-card, .chat-panel, .conversation-list, .relay-layout .relay-intro, .relay-inventory-list > a, .publish-success) {
+        background: #ffffff !important;
+        border: 1px solid var(--amz-border) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+    }
+    .trade-sections a.on,
+    .chips .chip.on {
+        background: var(--amz-nav-sub) !important;
+        color: #ffffff !important;
+        border-color: var(--amz-nav-sub) !important;
+    }
+
+    /* ---------------- 8. 亚马逊登录/注册极简框线白卡 ---------------- */
+    .entry-screen {
+        min-height: 100vh;
+        background: #ffffff !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 28px 20px 60px;
+    }
+    .entry-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--amz-nav-dark);
+    }
+    .entry-brand img { width: 38px; height: 38px; }
+    .entry-panel {
+        width: 100%;
+        max-width: 400px !important;
+        display: block !important;
+        background: #ffffff !important;
+        border: 1px solid #dddddd !important;
+        border-radius: 8px !important;
+        padding: 24px 26px !important;
+        box-shadow: none !important;
+    }
+    .entry-art { display: none !important; }
+    .entry-content h1 { font-size: 26px; font-weight: 500; margin: 0 0 6px; color: var(--amz-ink); }
+    .entry-content form .btn-primary {
+        background: var(--amz-yellow) !important;
+        border: 1px solid var(--amz-yellow-border) !important;
+        color: #0f1111 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    .entry-content form .btn-primary:hover { background: #f7ca00 !important; }
+
+    /* ---------------- 9. 亚马逊多栏页脚 ---------------- */
+    .market-footer { display: none !important; }
+    .amz-footer {
+        margin-top: 24px;
+        color: #ffffff;
+    }
+    .amz-back-top {
+        width: 100%;
+        height: 46px;
+        border: 0;
+        background: #125248;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .amz-back-top:hover { background: #176458; }
+    .amz-footer-cols {
+        background: #084239;
+        padding: 38px 20px;
+    }
+    .amz-footer-cols > div {
+        max-width: 1040px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 28px;
+    }
+    .amz-footer-cols h3 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .amz-footer-cols a {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #d6e4e0;
+    }
+    .amz-footer-cols a:hover { text-decoration: underline; color: #ffffff; }
+    .amz-footer-base {
+        background: var(--amz-nav-dark);
+        border-top: 1px solid rgba(255, 255, 255, .12);
+        padding: 22px 20px;
+        text-align: center;
+    }
+    .amz-footer-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+    .amz-footer-base p {
+        margin: 0;
+        font-size: 12px;
+        color: #b7ccc6;
+    }
+}
