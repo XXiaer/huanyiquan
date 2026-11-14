@@ -299,7 +299,11 @@
     if (!bar) return;
     if (active === false) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
     bar.style.display = 'flex';
-    bar.innerHTML = NAV.map((n) => {
+    const notch = `<svg class="tabbar__notch" viewBox="0 0 120 28" aria-hidden="true">
+      <path d="M0 28 L0 26 L17.86 26 A14 14 0 0 0 29.90 19.14 A35 35 0 0 1 90.10 19.14 A14 14 0 0 0 102.14 26 L120 26 L120 28 Z" fill="#FFFFFF"/>
+      <path d="M0 26 L17.86 26 A14 14 0 0 0 29.90 19.14 A35 35 0 0 1 90.10 19.14 A14 14 0 0 0 102.14 26 L120 26" fill="none" stroke="rgba(10,92,81,.1)" stroke-width="1"/>
+    </svg>`;
+    bar.innerHTML = notch + NAV.map((n) => {
       if (n.center) {
         return `<div class="tabbar__publish">
           <button data-href="${n.href}" aria-label="发布">
