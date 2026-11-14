@@ -1,0 +1,609 @@
+/* =========================================================================
+   换一圈 · 桌面端 Apple 官网质感设计系统 (保持森林绿品牌色与完整电商功能)
+   仅作用于 @media (min-width: 900px) 桌面端，不影响移动端
+   ========================================================================= */
+
+@media (min-width: 900px) {
+    :root {
+        --apple-canvas: #f5f7f6;
+        --apple-surface: #ffffff;
+        --apple-glass: rgba(255, 255, 255, .80);
+        --apple-border: rgba(10, 92, 81, .08);
+        --apple-border-hover: rgba(10, 92, 81, .18);
+        --apple-shadow-xs: 0 2px 10px rgba(10, 92, 81, .04), 0 1px 2px rgba(0, 0, 0, .02);
+        --apple-shadow-sm: 0 6px 24px rgba(10, 92, 81, .06), 0 1px 4px rgba(0, 0, 0, .03);
+        --apple-shadow-md: 0 18px 42px rgba(10, 92, 81, .10), 0 4px 12px rgba(0, 0, 0, .04);
+        --apple-shadow-lg: 0 28px 68px rgba(10, 92, 81, .14), 0 8px 24px rgba(0, 0, 0, .05);
+        --apple-ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    html, body {
+        background: var(--apple-canvas);
+        color: var(--ink-900);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ---------------- 1. 苹果式毛玻璃吸顶顶栏 ---------------- */
+    .appbar {
+        position: sticky;
+        top: 0;
+        z-index: 90;
+        background: var(--apple-glass);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        border-bottom: 1px solid var(--apple-border);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    }
+
+    .appbar-inner,
+    .header-nav-wrap {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding-inline: 32px;
+    }
+
+    .appbar-inner {
+        min-height: 66px;
+        gap: 24px;
+    }
+
+    .brand-name {
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+
+    .header-search {
+        flex: 1;
+        max-width: 460px;
+        background: rgba(10, 92, 81, .045);
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 4px 4px 4px 16px;
+        transition: background-color .2s var(--apple-ease), border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .header-search:focus-within {
+        background: #ffffff;
+        border-color: rgba(10, 92, 81, .28);
+        box-shadow: 0 0 0 4px rgba(10, 92, 81, .08);
+    }
+
+    .header-search input {
+        background: transparent;
+        border: 0;
+        font-size: 14px;
+    }
+
+    .header-search button {
+        border-radius: 999px;
+        padding: 0 18px;
+        height: 34px;
+        font-size: 13px;
+        font-weight: 700;
+        transition: transform .15s var(--apple-ease), background-color .15s ease;
+    }
+
+    .header-search button:active {
+        transform: scale(.97);
+    }
+
+    .header-actions :is(a, button) {
+        border-radius: 999px;
+        transition: background-color .18s ease, transform .18s var(--apple-ease);
+    }
+
+    .header-actions :is(.settings-link, .notice-link):hover {
+        background: rgba(10, 92, 81, .06);
+    }
+
+    .header-nav-wrap {
+        min-height: 46px;
+        border-top: 1px solid rgba(10, 92, 81, .05);
+    }
+
+    .topnav a {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -.01em;
+        padding: 12px 4px;
+        color: var(--ink-700);
+        transition: color .18s ease;
+    }
+
+    .topnav a:hover {
+        color: var(--green-700);
+    }
+
+    .topnav a.on {
+        color: var(--green-700);
+        font-weight: 700;
+        box-shadow: inset 0 -2px 0 var(--green-700);
+    }
+
+    .header-publish {
+        height: 34px;
+        padding: 0 16px;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(10, 92, 81, .18);
+        transition: transform .18s var(--apple-ease), box-shadow .18s ease, background-color .18s ease;
+    }
+
+    .header-publish:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(10, 92, 81, .24);
+    }
+
+    /* ---------------- 2. 主体宽屏工作台容器与排版 ---------------- */
+    .shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 28px 32px 80px;
+    }
+
+    :is(.page-head h1, .settings-heading h1, .redesign-heading h1, .auction-page-head h1, .community-head h1, .trade-top h1, .desk-me-bar h1, .admin-heading h1) {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        line-height: 1.15;
+        color: var(--ink-900);
+    }
+
+    /* ---------------- 3. 统一 Bento 白卡、按钮与分段控件 ---------------- */
+    :is(.card, .settings-page .card, .admin-table-wrap, .community-side .card, .auction-form, .chat-panel, .conversation-list, .publish-success) {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+        box-shadow: var(--apple-shadow-xs);
+    }
+
+    :is(.btn, .btn-primary, .btn-ghost, .btn-sm) {
+        border-radius: 999px;
+        font-weight: 700;
+        letter-spacing: -.01em;
+        transition: transform .18s var(--apple-ease), box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
+    }
+
+    :is(.btn, .btn-primary):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(10, 92, 81, .22);
+    }
+
+    :is(.btn, .btn-primary):active {
+        transform: scale(.98);
+    }
+
+    /* Apple 分段控制器 (Segmented Control) */
+    .trade-sections,
+    .chips {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 4px;
+        background: rgba(10, 92, 81, .055);
+        border-radius: 999px;
+        border: 1px solid rgba(10, 92, 81, .06);
+    }
+
+    .trade-sections a,
+    .chips .chip {
+        border-radius: 999px;
+        border: 0;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-700);
+        background: transparent;
+        box-shadow: none;
+        transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    .trade-sections a.on,
+    .chips .chip.on {
+        background: #ffffff;
+        color: var(--green-700);
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(10, 92, 81, .10);
+    }
+
+    /* ---------------- 4. 首页与集市 (Bento 侧栏 + Hero + 陈列网) ---------------- */
+    .market-home {
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 24px 28px;
+    }
+
+    .market-home .category-panel {
+        position: sticky;
+        top: 132px;
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+        padding: 18px 14px;
+        box-shadow: var(--apple-shadow-xs);
+    }
+
+    .category-panel-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink-500);
+        letter-spacing: .04em;
+        margin: 2px 0 10px;
+        padding: 0 10px;
+    }
+
+    .market-home .desk-category {
+        min-height: 40px;
+        border-radius: 12px;
+        padding: 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background-color .16s ease, color .16s ease, transform .16s var(--apple-ease);
+    }
+
+    .market-home .desk-category:hover {
+        background: var(--green-50);
+        color: var(--green-700);
+        transform: translateX(2px);
+    }
+
+    .market-home .desk-category.on {
+        background: var(--green-100);
+        color: var(--green-800);
+        font-weight: 700;
+    }
+
+    .desktop-market-shortcuts {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--apple-border);
+    }
+
+    .market-home .desktop-center {
+        gap: 18px;
+    }
+
+    .market-home .mascot-hero {
+        background: linear-gradient(135deg, #ffffff 0%, #eff8f5 62%, #e3f4ee 100%);
+        border: 1px solid var(--apple-border);
+        border-radius: 26px;
+        padding: 28px 38px;
+        box-shadow: var(--apple-shadow-sm);
+        grid-template-columns: minmax(0, 1fr) 136px;
+    }
+
+    .market-home .mascot-hero h1 {
+        font-size: clamp(28px, 3vw, 38px);
+        font-weight: 800;
+        letter-spacing: -.035em;
+        line-height: 1.12;
+        margin-bottom: 10px;
+    }
+
+    .market-home .mascot-portrait {
+        width: 136px;
+    }
+
+    .market-home .campus-services {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 20px;
+        padding: 12px 18px;
+        box-shadow: var(--apple-shadow-xs);
+        gap: 10px;
+    }
+
+    .market-home .campus-services a {
+        border-radius: 14px;
+        padding: 10px 8px;
+        transition: background-color .18s ease, transform .2s var(--apple-ease);
+    }
+
+    .market-home .campus-services a:hover {
+        background: var(--green-50);
+        transform: translateY(-2px);
+    }
+
+    /* 购物卡片 Apple 质感升级 */
+    .pgrid {
+        gap: 20px;
+    }
+
+    :is(.pcard, .item-card, .auction-card, .wish-card) {
+        border: 1px solid var(--apple-border);
+        border-radius: 20px;
+        background: var(--apple-surface);
+        box-shadow: var(--apple-shadow-xs);
+        transition: transform .26s var(--apple-ease), box-shadow .26s var(--apple-ease), border-color .26s ease;
+    }
+
+    :is(.pcard, .item-card, .auction-card, .wish-card):hover {
+        transform: translateY(-5px);
+        border-color: var(--apple-border-hover);
+        box-shadow: var(--apple-shadow-md);
+    }
+
+    .market-feed .pcard .pimg,
+    :is(.item-card, .auction-card) :is(.pimg, .thumb) {
+        background: #f3f6f5;
+        overflow: hidden;
+    }
+
+    :is(.pcard, .item-card, .auction-card):hover :is(.pimg > img, .thumb > img) {
+        transform: scale(1.045);
+    }
+
+    .pcard .pbody {
+        padding: 14px 16px 16px;
+    }
+
+    .pcard .ptitle {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -.01em;
+        line-height: 1.4;
+    }
+
+    .feed-heading {
+        margin-bottom: 16px;
+    }
+
+    .feed-heading h2 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -.025em;
+    }
+
+    .feed-filter {
+        border-radius: 999px;
+        padding: 0 16px;
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        box-shadow: var(--apple-shadow-xs);
+        font-weight: 600;
+    }
+
+    /* ---------------- 5. 二级页面：商品详情 (苹果产品陈列台) ---------------- */
+    .item-detail {
+        grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr);
+        gap: 24px 36px;
+        align-items: start;
+    }
+
+    .item-detail .hero {
+        position: sticky;
+        top: 132px;
+        border-radius: 26px;
+        border: 1px solid var(--apple-border);
+        background: var(--apple-surface);
+        padding: 20px;
+        box-shadow: var(--apple-shadow-sm);
+    }
+
+    .item-detail .detail-title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        line-height: 1.22;
+    }
+
+    .item-detail .card {
+        border-radius: 20px;
+        border: 1px solid var(--apple-border);
+        box-shadow: var(--apple-shadow-xs);
+        padding: 20px 22px;
+    }
+
+    .item-detail .action-bar {
+        margin-top: 12px;
+        gap: 12px;
+    }
+
+    .item-detail .action-bar .btn {
+        min-height: 48px;
+        padding: 0 24px;
+        font-size: 15px;
+        border-radius: 999px;
+    }
+
+    /* ---------------- 6. 二级页面：拍卖、求换、社区、接力、搜索 ---------------- */
+    .auction-page-head,
+    .community-head,
+    .redesign-heading,
+    .settings-heading {
+        margin-bottom: 22px;
+    }
+
+    .auction-grid {
+        gap: 20px;
+    }
+
+    .community-layout {
+        gap: 26px;
+    }
+
+    .community-layout .card,
+    .community-post,
+    .wish-card {
+        border-radius: 20px;
+        padding: 20px 22px;
+    }
+
+    .relay-layout {
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+    }
+
+    .relay-layout .relay-intro {
+        border-radius: 28px;
+        border: 1px solid var(--apple-border);
+        background: linear-gradient(135deg, #ffffff 0%, #edf7f4 100%);
+        box-shadow: var(--apple-shadow-sm);
+        padding: 44px 52px;
+    }
+
+    .relay-layout .relay-process {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+        margin-top: 20px;
+        padding: 24px 12px;
+        box-shadow: var(--apple-shadow-xs);
+    }
+
+    .relay-inventory-list > a {
+        border-radius: 18px;
+        border: 1px solid var(--apple-border);
+        padding: 16px 20px;
+        box-shadow: var(--apple-shadow-xs);
+        transition: transform .18s var(--apple-ease), box-shadow .18s ease;
+    }
+
+    .relay-inventory-list > a:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--apple-shadow-sm);
+    }
+
+    /* ---------------- 7. 二级页面：消息列表、聊天室、交易、个人中心、设置、后台 ---------------- */
+    .conversation-list {
+        overflow: hidden;
+        padding: 8px;
+    }
+
+    .conversation-row {
+        border-radius: 16px;
+        padding: 14px 16px;
+        transition: background-color .16s ease;
+    }
+
+    .conversation-row:hover {
+        background: var(--green-50);
+    }
+
+    .chat-panel {
+        overflow: hidden;
+        box-shadow: var(--apple-shadow-sm);
+    }
+
+    .chat-head {
+        background: rgba(255, 255, 255, .92);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--apple-border);
+        padding: 16px 22px;
+    }
+
+    .chat-compose {
+        border-top: 1px solid var(--apple-border);
+        padding: 14px 18px;
+        background: #ffffff;
+    }
+
+    .chat-compose input,
+    .chat-compose textarea {
+        border-radius: 999px;
+        background: #f4f7f6;
+        border: 1px solid transparent;
+        padding: 10px 18px;
+    }
+
+    .desk-me-layout {
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 28px;
+    }
+
+    .desk-me-side {
+        top: 132px;
+    }
+
+    .desk-me-nav {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+        padding: 10px;
+        box-shadow: var(--apple-shadow-xs);
+    }
+
+    .desk-me-nav a {
+        border-radius: 14px;
+        padding: 0 14px;
+    }
+
+    .desk-grid-2 {
+        gap: 18px;
+    }
+
+    .redesign-page,
+    .settings-page {
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    .search-page {
+        max-width: 1280px;
+    }
+
+    .publish-success {
+        max-width: 560px;
+        margin: 32px auto;
+        padding: 48px 36px;
+        text-align: center;
+        box-shadow: var(--apple-shadow-sm);
+    }
+
+    .admin-workspace {
+        gap: 24px;
+    }
+
+    .admin-side {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+        padding: 14px;
+        box-shadow: var(--apple-shadow-xs);
+    }
+
+    /* ---------------- 8. 二级页面：登录与注册 (Apple ID 居中卡片) ---------------- */
+    .auth-wrap {
+        min-height: 100vh;
+        background: radial-gradient(circle at 20% 15%, #e8f5f0 0%, #f5f7f6 52%, #eef4f2 100%);
+        padding: 48px 24px;
+    }
+
+    .auth-card {
+        border-radius: 28px;
+        border: 1px solid var(--apple-border);
+        background: rgba(255, 255, 255, .94);
+        backdrop-filter: blur(20px);
+        box-shadow: var(--apple-shadow-lg);
+        padding: 40px 42px;
+    }
+
+    /* ---------------- 9. 表单控件、弹层与模态框 ---------------- */
+    :is(.redesign-page, .settings-page, .auction-form, .estimate-form, .auth-card) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+        border-radius: 14px;
+        border: 1px solid var(--line-strong);
+        background: #fafcfb;
+        transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+    }
+
+    :is(.redesign-page, .settings-page, .auction-form, .estimate-form, .auth-card) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+        outline: none;
+        background: #ffffff;
+        border-color: var(--green-600);
+        box-shadow: 0 0 0 4px rgba(10, 92, 81, .10);
+    }
+
+    .mask {
+        background: rgba(15, 34, 29, .32);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .sheet {
+        border-radius: 26px;
+        border: 1px solid var(--apple-border);
+        box-shadow: var(--apple-shadow-lg);
+    }
+}
