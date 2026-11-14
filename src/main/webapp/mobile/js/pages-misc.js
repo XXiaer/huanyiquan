@@ -103,30 +103,45 @@
     async render(view) {
       view.innerHTML = `
       ${topbar('AI 好物估价')}
-      <div class="m-subpage">
-        <div class="tool-card tool-card--elevated">
-          <label class="ap-photo-box" id="apPhotoBox">
-            <input id="apFile" type="file" accept="image/*" capture="environment" hidden>
-            <img id="apPreview" hidden alt="">
-            <div class="ap-photo-box__empty" id="apPhotoEmpty">
-              ${icon('camera', 26)}
-              <b>拍照或上传物品图</b>
-            </div>
-            <button type="button" class="ap-photo-box__clear" id="apClear" hidden>重选</button>
-          </label>
-          <div class="label" style="margin-top:14px">物品名称</div>
-          <input class="field" id="apTitle" placeholder="例如 罗技GPW / 高数教材（选填）">
-          <div class="label" style="margin-top:14px">分类</div>
-          <div class="pe-chips" id="apCate">${['教材', '数码', '运动', '生活', '衣物', '绿植', '其他']
-            .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
-          <div class="label" style="margin-top:14px">成色</div>
-          <div class="pe-chips" id="apCond">${['全新', '九成新', '七成新', '有使用痕迹']
-            .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
-          <div class="label" style="margin-top:14px">原价</div>
-          <input class="field" id="apOrig" type="number" placeholder="¥ 入手原价（选填）">
-          <div id="apResult" aria-live="polite"></div>
-          <button class="btn btn--block" id="apGo" style="margin-top:16px">AI 估价</button>
-        </div>
+      <div class="ap-page">
+        <label class="ap-hero-upload" id="apPhotoBox">
+          <input id="apFile" type="file" accept="image/*" capture="environment" hidden>
+          <img id="apPreview" class="ap-hero-upload__img" hidden alt="">
+          <div class="ap-hero-upload__empty" id="apPhotoEmpty">
+            <span class="ap-corner ap-corner--tl"></span>
+            <span class="ap-corner ap-corner--tr"></span>
+            <span class="ap-corner ap-corner--bl"></span>
+            <span class="ap-corner ap-corner--br"></span>
+            <div class="ap-hero-upload__icon">${icon('camera', 26)}</div>
+            <b>拍照或上传物品图</b>
+          </div>
+          <button type="button" class="ap-hero-upload__clear" id="apClear" hidden>重选</button>
+        </label>
+
+        <div id="apResult" aria-live="polite"></div>
+
+        <section class="ap-card">
+          <div class="ap-row">
+            <label for="apTitle">物品名称</label>
+            <input id="apTitle" placeholder="例如 罗技GPW / 高数教材">
+          </div>
+          <div class="ap-row">
+            <label for="apOrig">入手原价</label>
+            <div class="ap-row__price"><em>¥</em><input id="apOrig" type="number" placeholder="选填"></div>
+          </div>
+        </section>
+
+        <section class="ap-card">
+          <div class="ap-card__title">分类</div>
+          <div class="ap-grid-chips" id="apCate">${['教材', '数码', '运动', '生活', '衣物', '绿植', '其他']
+            .map((c) => `<button type="button" class="ap-chip" data-v="${c}">${c}</button>`).join('')}</div>
+          <div class="ap-card__title" style="margin-top:14px">成色</div>
+          <div class="ap-grid-chips" id="apCond">${['全新', '九成新', '七成新', '有使用痕迹']
+            .map((c) => `<button type="button" class="ap-chip" data-v="${c}">${c}</button>`).join('')}</div>
+        </section>
+      </div>
+      <div class="ap-bottom-bar">
+        <button class="btn btn--block" id="apGo" type="button">AI 估价</button>
       </div>`;
       let cate = '', cond = '', photoDataUrl = '';
       const fileInput = document.getElementById('apFile');
@@ -155,8 +170,8 @@
         clearBtn.hidden = true;
       });
       ['apCate', 'apCond'].forEach((id) => {
-        view.querySelectorAll('#' + id + ' .chip').forEach((c) => c.addEventListener('click', () => {
-          view.querySelectorAll('#' + id + ' .chip').forEach((x) => x.classList.remove('on'));
+        view.querySelectorAll('#' + id + ' .ap-chip').forEach((c) => c.addEventListener('click', () => {
+          view.querySelectorAll('#' + id + ' .ap-chip').forEach((x) => x.classList.remove('on'));
           c.classList.add('on');
           if (id === 'apCate') cate = c.dataset.v; else cond = c.dataset.v;
         }));
