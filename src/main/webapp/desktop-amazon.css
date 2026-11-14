@@ -3756,6 +3756,28 @@
     .ali-price-row {
         flex-wrap: wrap;
     }
+
+    .ali-sub-brand,
+    .ali-brand-main {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .qq-left-promo img {
+        width: 48px !important;
+        height: 48px !important;
+        flex-shrink: 0 !important;
+        object-fit: contain !important;
+    }
+
+    .qq-arcade-box img {
+        width: 96px !important;
+        height: 96px !important;
+        flex-shrink: 0 !important;
+        object-fit: contain !important;
+        margin: 8px auto 12px !important;
+        display: block !important;
+    }
 }
 
 @media (max-width: 899px) {
