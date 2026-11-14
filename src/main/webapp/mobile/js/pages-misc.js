@@ -102,22 +102,58 @@
   PAGES.appraise = {
     async render(view) {
       view.innerHTML = `
-      ${topbar('好物估价')}
+      ${topbar('AI 好物估价')}
       <div class="m-subpage">
         <div class="tool-card tool-card--elevated">
-          <div class="label">分类</div>
+          <label class="ap-photo-box" id="apPhotoBox">
+            <input id="apFile" type="file" accept="image/*" capture="environment" hidden>
+            <img id="apPreview" hidden alt="">
+            <div class="ap-photo-box__empty" id="apPhotoEmpty">
+              ${icon('camera', 26)}
+              <b>拍照或上传物品图</b>
+            </div>
+            <button type="button" class="ap-photo-box__clear" id="apClear" hidden>重选</button>
+          </label>
+          <div class="label" style="margin-top:14px">物品名称</div>
+          <input class="field" id="apTitle" placeholder="例如 罗技GPW / 高数教材（选填）">
+          <div class="label" style="margin-top:14px">分类</div>
           <div class="pe-chips" id="apCate">${['教材', '数码', '运动', '生活', '衣物', '绿植', '其他']
             .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
-          <div class="label" style="margin-top:16px">成色</div>
+          <div class="label" style="margin-top:14px">成色</div>
           <div class="pe-chips" id="apCond">${['全新', '九成新', '七成新', '有使用痕迹']
             .map((c) => `<span class="chip" data-v="${c}">${c}</span>`).join('')}</div>
-          <div class="label" style="margin-top:16px">原价</div>
+          <div class="label" style="margin-top:14px">原价</div>
           <input class="field" id="apOrig" type="number" placeholder="¥ 入手原价（选填）">
           <div id="apResult" aria-live="polite"></div>
-          <button class="btn btn--block" id="apGo" style="margin-top:16px">立即估价</button>
+          <button class="btn btn--block" id="apGo" style="margin-top:16px">AI 估价</button>
         </div>
       </div>`;
-      let cate = '', cond = '';
+      let cate = '', cond = '', photoDataUrl = '';
+      const fileInput = document.getElementById('apFile');
+      const preview = document.getElementById('apPreview');
+      const emptyBox = document.getElementById('apPhotoEmpty');
+      const clearBtn = document.getElementById('apClear');
+      fileInput.addEventListener('change', async () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        try {
+          const { dataUrl } = await window.compressImageFile(f, 768);
+          photoDataUrl = dataUrl;
+          preview.src = dataUrl;
+          preview.hidden = false;
+          emptyBox.hidden = true;
+          clearBtn.hidden = false;
+        } catch (e) { toast(e.message); }
+      });
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        photoDataUrl = '';
+        fileInput.value = '';
+        preview.hidden = true;
+        emptyBox.hidden = false;
+        clearBtn.hidden = true;
+      });
       ['apCate', 'apCond'].forEach((id) => {
         view.querySelectorAll('#' + id + ' .chip').forEach((c) => c.addEventListener('click', () => {
           view.querySelectorAll('#' + id + ' .chip').forEach((x) => x.classList.remove('on'));
@@ -125,34 +161,56 @@
           if (id === 'apCate') cate = c.dataset.v; else cond = c.dataset.v;
         }));
       });
-      document.getElementById('apGo').addEventListener('click', async () => {
-        if (!cate) { toast('先选分类'); return; }
+      const goBtn = document.getElementById('apGo');
+      goBtn.addEventListener('click', async () => {
+        const title = document.getElementById('apTitle').value.trim();
+        const orig = Number(document.getElementById('apOrig').value || 0);
+        if (!photoDataUrl && !cate && !title) { toast('请拍照或选择分类'); return; }
+        goBtn.disabled = true;
+        goBtn.textContent = 'AI 识别估价中…';
         try {
-          const d = await api.get('/api/item/list', { category: cate, page: 1, size: 50 });
-          let list = (d.list || []).filter((i) => i.price);
-          if (cond) {
-            const same = list.filter((i) => i.conditionLevel === cond);
-            if (same.length >= 3) list = same;
-          }
-          if (!list.length) {
-            document.getElementById('apResult').innerHTML = `<div class="appraise-result-card appraise-result-card--empty">暂无参考数据</div>`;
-            return;
-          }
-          const ps = list.map((i) => i.price).sort((a, b) => a - b);
-          const lo = ps[Math.floor(ps.length * 0.25)];
-          const hi = ps[Math.floor(ps.length * 0.75)];
-          const orig = Number(document.getElementById('apOrig').value || 0);
+          const res = await api.post('/api/ai/appraise', {
+            image: photoDataUrl || '',
+            category: cate,
+            condition: cond,
+            origPrice: orig > 0 ? Math.round(orig) : 0,
+            title,
+          });
           document.getElementById('apResult').innerHTML = `
             <div class="appraise-result-card">
-              <div class="appraise-result-card__price"><em>¥</em><b>${api.yuan(lo)} – ${api.yuan(hi)}</b></div>
+              <div class="appraise-result-card__name">${esc(res.name || title || cate)}</div>
+              <div class="appraise-result-card__price"><em>¥</em><b>${res.lowPrice} – ${res.highPrice}</b></div>
               <div class="appraise-result-card__tags">
-                <span class="badge badge--green">${list.length} 件样本</span>
-                ${cond ? `<span class="badge badge--gray">${esc(cond)}</span>` : ''}
-                ${orig ? `<span class="badge badge--orange">${Math.round(lo / (orig * 100) * 100)}%–${Math.round(hi / (orig * 100) * 100)}%</span>` : ''}
+                ${res.category ? `<span class="badge badge--green">${esc(res.category)}</span>` : ''}
+                ${res.condition ? `<span class="badge badge--gray">${esc(res.condition)}</span>` : ''}
+                ${(res.tags || []).map(t => `<span class="badge badge--orange">${esc(t)}</span>`).join('')}
               </div>
               <a class="btn btn--ghost btn--sm" href="#/publish/edit/idle">按此价发布</a>
             </div>`;
-        } catch (e) { toast(e.message); }
+        } catch (e) {
+          if (cate) {
+            try {
+              const d = await api.get('/api/item/list', { category: cate, page: 1, size: 50 });
+              const list = (d.list || []).filter((i) => i.price);
+              if (list.length) {
+                const ps = list.map((i) => i.price).sort((a, b) => a - b);
+                const lo = ps[Math.floor(ps.length * 0.25)];
+                const hi = ps[Math.floor(ps.length * 0.75)];
+                document.getElementById('apResult').innerHTML = `
+                  <div class="appraise-result-card">
+                    <div class="appraise-result-card__price"><em>¥</em><b>${api.yuan(lo)} – ${api.yuan(hi)}</b></div>
+                    <div class="appraise-result-card__tags"><span class="badge badge--green">${list.length} 件样本</span></div>
+                    <a class="btn btn--ghost btn--sm" href="#/publish/edit/idle">按此价发布</a>
+                  </div>`;
+                return;
+              }
+            } catch (ignore) {}
+          }
+          toast(e.message || '估价失败，请重试');
+        } finally {
+          goBtn.disabled = false;
+          goBtn.textContent = 'AI 估价';
+        }
       });
     },
   };

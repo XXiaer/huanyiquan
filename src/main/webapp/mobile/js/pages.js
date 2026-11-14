@@ -2,6 +2,73 @@
 (function () {
   const PAGES = {};
 
+  function compressImageFile(file, maxEdge = 768) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('读取图片失败'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('图片格式不支持'));
+        img.onload = () => {
+          const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.82), img });
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  window.compressImageFile = compressImageFile;
+
+  window.openScanSearch = function () {
+    openSheet('扫码或拍照搜好物', `
+      <div class="scan-sheet">
+        <label class="scan-sheet__pick">
+          <input id="scanFile" type="file" accept="image/*" capture="environment" hidden>
+          <img src="assets/brand/mascot-search.png" width="64" height="64" alt="">
+          <b>拍照或选择物品图片</b>
+        </label>
+        <div id="scanStatus" class="scan-sheet__status"></div>
+      </div>`, {
+      onMount(sheet, close) {
+        const input = sheet.querySelector('#scanFile');
+        const status = sheet.querySelector('#scanStatus');
+        input.addEventListener('change', async () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          status.textContent = '正在识别…';
+          try {
+            const { dataUrl, img } = await compressImageFile(file, 768);
+            if ('BarcodeDetector' in window) {
+              try {
+                const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'qr_code', 'code_128'] });
+                const codes = await detector.detect(img);
+                if (codes && codes.length && codes[0].rawValue) {
+                  close();
+                  location.hash = '#/search/' + encodeURIComponent(codes[0].rawValue.trim());
+                  return;
+                }
+              } catch (e) { /* 降级走 AI 识图 */ }
+            }
+            const res = await api.post('/api/ai/scan-search', { image: dataUrl });
+            const kw = (res && res.keyword) || '';
+            if (!kw) throw new Error('未能识别出物品');
+            close();
+            location.hash = '#/search/' + encodeURIComponent(kw);
+          } catch (e) {
+            status.textContent = e.message || '识别失败，请重试';
+          }
+        });
+      },
+    });
+  };
+
   function topbar(title, opts) {
     const o = opts || {};
     return `<div class="topbar${o.white ? ' topbar--white' : ''}">
@@ -71,7 +138,7 @@
           <a class="home-guest-login" href="#/login" hidden>登录</a>
         </div>
         <form class="home-search" role="search">
-          ${icon('scan', 20)}
+          <button type="button" class="scan-btn" aria-label="扫码或拍照搜">${icon('scan', 20)}</button>
           <input name="keyword" type="search" aria-label="搜索校园闲置" placeholder="搜索校园里的好物" maxlength="200">
           <button type="submit" aria-label="搜索">${icon('search', 21)}</button>
         </form>
@@ -122,6 +189,7 @@
         window.__searchSort = '';
         window.__searchFilter = {};
       });
+      view.querySelector('.home-search .scan-btn')?.addEventListener('click', () => window.openScanSearch());
       view.querySelector('.home-search').addEventListener('submit', (event) => {
         event.preventDefault();
         const keyword = event.currentTarget.elements.keyword.value.trim();
@@ -838,15 +906,43 @@
   }
   window.reportSheet = reportSheet;
 
-  /* ============================================================ 社区 */
+  /* ============================================================ 集市 / 校内圈子 */
+  const CAMPUS_CIRCLES = [
+    { id: 'all', name: '广场', img: 'assets/brand/mascot-logo.png', bg: '#e6f6f2', tag: '全校热门' },
+    { id: '教材', name: '教材考研圈', img: 'assets/brand/illustrated-book.png', bg: '#eef7f4', tag: '笔记资料接力' },
+    { id: '数码', name: '数码外设圈', img: 'assets/brand/illustrated-headset.png', bg: '#edf4ff', tag: '键盘耳机好物' },
+    { id: '生活', name: '宿舍好物圈', img: 'assets/brand/illustrated-light.png', bg: '#fff5e4', tag: '台灯收纳好物' },
+    { id: '运动', name: '运动户外圈', img: 'assets/brand/illustrated-swapRing.png', bg: '#e8f9f1', tag: '球拍滑板同行' },
+    { id: '衣物', name: '穿搭好物圈', img: 'assets/brand/illustrated-bag.png', bg: '#fdeef2', tag: '闲置衣帽流转' },
+    { id: '绿植', name: '绿植手办圈', img: 'assets/brand/illustrated-wishBox.png', bg: '#f3efff', tag: '桌面治愈小物' },
+  ];
+
   PAGES.community = {
     tab: 'community',
     async render(view) {
       let list = [];
+      let hotItems = [];
       let me = window.__me;
       if (!me) { try { me = await api.get('/api/user/me'); window.__me = me; } catch (e) { me = null; } }
-      try { list = await api.get('/api/community') || []; } catch (e) { /* 忽略 */ }
-      const renderCommunityPosts = (rows) => rows.length ? rows.map((m) => `
+      try {
+        const [posts, itemsRes] = await Promise.all([
+          api.get('/api/community').catch(() => []),
+          api.get('/api/item/list', { page: 1, size: 12 }).catch(() => ({ list: [] })),
+        ]);
+        list = posts || [];
+        hotItems = (itemsRes && itemsRes.list) || [];
+      } catch (e) { /* 忽略 */ }
+
+      const joined = new Set(JSON.parse(localStorage.getItem('hq.circles') || '["教材","数码"]'));
+      const todayKey = new Date().toISOString().slice(0, 10);
+      let checkedIn = localStorage.getItem('hq.circleCheckin') === todayKey;
+      let activeCircle = window.__activeCircle || 'all';
+
+      const renderCommunityPosts = (rows) => {
+        const filtered = activeCircle === 'all' ? rows : rows.filter(r =>
+          String(r.content || '').includes(activeCircle) || String(r.itemTitle || '').includes(activeCircle)
+        );
+        return filtered.length ? filtered.map((m) => `
           <div class="community-card">
             <div class="hd">
               ${avatar({ nickname: m.nickname, id: m.userId, avatar: m.avatar }, 38)}
@@ -857,23 +953,167 @@
             ${m.kind === 'item' ? (m.itemAvailable
               ? `<a class="community-share" href="#/item/${Number(m.itemId)}"><img src="${esc(api.pics({ images: m.itemImages })[0] || 'assets/brand/placeholder.png')}" alt=""><b>${esc(m.itemTitle)}</b>${icon('right', 16)}</a>`
               : '<p>该物品已下架</p>') : ''}
-          </div>`).join('') : mascotEmpty('社区还没人发言，来说两句', 'assets/brand/mascot-wave-320.webp');
+          </div>`).join('') : mascotEmpty('这个圈子还没人发言，来说两句', 'assets/brand/mascot-wave-320.webp');
+      };
+
+      const promoGifts = [
+        { circle: '教材考研圈', img: 'assets/brand/illustrated-book.png', title: '教材圈徽章' },
+        { circle: '数码外设圈', img: 'assets/brand/illustrated-headset.png', title: '数码圈贴纸' },
+        { circle: '宿舍好物圈', img: 'assets/brand/illustrated-light.png', title: '擦亮特权卡' },
+      ];
+      const hotPicks = hotItems.slice(0, 2);
+
       view.innerHTML = `
-        ${homeTabs('community')}
-      <div class="market-community">
-      <a class="community-arcade" href="#/community/game">
-        ${serviceIcon('game', 40)}
-        <span><b>Scrap Arena</b><small>同屏双人对战</small></span>
-        ${icon('right', 18)}
-      </a>
-      <div class="mini-composer" id="composerWrap">
-        <div class="mini-composer__avatar">${avatar(me || '我', 36)}</div>
-        <div class="mini-composer__box" id="openComposer">分享你的换物日常…</div>
-        <button id="communityNew" aria-label="发动态">${icon('edit', 22)}</button>
-      </div>
-      <div id="communityPosts" style="padding:2px 0 10px">
-        ${renderCommunityPosts(list)}
-      </div></div>`;
+      <main class="circle-market">
+        <div class="circle-head">
+          <div class="home-guest-nav">
+            ${homeTabs('community')}
+            <button type="button" class="circle-checkin-pill ${checkedIn ? 'done' : ''}" id="circleTopCheck">
+              <img src="assets/brand/mascot-logo.png" width="22" height="22" alt="">
+              <span>${checkedIn ? '已签' : '签到'}</span>
+            </button>
+          </div>
+
+          <form class="home-search circle-search" role="search">
+            <button type="button" class="scan-btn" aria-label="扫码或拍照搜">${icon('scan', 20)}</button>
+            <input name="keyword" type="search" aria-label="搜索校内好物" placeholder="搜索圈内好物" maxlength="200">
+            <button type="button" class="cam-btn" aria-label="拍照识物">${icon('camera', 19)}</button>
+            <button type="submit" aria-label="搜索">${icon('search', 20)}</button>
+          </form>
+
+          <div class="circle-rail hscroll" id="circleRail">
+            ${CAMPUS_CIRCLES.map((c) => `
+              <button type="button" class="circle-rail__item ${activeCircle === c.id ? 'on' : ''}" data-circle="${c.id}">
+                <span class="circle-rail__avt" style="background:${c.bg}">
+                  <img src="${c.img}" alt="">
+                  ${c.id !== 'all' ? `<i class="${joined.has(c.id) ? 'joined' : ''}" data-join-icon="${c.id}">${joined.has(c.id) ? '✓' : '+'}</i>` : ''}
+                </span>
+                <b>${c.name}</b>
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <div class="circle-body">
+          <div class="circle-promo-grid">
+            <section class="circle-promo circle-promo--pink">
+              <div class="circle-promo__hd">
+                <span class="circle-promo__dot">${icon('fire', 13)}</span>
+                <b>圈友签到免费领</b>
+              </div>
+              <div class="circle-promo__items">
+                ${promoGifts.map(g => `
+                  <div class="circle-gift">
+                    <span class="circle-gift__tag">${g.circle}</span>
+                    <div class="circle-gift__img"><img src="${g.img}" alt=""></div>
+                    <b>${g.title}</b>
+                    <button type="button" class="circle-gift__btn ${checkedIn ? 'done' : ''}" data-checkin>${checkedIn ? '已签到' : '去签到'}</button>
+                  </div>`).join('')}
+              </div>
+            </section>
+
+            <section class="circle-promo circle-promo--mint">
+              <div class="circle-promo__hd">
+                <span class="circle-promo__dot circle-promo__dot--mint">${icon('heart', 13)}</span>
+                <b>圈友都在换</b>
+              </div>
+              <div class="circle-promo__picks">
+                ${hotPicks.length ? hotPicks.map(it => `
+                  <a class="circle-pick" href="#/item/${it.id}">
+                    <span class="circle-gift__tag">${esc(it.category || '校园')}</span>
+                    <img src="${esc(window.catalogThumbnail(api.firstPic(it)))}" alt="">
+                    <b>${esc(it.title)}</b>
+                    <em>${api.yuan(it.price) ? '¥' + api.yuan(it.price) : '以物换物'}</em>
+                  </a>`).join('') : '<div class="circle-pick-empty">去逛好物</div>'}
+              </div>
+            </section>
+          </div>
+
+          <section class="circle-rec-card">
+            <div class="circle-rec-card__top">
+              <div>
+                <div class="circle-rec-card__meta">
+                  <span class="circle-mini-avts"><i></i><i></i><i></i></span>
+                  <span>移通同学都在这</span>
+                </div>
+                <h2>把热爱一点点缝进校园生活里</h2>
+              </div>
+              <img class="circle-rec-card__mascot" src="assets/brand/mascot-wave-320.webp" alt="">
+            </div>
+            <div class="circle-rec-list">
+              ${CAMPUS_CIRCLES.slice(1, 4).map(c => `
+                <div class="circle-rec-row">
+                  <img src="${c.img}" style="background:${c.bg}" alt="">
+                  <div class="circle-rec-row__info">
+                    <b>${c.name}</b>
+                    <span>${c.tag}</span>
+                  </div>
+                  <button type="button" class="circle-join-btn ${joined.has(c.id) ? 'on' : ''}" data-join="${c.id}">${joined.has(c.id) ? '已加圈' : '+加圈'}</button>
+                </div>`).join('')}
+            </div>
+          </section>
+
+          <div class="market-community" style="padding:0">
+            <a class="community-arcade" href="#/community/game">
+              ${serviceIcon('game', 40)}
+              <span><b>Scrap Arena</b><small>同屏双人对战</small></span>
+              ${icon('right', 18)}
+            </a>
+            <div class="mini-composer" id="composerWrap">
+              <div class="mini-composer__avatar">${avatar(me || '我', 36)}</div>
+              <div class="mini-composer__box" id="openComposer">分享你的换物日常…</div>
+              <button id="communityNew" aria-label="发动态">${icon('edit', 22)}</button>
+            </div>
+            <div id="communityPosts" style="padding:2px 0 10px">
+              ${renderCommunityPosts(list)}
+            </div>
+          </div>
+        </div>
+      </main>`;
+
+      view.querySelector('.circle-search .scan-btn')?.addEventListener('click', () => window.openScanSearch());
+      view.querySelector('.circle-search .cam-btn')?.addEventListener('click', () => window.openScanSearch());
+      view.querySelector('.circle-search')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const kw = e.currentTarget.elements.keyword.value.trim();
+        location.hash = kw ? '#/search/' + encodeURIComponent(kw) : '#/search';
+      });
+
+      const doCheckin = () => {
+        if (checkedIn) { toast('今天已经签到过了'); return; }
+        checkedIn = true;
+        localStorage.setItem('hq.circleCheckin', todayKey);
+        view.querySelectorAll('[data-checkin], #circleTopCheck').forEach(b => {
+          b.classList.add('done');
+          if (b.id === 'circleTopCheck') b.querySelector('span').textContent = '已签';
+          else b.textContent = '已签到';
+        });
+        toast('签到成功');
+      };
+      view.querySelector('#circleTopCheck')?.addEventListener('click', doCheckin);
+      view.querySelectorAll('[data-checkin]').forEach(b => b.addEventListener('click', doCheckin));
+
+      const toggleJoin = (id) => {
+        if (joined.has(id)) joined.delete(id); else joined.add(id);
+        localStorage.setItem('hq.circles', JSON.stringify([...joined]));
+        view.querySelectorAll(`[data-join="${id}"]`).forEach(btn => {
+          btn.classList.toggle('on', joined.has(id));
+          btn.textContent = joined.has(id) ? '已加圈' : '+加圈';
+        });
+        view.querySelectorAll(`[data-join-icon="${id}"]`).forEach(ic => {
+          ic.classList.toggle('joined', joined.has(id));
+          ic.textContent = joined.has(id) ? '✓' : '+';
+        });
+        toast(joined.has(id) ? '已加入圈子' : '已退出圈子');
+      };
+      view.querySelectorAll('[data-join]').forEach(b => b.addEventListener('click', () => toggleJoin(b.dataset.join)));
+
+      view.querySelectorAll('[data-circle]').forEach(b => b.addEventListener('click', () => {
+        activeCircle = b.dataset.circle;
+        window.__activeCircle = activeCircle;
+        view.querySelectorAll('[data-circle]').forEach(x => x.classList.toggle('on', x.dataset.circle === activeCircle));
+        document.getElementById('communityPosts').innerHTML = renderCommunityPosts(list);
+      }));
+
       const open = () => openComposer();
       document.getElementById('openComposer').addEventListener('click', open);
       document.getElementById('communityNew').addEventListener('click', open);
@@ -890,9 +1130,9 @@
             feed.innerHTML = renderCommunityPosts(rows);
             previous = next;
           }
-        } catch (e) { /* Keep the last loaded feed during a connection failure. */ }
+        } catch (e) { /* 忽略 */ }
         finally { refreshing = false; }
-      }, 5000);
+      }, 10000);
       window.__cleanup = () => clearInterval(timer);
     },
   };
@@ -991,7 +1231,16 @@
       const mode = params.idle ? 1 : 2;
       const load = page => api.get('/api/item/list', { category: params.category, page, size:40 });
       let batch;
-      try { batch = await window.campusExchange.browse(load, mode); }
+      try {
+        if (params.idle) {
+          const res = await load(1);
+          const all = (res && res.list) || [];
+          const priced = all.filter(it => Number(it.tradeMode) !== 3 && Number(it.price) > 0);
+          batch = { rows: priced.length ? priced : all.filter(it => Number(it.tradeMode) !== 3), page: 1, hasMore: Boolean(res && res.hasMore) };
+        } else {
+          batch = await window.campusExchange.browse(load, mode);
+        }
+      }
       catch (error) { toast(error.message); }
       if (route !== location.hash) return;
       const prefix = params.idle ? '#/idle/category/' : '#/category/';
