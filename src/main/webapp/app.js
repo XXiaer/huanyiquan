@@ -739,10 +739,16 @@
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
         if (location.hash !== '#/search') {
             try {
+                var targetMode = location.hash === '#/idle' ? 1 : 2;
                 var batch = await window.campusExchange.browse(
                     function (page) { return api('/item/list' + params.replace(/page=\d+/, 'page=' + page), options); },
-                    location.hash === '#/idle' ? 1 : 2, h.page);
+                    targetMode, h.page);
                 if (token !== homeLoadToken || currentView.name !== 'home') return false;
+                if (location.hash === '#/idle' && h.page === 1 && (!batch.rows || !batch.rows.length)) {
+                    var fallback = await api('/item/list' + params, options);
+                    if (token !== homeLoadToken || currentView.name !== 'home') return false;
+                    batch = { page: 1, rows: fallback.list || [], hasMore: !!fallback.hasMore };
+                }
                 h.page = batch.page;
                 h.items = h.items.concat(batch.rows);
                 h.total = h.items.length;
@@ -857,6 +863,12 @@
             + '<li>支持校内公共区域当面验货交接，信用保障交易更放心。</li>'
             + (d.tip ? '<li>' + esc(d.tip) + '</li>' : '')
             + '</ul></div>'
+            + '<hr class="amz-hr">'
+            + '<div class="amz-trust-strip">'
+            + '<div><span>' + navIcon('me') + '</span><b>校内实名认证</b></div>'
+            + '<div><span>' + navIcon('trade') + '</span><b>当面验货交接</b></div>'
+            + '<div><span>' + navIcon('star') + '</span><b>信用分体系担保</b></div>'
+            + '</div>'
             + '</div>';
 
         var buyBox = '<aside class="amz-buybox">'

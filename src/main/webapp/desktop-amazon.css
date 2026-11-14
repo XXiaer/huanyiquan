@@ -124,7 +124,7 @@
         outline: none;
     }
     .amz-search-cat:hover { background: #dadada; color: #0f1111; }
-    .desktop-search-icon { display: none; }
+    .desktop-search-icon { display: none !important; }
     .header-search.amz-search input {
         flex: 1;
         border: 0;
@@ -210,8 +210,8 @@
     .amz-cart .nav-icon { width: 26px; height: 26px; color: #ffffff; }
     .amz-cart-num {
         position: absolute;
-        top: 2px;
-        left: 22px;
+        top: 0;
+        left: 20px;
         min-width: 16px;
         height: 16px;
         line-height: 16px;
@@ -820,6 +820,48 @@
         font-weight: 600 !important;
     }
     .entry-content form .btn-primary:hover { background: #f7ca00 !important; }
+
+    /* 详情页校园保障图标条与拍卖卡片底部对齐 */
+    .amz-trust-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 6px 0;
+    }
+    .amz-trust-strip > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        padding: 10px 8px;
+        background: #f7fafa;
+        border: 1px solid #e7ecea;
+        border-radius: 6px;
+    }
+    .amz-trust-strip span {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #edf7f4;
+        color: var(--amz-nav-sub);
+        display: grid;
+        place-items: center;
+    }
+    .amz-trust-strip b {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--amz-link);
+    }
+    .auction-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .auction-card .auction-meta,
+    .auction-card > div:last-child {
+        margin-top: auto;
+    }
 
     /* ---------------- 9. 亚马逊多栏页脚 ---------------- */
     .market-footer { display: none !important; }
