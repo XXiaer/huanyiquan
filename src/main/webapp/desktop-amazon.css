@@ -3778,6 +3778,1760 @@
         margin: 8px auto 12px !important;
         display: block !important;
     }
+
+    /* ==========================================================================
+       17. 六项全新视觉升级：
+           (1) 首页绿色横幅缩至 1/4 + 下方模块整体上移 + 吉祥物塞入第四张信用分框
+           (2) 顶栏最右侧 3D 消息图标 + 淘宝网页版 IM 聊天窗风格消息页
+           (3) 求换专区 & 换物接力同款阿里资产 5 列布局
+           (4) 京东「我的足迹 / 商品收藏」4 列卡片与个人中心深度集成
+           (5) AI 好物估价独立桌面端工作台 + 吉祥物顾问
+           (6) 全局微圆角 (8px ~ 10px) 统一精修
+       ========================================================================== */
+
+    /* --- (1) 首页绿色横幅缩至 1/4 高度 + 四宫格与海报整体上移 + 信用分框塞入专属吉祥物插画 --- */
+    .amz-hero.amz-hero-compact {
+        padding: 0 !important;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .amz-hero.amz-hero-compact::after {
+        height: 46px !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-inner {
+        max-width: 1460px !important;
+        padding: 14px 28px 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 20px !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        gap: 16px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-kicker {
+        margin: 0 !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+        font-size: 12px !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-copy h1 {
+        margin: 0 !important;
+        font-size: 23px !important;
+        line-height: 1.2 !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-copy p {
+        margin: 0 !important;
+        font-size: 13.5px !important;
+        color: #dcf2ec !important;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-btns {
+        flex-shrink: 0;
+        gap: 10px;
+    }
+
+    .amz-hero.amz-hero-compact .amz-hero-btns .btn {
+        padding: 7px 16px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+    }
+
+    .amz-quad-grid {
+        margin: -36px auto 18px !important;
+        gap: 18px !important;
+    }
+
+    .amz-acct-mini.amz-credit-mascot-box {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        background: linear-gradient(180deg, #EAF7F3 0%, #F5FBF9 100%) !important;
+        border: 1px solid #CBE4DC !important;
+        border-radius: 10px !important;
+        flex: 1 !important;
+        overflow: hidden;
+    }
+
+    .amz-credit-art {
+        width: 100%;
+        height: 158px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #DFF3EC;
+        box-shadow: inset 0 0 0 1px rgba(10, 92, 81, 0.08);
+    }
+
+    .amz-credit-art img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+    }
+
+    .amz-credit-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .amz-credit-score-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .amz-credit-score-row b {
+        font-size: 18px !important;
+        font-weight: 900 !important;
+        color: #06302A !important;
+        margin: 0 !important;
+    }
+
+    .amz-credit-pill {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        color: #FFFFFF !important;
+        font-size: 11.5px !important;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+    }
+
+    .amz-credit-desc {
+        margin: 0;
+        font-size: 12px;
+        color: #3B6E63;
+        line-height: 1.4;
+    }
+
+    .amz-credit-quick {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    .amz-credit-quick a {
+        text-align: center;
+        padding: 5px 4px;
+        background: #FFFFFF;
+        border: 1px solid #CDE2DB;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #0A5C51;
+        text-decoration: none;
+    }
+
+    .amz-credit-quick a:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    /* --- (2) 顶栏最右侧 3D 消息图标 + 淘宝网页版 IM 聊天窗风格 --- */
+    .amz-msg-top {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 10px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        color: #FFFFFF !important;
+        text-decoration: none;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .amz-msg-top:hover,
+    .amz-msg-top.on {
+        border-color: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .amz-msg-ico {
+        position: relative;
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+        overflow: visible;
+        flex-shrink: 0;
+    }
+
+    .amz-msg-ico img {
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+        object-fit: cover;
+        display: block;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .amz-msg-ico .notice-count {
+        position: absolute;
+        top: -5px;
+        right: -6px;
+        min-width: 17px;
+        height: 17px;
+        line-height: 17px;
+        border-radius: 999px;
+        background: #FF4D4F;
+        color: #FFFFFF;
+        font-size: 10.5px;
+        font-weight: 800;
+        text-align: center;
+        padding: 0 4px;
+    }
+
+    .amz-msg-txt {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.18;
+    }
+
+    .amz-msg-txt small {
+        font-size: 10.5px;
+        color: #CBE3DD;
+    }
+
+    .amz-msg-txt b {
+        font-size: 13px;
+        font-weight: 800;
+        color: #FFFFFF;
+    }
+
+    /* 淘宝网页版 IM 聊天中心 */
+    .tb-im-backdrop {
+        margin: -16px -20px -48px;
+        padding: 28px 28px 48px;
+        min-height: calc(100vh - 101px);
+        background:
+            radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.7), transparent 45%),
+            radial-gradient(circle at 82% 78%, rgba(16, 155, 132, 0.14), transparent 50%),
+            linear-gradient(135deg, #DDE2E5 0%, #CFD6DA 48%, #E2E6E9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .tb-im-window {
+        width: 100%;
+        max-width: 1120px;
+        height: 680px;
+        background: #FFFFFF;
+        border-radius: 14px;
+        box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18), 0 2px 10px rgba(15, 23, 42, 0.08);
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr) 236px;
+        overflow: hidden;
+        border: 1px solid #E5E7EB;
+    }
+
+    .tb-im-left {
+        background: #F7F8FA;
+        border-right: 1px solid #EBECEE;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .tb-left-head {
+        padding: 14px 14px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .tb-left-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #1F2329;
+    }
+
+    .tb-read-btn {
+        border: 0;
+        background: #E8F3F0;
+        color: #0A5C51;
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .tb-left-search {
+        padding: 0 12px 10px;
+    }
+
+    .tb-left-search input {
+        width: 100%;
+        height: 32px;
+        border-radius: 16px;
+        border: 1px solid #E2E4E8;
+        background: #FFFFFF;
+        padding: 0 12px;
+        font-size: 12.5px;
+        outline: none;
+    }
+
+    .tb-contact-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 6px 12px;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    .tb-contact-item {
+        display: flex !important;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #1F2329;
+        transition: background 0.14s ease;
+    }
+
+    .tb-contact-item:hover,
+    .tb-contact-item.on {
+        background: #EBF1F5;
+    }
+
+    .tb-contact-ava {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #FFFFFF;
+        font-size: 14px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .tb-contact-ava.tone-blue { background: #1677FF; }
+    .tb-contact-ava.tone-navy { background: #0050B3; }
+    .tb-contact-ava.tone-teal { background: #0A7E5C; }
+    .tb-contact-ava.tone-orange { background: #FA8C16; }
+    .tb-contact-ava.tone-green { background: #52C41A; }
+    .tb-contact-ava.tone-pink { background: #EB2F96; }
+    .tb-contact-ava.tone-red { background: #F5222D; }
+    .tb-contact-ava.tone-brown { background: #8C5A2B; }
+    .tb-contact-ava.tone-emerald { background: #0A5C51; }
+
+    .tb-contact-meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tb-contact-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        margin-bottom: 3px;
+    }
+
+    .tb-contact-top b {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1F2329;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tb-contact-top time {
+        font-size: 11px;
+        color: #999999;
+        flex-shrink: 0;
+    }
+
+    .tb-contact-sub {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    .tb-contact-sub p,
+    .tb-contact-meta > p {
+        margin: 0;
+        font-size: 11.5px;
+        color: #888888;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tb-unread-dot {
+        font-style: normal;
+        min-width: 16px;
+        height: 16px;
+        line-height: 16px;
+        border-radius: 999px;
+        background: #FF5000;
+        color: #FFFFFF;
+        font-size: 10.5px;
+        font-weight: 800;
+        text-align: center;
+        padding: 0 4px;
+        flex-shrink: 0;
+    }
+
+    .tb-im-center {
+        display: flex;
+        flex-direction: column;
+        background: #F2F3F5;
+        min-height: 0;
+    }
+
+    .tb-chat-header {
+        height: 54px;
+        padding: 0 18px;
+        background: #FFFFFF;
+        border-bottom: 1px solid #EBECEE;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .tb-chat-peer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tb-chat-peer b {
+        font-size: 15px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .tb-online-tag {
+        font-size: 11.5px;
+        color: #0A7E5C;
+        font-weight: 700;
+    }
+
+    .tb-chat-top-btns {
+        display: flex;
+        gap: 8px;
+    }
+
+    .tb-top-chip {
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #D9D9D9;
+        background: #FFFFFF;
+        color: #333333;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .tb-top-chip.primary {
+        background: #0A5C51;
+        border-color: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    .tb-chat-stream {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+    }
+
+    .tb-stream-divider {
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .tb-stream-divider span {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 999px;
+        background: rgba(10, 92, 81, 0.1);
+        color: #0A5C51;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .tb-notice-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        text-decoration: none;
+        color: #1F2329;
+    }
+
+    .tb-msg-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+    }
+
+    .tb-msg-sender {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .tb-msg-sender img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #E6F4F1;
+        object-fit: cover;
+    }
+
+    .tb-order-card {
+        width: 340px;
+        background: #FFFFFF;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin-left: 32px;
+    }
+
+    .tb-order-card h4 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .tb-order-item-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #F7F8FA;
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-bottom: 12px;
+    }
+
+    .tb-order-item-box img {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .tb-order-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tb-order-item-info p {
+        margin: 0 0 3px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #1F2329;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tb-order-item-info small {
+        font-size: 11px;
+        color: #888888;
+    }
+
+    .tb-order-item-price {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .tb-order-item-price b {
+        display: block;
+        font-size: 12.5px;
+        color: #111827;
+    }
+
+    .tb-order-item-price span {
+        font-size: 11px;
+        color: #999999;
+    }
+
+    .tb-order-orange-btn {
+        display: block;
+        width: 100%;
+        height: 36px;
+        line-height: 36px;
+        text-align: center;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #FF7700 0%, #FF5000 100%);
+        color: #FFFFFF !important;
+        font-size: 13.5px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .tb-order-orange-btn:hover {
+        filter: brightness(1.05);
+    }
+
+    .tb-text-bubble {
+        max-width: 480px;
+        background: #FFFFFF;
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #1F2329;
+        margin-left: 32px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    .tb-bottom-pill {
+        align-self: flex-end;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: #FFFFFF;
+        border: 1px solid #FFD8BF;
+        color: #FF5000 !important;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(255, 80, 0, 0.12);
+    }
+
+    .tb-chat-compose {
+        height: 146px;
+        background: #FFFFFF;
+        border-top: 1px solid #EBECEE;
+        padding: 8px 16px 12px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    .tb-compose-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .tb-tool-icons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .tb-tool-icons button {
+        border: 0;
+        background: none;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    .tb-tool-icons button:hover {
+        background: #F2F3F5;
+    }
+
+    .tb-char-count {
+        font-size: 11.5px;
+        color: #999999;
+    }
+
+    .tb-chat-compose textarea {
+        flex: 1;
+        width: 100%;
+        border: 0;
+        resize: none;
+        outline: none;
+        font-size: 13px;
+        color: #1F2329;
+        background: transparent;
+    }
+
+    .tb-compose-foot {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .tb-send-btn {
+        height: 30px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 0;
+        background: #1677FF;
+        color: #FFFFFF;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .tb-im-right {
+        background: #F7F8FA;
+        border-left: 1px solid #EBECEE;
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tb-shop-card,
+    .tb-mascot-helper {
+        background: #FFFFFF;
+        border: 1px solid #ECEEF2;
+        border-radius: 10px;
+        padding: 14px 12px;
+    }
+
+    .tb-shop-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .tb-shop-top img {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .tb-shop-top b {
+        display: block;
+        font-size: 13.5px;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .tb-enter-shop {
+        display: inline-block;
+        padding: 2px 8px;
+        border: 1px solid #1677FF;
+        color: #1677FF !important;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .tb-shop-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        border-top: 1px solid #F2F3F5;
+        padding-top: 10px;
+        text-align: center;
+    }
+
+    .tb-shop-stats span {
+        display: block;
+        font-size: 11px;
+        color: #888888;
+    }
+
+    .tb-shop-stats b {
+        font-size: 12px;
+        color: #0A5C51;
+    }
+
+    .tb-mascot-helper {
+        text-align: center;
+        margin-top: auto;
+    }
+
+    .tb-mascot-helper img {
+        width: 100%;
+        height: 115px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .tb-mascot-helper h5 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        color: #06302A;
+    }
+
+    .tb-mascot-helper p {
+        margin: 0 0 8px;
+        font-size: 11.5px;
+        color: #6B7280;
+        line-height: 1.45;
+    }
+
+    .tb-helper-link {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 800;
+        color: #0A5C51 !important;
+        text-decoration: none;
+    }
+
+    .tb-float-dock {
+        position: fixed;
+        right: 16px;
+        top: 52%;
+        transform: translateY(-50%);
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        padding: 8px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 40;
+    }
+
+    .tb-float-dock a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        font-size: 11px;
+        color: #4B5563;
+        text-decoration: none;
+        padding: 4px 6px;
+    }
+
+    /* --- (3) 求换专区 & 换物接力 阿里资产风格补充条 --- */
+    .ali-my-relay-strip {
+        background: #F0F9F6;
+        border: 1px solid #BCE3D8;
+        border-radius: 8px;
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 13px;
+        color: #06302A;
+    }
+
+    .ali-my-relay-pill {
+        background: #0A5C51;
+        color: #FFFFFF !important;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .ali-wish-bar {
+        background: #FFFFFF;
+        border: 1px solid #D5E6E1;
+        border-radius: 10px;
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ali-wish-bar-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ali-wish-bar-head img {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+    }
+
+    .ali-wish-bar-head b {
+        display: block;
+        font-size: 15px;
+        color: #06302A;
+    }
+
+    .ali-wish-bar-head span {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .ali-wish-bar-fields {
+        display: grid;
+        grid-template-columns: 1.5fr 140px 210px 1.4fr 140px;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .ali-wish-bar-fields .input,
+    .ali-wish-bar-fields .select {
+        height: 38px;
+        margin: 0;
+    }
+
+    /* --- (4) 京东「我的足迹 / 商品收藏」4 列卡片与个人中心内嵌模块 --- */
+    .jd-nav-badge {
+        display: inline-block;
+        font-style: normal;
+        background: #E1251B;
+        color: #FFFFFF;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        margin-left: 4px;
+    }
+
+    .jd-footprint-main {
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 20px 24px 28px;
+    }
+
+    .jd-footprint-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #F0F0F0;
+        margin-bottom: 16px;
+    }
+
+    .jd-footprint-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .jd-footprint-brand img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+
+    .jd-footprint-brand b {
+        font-size: 24px;
+        font-weight: 900;
+        color: #E1251B;
+    }
+
+    .jd-fp-div {
+        color: #D1D5DB;
+        font-size: 20px;
+    }
+
+    .jd-footprint-brand h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: #1F2329;
+    }
+
+    .jd-fp-tabs {
+        display: flex;
+        gap: 10px;
+        margin-left: 16px;
+    }
+
+    .jd-fp-tabs a {
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: #F3F4F6;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .jd-fp-tabs a.on {
+        background: #FDECEE;
+        color: #E1251B;
+    }
+
+    .jd-fp-tabs a i {
+        font-style: normal;
+        background: #E1251B;
+        color: #FFFFFF;
+        font-size: 10px;
+        padding: 1px 5px;
+        border-radius: 4px;
+        margin-left: 4px;
+    }
+
+    .jd-fp-search {
+        display: flex;
+        align-items: center;
+        border: 2px solid #5925DC;
+        border-radius: 8px;
+        overflow: hidden;
+        height: 38px;
+        background: #FFFFFF;
+    }
+
+    .jd-fp-search input {
+        border: 0;
+        padding: 0 12px;
+        width: 210px;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .jd-fp-ai-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #5925DC !important;
+        background: #F4F0FF;
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-right: 8px;
+        text-decoration: none;
+    }
+
+    .jd-fp-ai-toggle i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #5925DC;
+        display: inline-block;
+    }
+
+    .jd-fp-search button {
+        height: 100%;
+        border: 0;
+        background: #5925DC;
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 800;
+        padding: 0 18px;
+        cursor: pointer;
+    }
+
+    .jd-fp-date-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .jd-fp-date-left {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+    }
+
+    .jd-fp-date-left b {
+        font-size: 16px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .jd-fp-date-left span {
+        font-size: 12.5px;
+        color: #6B7280;
+    }
+
+    .jd-fp-clear-btn {
+        border: 1px solid #E5E7EB;
+        background: #FFFFFF;
+        color: #4B5563;
+        font-size: 12.5px;
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .jd-fp-clear-btn:hover {
+        border-color: #E1251B;
+        color: #E1251B;
+    }
+
+    .jd-history-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .jd-history-card {
+        background: #FFFFFF;
+        border: 1px solid #EAEAEA;
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .jd-history-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .jd-h-media {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        background: #F8F9FA;
+        overflow: hidden;
+    }
+
+    .jd-h-img-link {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .jd-h-img-link img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .jd-h-substrip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, #0A7E5C 0%, #10B981 100%);
+        color: #FFFFFF;
+        padding: 5px 10px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        font-size: 11px;
+    }
+
+    .jd-h-subprice b {
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .jd-h-subtag {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+    }
+
+    .jd-h-del {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 0;
+        background: rgba(0, 0, 0, 0.5);
+        color: #FFFFFF;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .jd-h-corner {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #E1251B;
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .jd-h-body {
+        padding: 12px 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .jd-h-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1F2329;
+        text-decoration: none;
+        line-height: 1.42;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .jd-self-badge {
+        display: inline-block;
+        background: #E1251B;
+        color: #FFFFFF;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        margin-right: 5px;
+    }
+
+    .jd-h-price-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+    }
+
+    .jd-h-price {
+        color: #E1251B;
+        font-weight: 800;
+    }
+
+    .jd-h-price em {
+        font-style: normal;
+        font-size: 12px;
+    }
+
+    .jd-h-price b {
+        font-size: 19px;
+    }
+
+    .jd-h-price sup {
+        font-size: 11px;
+    }
+
+    .jd-h-price del {
+        font-size: 11.5px;
+        color: #9CA3AF;
+        font-weight: 400;
+        margin-left: 6px;
+        text-decoration: none;
+    }
+
+    .jd-h-plus {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #FFEAE8;
+        color: #E1251B !important;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .jd-fp-end {
+        margin: 26px 0 4px;
+        text-align: center;
+        font-size: 13px;
+        color: #9CA3AF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .jd-fp-end img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+    }
+
+    .jd-me-footprint-embed {
+        padding: 18px 20px;
+    }
+
+    .jd-fp-embed-title {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+    }
+
+    .jd-fp-embed-title span {
+        font-size: 12px;
+        color: #888888;
+    }
+
+    .jd-fp-embed-links {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .jd-fp-embed-links a.on {
+        color: #E1251B;
+        font-weight: 800;
+    }
+
+    /* --- (5) AI 好物估价独立桌面端工作台 (.ai-appraise-page) --- */
+    .ai-workbench-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) 440px;
+        gap: 18px;
+        align-items: start;
+    }
+
+    .ai-main-card,
+    .ai-mascot-hero-card,
+    .ai-bench-card {
+        background: #FFFFFF;
+        border: 1px solid #DFE5E3;
+        border-radius: 10px;
+        padding: 22px 24px;
+    }
+
+    .ai-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #EEF2F1;
+        margin-bottom: 18px;
+    }
+
+    .ai-card-head h2 {
+        margin: 0 0 4px;
+        font-size: 20px;
+        font-weight: 900;
+        color: #06302A;
+    }
+
+    .ai-card-head p {
+        margin: 0;
+        font-size: 13px;
+        color: #6B7280;
+    }
+
+    .ai-badge-live {
+        background: #E8F6F1;
+        color: #0A5C51;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .ai-form-body {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .ai-upload-zone {
+        position: relative;
+        height: 156px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #F1F9F6 0%, #F8FCFA 100%);
+        border: 1px solid #D5E8E2;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .ai-corner {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-color: #0A5C51;
+        border-style: solid;
+    }
+
+    .ai-corner.tl { top: 16px; left: 22px; border-width: 2.5px 0 0 2.5px; border-top-left-radius: 6px; }
+    .ai-corner.tr { top: 16px; right: 22px; border-width: 2.5px 2.5px 0 0; border-top-right-radius: 6px; }
+    .ai-corner.bl { bottom: 16px; left: 22px; border-width: 0 0 2.5px 2.5px; border-bottom-left-radius: 6px; }
+    .ai-corner.br { bottom: 16px; right: 22px; border-width: 0 2.5px 2.5px 0; border-bottom-right-radius: 6px; }
+
+    .ai-upload-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-align: center;
+    }
+
+    .ai-upload-inner img {
+        height: 92px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .ai-cam-ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(10, 92, 81, 0.08);
+        color: #0A5C51;
+        display: grid;
+        place-items: center;
+    }
+
+    .ai-upload-inner b {
+        font-size: 14.5px;
+        color: #06302A;
+    }
+
+    .ai-upload-inner small {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .ai-input-row {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 14px;
+    }
+
+    .ai-sec-label {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #1F2329;
+        margin-bottom: 10px;
+    }
+
+    .ai-chip-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .ai-chip {
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        background: #F4F6F6;
+        color: #1F2329;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+    }
+
+    .ai-chip small {
+        font-size: 11px;
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    .ai-chip.on,
+    .ai-chip:hover {
+        background: #E8F6F1;
+        border-color: #0A5C51;
+        color: #06302A;
+    }
+
+    .ai-submit-btn {
+        width: 100%;
+        height: 44px;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+    }
+
+    .ai-evaluating-box {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        border-radius: 10px;
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+    }
+
+    .ai-eval-mascot {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        animation: aiBounce 0.6s infinite alternate;
+    }
+
+    @keyframes aiBounce {
+        from { transform: translateY(0); }
+        to { transform: translateY(-6px); }
+    }
+
+    .ai-result-panel {
+        border-radius: 10px;
+        background: #F5FAF8;
+        border: 1px solid #CDE4DC;
+        padding: 16px 18px;
+    }
+
+    .ai-result-placeholder,
+    .ai-report-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .ai-result-placeholder img,
+    .ai-report-mascot {
+        width: 68px;
+        height: 68px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .ai-result-placeholder b,
+    .ai-report-main h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        color: #06302A;
+    }
+
+    .ai-report-main h3 b {
+        color: #D95E00;
+        font-size: 22px;
+    }
+
+    .ai-result-placeholder p,
+    .ai-report-main p {
+        margin: 0;
+        font-size: 12.5px;
+        color: #4B5563;
+    }
+
+    .ai-report-kicker {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 800;
+        color: #0A7E5C;
+        margin-bottom: 4px;
+    }
+
+    .ai-report-actions {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .ai-side-col {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .ai-mascot-art-wrap {
+        width: 100%;
+        height: 180px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .ai-mascot-art-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .ai-advisor-tag {
+        display: inline-block;
+        background: #0A5C51;
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 999px;
+        margin-bottom: 6px;
+    }
+
+    .ai-mascot-copy h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+        color: #06302A;
+    }
+
+    .ai-mascot-copy p {
+        margin: 0 0 10px;
+        font-size: 12.5px;
+        color: #4B5563;
+        line-height: 1.5;
+    }
+
+    .ai-mascot-perks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .ai-mascot-perks span {
+        background: #EEF7F4;
+        color: #0A5C51;
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .ai-bench-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .ai-bench-head h3 {
+        margin: 0;
+        font-size: 15.5px;
+        color: #06302A;
+    }
+
+    .ai-bench-head span {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .ai-bench-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .ai-bench-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #F8FAFA;
+        border: 1px solid #EDF2F0;
+    }
+
+    .ai-bench-row img {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .ai-bench-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ai-bench-info b {
+        display: block;
+        font-size: 12.5px;
+        color: #1F2329;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ai-bench-info span {
+        font-size: 11px;
+        color: #6B7280;
+    }
+
+    .ai-bench-price {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .ai-bench-price b {
+        display: block;
+        font-size: 13px;
+        color: #0A7E5C;
+        margin-bottom: 2px;
+    }
+
+    .ai-bench-price button {
+        border: 1px solid #0A5C51;
+        background: #FFFFFF;
+        color: #0A5C51;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .ai-bench-price button:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    /* --- (6) 全局 UI 微圆角统一精修 (8px ~ 10px 卡片/容器，6px 按钮/输入框) --- */
+    .amz-quad-card,
+    .amz-shelf-wrap,
+    .amz-browse-layout .category-panel,
+    .amz-browse-main,
+    .pcard,
+    .ali-sub-header,
+    .ali-filter-box,
+    .ali-sort-toolbar,
+    .ali-auction-card,
+    .jd-side-nav,
+    .jd-order-panel,
+    .jd-order-item,
+    .jd-me-hero-card,
+    .jd-me-card,
+    .qq-chan-left,
+    .qq-hero-banner,
+    .qq-compose-box,
+    .qq-realtime-card,
+    .qq-post-card,
+    .qq-side-card {
+        border-radius: 10px !important;
+    }
+
+    .ali-auction-card {
+        overflow: hidden;
+    }
+
+    .ali-bid-btn,
+    .ali-filter-v button,
+    .ali-sub-nav a,
+    .jd-order-search input,
+    .jd-order-search button,
+    .jd-btn-rebuy,
+    .jd-btn-red,
+    .jd-btn-outline,
+    .header-publish,
+    .amz-q-photo,
+    .input,
+    .select,
+    .textarea {
+        border-radius: 6px !important;
+    }
 }
 
 @media (max-width: 899px) {
@@ -3785,11 +5539,13 @@
     .amz-lang,
     .amz-acct-dropdown,
     .amz-poster-strip,
+    .amz-msg-top,
     .jd-side-nav,
     .qq-chan-left,
     .qq-chan-right,
     .ali-filter-box,
-    .ali-sort-toolbar {
+    .ali-sort-toolbar,
+    .tb-float-dock {
         display: none !important;
     }
 }
