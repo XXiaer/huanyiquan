@@ -2096,7 +2096,15 @@ body { font-family:"PingFang SC","Microsoft YaHei",sans-serif; letter-spacing:.0
   .hero-card { min-height:180px; }
   .page-head h1 { font-size:30px; }
 }
-@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-iteration-count: 1 !important;
+    animation-duration: .08s !important;
+    transition-duration: .08s !important;
+  }
+}
+.stars .star { background: none; border: 0; padding: 2px; cursor: pointer; display: inline-flex; align-items: center; }
 /* Login: a welcoming editorial cover on larger screens. */
 .auth-wrap { position:relative; background:#f0f0f0; padding:32px 20px; }
 .auth-card { position:relative; border:1px solid rgba(65,65,65,.08); box-shadow:0 24px 70px rgba(54,54,54,.11); padding:34px; max-width:440px; }
@@ -2325,7 +2333,7 @@ h1,h2,h3,.brand,.land-brand,.land-hero h1,.community-side h2 { font-family:inher
 .notice-row,.wish-card,.conversation-row { background:#ffffff;color:#1d1d1d;border:0;border-radius:24px;box-shadow:var(--sh-1); }.notice-body span,.notice-row time { color:#868686; }.notice-row.is-unread { border:0; }.notice-dot { background:#646464; }
 .conversation-list,.wish-grid { display:grid;gap:16px; }.conversation-row { display:flex;align-items:center;gap:16px;width:100%;padding:20px;text-align:left;font:inherit;cursor:pointer; }.conversation-row>span:nth-child(2) { flex:1;display:grid;gap:4px; }.conversation-row small { color:#6e6e6e; }.conversation-avatar { display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#f5f5f5; }.wish-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));margin-top:24px; }.wish-card { padding:24px; }.wish-card h2 { font-size:22px; }.wish-card p { white-space:pre-wrap;overflow-wrap:anywhere; }.wish-form { display:grid;gap:12px; }.wish-form .btn { justify-self:start; }.room-head h1 { font-size:32px;margin:12px 0 4px; }.room-head p { color:#6e6e6e; }.room-panel { max-width:800px;margin:24px auto; }.ring-flow-list { display:grid;gap:12px;padding:24px;margin:16px 0;background:#ffffff;border-radius:24px; }.ring-flow-list span { color:#616161;padding:0 12px; }
 @media(max-width:760px) { .land-hero { min-height:500px;padding:96px 24px 64px; }.land-hero h1 { font-size:clamp(44px,11vw,64px); }.shell { padding:24px 16px 104px; }.notice-link { font-size:12px; }.land-notices { margin-left:auto; }.land-notices + .land-header-link { margin-left:0; } }
-@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important;transition-duration:.01ms !important;animation-duration:.01ms !important; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important;animation-duration:.08s !important;transition-duration:.08s !important; } }
 
 /* Marketplace redesign: distinct desktop storefront and mobile discovery feed. */
 :root { --green-700:#232323;--green-600:#2d2d2d;--green-500:#b6b6b6;--green-400:#d4d4d4;--green-100:#f5f5f5;--green-50:#fbfbfb;--orange-600:#9c9c9c;--orange-500:#bcbcbc;--orange-50:#f8f8f8;--ink-900:#232323;--ink-700:#4c4c4c;--ink-500:#848484;--ink-400:#a9a9a9;--bg:#f6f6f6;--surface:#ffffff;--line:#eeeeee;--line-strong:#e2e2e2;--sh-1:0 2px 12px rgba(31,31,31,.045);--sh-2:0 10px 32px rgba(31,31,31,.07);--sh-green:none; }

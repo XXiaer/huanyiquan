@@ -45,7 +45,7 @@
 
   window.successSheet = function (title, text, action) {
     openSheet(title, `<div style="text-align:center;padding:14px 6px 6px">
-      <img src="assets/brand/mascot-wave-complete.png" style="width:140px;margin:0 auto 14px" alt="">
+      <img src="assets/brand/mascot-wave-320.webp" style="width:140px;margin:0 auto 14px" alt="">
       <div style="font-size:19px;font-weight:800">${title}</div>
       <p style="font-size:13px;color:var(--ink-500);line-height:1.65;margin-top:8px">${text}</p>
       ${action ? `<button class="btn btn--block" style="margin-top:18px" data-act>${action.text}</button>` : ''}
@@ -279,7 +279,7 @@
 
   window.mascotEmpty = function (text, src, action) {
     return `<div class="empty">
-      <div class="mascot-slot"><img src="${src || 'assets/brand/mascot-wave-complete.png'}" alt=""></div>
+      <div class="mascot-slot"><img src="${src || 'assets/brand/mascot-wave-320.webp'}" alt=""></div>
       <p>${text}</p>
       ${action ? `<a class="btn btn--ghost btn--sm" href="${action.href}">${action.text}</a>` : ''}
     </div>`;

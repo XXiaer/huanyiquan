@@ -52,7 +52,15 @@
         feed = (r[3] && r[3].list) || [];
         if (r[4]) stats = r[4];
       } catch (e) {
-        view.innerHTML = `<div class="empty">请先登录<br><br><a class="btn btn--sm" href="#/login">去登录</a></div>`;
+        view.innerHTML = `<section class="me-unauth">
+          <img src="/assets/brand/mascot-wave-320.webp" width="132" height="132" alt="换一圈吉祥物" decoding="async">
+          <h2>欢迎来到换一圈</h2>
+          <p>登录后即可查看你的收藏、交换进度、校园心愿与信用评分。</p>
+          <div class="me-unauth__acts">
+            <a class="btn btn--sm" href="#/login">去登录</a>
+            <a class="btn btn--sm btn--ghost" href="#/home">逛逛闲置</a>
+          </div>
+        </section>`;
         renderTabbar('me', 0);
         return;
       }
@@ -111,7 +119,7 @@
             </div>
           </div>
           <div class="me-appraise__right">
-            <img src="assets/brand/mascot-wave-complete.png" alt="">
+            <img src="assets/brand/mascot-wave-320.webp" alt="">
             <div><b>猜你想换</b></div>
           </div>
           <span class="me-appraise__arrow">${icon('right', 18)}</span>
@@ -127,7 +135,7 @@
         </div>
 
         <div class="sect-title"><h2>猜你喜欢</h2><a class="more" href="#/market">去集市 ${icon('right', 14)}</a></div>
-        ${feed.length ? waterfall(feed) : mascotEmpty('还没有推荐的宝贝', 'assets/brand/mascot-wave-complete.png')}
+        ${feed.length ? waterfall(feed) : mascotEmpty('还没有推荐的宝贝', 'assets/brand/mascot-wave-320.webp')}
       </div>`;
 
       document.getElementById('meAppraise').addEventListener('click', () => { location.hash = '#/appraise'; });

@@ -168,7 +168,7 @@
     function thumb(it, cls) {
         var img = firstImage(it.images);
         var inner = img
-            ? '<img src="' + esc(img) + '" alt="' + esc(it.title) + '">'
+            ? '<img src="' + esc(img) + '" alt="' + esc(it.title) + '" loading="lazy" decoding="async">'
             : (CAT_ICON[it.category] || navIcon('box'));
         return '<div class="' + (cls || 'thumb') + '" data-cat="' + esc(it.category) + '">' + inner + '</div>';
     }
@@ -943,7 +943,19 @@
 
     async function renderCycle(itemId) {
         $('#app').innerHTML = shell('home', loading());
-        var rings = await api('/cycle/' + itemId);
+        var rings = [];
+        try {
+            rings = await api('/cycle/' + itemId);
+        } catch (e) {
+            if (e && e.code === 401) return;
+            $('#app').innerHTML = shell('home', '<div class="page-head"><h1>暂无法查找换物环</h1>'
+                + '<p>' + esc((e && e.message) || '该物品暂不满足闭环条件') + '</p></div>'
+                + '<div class="btn-row">'
+                + '<a class="btn btn-primary btn-sm" href="#/item/' + encodeURIComponent(itemId) + '/edit">去编辑物品</a>'
+                + '<a class="btn btn-ghost btn-sm" href="#/relay">返回换物接力</a>'
+                + '</div>');
+            return;
+        }
 
         if (!rings || rings.length === 0) {
             $('#app').innerHTML = shell('home', '<div class="page-head"><h1>暂时凑不成环</h1>'
@@ -1308,7 +1320,7 @@
         var labels={active:'竞拍中',cancelled:'已取消',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '等待卖家结算' : '已结束 | 无报价'};
         var end=String(a.endsAt || '').replace('T',' ').slice(0,16);
         var image=firstImage(a.image);
-        return '<article class="auction-card">'+(image?'<img class="auction-image" src="'+esc(image)+'" alt="'+esc(a.title)+'">':'<div class="auction-image auction-image-empty">历史拍品暂无图片</div>')+'<div class="auction-card-head"><span class="tag">'+esc(labels[a.state] || '未知')+'</span>'+(a.state==='active'||a.state==='ended'?'<span class="hint">截止 '+esc(end)+'</span>':'')+'</div><h2>'+esc(a.title)+'</h2><p>'+esc(a.description || '暂无描述')+'</p><div class="auction-price"><span>'+(a.bidCount?'当前最高':'起拍价')+'</span><b>¥'+esc(a.currentPrice)+'</b></div><div class="auction-meta">发布者：'+esc(a.seller)+' | '+a.bidCount+' 次出价'+(a.bidder?' | 最高出价：'+esc(a.bidder):'')+'</div>'
+        return '<article class="auction-card">'+(image?'<img class="auction-image" src="'+esc(image)+'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">':'<div class="auction-image auction-image-empty">历史拍品暂无图片</div>')+'<div class="auction-card-head"><span class="tag">'+esc(labels[a.state] || '未知')+'</span>'+(a.state==='active'||a.state==='ended'?'<span class="hint">截止 '+esc(end)+'</span>':'')+'</div><h2>'+esc(a.title)+'</h2><p>'+esc(a.description || '暂无描述')+'</p><div class="auction-price"><span>'+(a.bidCount?'当前最高':'起拍价')+'</span><b>¥'+esc(a.currentPrice)+'</b></div><div class="auction-meta">发布者：'+esc(a.seller)+' | '+a.bidCount+' 次出价'+(a.bidder?' | 最高出价：'+esc(a.bidder):'')+'</div>'
          +(a.state==='settled'?'<p class="auction-result">已选报价：'+esc(a.winner)+' | ¥'+esc(a.selectedAmount)+'。请双方自行协商线下交付。</p>':'')
          +(mode==='admin'&&a.state==='pending'?'<div class="btn-row"><button class="btn btn-sm btn-primary" data-act="review-listing" data-kind="auctions" data-do="approve" data-id="'+a.id+'">通过</button><button class="btn btn-sm" data-act="review-listing" data-kind="auctions" data-do="reject" data-id="'+a.id+'">驳回</button></div>':'')
          +(mode==='admin'&&(a.state==='active'||a.state==='ended')?'<button class="btn btn-sm" data-act="auction-cancel" data-id="'+a.id+'">取消拍卖</button>':'')
@@ -1317,9 +1329,21 @@
     }
     async function renderAuctions(mine) {
         $('#app').innerHTML=shell('auctions',loading());
-        var auctions=await api(mine?'/auction/mine':'/auction');
+        var auctions=[];
+        var loadError='';
+        try {
+            var res=await api(mine?'/auction/mine':'/auction', { optionalAuth: !mine });
+            auctions=Array.isArray(res)?res:(res&&Array.isArray(res.list)?res.list:[]);
+        } catch (e) {
+            if (mine && e && e.code === 401) {
+                sessionStorage.setItem('hq.returnTo', '#/auction/mine');
+                go('#/login');
+                return;
+            }
+            loadError=(e && e.message) || '拍卖数据暂时无法加载';
+        }
         var content='<div class="auction-page-head"><div><span class="tag">AUCTIONS</span><h1>'+(mine?'我的拍卖':'校园拍卖')+'</h1><p>人民币出价，成交后由双方线下协商交付。</p></div><div class="btn-row"><a class="btn btn-ghost" href="'+(mine?'#/auctions':'#/auction/mine')+'">'+(mine?'返回拍卖':'我的拍卖')+'</a><a class="btn btn-primary" href="#/auction/new">发起拍卖</a></div></div>'
-          +(auctions.length?'<div class="auction-grid">'+auctions.map(function(a){return auctionCard(a,mine?'mine':'public');}).join('')+'</div>':'<div class="card card-pad">暂无拍卖。</div>');
+          +(loadError?'<div class="card card-pad"><p>'+esc(loadError)+'</p><button class="btn btn-ghost btn-sm" data-act="go" data-to="'+(mine?'#/auction/mine':'#/auctions')+'">重试</button></div>':(auctions.length?'<div class="auction-grid">'+auctions.map(function(a){return auctionCard(a,mine?'mine':'public');}).join('')+'</div>':'<div class="card card-pad">暂无拍卖。</div>'));
         $('#app').innerHTML=shell('auctions',content);
     }
     function renderAuctionNew() {
@@ -1686,9 +1710,9 @@
             + '<form data-form="review"><input type="hidden" name="exchangeId" value="' + exchangeId + '">'
             + '<input type="hidden" name="targetUserId" value="' + targetUserId + '">'
             + '<input type="hidden" name="score" id="review-score" value="5">'
-            + '<div class="stars" id="review-stars" style="margin-bottom:14px">'
+            + '<div class="stars" id="review-stars" role="radiogroup" aria-label="评分星级" style="margin-bottom:14px">'
             + [1, 2, 3, 4, 5].map(function (n) {
-                return '<span class="star ' + (n <= 5 ? 'on' : '') + '" data-act="set-star" data-n="' + n + '">'+navIcon('star')+'</span>';
+                return '<button type="button" class="star ' + (n <= 5 ? 'on' : '') + '" data-act="set-star" data-n="' + n + '" aria-label="评分 ' + n + ' 星">'+navIcon('star')+'</button>';
             }).join('') + '</div>'
             + '<div class="field"><label class="label">说两句 <span class="opt">选填，≤100 字</span></label>'
             + '<input class="input" name="content" maxlength="100" placeholder="守时、描述属实、沟通顺畅…"></div>'

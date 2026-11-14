@@ -45,7 +45,7 @@
             ${w.offeredItemId ? `<a class="chip" href="#/item/${Number(w.offeredItemId)}">接力换出物品</a>` : ''}
             ${w.content ? `<p style="margin-top:5px;font-size:13px;color:var(--ink-500)">${esc(w.content)}</p>` : ''}
             ${me && w.userId === me.id ? `<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="chip" data-close="${w.id}">关闭心愿</button></div>` : ''}
-          </div>`).join('') : mascotEmpty(mineOnly ? '你还没有心愿，发一个等同学来换' : '还没有人发心愿', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/wish', text: '发心愿' })}
+          </div>`).join('') : mascotEmpty(mineOnly ? '你还没有心愿，发一个等同学来换' : '还没有人发心愿', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/wish', text: '发心愿' })}
       </div>`;
       view.querySelectorAll('[data-wish]').forEach((c) => c.addEventListener('click', () => {
         window.__wishMine = c.dataset.wish === 'mine';
@@ -83,7 +83,7 @@
               <p>${esc(n.content)}</p>
               <time>${fmtTime(n.createdAt)}</time>
             </div>
-          </div>`).join('') : mascotEmpty('这里还没有消息', 'assets/brand/mascot-wave-complete.png')}
+          </div>`).join('') : mascotEmpty('这里还没有消息', 'assets/brand/mascot-wave-320.webp')}
       </div>`;
       document.getElementById('readAll').addEventListener('click', async () => {
         try { await api.post('/api/notification/read', cat ? { category: cat } : {}); toast('已全部标为已读'); renderRoute(); } catch (e) { toast(e.message); }
@@ -207,7 +207,7 @@
                        <a class="chip" href="#/cycle/${i.id}">寻找换法</a>`
                     : `<a class="chip" href="#/item/${i.id}">看看</a>`}
                 </div>
-              </div>`).join('') : mascotEmpty(params.kind === 'sold' ? '还没有卖出的宝贝' : '还没有发布过闲置', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/idle', text: '去发布' })}
+              </div>`).join('') : mascotEmpty(params.kind === 'sold' ? '还没有卖出的宝贝' : '还没有发布过闲置', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/idle', text: '去发布' })}
           </div>`;
         view.querySelectorAll('[data-off]').forEach((b) => b.addEventListener('click', () => {
           confirmSheet('下架宝贝', '下架后可在「我发布的」里重新上架。', '下架', async () => {
@@ -267,7 +267,7 @@
         const labels = ['待回应', '已接受', '已拒绝', '已过期', '已撤回', '已还价'];
         view.innerHTML = `${topbar('我的报价')}<div style="padding:8px 13px 20px">
           <div class="pf-chips"><button class="chip ${mode === 'received' ? 'on' : ''}" data-offer-tab="received">收到的</button><button class="chip ${mode === 'sent' ? 'on' : ''}" data-offer-tab="sent">发出的</button></div>
-          ${rows.length ? rows.map(o => `<div class="community-card" style="margin:10px 0"><div style="display:flex;justify-content:space-between"><b>${esc(o.myTitle || '闲置')} → ${esc(o.targetTitle || '闲置')}</b><span class="badge badge--green">${esc(labels[o.status] || '已处理')}</span></div><p style="margin:8px 0;color:var(--ink-700)">${esc(o.message || '')}</p>${o.status === 0 ? `<div style="display:flex;gap:8px">${mode === 'received' ? `<button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button><button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}</div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-complete.png', {href:'#/market',text:'去集市看看'})}</div>`;
+          ${rows.length ? rows.map(o => `<div class="community-card" style="margin:10px 0"><div style="display:flex;justify-content:space-between"><b>${esc(o.myTitle || '闲置')} → ${esc(o.targetTitle || '闲置')}</b><span class="badge badge--green">${esc(labels[o.status] || '已处理')}</span></div><p style="margin:8px 0;color:var(--ink-700)">${esc(o.message || '')}</p>${o.status === 0 ? `<div style="display:flex;gap:8px">${mode === 'received' ? `<button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button><button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}</div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-320.webp', {href:'#/market',text:'去集市看看'})}</div>`;
         view.querySelectorAll('[data-offer-tab]').forEach(b => b.addEventListener('click', () => { window.__offersMode = b.dataset.offerTab; renderRoute(); }));
         view.querySelectorAll('[data-offer-id]').forEach(b => b.addEventListener('click', async () => {
           if (b.dataset.action === 'counter') {
@@ -300,7 +300,7 @@
                   <a class="chip" href="#/exchange/${e.id}">查看</a>
                 </div>
               </div>
-            </div>`).join('') : mascotEmpty('还没有交换单，发起一次以物换物吧', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去逛逛' })}
+            </div>`).join('') : mascotEmpty('还没有交换单，发起一次以物换物吧', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去逛逛' })}
         </div>`;
 
       view.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
@@ -349,7 +349,7 @@
     async render(view) {
       let list = [];
       try { list = await api.get('/api/social/favorite') || []; } catch (e) { /* 未登录 */ }
-      view.innerHTML = `${topbar('我的收藏')}${list.length ? waterfall(list) : mascotEmpty('还没有收藏的宝贝', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去集市逛逛' })}`;
+      view.innerHTML = `${topbar('我的收藏')}${list.length ? waterfall(list) : mascotEmpty('还没有收藏的宝贝', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去集市逛逛' })}`;
     },
   };
   PAGES.history = {
@@ -357,7 +357,7 @@
     async render(view) {
       let list = [];
       try { list = await api.get('/api/social/history') || []; } catch (e) { /* 未登录 */ }
-      view.innerHTML = `${topbar('历史浏览')}${list.length ? waterfall(list) : mascotEmpty('还没有浏览记录', 'assets/brand/mascot-wave-complete.png', { href: '#/home', text: '去首页看看' })}`;
+      view.innerHTML = `${topbar('历史浏览')}${list.length ? waterfall(list) : mascotEmpty('还没有浏览记录', 'assets/brand/mascot-wave-320.webp', { href: '#/home', text: '去首页看看' })}`;
     },
   };
   PAGES.follows = {
@@ -381,7 +381,7 @@
                 <div class="conv__text">${esc(u.college || '重庆移通学院')} | ${esc(u.building || '缤果大街')}</div>
               </div>
               ${icon('right', 16)}
-            </a>`).join('') : mascotEmpty(followers ? '还没有同学关注你' : '还没有关注的同学', 'assets/brand/mascot-wave-complete.png')}
+            </a>`).join('') : mascotEmpty(followers ? '还没有同学关注你' : '还没有关注的同学', 'assets/brand/mascot-wave-320.webp')}
         </div>`;
     },
   };
@@ -513,7 +513,7 @@
           ? `当前按「${esc(building)}」筛选。面交地点请与发布者协商。`
           : '当前显示全校闲置。登录并设置宿舍楼后，可按同楼筛选。'}</p>
         ${error ? `<div class="empty" role="status">${esc(error)} <button class="btn btn--ghost btn--sm" id="doorRetry">重试</button></div>`
-          : list.length ? waterfall(list) : mascotEmpty(building ? '这栋楼暂时没有闲置' : '暂时没有在架闲置', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去集市看看' })}`;
+          : list.length ? waterfall(list) : mascotEmpty(building ? '这栋楼暂时没有闲置' : '暂时没有在架闲置', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去集市看看' })}`;
       view.querySelector('#doorRetry')?.addEventListener('click', () => renderRoute());
     },
   };
@@ -535,7 +535,7 @@
               <div style="font-size:16px;font-weight:600">${esc(String(w.title || '').replace('【失物】', ''))}</div>
               <p style="font-size:13px;color:var(--ink-500);margin-top:6px">${esc(w.content || '')}</p>
               <div style="font-size:11px;color:var(--ink-500);margin-top:8px">${fmtTime(w.createdAt)} | ${esc(w.nickname || '同学')}</div>
-            </div>`).join('') : mascotEmpty('还没有失物信息', 'assets/brand/mascot-wave-complete.png')}
+            </div>`).join('') : mascotEmpty('还没有失物信息', 'assets/brand/mascot-wave-320.webp')}
         </div>`;
       view.querySelector('#lostRetry')?.addEventListener('click', () => renderRoute());
       document.getElementById('lostNew').addEventListener('click', () => {
@@ -588,7 +588,7 @@
               <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--ink-500)">
                 <span>最低 ¥${api.yuan(r.min)}</span><span>最高 ¥${api.yuan(r.max)}</span>
               </div>
-            </div>`).join('') || mascotEmpty('还没有足够的挂单价格', 'assets/brand/mascot-wave-complete.png')}
+            </div>`).join('') || mascotEmpty('还没有足够的挂单价格', 'assets/brand/mascot-wave-320.webp')}
         </div>`;
     },
   };
@@ -616,7 +616,7 @@
                 <div class="conv__text">${esc(u.college || '重庆移通学院')} | ${esc(u.building || '缤果大街')}</div>
               </div>
               ${icon('right', 16)}
-            </a>`).join('') : mascotEmpty('没找到这个同学', 'assets/brand/mascot-wave-complete.png')}
+            </a>`).join('') : mascotEmpty('没找到这个同学', 'assets/brand/mascot-wave-320.webp')}
         </div>`;
       const go = () => {
         const v = document.getElementById('uInput').value.trim();
@@ -634,7 +634,7 @@
       const me = window.__me || await api.get('/api/user/me').catch(() => null);
       let e;
       try { e = await api.get('/api/exchange/' + params.id); }
-      catch (err) { view.innerHTML = mascotEmpty(esc(err.message), 'assets/brand/mascot-wave-complete.png'); return; }
+      catch (err) { view.innerHTML = mascotEmpty(esc(err.message), 'assets/brand/mascot-wave-320.webp'); return; }
       const summary = window.exchangeSummary(e);
       const { mine, people, recipient, sender } = summary;
       const reviewTargets = people.filter((person) => !summary.isMe(person) && (!me || person.userId !== me.id));
@@ -769,7 +769,7 @@
         ${topbar('一键擦亮')}
         <div style="padding:0 13px 20px">
           <div class="tool-card" style="display:flex;align-items:center;gap:12px">
-            <img src="assets/brand/mascot-wave-complete.png" style="width:60px;height:60px;object-fit:contain" alt="">
+            <img src="assets/brand/mascot-wave-320.webp" style="width:60px;height:60px;object-fit:contain" alt="">
             <div>
               <div style="font-size:16px;font-weight:700">擦亮让宝贝排到前面</div>
               <div style="font-size:12.5px;color:var(--ink-500);margin-top:3px">每件每天可以擦亮一次</div>

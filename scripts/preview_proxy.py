@@ -8,12 +8,12 @@ ROOT=Path(__file__).resolve().parents[1]/'src/main/webapp'
 class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
  def do_GET(self):
-  if self.path.startswith('/api/'):self.proxy()
+  if self.path.startswith('/api/') or self.path.startswith('/uploads/'):self.proxy()
   else:super().do_GET()
  def do_POST(self):self.proxy()
  def do_PUT(self):self.proxy()
  def proxy(self):
-  if not self.path.startswith('/api/'):self.send_error(404);return
+  if not (self.path.startswith('/api/') or self.path.startswith('/uploads/')):self.send_error(404);return
   body=self.rfile.read(int(self.headers.get('Content-Length',0))) if self.command in ('POST','PUT') else None
   headers={k:self.headers[k] for k in ('Content-Type','Cookie','X-Token') if k in self.headers}
   req=Request('http://118.89.177.23:8081'+self.path,data=body,headers=headers,method=self.command)

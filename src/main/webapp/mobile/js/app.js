@@ -75,7 +75,7 @@
 
     if (!page) {
       view.innerHTML = `<div class="empty">
-        <div class="mascot-slot"><img src="assets/brand/mascot-wave-complete.png" alt=""></div>
+        <div class="mascot-slot"><img src="assets/brand/mascot-wave-320.webp" alt=""></div>
         <p>这一页走丢了，回首页看看吧</p>
         <a class="btn btn--ghost btn--sm" href="#/home">回首页</a>
       </div>`;

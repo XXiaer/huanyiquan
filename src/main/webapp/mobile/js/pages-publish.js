@@ -477,7 +477,7 @@
         </div>
         <div class="pe-card">
           <div style="display:flex;align-items:center;gap:10px;padding:2px 0 10px">
-            <img src="assets/brand/mascot-wave-complete.png" style="width:58px;height:58px;object-fit:contain" alt="">
+            <img src="assets/brand/mascot-wave-320.webp" style="width:58px;height:58px;object-fit:contain" alt="">
             <div style="font-size:13px;color:var(--ink-500);line-height:1.5">把想要的东西挂出来，<br>有同学愿意换时会通知你。</div>
           </div>
           <input class="pe-title-in" id="wishTitle" maxlength="100" placeholder="想要什么？比如：一台宿舍静音小冰箱" value="${esc(draft.title || '')}">
@@ -521,7 +521,7 @@
         await api.post('/api/wish', { title, content, category });
         localStorage.removeItem('draft:wish');
         view.innerHTML = `<div class="pe-success">
-          <img src="assets/brand/mascot-wave-complete.png" alt="">
+          <img src="assets/brand/mascot-wave-320.webp" alt="">
           <h2>心愿已发布</h2>
           <p>有同学愿意换时，会第一时间通知你。</p>
           <div class="btns">

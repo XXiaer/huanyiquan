@@ -55,10 +55,10 @@
               <div><b>${esc(u.nickname)}</b><span>${fmtTime(m.createTime)}</span></div></div>
             <p>${esc(m.content || '')}</p>
             ${m.image ? `<img class="pic" src="${m.image}" alt="">` : ''}
-          </div>`).join('')}</div>` : mascotEmpty('还没有发过动态', 'assets/brand/mascot-wave-complete.png');
+          </div>`).join('')}</div>` : mascotEmpty('还没有发过动态', 'assets/brand/mascot-wave-320.webp');
       } else {
         body = items.length ? `<div class="r-feed-wrap">${waterfall(items)}</div>`
-          : mascotEmpty('这里还没有宝贝', 'assets/brand/mascot-wave-complete.png');
+          : mascotEmpty('这里还没有宝贝', 'assets/brand/mascot-wave-320.webp');
       }
 
       const heroHtml = `

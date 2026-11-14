@@ -88,7 +88,7 @@
       </div>
 
       <section class="home-feed" aria-label="以物换物"><h1 class="swap-feed-title"><img src="assets/brand/swap-wordmark.webp" width="48" height="12" alt="以物换物"></h1>
-        <div data-swap-results>${feed.length ? waterfall(feed) : mascotEmpty('暂时没有可交换的物品', 'assets/brand/mascot-wave-complete.png')}</div>
+        <div data-swap-results>${feed.length ? waterfall(feed) : mascotEmpty('暂时没有可交换的物品', 'assets/brand/mascot-wave-320.webp')}</div>
         ${batch?.hasMore && window.__homeChannel !== '关注' ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}
       </section>
       ${deals.length ? `<div class="deal-ticker">
@@ -245,7 +245,7 @@
         <a class="msg-followers-link" href="#/followers">谁关注了我 ${icon('right', 16)}</a>
         ${recent.length ? `<div class="msg-group">${icon('clock', 15)}<span>最近的消息</span></div>${recent.map(convRow).join('')}` : ''}
         ${older.length ? `<div class="msg-group">${icon('clock', 15)}<span>1 个月以前的消息</span></div>${older.map(convRow).join('')}` : ''}
-        ${!convs.length ? mascotEmpty('还没有会话，去商品页跟同学聊聊', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去集市看看' }) : ''}
+        ${!convs.length ? mascotEmpty('还没有会话，去商品页跟同学聊聊', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去集市看看' }) : ''}
       </div>`;
 
       function convRow(c) {
@@ -388,7 +388,7 @@
       try {
         conv = await api.get('/api/conversation/' + params.id);
       } catch (e) {
-        view.innerHTML = mascotEmpty(esc(e.message), 'assets/brand/mascot-wave-complete.png');
+        view.innerHTML = mascotEmpty(esc(e.message), 'assets/brand/mascot-wave-320.webp');
         return;
       }
       const me = window.__me || (window.__me = await api.get('/api/user/me').catch(() => null));
@@ -857,7 +857,7 @@
             ${m.kind === 'item' ? (m.itemAvailable
               ? `<a class="community-share" href="#/item/${Number(m.itemId)}"><img src="${esc(api.pics({ images: m.itemImages })[0] || 'assets/brand/placeholder.png')}" alt=""><b>${esc(m.itemTitle)}</b>${icon('right', 16)}</a>`
               : '<p>该物品已下架</p>') : ''}
-          </div>`).join('') : mascotEmpty('社区还没人发言，来说两句', 'assets/brand/mascot-wave-complete.png');
+          </div>`).join('') : mascotEmpty('社区还没人发言，来说两句', 'assets/brand/mascot-wave-320.webp');
       view.innerHTML = `
         ${homeTabs('community')}
       <div class="market-community">
@@ -1002,7 +1002,7 @@
           ${['全部', ...HOME_CATEGORIES].map(c =>
             `<a class="chip${(params.category || '全部') === c ? ' on' : ''}" href="${prefix + encodeURIComponent(c === '全部' ? '' : c)}">${c}</a>`).join('')}
         </div>
-        <div data-swap-results>${batch?.rows.length ? waterfall(batch.rows) : mascotEmpty('这个分类暂时没有物品', 'assets/brand/mascot-wave-complete.png')}</div>
+        <div data-swap-results>${batch?.rows.length ? waterfall(batch.rows) : mascotEmpty('这个分类暂时没有物品', 'assets/brand/mascot-wave-320.webp')}</div>
         ${batch?.hasMore ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}`;
       bindBrowseMore(view, load, mode, batch);
     },
@@ -1035,7 +1035,7 @@
                   : `<a class="chip" href="${a.itemId ? '#/item/' + a.itemId : '#/auction'}">看看</a>`}
               </div>
             </div>
-          </div>`).join('') : mascotEmpty('还没有正在进行的拍卖', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/auction', text: '发起一场' })}
+          </div>`).join('') : mascotEmpty('还没有正在进行的拍卖', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/auction', text: '发起一场' })}
       </div>`;
       view.querySelectorAll('[data-bid]').forEach((btn) => btn.addEventListener('click', () => {
         const aid = btn.dataset.bid, cur = btn.dataset.cur;
@@ -1072,7 +1072,7 @@
           auction = (list || []).find((a) => Number(a.itemId) === Number(params.id)) || null;
         }
       } catch (e) {
-        view.innerHTML = mascotEmpty(esc(e.message), 'assets/brand/mascot-wave-complete.png');
+        view.innerHTML = mascotEmpty(esc(e.message), 'assets/brand/mascot-wave-320.webp');
         return;
       }
       const it = data.item;
@@ -1420,9 +1420,9 @@
               <div class="conv__text">${esc(u.college || '重庆移通学院')} | ${esc(u.building || '缤果大街')}</div>
             </div>
             ${icon('right', 16)}
-          </a>`).join('') : mascotEmpty('没找到这个同学', 'assets/brand/mascot-wave-complete.png');
+          </a>`).join('') : mascotEmpty('没找到这个同学', 'assets/brand/mascot-wave-320.webp');
       } else {
-        bodyHtml = `<div class="r-feed-wrap">${list.length ? waterfallWith(list, resultCard) : mascotEmpty('没找到「' + esc(kw) + '」，换个说法试试', 'assets/brand/mascot-wave-complete.png')}</div>`;
+        bodyHtml = `<div class="r-feed-wrap">${list.length ? waterfallWith(list, resultCard) : mascotEmpty('没找到「' + esc(kw) + '」，换个说法试试', 'assets/brand/mascot-wave-320.webp')}</div>`;
       }
 
       view.innerHTML = `

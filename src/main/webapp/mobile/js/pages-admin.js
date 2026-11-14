@@ -9,7 +9,7 @@
       if (!me) { try { me = await api.get('/api/user/me'); window.__me = me; } catch (e) { me = null; } }
       if (!me || me.role !== 1) {
         view.innerHTML = `<div class="admin-denied">
-          <img src="assets/brand/mascot-wave-complete.png" alt="">
+          <img src="assets/brand/mascot-wave-320.webp" alt="">
           <h2>需要管理员权限</h2>
           <p>用管理员账号 admin / admin123 登录后，再回到这一页。</p>
           <a class="btn" href="#/login">去登录</a>
