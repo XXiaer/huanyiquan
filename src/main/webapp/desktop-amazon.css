@@ -1272,4 +1272,2502 @@
         font-size: 12px;
         color: #b7ccc6;
     }
+
+    /* ==========================================================================
+       10. 像素级还原：顶栏微笑弧线、语言标、账户悬停气泡卡片、购物车图标
+       ========================================================================== */
+    .brand-text-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1;
+    }
+
+    .brand-smile {
+        width: 68px;
+        height: 12px;
+        display: block;
+        margin-top: -2px;
+    }
+
+    .amz-lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 8px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .amz-lang:hover {
+        border-color: #FFFFFF;
+    }
+
+    .amz-lang .lang-flag {
+        background: linear-gradient(180deg, #FF9900 0%, #E47911 100%);
+        color: #111;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 1px 4px;
+        border-radius: 2px;
+        line-height: 1.2;
+    }
+
+    .amz-lang .lang-caret {
+        font-size: 10px;
+        color: #A7C4BC;
+    }
+
+    .amz-acct-wrap {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+    }
+
+    .amz-acct-dropdown {
+        position: absolute;
+        top: calc(100% + 2px);
+        right: -28px;
+        width: 396px;
+        background: #FFFFFF;
+        color: #0F1111;
+        border: 1px solid #BBB;
+        border-radius: 4px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        padding: 16px 20px 18px;
+        z-index: 400;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(4px);
+        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+    }
+
+    .amz-acct-wrap:hover .amz-acct-dropdown,
+    .amz-acct-wrap:focus-within .amz-acct-dropdown {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .amz-pop-arrow {
+        position: absolute;
+        top: -8px;
+        right: 68px;
+        width: 14px;
+        height: 14px;
+        background: #FFFFFF;
+        border-left: 1px solid #BBB;
+        border-top: 1px solid #BBB;
+        transform: rotate(45deg);
+    }
+
+    .amz-pop-top {
+        text-align: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #EEE;
+    }
+
+    .amz-pop-signin-btn {
+        display: inline-block;
+        min-width: 190px;
+        padding: 7px 28px;
+        background: linear-gradient(180deg, #FFD814 0%, #F7CA00 100%);
+        border: 1px solid #FCD200;
+        border-radius: 6px;
+        color: #0F1111;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+    }
+
+    .amz-pop-signin-btn:hover {
+        background: #F7CA00;
+    }
+
+    .amz-pop-sub {
+        margin: 8px 0 0;
+        font-size: 12px;
+        color: #565959;
+    }
+
+    .amz-pop-sub a {
+        color: #007185;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .amz-pop-sub a:hover {
+        color: #C7511F;
+        text-decoration: underline;
+    }
+
+    .amz-pop-cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        padding-top: 12px;
+    }
+
+    .amz-pop-col + .amz-pop-col {
+        border-left: 1px solid #EEE;
+        padding-left: 18px;
+    }
+
+    .amz-pop-col h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #0F1111;
+    }
+
+    .amz-pop-col a {
+        display: block;
+        padding: 3px 0;
+        font-size: 12.5px;
+        color: #444;
+        text-decoration: none;
+    }
+
+    .amz-pop-col a:hover {
+        color: #C7511F;
+        text-decoration: underline;
+    }
+
+    .amz-cart-svg {
+        width: 38px;
+        height: 28px;
+        display: block;
+        color: #FFFFFF;
+    }
+
+    .amz-cart-link .amz-cart-count {
+        top: 2px;
+        left: 19px;
+        background: transparent;
+        color: #FF9900;
+        font-size: 15px;
+        font-weight: 900;
+        padding: 0;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    /* ==========================================================================
+       11. 首页 Hero 放大 + 吉祥物靠最右 + 四宫格分类上移且图片放大 + 5列彩色海报接口
+       ========================================================================== */
+    .amz-hero-banner {
+        min-height: 410px !important;
+        padding: 36px 44px 195px !important;
+        position: relative !important;
+    }
+
+    .amz-hero-copy {
+        max-width: 780px;
+    }
+
+    .amz-hero-kicker {
+        font-size: 13px !important;
+        padding: 5px 12px !important;
+    }
+
+    .amz-hero-copy h1 {
+        font-size: 46px !important;
+        line-height: 1.15 !important;
+        margin: 12px 0 10px !important;
+        letter-spacing: -0.02em;
+    }
+
+    .amz-hero-copy p {
+        font-size: 17px !important;
+        opacity: 0.95;
+        margin-bottom: 20px !important;
+    }
+
+    .amz-hero-cta .btn {
+        height: 44px !important;
+        padding: 0 24px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+    }
+
+    .amz-hero-mascot {
+        position: absolute !important;
+        right: 24px !important;
+        top: 12px !important;
+        width: 248px !important;
+        height: 248px !important;
+        object-fit: contain;
+        margin: 0 !important;
+    }
+
+    .amz-quad-grid {
+        margin: -175px auto 20px !important;
+        gap: 18px !important;
+    }
+
+    .amz-quad-card {
+        padding: 20px 18px 16px !important;
+    }
+
+    .amz-quad-card h2 {
+        font-size: 20px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .amz-quad-items {
+        gap: 14px !important;
+    }
+
+    .amz-quad-cell img {
+        aspect-ratio: 1 / 0.92 !important;
+        border-radius: 4px !important;
+    }
+
+    .amz-quad-cell span {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        margin-top: 6px !important;
+    }
+
+    /* 5-Column Amazon Feature Poster Strip */
+    .amz-poster-strip {
+        max-width: 1460px;
+        margin: 0 auto 22px;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .amz-poster-card {
+        border-radius: 10px;
+        padding: 20px 18px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 320px;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(15, 17, 17, 0.08);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .amz-poster-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(15, 17, 17, 0.15);
+    }
+
+    .amz-poster-head span {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        opacity: 0.85;
+        margin-bottom: 4px;
+    }
+
+    .amz-poster-head h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .amz-poster-card.poster-orange {
+        background: linear-gradient(180deg, #F26B0A 0%, #DF4B00 100%);
+        color: #FFFFFF;
+    }
+
+    .amz-poster-card.poster-sage {
+        background: linear-gradient(180deg, #DCE8E0 0%, #C2D7CA 100%);
+        color: #0F1111;
+    }
+
+    .amz-poster-card.poster-peach {
+        background: linear-gradient(180deg, #FFE4D4 0%, #F9CBB0 100%);
+        color: #0F1111;
+    }
+
+    .amz-poster-card.poster-sand {
+        background: linear-gradient(180deg, #EAE1D7 0%, #D8C8B4 100%);
+        color: #0F1111;
+    }
+
+    .amz-poster-card.poster-sky {
+        background: linear-gradient(180deg, #D9EEFF 0%, #B8DCFF 100%);
+        color: #0F1111;
+    }
+
+    .amz-poster-collage {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+        flex: 1;
+    }
+
+    .amz-poster-mini {
+        background: #FFFFFF;
+        border-radius: 6px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        color: #0F1111;
+    }
+
+    .amz-poster-mini img {
+        width: 100%;
+        height: 66px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .amz-poster-mini b {
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    .amz-poster-visual {
+        margin-top: 12px;
+        height: 196px;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        background: #FFFFFF;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .amz-poster-visual > img:first-child {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .amz-poster-mascot {
+        position: absolute;
+        right: 6px;
+        bottom: 4px;
+        width: 68px !important;
+        height: 68px !important;
+        object-fit: contain !important;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
+    }
+
+    .amz-poster-pill {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        background: rgba(6, 48, 42, 0.9);
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 9px;
+        border-radius: 999px;
+    }
+
+    /* ==========================================================================
+       12. 校园闲置左边栏深度丰富化 (.amz-rich-sidebar)
+       ========================================================================== */
+    .amz-rich-sidebar .amz-side-hero {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: linear-gradient(135deg, #E8F4F0 0%, #D5EBE3 100%);
+        border: 1px solid #BDE0D4;
+        border-radius: 8px;
+        margin-bottom: 14px;
+    }
+
+    .amz-rich-sidebar .amz-side-hero img {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+    }
+
+    .amz-rich-sidebar .amz-side-hero b {
+        display: block;
+        font-size: 13.5px;
+        color: #06302A;
+    }
+
+    .amz-rich-sidebar .amz-side-hero span {
+        font-size: 11.5px;
+        color: #2B5B52;
+    }
+
+    .amz-side-list a.with-sub {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 8px;
+        border-radius: 6px;
+    }
+
+    .amz-side-list a.with-sub span {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+    }
+
+    .amz-side-list a.with-sub b {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0F1111;
+    }
+
+    .amz-side-list a.with-sub small {
+        font-size: 11px;
+        color: #6B7280;
+    }
+
+    .amz-check-row {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px !important;
+    }
+
+    .amz-check-box {
+        width: 15px;
+        height: 15px;
+        border: 1px solid #888;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: #FFFFFF;
+        background: #FFFFFF;
+    }
+
+    .amz-check-box.checked {
+        background: #0A5C51;
+        border-color: #0A5C51;
+    }
+
+    .amz-star-filter {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .amz-star-filter a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: #0F1111;
+        text-decoration: none;
+        padding: 3px 6px;
+        border-radius: 4px;
+    }
+
+    .amz-star-filter a:hover {
+        background: #F0F5F3;
+        color: #C7511F;
+    }
+
+    .amz-stars {
+        color: #FFA41C;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    .amz-side-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .amz-side-tags a {
+        font-size: 11.5px;
+        color: #06302A;
+        background: #EEF5F2;
+        border: 1px solid #D3E4DD;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+
+    .amz-side-tags a:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    .amz-side-promo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 14px;
+        padding: 12px;
+        background: linear-gradient(135deg, #06302A 0%, #0A5C51 100%);
+        color: #FFFFFF;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+
+    .amz-side-promo b {
+        display: block;
+        font-size: 13px;
+        color: #FFD814;
+    }
+
+    .amz-side-promo p {
+        margin: 2px 0 6px;
+        font-size: 11px;
+        color: #D7ECE6;
+    }
+
+    .amz-side-promo span {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #FF9900;
+    }
+
+    .amz-side-promo img {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+    }
+
+    /* ==========================================================================
+       13. 社区页面：腾讯频道风格三栏布局 (.qq-channel-shell)
+       ========================================================================== */
+    .qq-channel-shell {
+        display: grid;
+        grid-template-columns: 236px minmax(0, 1fr) 270px;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .qq-chan-left {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 14px 12px;
+        position: sticky;
+        top: 16px;
+    }
+
+    .qq-guild-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 8px 12px;
+        border-bottom: 1px solid #EEF1F1;
+        margin-bottom: 10px;
+    }
+
+    .qq-guild-head img {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #E8F4F0;
+        object-fit: contain;
+    }
+
+    .qq-guild-head b {
+        display: block;
+        font-size: 15px;
+        color: #0F1111;
+    }
+
+    .qq-guild-head span {
+        font-size: 11.5px;
+        color: #0A7E5C;
+        font-weight: 600;
+    }
+
+    .qq-chan-group {
+        margin-bottom: 12px;
+    }
+
+    .qq-group-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #6B7280;
+        padding: 6px 8px 4px;
+    }
+
+    .qq-chan-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 7px;
+        color: #1F2937;
+        font-size: 13.5px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 2px;
+    }
+
+    .qq-chan-item:hover {
+        background: #F1F6F4;
+    }
+
+    .qq-chan-item.on {
+        background: #E4F2EE;
+        color: #06302A;
+        font-weight: 800;
+    }
+
+    .qq-chan-item i {
+        font-style: normal;
+        font-weight: 800;
+        color: #0A5C51;
+        width: 18px;
+        text-align: center;
+    }
+
+    .qq-chan-item span {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .qq-chan-item small,
+    .qq-badge-hot {
+        font-size: 10.5px;
+        font-style: normal;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: #FFF1E6;
+        color: #D95E00;
+        font-weight: 700;
+    }
+
+    .qq-left-promo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 10px;
+        background: #F5F9F7;
+        border: 1px solid #DCEAE4;
+        border-radius: 8px;
+    }
+
+    .qq-left-promo img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+
+    .qq-left-promo b {
+        display: block;
+        font-size: 12.5px;
+        color: #06302A;
+    }
+
+    .qq-left-promo p {
+        margin: 2px 0 0;
+        font-size: 11px;
+        color: #565959;
+    }
+
+    .qq-chan-center {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .qq-hero-banner {
+        background: linear-gradient(125deg, #06302A 0%, #0A5C51 62%, #147A6B 100%);
+        color: #FFFFFF;
+        border-radius: 12px;
+        padding: 22px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .qq-official-tag {
+        display: inline-block;
+        background: #F08C1A;
+        color: #111;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-bottom: 6px;
+    }
+
+    .qq-hero-copy h1 {
+        margin: 4px 0 6px;
+        font-size: 22px;
+        font-weight: 900;
+    }
+
+    .qq-hero-copy p {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: #D9EFE9;
+        max-width: 560px;
+    }
+
+    .qq-hero-stats {
+        display: flex;
+        gap: 18px;
+        font-size: 12.5px;
+        color: #B9E0D7;
+    }
+
+    .qq-hero-stats b {
+        color: #FFD814;
+        margin-left: 3px;
+    }
+
+    .qq-hero-mascot {
+        width: 112px;
+        height: 112px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .qq-compose-box {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+
+    .qq-compose-top {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .qq-compose-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #E8F4F0;
+        object-fit: contain;
+    }
+
+    .qq-compose-top textarea {
+        flex: 1;
+        border: 1px solid #E2E8F0;
+        background: #F8FAFC;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 13.5px;
+        resize: vertical;
+    }
+
+    .qq-compose-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #F1F5F9;
+    }
+
+    .qq-tool-btns {
+        display: flex;
+        gap: 8px;
+    }
+
+    .qq-feed-tabs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 10px 16px;
+    }
+
+    .qq-feed-tabs span,
+    .qq-feed-tabs a {
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #4B5563;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .qq-feed-tabs span.on {
+        background: #06302A;
+        color: #FFFFFF;
+    }
+
+    .qq-feed-tabs .qq-live-pill {
+        margin-left: auto;
+        color: #0A7E5C;
+        font-size: 12px;
+    }
+
+    .qq-realtime-card {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+
+    .qq-realtime-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #EEF2F2;
+    }
+
+    .qq-realtime-head b {
+        font-size: 14px;
+        color: #0F1111;
+    }
+
+    .qq-realtime-head span {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .qq-realtime-card .chat-messages {
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+    .qq-featured-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .qq-post-card {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 18px 20px;
+    }
+
+    .qq-post-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .qq-post-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #0A5C51;
+        color: #FFFFFF;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+    }
+
+    .qq-post-head b {
+        display: block;
+        font-size: 14px;
+        color: #0F1111;
+    }
+
+    .qq-post-head span {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    .qq-post-tag {
+        margin-left: auto;
+        background: #E8F4F0;
+        color: #0A5C51;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        text-decoration: none;
+    }
+
+    .qq-post-card h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0F1111;
+    }
+
+    .qq-post-card p {
+        margin: 0 0 12px;
+        font-size: 13.5px;
+        line-height: 1.65;
+        color: #374151;
+    }
+
+    .qq-post-imgs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 180px));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .qq-post-imgs img {
+        width: 100%;
+        height: 135px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .qq-post-foot {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding-top: 10px;
+        border-top: 1px solid #F1F5F9;
+        font-size: 12.5px;
+        color: #6B7280;
+    }
+
+    .qq-post-foot a {
+        margin-left: auto;
+        color: #007185;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .qq-chan-right {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .qq-side-card {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    .qq-side-card h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #0F1111;
+    }
+
+    .qq-side-card p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.65;
+        color: #4B5563;
+    }
+
+    .qq-arcade-box {
+        background: linear-gradient(160deg, #06302A 0%, #0A5C51 100%);
+        color: #FFFFFF;
+        text-align: center;
+    }
+
+    .qq-arcade-box h3 {
+        margin: 8px 0 4px;
+        font-size: 18px;
+        color: #FFFFFF;
+    }
+
+    .qq-arcade-box p {
+        color: #CBE6DF;
+        margin-bottom: 10px;
+    }
+
+    .qq-arcade-box img {
+        width: 84px;
+        height: 84px;
+        object-fit: contain;
+        margin: 4px auto 10px;
+        display: block;
+    }
+
+    .qq-rank-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .qq-rank-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .qq-rank-list li b {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        background: #E8F4F0;
+        color: #06302A;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+    }
+
+    .qq-rank-list li span {
+        flex: 1;
+        color: #1F2937;
+    }
+
+    .qq-rank-list li em {
+        font-style: normal;
+        color: #0A7E5C;
+        font-weight: 700;
+    }
+
+    /* ==========================================================================
+       14. 我的交易与个人中心：京东订单中心 & 京东个人主页风格 (.jd-center-wrap)
+       ========================================================================== */
+    .jd-center-wrap {
+        display: grid;
+        grid-template-columns: 185px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .jd-side-nav {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        border-radius: 4px;
+        padding: 14px 16px;
+    }
+
+    .jd-nav-group {
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #F1F3F3;
+    }
+
+    .jd-nav-group:last-child {
+        border-bottom: 0;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .jd-nav-group h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #111;
+    }
+
+    .jd-nav-group a {
+        display: block;
+        padding: 4px 0;
+        font-size: 12.5px;
+        color: #555;
+        text-decoration: none;
+    }
+
+    .jd-nav-group a:hover,
+    .jd-nav-group a.on {
+        color: #0A5C51;
+        font-weight: 700;
+    }
+
+    .jd-order-main,
+    .jd-me-main {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .jd-order-title-bar {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        padding: 14px 20px;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+    }
+
+    .jd-order-title-bar h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #333;
+    }
+
+    .jd-order-title-bar span {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .jd-order-panel {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        padding: 16px 20px 24px;
+    }
+
+    .jd-order-tabs-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #EEE;
+    }
+
+    .jd-order-tabs {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+
+    .jd-order-tabs button,
+    .jd-order-tabs a {
+        background: none;
+        border: 0;
+        padding: 4px 0;
+        font-size: 13px;
+        color: #333;
+        cursor: pointer;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+    }
+
+    .jd-order-tabs button.on,
+    .jd-order-tabs a.on {
+        color: #0A5C51;
+        font-weight: 800;
+        border-bottom-color: #0A5C51;
+    }
+
+    .jd-order-tabs .jd-tab-emph {
+        padding-left: 14px;
+        border-left: 1px solid #E5E5E5;
+        font-weight: 700;
+    }
+
+    .jd-order-search {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .jd-order-search input {
+        width: 210px;
+        height: 28px;
+        border: 1px solid #CCC;
+        padding: 0 8px;
+        font-size: 12px;
+    }
+
+    .jd-order-search button {
+        height: 28px;
+        padding: 0 12px;
+        background: #F5F5F5;
+        border: 1px solid #CCC;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .jd-order-notice {
+        margin: 12px 0;
+        padding: 8px 12px;
+        background: #FFFDEE;
+        border: 1px solid #F5E6B8;
+        color: #8A6D3B;
+        font-size: 12px;
+    }
+
+    .jd-table-head {
+        display: grid;
+        grid-template-columns: minmax(0, 2.5fr) 120px 120px 115px 130px;
+        background: #F5F5F5;
+        border: 1px solid #E5E5E5;
+        padding: 8px 14px;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 12px;
+    }
+
+    .jd-table-head span:not(.col-goods) {
+        text-align: center;
+    }
+
+    .jd-order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .jd-order-item {
+        border: 1px solid #E5E5E5;
+        background: #FFFFFF;
+    }
+
+    .jd-item-head {
+        background: #F5F5F5;
+        padding: 7px 14px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        font-size: 12px;
+        color: #666;
+        border-bottom: 1px solid #E5E5E5;
+    }
+
+    .jd-item-head b {
+        color: #333;
+    }
+
+    .jd-item-shop {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .jd-chat-dot {
+        font-style: normal;
+        margin-left: 4px;
+    }
+
+    .jd-item-trash {
+        margin-left: auto;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        opacity: 0.55;
+    }
+
+    .jd-item-row {
+        display: grid;
+        grid-template-columns: minmax(0, 2.5fr) 120px 120px 115px 130px;
+        align-items: stretch;
+    }
+
+    .jd-item-row > div {
+        padding: 14px 12px;
+        border-right: 1px solid #F0F0F0;
+    }
+
+    .jd-item-row > div:last-child {
+        border-right: 0;
+    }
+
+    .jd-col-goods {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .jd-goods-thumb {
+        width: 64px;
+        height: 64px;
+        border: 1px solid #EEE;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .jd-goods-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .jd-goods-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .jd-goods-title {
+        display: block;
+        margin: 0 0 6px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .jd-goods-title:hover {
+        color: #0A5C51;
+    }
+
+    .jd-goods-tags {
+        display: flex;
+        gap: 6px;
+    }
+
+    .jd-goods-tags span {
+        font-size: 11px;
+        color: #0A5C51;
+        background: #EBF5F2;
+        padding: 1px 6px;
+        border-radius: 2px;
+    }
+
+    .jd-goods-note {
+        margin: 4px 0 0;
+        font-size: 11.5px;
+        color: #888;
+    }
+
+    .jd-goods-qty {
+        font-size: 12px;
+        color: #999;
+        padding: 0 8px;
+    }
+
+    .jd-goods-repair {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+    }
+
+    .jd-goods-repair a {
+        color: #666;
+        text-decoration: none;
+    }
+
+    .jd-col-buyer,
+    .jd-col-amount,
+    .jd-col-status,
+    .jd-col-ops {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .jd-col-amount b {
+        font-size: 13px;
+        color: #333;
+    }
+
+    .jd-col-amount small {
+        color: #999;
+        border-top: 1px solid #EEE;
+        padding-top: 3px;
+    }
+
+    .jd-st-done {
+        color: #888;
+    }
+
+    .jd-col-status a,
+    .jd-op-link {
+        color: #333;
+        text-decoration: none;
+        font-size: 12px;
+    }
+
+    .jd-col-status a:hover,
+    .jd-op-link:hover {
+        color: #0A5C51;
+    }
+
+    .jd-btn-rebuy {
+        padding: 5px 10px;
+        background: #F5F5F5;
+        border: 1px solid #DDD;
+        border-radius: 2px;
+        font-size: 12px;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .jd-btn-rebuy:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+        border-color: #0A5C51;
+    }
+
+    .jd-empty-order-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 28px 20px;
+        border-bottom: 1px dashed #E5E5E5;
+    }
+
+    .jd-empty-order-box img {
+        width: 96px;
+        height: 96px;
+        object-fit: contain;
+    }
+
+    .jd-empty-order-copy p {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .jd-empty-btns {
+        display: flex;
+        gap: 10px;
+    }
+
+    .jd-btn-red {
+        padding: 6px 14px;
+        background: #0A5C51;
+        color: #FFFFFF;
+        border: 1px solid #0A5C51;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .jd-btn-outline {
+        padding: 6px 14px;
+        background: #FFFFFF;
+        color: #333;
+        border: 1px solid #CCC;
+        border-radius: 3px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .jd-demo-divider {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 16px 0 10px;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #555;
+    }
+
+    .jd-demo-divider a {
+        color: #007185;
+        text-decoration: none;
+    }
+
+    /* JD Personal Center (我的主页) */
+    .jd-me-hero-card {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr) 235px;
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .jd-me-user-box {
+        background: linear-gradient(150deg, #06302A 0%, #0A5C51 100%);
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .jd-me-user-top {
+        padding: 18px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .jd-me-avatar {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 2px solid #FFD814;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .jd-me-avatar img {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+    }
+
+    .jd-vip-pill {
+        position: absolute;
+        bottom: -6px;
+        background: #FFD814;
+        color: #111;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 1px 6px;
+        border-radius: 999px;
+    }
+
+    .jd-me-user-meta h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .jd-me-user-meta p {
+        margin: 0 0 8px;
+        font-size: 11.5px;
+        color: #CBE6DF;
+    }
+
+    .jd-me-user-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .jd-me-user-links a,
+    .jd-me-user-links .link-btn {
+        color: #FFD814;
+        font-size: 11.5px;
+        text-decoration: none;
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .jd-me-plus-bar {
+        background: #041F1B;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .jd-me-plus-bar b {
+        display: block;
+        font-size: 12px;
+        color: #FFD814;
+    }
+
+    .jd-me-plus-bar span {
+        font-size: 10.5px;
+        color: #A7C4BC;
+    }
+
+    .jd-me-plus-bar a {
+        background: #FFD814;
+        color: #111;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 999px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .jd-me-assets-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: center;
+        padding: 18px 10px;
+    }
+
+    .jd-asset-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        border-right: 1px solid #F1F1F1;
+    }
+
+    .jd-asset-col:last-child {
+        border-right: 0;
+    }
+
+    .jd-asset-col b {
+        font-size: 22px;
+        font-weight: 900;
+        color: #111;
+    }
+
+    .jd-asset-col span {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .jd-asset-act {
+        font-size: 11.5px;
+        color: #007185;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .jd-me-recycle-card {
+        background: linear-gradient(135deg, #FFF5EB 0%, #FFE3C8 100%);
+        padding: 16px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        color: #111;
+        border-left: 1px solid #F3E1CE;
+    }
+
+    .jd-recycle-tag {
+        display: inline-block;
+        background: #F08C1A;
+        color: #FFF;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-bottom: 4px;
+    }
+
+    .jd-recycle-copy h4 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .jd-recycle-copy p {
+        margin: 0 0 8px;
+        font-size: 11px;
+        color: #666;
+    }
+
+    .jd-recycle-copy b {
+        font-size: 12px;
+        color: #D95E00;
+    }
+
+    .jd-me-recycle-card img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+    }
+
+    .jd-me-mid-grid,
+    .jd-me-service-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .jd-me-card {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        border-radius: 4px;
+        padding: 16px 18px;
+    }
+
+    .jd-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #F1F1F1;
+    }
+
+    .jd-card-head h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+        color: #222;
+    }
+
+    .jd-card-head a {
+        font-size: 12px;
+        color: #666;
+        text-decoration: none;
+    }
+
+    .jd-order-quick-icons {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        text-align: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #F5F5F5;
+    }
+
+    .jd-order-quick-icons a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        color: #333;
+        font-size: 12px;
+        padding: 8px 4px;
+        border-radius: 6px;
+    }
+
+    .jd-order-quick-icons a:hover {
+        background: #F4F8F6;
+        color: #0A5C51;
+    }
+
+    .jd-order-quick-icons i {
+        font-style: normal;
+        font-size: 22px;
+    }
+
+    .jd-order-mini-preview {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-top: 12px;
+    }
+
+    .jd-order-mini-preview img {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+    }
+
+    .jd-order-mini-preview p {
+        margin: 0 0 4px;
+        font-size: 12.5px;
+        color: #555;
+    }
+
+    .jd-order-mini-preview a {
+        font-size: 12px;
+        color: #007185;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .jd-fav-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        text-align: center;
+        padding: 12px 0 18px;
+    }
+
+    .jd-fav-stats a {
+        text-decoration: none;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .jd-fav-stats b {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111;
+    }
+
+    .jd-fav-stats span {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .jd-fav-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: linear-gradient(90deg, #E8F4F0 0%, #D5EBE3 100%);
+        border-radius: 6px;
+        text-decoration: none;
+        color: #06302A;
+    }
+
+    .jd-fav-banner b {
+        display: block;
+        font-size: 13.5px;
+    }
+
+    .jd-fav-banner span {
+        font-size: 11.5px;
+        color: #3B6E63;
+    }
+
+    .jd-fav-banner em {
+        font-style: normal;
+        font-size: 12px;
+        font-weight: 800;
+        color: #D95E00;
+    }
+
+    .jd-follow-tags {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .jd-follow-tags a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        color: #333;
+        font-size: 12px;
+    }
+
+    .jd-follow-tags img {
+        width: 100%;
+        height: 82px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #EEE;
+    }
+
+    .jd-me-3posters {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .jd-poster-tile {
+        border-radius: 6px;
+        padding: 14px 12px;
+        text-decoration: none;
+        color: #111;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .jd-poster-tile.tone-peach {
+        background: linear-gradient(180deg, #FFF0E6 0%, #FFE0CC 100%);
+    }
+
+    .jd-poster-tile.tone-blue {
+        background: linear-gradient(180deg, #EBF5FF 0%, #D6EAFF 100%);
+    }
+
+    .jd-poster-tile.tone-mint {
+        background: linear-gradient(180deg, #E8F6F1 0%, #D0ECE3 100%);
+    }
+
+    .jd-poster-tile h4 {
+        margin: 0 0 2px;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .jd-poster-tile p {
+        margin: 0 0 8px;
+        font-size: 11px;
+        color: #555;
+    }
+
+    .jd-poster-tile img {
+        width: 100%;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    /* ==========================================================================
+       15. 校园拍卖页面：阿里资产·司法拍卖风格 + 5列卡片网格 (.ali-auction-page)
+       ========================================================================== */
+    .ali-auction-page {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .ali-sub-header {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        border-top: 3px solid #0A5C51;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .ali-brand-main {
+        display: block;
+        font-size: 20px;
+        font-weight: 900;
+        color: #06302A;
+    }
+
+    .ali-brand-sub {
+        font-size: 11px;
+        color: #6B7280;
+    }
+
+    .ali-sub-nav {
+        display: flex;
+        gap: 20px;
+    }
+
+    .ali-sub-nav a {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        text-decoration: none;
+        padding: 6px 10px;
+        border-radius: 4px;
+    }
+
+    .ali-sub-nav a.on,
+    .ali-sub-nav a:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    .ali-sub-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .ali-filter-box {
+        background: #FFFFFF;
+        border: 1px solid #E3E6E6;
+        padding: 6px 18px;
+    }
+
+    .ali-filter-row {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dashed #EAEAEA;
+        font-size: 12.5px;
+    }
+
+    .ali-filter-row:last-child {
+        border-bottom: 0;
+    }
+
+    .ali-filter-k {
+        width: 118px;
+        color: #888;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .ali-filter-v {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ali-filter-v button {
+        background: none;
+        border: 0;
+        padding: 3px 10px;
+        font-size: 12.5px;
+        color: #333;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .ali-filter-v button.on,
+    .ali-filter-v button:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+        font-weight: 700;
+    }
+
+    .ali-sort-toolbar {
+        background: #F8FAFA;
+        border: 1px solid #E3E6E6;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12.5px;
+    }
+
+    .ali-sort-checks {
+        display: flex;
+        gap: 16px;
+        color: #444;
+    }
+
+    .ali-sort-links {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #555;
+    }
+
+    .ali-sort-links span.on {
+        color: #0A5C51;
+        font-weight: 800;
+    }
+
+    .ali-toolbar-mascot {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+    }
+
+    .ali-auction-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .ali-auction-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E6E6;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ali-auction-card:hover {
+        border-color: #0A5C51;
+        box-shadow: 0 6px 18px rgba(6, 48, 42, 0.12);
+    }
+
+    .ali-card-media {
+        position: relative;
+        height: 175px;
+        background: #F4F6F6;
+        overflow: hidden;
+    }
+
+    .ali-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .ali-stage-badge {
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: rgba(6, 48, 42, 0.85);
+        color: #FFFFFF;
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+
+    .ali-status-corner {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 800;
+        border-radius: 3px;
+        color: #FFFFFF;
+    }
+
+    .ali-status-corner.is-live {
+        background: #0A7E5C;
+    }
+
+    .ali-status-corner.is-done {
+        background: #6B7280;
+    }
+
+    .ali-status-corner.is-end {
+        background: #D95E00;
+    }
+
+    .ali-card-body {
+        padding: 12px 12px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .ali-card-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #222;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 36px;
+    }
+
+    .ali-price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    .ali-price-k {
+        font-size: 11.5px;
+        color: #888;
+    }
+
+    .ali-price-v {
+        font-size: 21px;
+        font-weight: 900;
+        color: #0A7E5C;
+    }
+
+    .ali-price-orig {
+        margin-left: auto;
+        font-size: 11px;
+        color: #999;
+        text-decoration: line-through;
+    }
+
+    .ali-time-row,
+    .ali-seller-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11.5px;
+        color: #666;
+    }
+
+    .ali-settled-tip {
+        margin: 0;
+        font-size: 11px;
+        color: #0A5C51;
+        background: #EBF5F2;
+        padding: 3px 6px;
+    }
+
+    .ali-card-actions {
+        margin-top: auto;
+        padding-top: 6px;
+    }
+
+    .ali-bid-btn {
+        width: 100%;
+        height: 32px;
+        background: #0A5C51;
+        color: #FFFFFF;
+        border: 0;
+        border-radius: 3px;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .ali-bid-btn:hover {
+        background: #06302A;
+    }
+
+    .ali-bid-btn.is-muted {
+        background: #E5E7EB;
+        color: #374151;
+    }
+
+    .ali-card-foot {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid #EEEEEE;
+        background: #FAFAFA;
+        font-size: 11.5px;
+        color: #777;
+    }
+
+    .ali-card-foot span {
+        padding: 7px 6px;
+        text-align: center;
+    }
+
+    .ali-card-foot span + span {
+        border-left: 1px solid #EEEEEE;
+    }
+
+    .ali-card-foot b {
+        color: #333;
+    }
+
+    /* ==========================================================================
+       16. 像素级细节精修补丁 (顶栏右侧净化、悬停菜单黄钮与双列、5列海报条横排、按钮防折行)
+       ========================================================================== */
+    .header-actions .notice-link,
+    .header-actions .settings-link:not(.amz-cart),
+    .header-actions > .avatar,
+    .header-actions > .header-account {
+        display: none !important;
+    }
+
+    .amz-pop-btn,
+    .amz-pop-signin-btn {
+        display: inline-block !important;
+        min-width: 200px;
+        padding: 8px 32px;
+        background: linear-gradient(180deg, #FFD814 0%, #F7CA00 100%) !important;
+        border: 1px solid #FCD200 !important;
+        border-radius: 6px;
+        color: #0F1111 !important;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none !important;
+        box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+    }
+
+    .amz-pop-btn:hover,
+    .amz-pop-signin-btn:hover {
+        background: #F7CA00 !important;
+    }
+
+    .amz-pop-top p {
+        margin: 8px 0 0;
+        font-size: 12px;
+        color: #565959;
+    }
+
+    .amz-pop-top p a,
+    .amz-pop-top p .link-btn {
+        color: #007185 !important;
+        font-weight: 700;
+        text-decoration: none;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .amz-pop-cols > div + div {
+        border-left: 1px solid #EEEEEE;
+        padding-left: 18px;
+    }
+
+    .amz-pop-cols h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 800;
+        color: #0F1111;
+    }
+
+    .amz-pop-cols a,
+    .amz-pop-cols .amz-pop-link {
+        display: block !important;
+        width: 100%;
+        text-align: left;
+        padding: 4px 0;
+        font-size: 12.5px;
+        color: #333333 !important;
+        text-decoration: none;
+        background: none;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .amz-pop-cols a:hover,
+    .amz-pop-cols .amz-pop-link:hover {
+        color: #C7511F !important;
+        text-decoration: underline;
+    }
+
+    /* Hero 与四宫格无遮挡衔接 + 5列彩色海报横排 */
+    .amz-hero-inner {
+        padding: 34px 44px 168px !important;
+        position: relative !important;
+    }
+
+    .amz-quad-grid {
+        margin: -132px auto 24px !important;
+        gap: 18px !important;
+    }
+
+    .amz-poster-strip {
+        max-width: 1460px;
+        margin: 0 auto 26px !important;
+        padding: 0 20px !important;
+        display: block !important;
+    }
+
+    .amz-poster-strip > .amz-poster-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 0 2px;
+    }
+
+    .amz-poster-strip > .amz-poster-head h2 {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 900;
+        color: #0F1111;
+    }
+
+    .amz-poster-strip > .amz-poster-head span {
+        font-size: 13px;
+        color: #007185;
+        font-weight: 700;
+    }
+
+    .amz-poster-row {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 16px !important;
+    }
+
+    .amz-poster-card {
+        min-height: 336px !important;
+        border-radius: 10px !important;
+        padding: 20px 18px 16px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        text-align: left !important;
+        border: 0 !important;
+        cursor: pointer;
+    }
+
+    .amz-poster-copy h3 {
+        margin: 0 0 6px;
+        font-size: 23px;
+        font-weight: 900;
+        line-height: 1.22;
+        letter-spacing: -0.02em;
+    }
+
+    .amz-poster-copy span {
+        font-size: 12.5px;
+        font-weight: 700;
+        opacity: 0.92;
+    }
+
+    .amz-poster-art {
+        margin-top: 12px;
+        height: 204px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .amz-poster-art img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .amz-poster-collage {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-top: 12px !important;
+    }
+
+    .amz-poster-collage .p-frame {
+        background: #FFFFFF;
+        border-radius: 6px;
+        padding: 4px;
+        height: 94px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .amz-poster-collage .p-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    /* 校园闲置侧边栏分类副标题右对齐与星级按钮对齐 */
+    .amz-rich-sidebar a small {
+        margin-left: auto;
+        font-size: 11px;
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    .amz-rich-sidebar .amz-star-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 6px 10px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 12.5px;
+    }
+
+    .amz-rich-sidebar .amz-star-row:hover {
+        background: #EEF5F2;
+    }
+
+    .amz-rich-sidebar .amz-spot-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 4px 2px 10px;
+    }
+
+    .amz-rich-sidebar .amz-spot-tags button {
+        font-size: 11.5px;
+        background: #EEF5F2;
+        color: #06302A;
+        border: 1px solid #CDE0D9;
+        border-radius: 5px;
+        padding: 4px 9px;
+        cursor: pointer;
+    }
+
+    .amz-rich-sidebar .amz-spot-tags button:hover {
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+
+    /* 全局按钮与标签防竖向折行 */
+    .qq-feed-tabs span,
+    .qq-feed-tabs a,
+    .ali-sub-nav a,
+    .ali-sub-actions .btn,
+    .ali-price-k,
+    .jd-order-search button,
+    .jd-order-tabs a,
+    .jd-order-tabs button,
+    .segmented button {
+        white-space: nowrap !important;
+    }
+
+    .ali-price-row {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 899px) {
+    .brand-smile,
+    .amz-lang,
+    .amz-acct-dropdown,
+    .amz-poster-strip,
+    .jd-side-nav,
+    .qq-chan-left,
+    .qq-chan-right,
+    .ali-filter-box,
+    .ali-sort-toolbar {
+        display: none !important;
+    }
 }
