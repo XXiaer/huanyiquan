@@ -328,12 +328,12 @@
         <div class="set-sub">
           <div class="set-sub__card" style="padding:4px 15px">
             <div class="set-row" style="padding:0"><span style="flex:1">登录学号</span><span class="set-row__val">${esc(me ? me.studentNo : '')}</span></div>
-            <div class="set-row" style="padding:0"><span style="flex:1">绑定邮箱</span><span class="set-row__val">${esc(emailState && emailState.email ? emailState.email : '未绑定')}</span></div>
+            <div class="set-row" style="padding:0"><span style="flex:1">绑定邮箱</span><span class="set-row__val">${esc(emailState && emailState.verified ? emailState.email : '未绑定')}</span></div>
           </div>
           <div class="label" style="margin-top:18px">绑定 / 验证邮箱</div>
-          <input class="field" id="emailIn" type="email" autocomplete="email" placeholder="name@example.com" value="${esc(emailState && emailState.email ? emailState.email : '')}">
+          <input class="field" id="emailIn" placeholder="name@example.com" value="${esc(emailState && emailState.email ? emailState.email : '')}">
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input class="field" id="codeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="邮箱验证码" style="flex:1">
+            <input class="field" id="codeIn" placeholder="邮箱验证码" style="flex:1">
             <button class="btn" id="sendCode" style="height:50px;padding:0 14px;font-size:13px">发验证码</button>
           </div>
           <button class="btn btn--block" id="verifyEmail" style="margin-top:10px">验证邮箱</button>
@@ -341,33 +341,23 @@
           <input class="field" id="oldPwd" type="password" placeholder="原密码">
           <input class="field" id="newPwd" type="password" placeholder="新密码（6-20 位）" style="margin-top:8px">
           <button class="btn btn--block" id="pwdGo" style="margin-top:10px">修改密码</button>
-          <div class="set-sub__tip">${emailState?.available ? '验证码会发送到你的邮箱，10 分钟内有效。' : '邮件服务暂不可用。'}</div>
+          <div class="set-sub__tip">邮箱用于找回密码和接收重要交易通知。验证码会发送到你的邮箱，10 分钟内有效。</div>
         </div></div>`;
-      const sendCode = document.getElementById('sendCode');
-      const verifyEmail = document.getElementById('verifyEmail');
-      sendCode.disabled = !emailState?.available;
-      sendCode.addEventListener('click', async () => {
-        const input = document.getElementById('emailIn');
-        const email = input.value.trim();
-        if (!email || !input.checkValidity()) { toast('请输入有效邮箱'); return; }
-        sendCode.disabled = true;
+      document.getElementById('sendCode').addEventListener('click', async () => {
+        const email = document.getElementById('emailIn').value.trim();
+        if (!email) { toast('先填邮箱'); return; }
         try {
-          await api.post('/api/user/email/send', { email });
-          toast('验证码已发送，请查收邮箱');
-          document.getElementById('codeIn')?.focus();
-          window.setTimeout(() => { sendCode.disabled = false; }, 60000);
-        } catch (e) { sendCode.disabled = false; toast(e.message); }
-      });
-      verifyEmail.addEventListener('click', async () => {
-        const code = document.getElementById('codeIn').value.trim();
-        if (!/^\d{6}$/.test(code)) { toast('请输入 6 位验证码'); return; }
-        verifyEmail.disabled = true;
-        try {
-          await api.post('/api/user/email/verify', { code });
-          toast('邮箱验证成功');
-          await renderRoute();
+          const r = await api.post('/api/user/email/send', { email });
+          if (r && r.devCode) {
+            document.getElementById('codeIn').value = r.devCode;
+            toast('本地演示验证码：' + r.devCode + '（已自动填入）', 3200);
+          } else toast('验证码已发送，请查收邮箱');
         } catch (e) { toast(e.message); }
-        finally { verifyEmail.disabled = false; }
+      });
+      document.getElementById('verifyEmail').addEventListener('click', async () => {
+        const code = document.getElementById('codeIn').value.trim();
+        if (!code) { toast('填一下验证码'); return; }
+        try { await api.post('/api/user/email/verify', { code }); toast('邮箱验证成功'); } catch (e) { toast(e.message); }
       });
       document.getElementById('pwdGo').addEventListener('click', async () => {
         const oldPassword = document.getElementById('oldPwd').value;

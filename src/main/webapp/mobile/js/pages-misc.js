@@ -155,136 +155,10 @@
   const MINE_MAP = {
     onshelf: { title: '我发布的' },
     sold: { title: '我卖出的' },
-    offers: { title: '我的报价' },
+    offers: { title: '我买到的' },
     exchange: { title: '我的交换' },
     reviews: { title: '我收到的评价' },
   };
-
-  function tradeFrame(view, {title, filters, cards, empty, extra = '', direction = ''}) {
-    view.innerHTML = `
-      <main class="trade-list-page">
-        <header class="trade-list-head">
-          <a href="#/me" class="trade-list-back" aria-label="返回我的">${icon('back',22)}</a>
-          <h1>${esc(title)}</h1>${extra}
-        </header>
-        <label class="trade-list-search">${icon('search',18)}
-          <input type="search" placeholder="搜索物品或交易记录" aria-label="搜索记录">
-        </label>
-        ${direction}
-        <nav class="trade-list-filters" aria-label="状态筛选">
-          ${[['','全部'], ...filters].map(([key,label]) => `<button type="button" data-trade-filter="${key}" aria-pressed="${key === ''}">${label}</button>`).join('')}
-        </nav>
-        <section class="trade-list-results" aria-label="${esc(title)}记录">${cards}</section>
-        <div class="trade-list-empty" role="status">${esc(empty)}</div>
-      </main>`;
-    const search = view.querySelector('.trade-list-search input');
-    const records = Array.from(view.querySelectorAll('[data-trade-state]'));
-    const status = view.querySelector('.trade-list-empty');
-    let selected = '';
-    function apply() {
-      const keyword = search.value.trim().toLocaleLowerCase();
-      let shown = 0;
-      records.forEach(row => {
-        row.hidden = (selected && row.dataset.tradeState !== selected)
-          || !row.dataset.tradeSearch.toLocaleLowerCase().includes(keyword);
-        if (!row.hidden) shown++;
-      });
-      status.hidden = shown > 0;
-      status.textContent = keyword || selected ? '没有符合条件的记录' : empty;
-    }
-    search.addEventListener('input', apply);
-    view.querySelector('.trade-list-page').addEventListener('tradephoto', apply);
-    view.querySelectorAll('[data-trade-filter]').forEach(button => {
-      button.addEventListener('click', () => {
-        selected = button.dataset.tradeFilter;
-        view.querySelectorAll('[data-trade-filter]').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
-        apply();
-      });
-    });
-    apply();
-  }
-
-  function tradeCard({state, search, identity, status, body, actions, completed = false}) {
-    return `<article class="trade-list-card" data-trade-state="${esc(String(state))}" data-trade-search="${esc(search)}">
-      <header><div>${identity}</div><span class="trade-list-status${completed ? ' complete' : ''}">${esc(status)}</span></header>
-      <div class="trade-list-body">${body}</div>
-      ${actions ? `<footer>${actions}</footer>` : ''}
-    </article>`;
-  }
-
-  const tradePlaceholder = 'assets/brand/placeholder.png';
-
-  function tradeThumb({src, itemId, exchangeId} = {}) {
-    return `<div class="trade-list-thumb"${itemId ? ` data-trade-item="${Number(itemId)}"` : ''}${exchangeId ? ` data-trade-exchange="${Number(exchangeId)}"` : ''}>
-      <img src="${esc(src ? window.catalogThumbnail(src) : tradePlaceholder)}" alt="" width="72" height="72" loading="lazy" decoding="async">
-    </div>`;
-  }
-
-  function hydrateTradePhotos(view, accountId) {
-    const page = view.querySelector('.trade-list-page');
-    if (!page) return;
-    const applyImage = (slot, src) => {
-      if (src && slot.isConnected) slot.querySelector('img').src = window.catalogThumbnail(src);
-    };
-    page.addEventListener('error', event => {
-      if (event.target.matches('.trade-list-thumb img') && !event.target.src.endsWith(tradePlaceholder)) {
-        event.target.src = tradePlaceholder;
-      }
-    }, true);
-    const images = new Map();
-    let pending = [];
-    let loading = false;
-    async function load() {
-      if (loading || !page.isConnected) return;
-      loading = true;
-      try {
-        while (pending.length && page.isConnected) {
-          const slots = pending.splice(0, 6);
-          const ids = await Promise.all(slots.map(async slot => {
-            if (slot.dataset.tradeItem) return slot.dataset.tradeItem;
-            try {
-              const details = await api.get('/api/exchange/' + slot.dataset.tradeExchange);
-              const mine = details.mine || (details.details || []).find(row => Number(row.userId) === Number(accountId));
-              const row = mine || (details.details || [])[0];
-              if (!row) return '';
-              const card = slot.closest('.trade-list-card');
-              const title = row.getTitle || row.giveTitle;
-              if (title && card.isConnected) {
-                card.querySelector('.trade-list-copy b').textContent = title;
-                card.dataset.tradeSearch += ' ' + title;
-                page.dispatchEvent(new Event('tradephoto'));
-              }
-              return String(row.getItemId || row.giveItemId || '');
-            } catch (error) { return ''; }
-          }));
-          if (!page.isConnected) break;
-          const missing = [...new Set(ids.filter(id => id && !images.has(id)))];
-          if (missing.length) {
-            try {
-              const found = await api.get('/api/item/trade-thumbnails', {ids:missing.join(',')});
-              missing.forEach(id => images.set(id, found?.[id] || ''));
-            } catch (error) { /* keep the fallback image when a cover is unavailable */ }
-          }
-          slots.forEach((slot,i) => applyImage(slot, images.get(ids[i])));
-        }
-      } finally { loading = false; }
-    }
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        observer.unobserve(entry.target);
-        pending.push(entry.target);
-      });
-      load();
-    }, {rootMargin:'140px'});
-    page.querySelectorAll('[data-trade-item],[data-trade-exchange]').forEach(slot => observer.observe(slot));
-    const previous = window.__cleanup;
-    window.__cleanup = () => { observer.disconnect(); pending = []; previous?.(); };
-  }
-
-  function tradeCopy(title, sub) {
-    return `<div class="trade-list-copy"><b>${esc(title)}</b>${sub ? `<p>${esc(sub)}</p>` : ''}</div>`;
-  }
 
   PAGES.mineList = {
     tab: 'me',
@@ -296,36 +170,45 @@
       if (params.kind === 'onshelf' || params.kind === 'sold') {
         let list = [];
         try { list = await api.get('/api/item/mine') || []; } catch (e) { /* 未登录 */ }
-        list = list.filter((i) => params.kind === 'sold' ? i.status === 3 : [1,4,5,6].includes(i.status));
+        list = list.filter((i) => params.kind === 'sold' ? i.status === 3 : (i.status === 1 || i.status === 5));
         const drafts = params.kind === 'onshelf' ? ['idle', 'auction', 'wish'].map((k) => {
           const d = JSON.parse(localStorage.getItem('draft:' + k) || 'null');
           return d && (d.title || d.desc || d.content) ? { kind: k, d } : null;
         }).filter(Boolean) : [];
-        const sold = params.kind === 'sold';
-        const draftCards = drafts.map(({kind,d}) => {
-          const title = d.title || d.content || '未命名草稿';
-          return tradeCard({state:'draft', search:title, identity:'<b>草稿</b>', status:'未发布',
-            body:tradeThumb({src:d.pics?.[0]}) + tradeCopy(title, '已自动保存'),
-            actions:`<button data-draft="${kind}">删除</button><a class="primary" href="#/publish/edit/${kind}">继续编辑</a>`});
-        }).join('');
-        const itemCards = list.map(i => {
-          const id = Number(i.id);
-          const price = api.yuan(i.price);
-          const actions = sold ? `<a class="primary" href="#/item/${id}">查看物品</a>`
-            : `<a href="#/item/${id}">查看</a>
-                ${i.tradeMode !== 3 ? `<a href="#/item/${id}/edit">编辑</a>` : ''}
-                ${i.status === 1 ? `<button data-off="${id}">下架</button><button class="primary" data-spark="${id}">擦亮</button>
-                  ${i.allowCycle ? `<a href="#/cycle/${id}">寻找换法</a>` : ''}` : ''}`;
-          return tradeCard({state:i.status, search:i.title || '', identity:`<b>${esc(i.category || '校园物品')}</b>`,
-            status:i.statusText || ({1:'在架',3:'交易完成',4:'已下架',5:'待审核',6:'未通过'}[i.status] || '处理中'), completed:sold,
-            body:tradeThumb({src:api.pics(i)[0]})
-              + tradeCopy(i.title || '校园物品', [i.conditionLevel, (i.viewCount || 0) + ' 次浏览'].filter(Boolean).join(' · '))
-              + `<strong class="trade-list-price">${price ? '¥' + esc(price) : '以物换物'}</strong>`, actions});
-        }).join('');
-        tradeFrame(view, {title:conf.title, filters:sold ? [['3','已完成']] : [['1','在架'],['5','待审核'],['4','已下架'],['6','未通过'],['draft','草稿']],
-          cards:draftCards + itemCards, empty:sold ? '还没有卖出的物品' : '还没有发布过物品',
-          extra:sold ? '' : '<a class="trade-list-publish" href="#/publish/edit/idle">发布</a>'});
-        hydrateTradePhotos(view, me?.id);
+        view.innerHTML = `
+          ${topbar(conf.title, { right: `<a href="#/publish/edit/idle" style="font-size:13px;font-weight:600;color:var(--green-700)">＋ 发布</a>` })}
+          <div style="padding:2px 13px 20px">
+            ${drafts.length ? `<div class="sect-title" style="padding:2px 2px 9px"><h2 style="font-size:15px">草稿箱</h2></div>
+              ${drafts.map(({ kind, d }) => `
+                <div class="list-block" style="margin:0 0 8px;border-radius:12px;padding:10px">
+                  <div class="main" style="margin-left:0">
+                    <b>${esc(d.title || d.content || '未命名草稿')}</b>
+                    <p>${kind === 'wish' ? '心愿草稿' : kind === 'auction' ? '拍卖草稿' : '闲置草稿'} | 自动保存</p>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;flex:none">
+                    <a class="chip on" href="#/publish/edit/${kind}">继续</a>
+                    <button class="chip" data-draft="${kind}">删除</button>
+                  </div>
+                </div>`).join('')}
+              <div class="sect-title" style="padding:8px 2px 9px"><h2 style="font-size:15px">已发布</h2></div>` : ''}
+            ${list.length ? list.map((i) => `
+              <div class="list-block" style="margin:0 0 8px;border-radius:12px;padding:10px">
+                <img src="${api.firstPic(i)}" alt="">
+                <div class="main">
+                  <b>${esc(i.title)}</b>
+                  <p>${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '想换'} | ${esc(i.conditionLevel)} | ${esc(i.statusText)}</p>
+                  <div class="meta">${fmtTime(i.updateTime)} 更新 | ${i.viewCount || 0} 浏览</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;flex:none">
+                  ${params.kind === 'onshelf'
+                    ? `${i.tradeMode !== 3 ? `<a class="chip" href="#/item/${i.id}/edit">编辑</a>` : ''}
+                       <button class="chip" data-off="${i.id}">下架</button>
+                       <button class="chip on" data-spark="${i.id}">擦亮</button>
+                       <a class="chip" href="#/cycle/${i.id}">寻找换法</a>`
+                    : `<a class="chip" href="#/item/${i.id}">看看</a>`}
+                </div>
+              </div>`).join('') : mascotEmpty(params.kind === 'sold' ? '还没有卖出的宝贝' : '还没有发布过闲置', 'assets/brand/mascot-wave-complete.png', { href: '#/publish/edit/idle', text: '去发布' })}
+          </div>`;
         view.querySelectorAll('[data-off]').forEach((b) => b.addEventListener('click', () => {
           confirmSheet('下架宝贝', '下架后可在「我发布的」里重新上架。', '下架', async () => {
             try { await api.put('/api/item/' + b.dataset.off, { status: 4 }); toast('已下架'); renderRoute(); } catch (e) { toast(e.message); }
@@ -382,23 +265,9 @@
         const mode = window.__offersMode || 'received';
         const rows = mode === 'received' ? received : offers;
         const labels = ['待回应', '已接受', '已拒绝', '已过期', '已撤回', '已还价'];
-        const cards = rows.map(o => {
-          const peer = (mode === 'received' ? o.fromNickname : o.toNickname) || '校园同学';
-          const title = o.targetTitle || '校园物品';
-          const id = Number(o.id);
-          const offerButton = (action,label,primary = false) => `<button${primary ? ' class="primary"' : ''} data-offer-id="${id}" data-action="${action}">${label}</button>`;
-          const actions = (o.itemId ? `<a href="#/item/${Number(o.itemId)}">查看物品</a>` : '') + (o.status === 0
-            ? (mode === 'received' ? offerButton('reject','拒绝') + offerButton('counter','还价') + offerButton('accept','接受',true) : offerButton('cancel','撤回')) : '');
-          return tradeCard({state:o.status, search:[peer,title,o.myTitle,o.message].filter(Boolean).join(' '),
-            identity:avatar({nickname:peer,id:mode === 'received' ? o.fromUser : o.toUser},25) + `<b>${esc(peer)}</b>`,
-            status:labels[o.status] || o.statusText || '已处理', completed:o.status === 1,
-            body:tradeThumb({itemId:o.itemId || o.myItemId}) + tradeCopy(title,[o.myTitle ? '换出 ' + o.myTitle : '',o.message].filter(Boolean).join(' · ')), actions});
-        }).join('');
-        tradeFrame(view, {title:'我的报价', filters:labels.map((label,i) => [i,label]), cards, empty:'这里还没有报价',
-          direction:`<div class="trade-list-direction" aria-label="报价方向">
-            ${[['received','收到的'],['sent','发出的']].map(([key,label]) => `<button type="button" data-offer-tab="${key}" aria-pressed="${key === mode}">${label}</button>`).join('')}
-          </div>`});
-        hydrateTradePhotos(view, me?.id);
+        view.innerHTML = `${topbar('我的报价')}<div style="padding:8px 13px 20px">
+          <div class="pf-chips"><button class="chip ${mode === 'received' ? 'on' : ''}" data-offer-tab="received">收到的</button><button class="chip ${mode === 'sent' ? 'on' : ''}" data-offer-tab="sent">发出的</button></div>
+          ${rows.length ? rows.map(o => `<div class="community-card" style="margin:10px 0"><div style="display:flex;justify-content:space-between"><b>${esc(o.myTitle || '闲置')} → ${esc(o.targetTitle || '闲置')}</b><span class="badge badge--green">${esc(labels[o.status] || '已处理')}</span></div><p style="margin:8px 0;color:var(--ink-700)">${esc(o.message || '')}</p>${o.status === 0 ? `<div style="display:flex;gap:8px">${mode === 'received' ? `<button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button><button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}</div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-complete.png', {href:'#/market',text:'去集市看看'})}</div>`;
         view.querySelectorAll('[data-offer-tab]').forEach(b => b.addEventListener('click', () => { window.__offersMode = b.dataset.offerTab; renderRoute(); }));
         view.querySelectorAll('[data-offer-id]').forEach(b => b.addEventListener('click', async () => {
           if (b.dataset.action === 'counter') {
@@ -413,23 +282,39 @@
         return;
       }
 
-      const cards = exchanges.map(e => {
-        const id = Number(e.id);
-        const type = e.type === 3 ? '三方接力' : '一对一交换';
-        const detail = e.mine || (e.details || []).find(row => Number(row.userId) === Number(me?.id)) || e.details?.[0];
-        const title = detail?.getTitle || detail?.giveTitle || '交换单 #' + id;
-        const progress = window.exchangeNeedsConfirmation(e) ? `${e.confirmedCount || 0}/${e.needConfirm || 0} 已确认`
-          : `${e.deliveredCount || 0}/${e.needConfirm || 0} 已收货`;
-        return tradeCard({state:e.status, search:[id,type,title,e.place,e.dealTime].filter(Boolean).join(' '),
-          identity:`<b>${type}</b>`, status:e.statusText || '进行中', completed:e.status === 3,
-          body:tradeThumb({itemId:detail?.getItemId || detail?.giveItemId, exchangeId:detail ? null : id})
-            + tradeCopy(title, [e.place || '面交地点待约定',e.dealTime,progress].filter(Boolean).join(' · ')),
-          actions:`<a class="${e.status >= 3 ? 'primary' : ''}" href="#/exchange/${id}">查看交换单</a>
-            ${e.status === 1 ? `<button class="primary" data-confirm="${id}">确认参与</button>` : ''}
-            ${e.status === 2 ? `<button class="primary" data-done="${id}">确认收货</button>` : ''}`});
-      }).join('');
-      tradeFrame(view, {title:'我的交换', filters:[['1','待确认'],['2','待交付'],['3','已完成'],['4','已失效'],['5','已关闭']], cards, empty:'还没有交换单'});
-      hydrateTradePhotos(view, me?.id);
+      view.innerHTML = `
+        ${topbar('我的交换')}
+        <div style="padding:2px 13px 20px">
+          ${exchanges.length ? exchanges.map((e) => `
+            <div class="community-card" style="margin:0 0 9px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <b style="font-size:15px">交换单 #${e.id} | ${e.type === 3 ? '三方成环' : '一对一'}</b>
+                <span class="badge ${e.status === 3 ? 'badge--green' : e.status === 1 || e.status === 2 ? 'badge--orange' : 'badge--gray'}">${esc(e.statusText || '进行中')}</span>
+              </div>
+              <p style="font-size:13px;color:var(--ink-500);margin-top:6px">${esc(e.place || '面交点待约定')} | ${esc(e.dealTime || '时间待约定')}</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+                <span style="font-size:11px;color:var(--ink-500)">${window.exchangeNeedsConfirmation(e) ? `${e.confirmedCount || 0}/${e.needConfirm || 0} 已确认 | ` : ''}${e.deliveredCount || 0}/${e.needConfirm || 0} 已收货</span>
+                <div style="display:flex;gap:6px">
+                  ${e.status === 1 ? `<button class="chip on" data-confirm="${e.id}">确认参与</button>` : ''}
+                  ${e.status === 2 ? `<button class="chip on" data-done="${e.id}">确认收货</button>` : ''}
+                  <a class="chip" href="#/exchange/${e.id}">查看</a>
+                </div>
+              </div>
+            </div>`).join('') : mascotEmpty('还没有交换单，发起一次以物换物吧', 'assets/brand/mascot-wave-complete.png', { href: '#/market', text: '去逛逛' })}
+        </div>`;
+
+      view.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
+        const e = exchanges.find((x) => String(x.id) === b.dataset.view);
+        if (!e) return;
+        openSheet('交换单 #' + e.id, `<div class="set-card">
+          <div class="set-row">类型<span class="set-row__val">${e.type === 3 ? '三方成环' : '一对一'}</span></div>
+          <div class="set-row">状态<span class="set-row__val">${esc(e.statusText || '')}</span></div>
+          <div class="set-row">面交点<span class="set-row__val">${esc(e.place || '待约定')}</span></div>
+          <div class="set-row">约定时间<span class="set-row__val">${esc(e.dealTime || '待约定')}</span></div>
+          ${window.exchangeNeedsConfirmation(e) ? `<div class="set-row">确认进度<span class="set-row__val">${e.confirmedCount || 0}/${e.needConfirm || 0}</span></div>` : ''}
+          <div class="set-row">收货进度<span class="set-row__val">${e.deliveredCount || 0}/${e.needConfirm || 0}</span></div>
+        </div>`, { closeText: '关闭' });
+      }));
       view.querySelectorAll('[data-done]').forEach((b) => b.addEventListener('click', () => {
         confirmSheet('确认收货', '确认对方已交付、物品无误？确认后不可撤回。', '确认', async () => {
           try { await api.post('/api/exchange/' + b.dataset.done + '/done', {}); toast('已确认收货'); renderRoute(); } catch (e) { toast(e.message); }
