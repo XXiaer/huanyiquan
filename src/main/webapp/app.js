@@ -314,7 +314,8 @@
     async function renderEmail() {
         var data=await api('/user/email');
         if(currentView.name!=='email')return;
-        $('#app').innerHTML=shell('settings','<div class="settings-page"><div class="settings-heading"><h1>邮箱认证</h1><p>验证后，邮箱会绑定到你的账号。</p></div><section class="settings-card"><h2>'+(data.email?'已认证':'尚未认证')+'</h2>'+(data.email?'<p>'+esc(data.email)+'</p>':'')+(data.available?'<form data-form="email-send"><label class="label" for="verify-email">邮箱地址</label><input class="input" id="verify-email" name="email" type="email" maxlength="254" required><button class="btn btn-sm" type="submit">发送验证码</button></form><form data-form="email-verify"><label class="label" for="verify-code">邮箱验证码</label><input class="input" id="verify-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required><button class="btn btn-primary btn-sm" type="submit">确认认证</button></form>':'<p>邮箱发信服务尚未开通。</p>')+'</section></div>');
+        $('#app').innerHTML=shell('settings','<div class="settings-page"><div class="settings-heading"><h1>邮箱认证</h1><p>验证后，邮箱会绑定到你的账号。</p></div><section class="settings-card"><h2>'+(data.email?'已认证':'尚未认证')+'</h2>'+(data.email?'<p>'+esc(data.email)+'</p>':'')+(data.available?'<form data-form="email-send"><label class="label" for="verify-email">邮箱地址</label><input class="input" id="verify-email" name="email" type="email" maxlength="254" required><button class="btn btn-sm" type="submit" data-code-key="bind-email" data-idle-text="发送验证码">发送验证码</button></form><form data-form="email-verify"><label class="label" for="verify-code">邮箱验证码</label><input class="input" id="verify-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required><button class="btn btn-primary btn-sm" type="submit">确认认证</button></form>':'<p>邮箱发信服务尚未开通。</p>')+'</section></div>');
+        syncCodeCountdowns();
     }
 
     function firstImage(images) {
@@ -691,48 +692,117 @@
         return html + '</div>';
     }
 
-    // ------------------------------------------------------------------ 登录
+    // ------------------------------------------------------------------ 登录 & 验证码倒计时
+
+    var CODE_COOLDOWN_SEC = 90;
+    var codeCooldowns = {};
+
+    function bindCodeButton(btn, key, idleText) {
+        if (!btn || !key) return;
+        var label = idleText || btn.dataset.idleText || btn.textContent.trim() || '发送验证码';
+        btn.dataset.idleText = label;
+        var rec = codeCooldowns[key];
+        if (!rec) { rec = { until: 0, timer: null }; codeCooldowns[key] = rec; }
+        if (rec.timer) { clearInterval(rec.timer); rec.timer = null; }
+        var paint = function () {
+            var left = Math.ceil((rec.until - Date.now()) / 1000);
+            if (left > 0) {
+                btn.disabled = true;
+                btn.textContent = left + 's 后重发';
+                return true;
+            }
+            btn.disabled = false;
+            btn.textContent = label;
+            if (rec.timer) { clearInterval(rec.timer); rec.timer = null; }
+            return false;
+        };
+        if (paint()) {
+            rec.timer = setInterval(function () {
+                if (!btn.isConnected || !paint()) {
+                    clearInterval(rec.timer);
+                    rec.timer = null;
+                }
+            }, 250);
+        }
+    }
+
+    function startCodeCountdown(btn, key, idleText) {
+        if (!codeCooldowns[key]) codeCooldowns[key] = { until: 0, timer: null };
+        codeCooldowns[key].until = Date.now() + CODE_COOLDOWN_SEC * 1000;
+        bindCodeButton(btn, key, idleText);
+    }
+
+    function syncCodeCountdowns() {
+        document.querySelectorAll('[data-code-key]').forEach(function (btn) {
+            bindCodeButton(btn, btn.dataset.codeKey, btn.dataset.idleText);
+        });
+    }
+
+    async function sendEmailCodeWithCooldown(btn, key, reqFn, okMsg, okType, focusEl) {
+        if (!btn || btn.disabled) return;
+        var idleText = btn.dataset.idleText || btn.textContent.trim() || '发送验证码';
+        btn.dataset.idleText = idleText;
+        btn.disabled = true;
+        btn.textContent = '发送中…';
+        try {
+            await reqFn();
+            toast(okMsg, okType);
+            focusEl?.focus();
+            startCodeCountdown(btn, key, idleText);
+        } catch (error) {
+            btn.disabled = false;
+            btn.textContent = idleText;
+            toast(error.message, 'err');
+        }
+    }
 
     function renderLogin(mode) {
         mode = mode || 'login';
         var isReg = mode === 'register';
         var method = isReg ? 'student' : (state.loginMethod || 'student');
         var methods = {student:'账号密码', email:'邮箱密码', code:'邮箱验证码'};
-        var body = '<main class="entry-screen"><div class="entry-brand"><img src="/assets/brand/brand-mascot-logo.png" alt=""><span>换一圈</span></div><div class="entry-panel"><div class="entry-art"><div class="entry-portrait"><img src="/assets/brand/mascot-box.png" alt="抱着箱子的换一圈吉祥物"></div><p>校园闲置，让好物流转</p></div><section class="entry-content">'
-            + '<h1>' + (isReg ? '注册账号' : '欢迎回来') + '</h1>'
-            + '<p class="entry-intro">' + (isReg ? '使用学号和邮箱创建校园账号' : '登录换一圈，继续逛校园好物') + '</p>'
+        var body = '<div class="auth-wrap"><div class="auth-card">'
+            + '<div class="auth-logo" aria-label="换一圈">' + logoMarkup() + '</div>'
+            + '<div class="auth-school">重庆移通学院 | 校园换物</div>'
+            + '<h1>' + (isReg ? '注册新账号' : '欢迎回来') + '</h1>'
+            + '<p class="lead">' + (isReg
+                ? '用学号注册，初始信用分 80。发一件闲置，就能开始找换法。'
+                : '校园里最缺的那件东西，可能正躺在别人的柜子里。') + '</p>'
             + '<form data-form="' + (isReg ? 'register' : 'login') + '">'
-            + (isReg ? '' : '<div class="entry-methods" role="group" aria-label="登录方式">' + Object.keys(methods).map(function (key) {
+            + (isReg ? '' : '<div class="auth-methods" role="group" aria-label="登录方式">' + Object.keys(methods).map(function (key) {
                 return '<button type="button" class="btn ' + (key === method ? 'btn-primary' : 'btn-ghost') + '" data-act="login-method" data-v="' + key + '" aria-pressed="' + (key === method) + '">' + methods[key] + '</button>';
             }).join('') + '</div>')
             + (method === 'student' ? '<div class="field"><label class="label">学号 <span class="opt">10 位数字</span></label>'
             + '<input class="input" name="studentNo" autocomplete="username" inputmode="numeric" '
             + 'maxlength="10" placeholder="例如 2021210001" required></div>'
-                : '<div class="field"><label class="label" for="login-email">邮箱</label><input class="input" id="login-email" type="email" name="email" autocomplete="username" required></div>')
+                : '<div class="field"><label class="label" for="login-email">邮箱</label><input class="input" id="login-email" type="email" name="email" autocomplete="username" placeholder="已绑定的邮箱" required></div>')
             + (isReg ? '<div class="field"><label class="label">昵称</label>'
                 + '<input class="input" name="nickname" placeholder="别人看到的名字" maxlength="20" required></div>' : '')
             + (method === 'code'
-                ? '<div class="field"><label class="label" for="login-code">验证码</label><div class="entry-code"><input class="input" id="login-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required><button type="button" class="btn btn-ghost" data-act="login-email-send">发送验证码</button></div></div>'
+                ? '<div class="field"><label class="label" for="login-code">验证码</label><div class="auth-code"><input class="input" id="login-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6 位数字" required><button type="button" class="btn btn-ghost" data-act="login-email-send" data-code-key="login-email" data-idle-text="发送验证码">发送验证码</button></div></div>'
                 : '<div class="field"><label class="label">密码</label>'
-            + '<input class="input" type="password" name="password" autocomplete="' + (isReg ? 'new-password' : 'current-password') + '" placeholder="请输入密码" required></div>')
-            + (isReg ? '<div class="field"><label class="label">院系 <span class="opt">选填</span></label>'
+            + '<input class="input" type="password" name="password" autocomplete="' + (isReg ? 'new-password' : 'current-password') + '" placeholder="6-20 位" required></div>')
+            + (isReg ? '<div class="field"><label class="label" for="register-email">邮箱</label>'
+                + '<input class="input" id="register-email" type="email" name="email" autocomplete="email" placeholder="用于接收验证码" required></div>'
+                + '<div class="field"><label class="label" for="register-code">邮箱验证码</label>'
+                + '<div class="auth-code"><input class="input" id="register-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6 位数字" required>'
+                + '<button class="btn btn-ghost" type="button" data-act="register-email-send" data-code-key="register-email" data-idle-text="发送验证码">发送验证码</button></div></div>'
+                + '<div class="field"><label class="label">院系 <span class="opt">选填</span></label>'
                 + '<input class="input" name="college" placeholder="例如 计算机学院"></div>'
                 + '<div class="field"><label class="label">宿舍楼 <span class="opt">选填，用于就近面交</span></label>'
                 + '<input class="input" name="building" placeholder="例如 紫荆 3 号楼"></div>' : '')
-            + (isReg ? '<div class="field"><label class="label" for="register-email">邮箱</label>'
-                + '<input class="input" id="register-email" type="email" name="email" autocomplete="email" required></div>'
-                + '<div class="field"><label class="label" for="register-code">邮箱验证码</label>'
-                + '<div class="entry-code"><input class="input" id="register-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>'
-                + '<button class="btn btn-ghost" type="button" data-act="register-email-send">发送验证码</button></div></div>' : '')
             + '<div class="form-error" id="form-error"></div>'
             + '<button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">'
             + (isReg ? '注册' : '登录') + '</button>'
             + '</form>'
-            + '<div class="entry-switch">' + (isReg ? '已有账号？' : '还没有账号？')
-            + '<button data-act="auth-mode" data-mode="' + (isReg ? 'login' : 'register') + '">'
+            + '<div class="auth-switch">' + (isReg ? '已有账号？' : '还没有账号？')
+            + '<button type="button" data-act="auth-mode" data-mode="' + (isReg ? 'login' : 'register') + '">'
             + (isReg ? '去登录' : '去注册') + '</button></div>'
-            + '</section></div></main>';
+            + '<div class="chain" id="chain-status"></div>'
+            + '</div></div>';
         $('#app').innerHTML = body;
+        syncCodeCountdowns();
+        checkChain();
     }
 
     /** 打开登录页就探一次：后端通没通、数据库连没连 */
@@ -2474,12 +2544,13 @@
                 + '<div class="card card-pad"><h3>账号安全与邮箱认证</h3>'
                 + '<p class="hint">登录学号：<b>' + esc(me.studentNo || '已认证同学') + '</b> | 邮箱状态：' + (emailData.email ? '<span class="tag success">已认证：' + esc(emailData.email) + '</span>' : '<span class="tag accent">待认证</span>') + '</p>'
                 + (emailData.available
-                    ? '<form data-form="email-send" style="margin-bottom:10px"><div class="field"><label class="label">绑定邮箱</label><input class="input" name="email" type="email" placeholder="name@example.com" required></div><button class="btn btn-sm btn-ghost" type="submit">发送验证码</button></form>'
+                    ? '<form data-form="email-send" style="margin-bottom:10px"><div class="field"><label class="label">绑定邮箱</label><input class="input" name="email" type="email" placeholder="name@example.com" required></div><button class="btn btn-sm btn-ghost" type="submit" data-code-key="bind-email" data-idle-text="发送验证码">发送验证码</button></form>'
                       + '<form data-form="email-verify"><div class="field"><label class="label">6位验证码</label><input class="input" name="code" maxlength="6" placeholder="输入邮件中的6位数字" required></div><button class="btn btn-sm btn-primary" type="submit">完成认证</button></form>'
                     : '<p class="hint">校内邮箱验证通道由管理员统一配置，当前学号登录已受本地加密凭证保护。</p>')
                 + '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #EEE;display:flex;gap:10px"><a href="#/settings" class="btn btn-sm btn-ghost">切换主题色</a><button type="button" class="btn btn-sm btn-ghost" data-act="logout">退出当前账号</button></div>'
                 + '</div></div>';
             renderJdWorkspace('me', tab, wrapPanel(), true);
+            syncCodeCountdowns();
             return;
         }
 
@@ -4640,13 +4711,9 @@
             var studentNo = el.form.elements.studentNo.value.trim();
             if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号', 'err'); return; }
             if (!email.reportValidity()) return;
-            el.disabled = true;
-            try {
-                await api('/user/register/email/send', {method:'POST', body:{studentNo:studentNo,email:email.value.trim()}});
-                toast('验证码已发送，请查收邮箱', 'ok');
-                el.form?.elements.code.focus();
-                setTimeout(function() { el.disabled = false; }, 60000);
-            } catch (error) { el.disabled = false; toast(error.message, 'err'); }
+            await sendEmailCodeWithCooldown(el, 'register-email', function () {
+                return api('/user/register/email/send', {method:'POST', body:{studentNo:studentNo,email:email.value.trim()}});
+            }, '验证码已发送，请查收邮箱', 'ok', el.form?.elements.code);
             return;
         }
 
@@ -4958,16 +5025,9 @@
         if (act === 'login-email-send') {
             var loginEmail = $('#login-email');
             if (!loginEmail.reportValidity()) return;
-            el.disabled = true;
-            try {
-                await api('/user/login/email/send', {method:'POST', body:{email:loginEmail.value.trim()}});
-                toast('如果该邮箱已绑定账号，请查收验证码');
-                $('#login-code')?.focus();
-                setTimeout(function () { el.disabled = false; }, 60000);
-            } catch (error) {
-                el.disabled = false;
-                toast(error.message, 'err');
-            }
+            await sendEmailCodeWithCooldown(el, 'login-email', function () {
+                return api('/user/login/email/send', {method:'POST', body:{email:loginEmail.value.trim()}});
+            }, '如果该邮箱已绑定账号，请查收验证码', undefined, $('#login-code'));
             return;
         }
         if (act === 'auth-mode') {
@@ -5407,7 +5467,13 @@
                 }
                 return;
             }
-            if (kind === 'email-send') { await api('/user/email/send',{method:'POST',body:{email:fd.get('email')}});toast('验证码已发送，请查收');$('#verify-code')?.focus();return; }
+            if (kind === 'email-send') {
+                var sendBtn = ev.submitter || form.querySelector('[type="submit"]');
+                await sendEmailCodeWithCooldown(sendBtn, 'bind-email', function () {
+                    return api('/user/email/send', {method:'POST', body:{email:fd.get('email')}});
+                }, '验证码已发送，请查收', 'ok', form.parentElement?.querySelector('input[name="code"]') || $('#verify-code'));
+                return;
+            }
             if (kind === 'email-verify') { await api('/user/email/verify',{method:'POST',body:{code:fd.get('code')}});toast('邮箱认证成功');await renderEmail();return; }
             if (kind === 'demo-auction-bid') {
                 var dAid = Number(fd.get('id'));

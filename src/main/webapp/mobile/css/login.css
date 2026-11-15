@@ -65,7 +65,8 @@ body:has(.mobile-login) { background: #fff; }
   font-size: 16px;
 }
 .mobile-login .entry-code { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
-.mobile-login .entry-code button { white-space: nowrap; padding: 0 12px; }
+.mobile-login .entry-code button { min-width: 112px; white-space: nowrap; padding: 0 12px; font-variant-numeric: tabular-nums; }
+.mobile-login .entry-code button:disabled { opacity: .6; cursor: not-allowed; }
 .mobile-login .entry-switch { margin-top: 16px; text-align: center; color: #606863; font-size: 13px; }
 .mobile-login .entry-switch a { color: #0d6557; font-weight: 700; }
 .mobile-login :is(button,a,input):focus-visible { outline: 2px solid #0d6557; outline-offset: 2px; }

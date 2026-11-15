@@ -3344,3 +3344,65 @@ body, .landing, .auth-wrap {
     .desk-me-side { position: static; }
     .desk-grid-2 { grid-template-columns: 1fr; }
 }
+
+/* v1.0 桌面端登录页与验证码倒计时按钮样式 */
+.auth-wrap {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fafdfc 0%, #f3f7f5 100%);
+}
+.auth-card {
+    border: 1px solid #d8efed;
+    border-radius: 22px;
+    box-shadow: 0 18px 42px rgba(10, 92, 81, .08);
+    background: #ffffff;
+}
+.auth-methods {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 4px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    background: #f1f6f4;
+}
+.auth-methods .btn {
+    min-height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: none;
+    white-space: nowrap;
+}
+.auth-methods .btn-ghost {
+    background: transparent;
+    color: var(--ink-500);
+}
+.auth-methods .btn-ghost:hover {
+    background: rgba(10, 92, 81, .08);
+    color: var(--green-700);
+}
+.auth-methods .btn-primary {
+    background: #ffffff;
+    color: var(--green-700);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(10, 92, 81, .10);
+}
+.auth-code {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+.auth-code button {
+    min-width: 112px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+[data-code-key]:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}

@@ -74,10 +74,26 @@
     pointer-events: none;
 }
 
+.amz-msg-ico {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.amz-msg-ico img {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    object-fit: cover;
+    display: block;
+}
+
 @media (max-width: 899px) {
     .amz-deliver,
     .amz-search-cat,
     .amz-nav-item,
+    .amz-msg-top,
     .amz-cart,
     .amz-all-btn,
     .amz-sub-right,

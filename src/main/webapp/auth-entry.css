@@ -104,6 +104,7 @@
 .entry-screen :is(button,input,a):focus-visible { outline: 2px solid #187864; outline-offset: 2px; }
 .entry-screen .entry-code { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .entry-screen .entry-code button {
+  min-width: 112px;
   min-height: 44px;
   padding: 0 12px;
   border: 1px solid #cfe5dc;
@@ -111,8 +112,10 @@
   background: #edf7f1;
   color: var(--entry-green);
   box-shadow: none;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.entry-screen .entry-code button:disabled { opacity: .6; cursor: not-allowed; }
 .entry-screen .entry-content :is(.btn-block,.btn--block) {
   min-height: 46px;
   margin-top: 12px;

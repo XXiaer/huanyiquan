@@ -1,6 +1,60 @@
 /* 页面：我的、设置与设置子页、登录、注册 */
 (function () {
   const PAGES = window.PAGES || {};
+  const CODE_COOLDOWN_SEC = 90;
+  const codeCooldowns = {};
+
+  function bindMobileCodeCountdown(btn, key, idleText) {
+    if (!btn || !key) return;
+    const label = idleText || btn.dataset.idleText || btn.textContent.trim() || '发送验证码';
+    btn.dataset.idleText = label;
+    let rec = codeCooldowns[key];
+    if (!rec) { rec = { until: 0, timer: null }; codeCooldowns[key] = rec; }
+    if (rec.timer) { clearInterval(rec.timer); rec.timer = null; }
+    const paint = () => {
+      const left = Math.ceil((rec.until - Date.now()) / 1000);
+      if (left > 0) {
+        btn.disabled = true;
+        btn.textContent = `${left}s 后重发`;
+        return true;
+      }
+      btn.disabled = false;
+      btn.textContent = label;
+      if (rec.timer) { clearInterval(rec.timer); rec.timer = null; }
+      return false;
+    };
+    if (paint()) {
+      rec.timer = setInterval(() => {
+        if (!btn.isConnected || !paint()) {
+          clearInterval(rec.timer);
+          rec.timer = null;
+        }
+      }, 250);
+    }
+  }
+
+  function startMobileCodeCountdown(btn, key, idleText) {
+    if (!codeCooldowns[key]) codeCooldowns[key] = { until: 0, timer: null };
+    codeCooldowns[key].until = Date.now() + CODE_COOLDOWN_SEC * 1000;
+    bindMobileCodeCountdown(btn, key, idleText);
+  }
+
+  async function runMobileCodeSend(btn, key, reqFn, onSuccess, idleText) {
+    if (!btn || btn.disabled) return;
+    const label = idleText || btn.dataset.idleText || btn.textContent.trim() || '发送验证码';
+    btn.dataset.idleText = label;
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+    try {
+      const res = await reqFn();
+      startMobileCodeCountdown(btn, key, label);
+      onSuccess?.(res);
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = label;
+      toast(e.message);
+    }
+  }
 
   function topbar(title, opts) {
     const o = opts || {};
@@ -351,16 +405,23 @@
           <button class="btn btn--block" id="pwdGo" style="margin-top:10px">修改密码</button>
           <div class="set-sub__tip">邮箱用于找回密码和接收重要交易通知。验证码会发送到你的邮箱，10 分钟内有效。</div>
         </div></div>`;
-      document.getElementById('sendCode').addEventListener('click', async () => {
+      const sendCodeBtn = document.getElementById('sendCode');
+      bindMobileCodeCountdown(sendCodeBtn, 'bind-email', '发验证码');
+      sendCodeBtn.addEventListener('click', async () => {
         const email = document.getElementById('emailIn').value.trim();
         if (!email) { toast('先填邮箱'); return; }
-        try {
-          const r = await api.post('/api/user/email/send', { email });
-          if (r && r.devCode) {
-            document.getElementById('codeIn').value = r.devCode;
-            toast('本地演示验证码：' + r.devCode + '（已自动填入）', 3200);
-          } else toast('验证码已发送，请查收邮箱');
-        } catch (e) { toast(e.message); }
+        await runMobileCodeSend(
+          sendCodeBtn,
+          'bind-email',
+          () => api.post('/api/user/email/send', { email }),
+          (r) => {
+            if (r && r.devCode) {
+              document.getElementById('codeIn').value = r.devCode;
+              toast('本地演示验证码：' + r.devCode + '（已自动填入）', 3200);
+            } else toast('验证码已发送，请查收邮箱');
+          },
+          '发验证码'
+        );
       });
       document.getElementById('verifyEmail').addEventListener('click', async () => {
         const code = document.getElementById('codeIn').value.trim();
@@ -589,8 +650,6 @@
       };
       let method = '';
       let email = '';
-      let sending = false;
-      let sentUntil = 0;
       let submitting = false;
       function render() {
         const icons = {student:'me', email:'message'};
@@ -640,34 +699,26 @@
         const emailInput = form.elements.namedItem('email');
         if (emailInput) emailInput.value = email;
         view.querySelector('#lgBack').onclick = () => {
-          if (submitting || sending) return;
+          if (submitting) return;
           if (emailInput) email = emailInput.value;
           method = '';
           render();
         };
         const send = view.querySelector('#lgSend');
         if (send) {
-          const refreshSend = () => {
-            send.disabled = sending || Date.now() < sentUntil;
-            send.textContent = send.disabled ? '稍后可重发' : '发送验证码';
-          };
-          refreshSend();
-          if (sentUntil > Date.now()) setTimeout(refreshSend, sentUntil - Date.now());
+          bindMobileCodeCountdown(send, 'login-email', '发送验证码');
           send.onclick = async () => {
             if (!emailInput.reportValidity()) return;
-            sending = true;
-            refreshSend();
-            try {
-              await api.post('/api/user/login/email/send', {email:emailInput.value.trim()});
-              sentUntil = Date.now() + 60000;
-              toast('如果该邮箱已绑定账号，请查收验证码');
-              form.elements.namedItem('code').focus();
-            } catch (e) { toast(e.message); }
-            finally {
-              sending = false;
-              refreshSend();
-              setTimeout(refreshSend, Math.max(0, sentUntil - Date.now()));
-            }
+            await runMobileCodeSend(
+              send,
+              'login-email',
+              () => api.post('/api/user/login/email/send', { email: emailInput.value.trim() }),
+              () => {
+                toast('如果该邮箱已绑定账号，请查收验证码');
+                form.elements.namedItem('code').focus();
+              },
+              '发送验证码'
+            );
           };
         }
         const doLogin = async (data) => {
@@ -714,18 +765,22 @@
         <p class="entry-switch">已有账号？<a href="#/login">直接登录</a></p>
       </section></div></main>`;
       const send = document.getElementById('rgSend');
+      bindMobileCodeCountdown(send, 'register-email', '发送验证码');
       send.addEventListener('click', async () => {
         const studentNo = document.getElementById('rgNo').value.trim();
         const email = document.getElementById('rgEmail');
         if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号'); return; }
         if (!email.reportValidity()) return;
-        send.disabled = true;
-        try {
-          await api.post('/api/user/register/email/send', {studentNo, email:email.value.trim()});
-          toast('验证码已发送，请查收邮箱');
-          document.getElementById('rgCode')?.focus();
-          setTimeout(() => { send.disabled = false; }, 60000);
-        } catch (error) { send.disabled = false; toast(error.message); }
+        await runMobileCodeSend(
+          send,
+          'register-email',
+          () => api.post('/api/user/register/email/send', { studentNo, email: email.value.trim() }),
+          () => {
+            toast('验证码已发送，请查收邮箱');
+            document.getElementById('rgCode')?.focus();
+          },
+          '发送验证码'
+        );
       });
       document.getElementById('rgGo').addEventListener('click', async () => {
         const studentNo = document.getElementById('rgNo').value.trim();

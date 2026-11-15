@@ -63,6 +63,19 @@ public class StaticServlet extends HttpServlet {
         }
 
         File file = resolve(uri);
+        if (file != null && file.isDirectory()) {
+            File dirIndex = new File(file, SPA_ENTRY[0]);
+            if (dirIndex.isFile()) {
+                if (!uri.endsWith("/")) {
+                    String prefix = (ctx == null) ? "" : ctx;
+                    String query = req.getQueryString();
+                    String target = prefix + uri + "/" + (query != null && !query.isEmpty() ? "?" + query : "");
+                    resp.sendRedirect(target);
+                    return;
+                }
+                file = dirIndex;
+            }
+        }
         if (file == null || !file.isFile()) {
             // 前端用 hash 路由，正常不走这里；兜底回首页，避免刷新 404
             file = new File(root, SPA_ENTRY[0]);
