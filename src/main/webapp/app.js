@@ -159,7 +159,7 @@
                 category: it.category || '校园好物',
                 price: it.price ? (Number(it.price) > 500 ? (Number(it.price) / 100).toFixed(2) : Number(it.price).toFixed(2)) : (48 + (idx * 37) % 180) + '.90',
                 origPrice: (129 + (idx * 53) % 260) + '.00',
-                subsidy: key === 'favorites' ? '收藏降价提醒 · 校内面交' : '校内实名验货 · 信用担保',
+                subsidy: '',
                 images: firstImage(it.images) || DEMO_SHELF_ITEMS[idx % DEMO_SHELF_ITEMS.length].images
             };
         });
@@ -174,18 +174,14 @@
                 + '<div class="jd-h-media">'
                 + '<a href="' + href + '" class="jd-h-img-link">'
                 + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital.jpg\'" alt="' + esc(it.title) + '" loading="lazy">'
-                + '<div class="jd-h-substrip">'
-                + '<span class="jd-h-subprice"><small>换物参考价 ¥</small><b>' + esc(priceParts[0]) + '</b></span>'
-                + '<span class="jd-h-subtag">' + esc(it.subsidy || '校园认证好物') + '</span>'
-                + '</div>'
                 + '</a>'
-                + (it.isSaved ? '<button type="button" class="jd-h-del" data-act="shelf-remove" data-key="' + key + '" data-id="' + Number(it.id) + '" title="移出记录">✕</button>' : '<span class="jd-h-corner">' + (key === 'favorites' ? '有降价' : '常看') + '</span>')
+                + (it.isSaved ? '<button type="button" class="jd-h-del" data-act="shelf-remove" data-key="' + key + '" data-id="' + Number(it.id) + '" title="移出记录">✕</button>' : '')
                 + '</div>'
                 + '<div class="jd-h-body">'
-                + '<a href="' + href + '" class="jd-h-title"><span class="jd-self-badge">自营认证</span>' + esc(it.title) + '</a>'
+                + '<a href="' + href + '" class="jd-h-title">' + esc(it.title) + '</a>'
                 + '<div class="jd-h-price-row">'
-                + '<div class="jd-h-price"><em>¥</em><b>' + esc(priceParts[0]) + '</b><sup>.' + esc(priceParts[1] || '00') + '</sup><del>到手价 ¥' + esc(it.origPrice || '199.00') + '</del></div>'
-                + '<a href="' + href + '" class="jd-h-plus" aria-label="查看或发起交换" title="发起换物">+</a>'
+                + '<div class="jd-h-price"><em>¥</em><b>' + esc(priceParts[0]) + '</b><sup>.' + esc(priceParts[1] || '00') + '</sup></div>'
+                + '<a href="' + href + '" class="jd-h-plus" aria-label="查看" title="查看">+</a>'
                 + '</div>'
                 + '</div>'
                 + '</article>';
@@ -212,7 +208,7 @@
             + '</form>'
             + '</header>'
             + '<div class="jd-fp-date-bar">'
-            + '<div class="jd-fp-date-left"><b>11月15日 · 今天</b><span>' + (key === 'favorites' ? '已收藏 ' : '看过 ') + displayList.length + ' 件商品</span></div>'
+            + '<div class="jd-fp-date-left"><b>' + (key === 'favorites' ? '我的收藏' : '浏览足迹') + '</b><span>' + displayList.length + ' 件</span></div>'
             + '<button type="button" class="jd-fp-clear-btn" data-act="shelf-clear" data-key="' + key + '">🗑 全部清空</button>'
             + '</div>'
             + '<div class="jd-history-grid">' + cards + '</div>'
@@ -476,7 +472,7 @@
             + '<div><h3>交易保障</h3><a href="#/offers">我的报价</a><a href="#/exchange">我的交换单</a><a href="#/favorites">收藏与历史</a></div>'
             + '<div><h3>账户与帮助</h3><a href="#/me">个人中心</a><a href="#/settings">账号设置</a><a href="#/notifications">消息通知</a></div>'
             + '</div></div>'
-            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈</span></div><p>重庆移通学院 · 校园以物换物平台 · 校内面交更安心</p></div>'
+            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈</span></div><p>重庆移通学院 校园闲置流转平台</p></div>'
             + '</footer>';
     }
     function shell(active,content) {
@@ -484,7 +480,7 @@
         var me=state.me;
         var account=me?'<button class="avatar" data-act="go" data-to="#/me" title="'+esc(me.nickname)+'">'+esc(me.nickname.slice(0,1))+'</button>':(readToken()?'<a class="header-account" href="#/me">个人中心</a>':'<a class="header-account" href="#/login">登录 / 注册</a>');
         var popCta = me
-            ? '<div class="amz-pop-top"><a class="amz-pop-btn" href="#/me">进入个人中心</a><p>当前账号：<b>'+esc(me.nickname)+'</b>（信用 '+me.credit+'）· <button type="button" class="link-btn" data-act="logout">退出</button></p></div>'
+            ? '<div class="amz-pop-top"><a class="amz-pop-btn" href="#/me">进入个人中心</a><p><b>'+esc(me.nickname)+'</b>（信用 '+me.credit+'）<button type="button" class="link-btn" data-act="logout">退出</button></p></div>'
             : '<div class="amz-pop-top"><a class="amz-pop-btn" href="#/login">立即登录</a><p>新同学？<a href="#/register">点此免费注册</a></p></div>';
         var amzAccount='<div class="amz-acct-wrap">'
             +'<a class="amz-nav-item amz-acct-trigger" href="'+(me?'#/me':'#/login')+'"><small>你好，'+(me?esc(me.nickname):'请登录')+'</small><b>账户与列表 <span class="amz-caret-sm">▾</span></b></a>'
@@ -503,13 +499,12 @@
             +'<a class="amz-deliver" href="#/idle">'+navIcon('pin')+'<span><small>面交至</small><b>重庆移通学院</b></span></a>'
             +search
             +'<div class="header-actions">'
-            +'<a class="amz-lang" href="#/settings" title="语言与偏好设置"><span class="amz-flag-cn">CN</span><b>ZH</b><span class="amz-caret-sm">▾</span></a>'
             +amzAccount
-            +'<a class="amz-nav-item" href="#/exchange"><small>退换与</small><b>我的订单</b></a>'
-            +'<a class="notice-link amz-nav-item" href="#/notifications" aria-label="消息通知"><small>消息</small><b>通知中心</b><span class="notice-count" hidden></span></a>'
+            +'<a class="amz-nav-item amz-orders-link" href="#/exchange"><b>我的订单</b></a>'
+            +'<a class="notice-link amz-nav-item" href="#/notifications" aria-label="消息通知"><b>通知</b><span class="notice-count" hidden></span></a>'
             +'<a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a>'
-            +'<a class="settings-link shelf-link amz-cart" href="#/favorites" aria-label="收藏与历史" title="收藏夹"><span class="amz-cart-ico">'+amzCartSvg+'<span class="amz-cart-num">'+favCount+'</span></span><b class="amz-cart-label">收藏夹</b></a>'
-            +'<a class="amz-msg-top'+(active==='notifications'?' on':'')+'" href="#/notifications" aria-label="消息中心" title="消息中心"><span class="amz-msg-ico"><img src="/assets/amz/nav-msg-icon.jpg" alt="消息"><span class="notice-count" hidden></span></span><span class="amz-msg-txt"><small>实时互动</small><b>消息</b></span></a>'
+            +'<a class="shelf-link amz-cart" href="#/favorites" aria-label="收藏与历史" title="收藏夹"><span class="amz-cart-ico">'+amzCartSvg+'<span class="amz-cart-num">'+favCount+'</span></span><b class="amz-cart-label">收藏夹</b></a>'
+            +'<a class="amz-msg-top'+(active==='notifications'?' on':'')+'" href="#/notifications" aria-label="消息中心" title="消息中心"><span class="amz-msg-ico"><img src="/assets/amz/nav-msg-icon.jpg" alt="消息"><span class="notice-count" hidden></span></span><span class="amz-msg-txt"><b>消息</b></span></a>'
             +account+'</div></div>'
             +'<div class="header-nav-wrap"><a class="amz-all-btn" href="#/idle">'+navIcon('menu')+'<span>全部</span></a>'+topnav(active)
             +'<div class="amz-sub-right"><button type="button" class="amz-sub-link" data-act="estimate">AI 好物估价</button><a class="header-publish" href="#/publish">'+navIcon('add')+' 发布闲置</a></div></div></header>'
@@ -549,7 +544,7 @@
 
     function pCard(it) {
         var locked=it.status&&it.status!==1, img=firstImage(it.images);
-        var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="225" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
+        var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="300" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
         var hasPrice = (it.isDemo && window.campusExchange.supports(it,1) && Number(it.price) > 0) || (!it.isDemo && mode === 1 && Number(it.price) > 0);
         var priceHtml;
@@ -557,16 +552,15 @@
             var parts = (Number(it.price) / 100).toFixed(2).split('.');
             priceHtml = '<span class="amz-price"><em>¥</em><b>' + parts[0] + '</b><sup>.' + parts[1] + '</sup></span>';
         } else {
-            priceHtml = '<span class="swap-label">' + (mode === 3 && !it.isDemo ? '拍卖竞价' : '以物换物') + '</span>';
+            var wantHint = it.wantText || it.wantCategory;
+            priceHtml = '<span class="swap-label">' + (mode === 3 && !it.isDemo ? '拍卖竞价' : (wantHint ? '想换 ' + esc(wantHint) : '以物换物')) + '</span>';
         }
         var credit = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
         var stars = credit >= 90 ? 5 : credit >= 75 ? 4 : 3;
         return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
-            +'<span class="pbadge">'+esc(it.isDemo?window.campusExchange.demoLabel(it):(locked?(it.statusText||'已换出'):it.conditionLevel))+'</span></div>'
+            +(locked?'<span class="pbadge">'+esc(it.statusText||'已换出')+'</span>':'')+'</div>'
             +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p>'
-            +'<div class="amz-rating"><span class="amz-stars">'+'★'.repeat(stars)+'☆'.repeat(5-stars)+'</span><span class="amz-rating-num">信用 '+credit+'</span></div>'
-            +'<div class="pcard-bottom">'+priceHtml+'<span class="pcard-category">'+esc(it.category)+'</span></div>'
-            +'<div class="pcard-owner"><span class="pcard-owner-avatar">'+esc((it.ownerNickname||'同').slice(0,1))+'</span><span>'+esc(it.ownerNickname||'校园同学')+'</span><span class="amz-prime-tag">校内面交</span></div></div></button>';
+            +'<div class="pcard-bottom">'+priceHtml+'</div></div></button>';
     }
 
     /** 信用分换算等级，和后端 UserService.creditLevel 的阈值保持一致 */
@@ -733,15 +727,15 @@
             ['绿植','绿植花卉','多肉/盆栽'],
             ['其他','兴趣好物','手办/乐器']
         ];
-        var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span class="desk-cat-main"><b>'+esc(c[1])+'</b><small>'+esc(c[2])+'</small></span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
+        var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span class="desk-cat-main"><b>'+esc(c[1])+'</b></span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
         var condSidebar='<div class="amz-side-group"><h3>新旧成色</h3>'+[['','不限成色'],['全新','全新未拆'],['九成新','九成新'],['七成新','七成新'],['有使用痕迹','有使用痕迹']].map(function(c){
             var checked = h.condition===c[0];
             return '<button class="desk-category amz-check-row '+(checked?'on':'')+'" data-act="f-cond" data-v="'+esc(c[0])+'"><span class="amz-radio-dot '+(checked?'on':'')+'"></span><span>'+esc(c[1])+'</span></button>';
         }).join('')+'</div>';
-        var creditSidebar='<div class="amz-side-group"><h3>物主信用评级</h3>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★★</span><span>90分以上 · 极好</span></button>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★☆</span><span>80分以上 · 优秀</span></button>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★☆☆</span><span>60分以上 · 良好</span></button>'
+        var creditSidebar='<div class="amz-side-group"><h3>物主信用</h3>'
+            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★★</span><span>90分以上</span></button>'
+            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★☆</span><span>80分以上</span></button>'
+            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★☆☆</span><span>60分以上</span></button>'
             +'</div>';
         var spotSidebar='<div class="amz-side-group"><h3>热门校内面交点</h3><div class="amz-side-tags">'
             +['北山斋宿舍','南山书院','图书馆正门','第一食堂','菜鸟驿站','双栀书院'].map(function(s){
@@ -754,27 +748,25 @@
             return '<a class="desk-category" href="'+link[0]+'"><span class="desk-category-icon">'+navIcon(link[1])+'</span>'+link[2]+'</a>';
         }).join('');
 
-        // 5列彩色大图入口卡片条（参照 Amazon 节日/频道竖幅海报）
-        var posterStrip = '<section class="amz-poster-strip" aria-label="特色频道海报">'
-            + '<div class="amz-poster-head"><h2>探索校园特色频道</h2><span>点击海报直达专场 ›</span></div>'
+        // 5列彩色大图入口卡片条
+        var posterStrip = '<section class="amz-poster-strip" aria-label="特色频道">'
+            + '<div class="amz-poster-head"><h2>校园特色频道</h2></div>'
             + '<div class="amz-poster-row">'
-            + '<a class="amz-poster-card poster-orange" href="#/auctions"><div class="amz-poster-copy"><h3>校园限时拍卖<br>低至 1 元起拍</h3><span>立即参与竞拍 ›</span></div><div class="amz-poster-collage"><span class="p-frame f1"><img src="/assets/amz/quad-auction.jpg" alt=""></span><span class="p-frame f2"><img src="/assets/amz/quad-digital.jpg" alt=""></span><span class="p-frame f3"><img src="/assets/amz/quad-books.jpg" alt=""></span><span class="p-frame f4"><img src="/assets/brand/mascot-box.png" alt=""></span></div></a>'
-            + '<button type="button" class="amz-poster-card poster-sage" data-act="estimate"><div class="amz-poster-copy"><h3>AI 智能好物估价<br>秒算参考行情</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-appraise.jpg" alt="AI好物估价"></div></button>'
-            + '<a class="amz-poster-card poster-peach" href="#/relay"><div class="amz-poster-copy"><h3>三方换物接力<br>自动匹配成环</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-relay.jpg" alt="三方换物接力"></div></a>'
-            + '<a class="amz-poster-card poster-sand" href="#/idle"><div class="amz-poster-copy"><h3>学长学姐毕业季<br>宿舍好物出清</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-grad.jpg" alt="毕业季好物"></div></a>'
-            + '<a class="amz-poster-card poster-sky" href="#/community"><div class="amz-poster-copy"><h3>校园频道与街机<br>边聊边玩更热闹</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-community.jpg" alt="校园社区"></div></a>'
+            + '<a class="amz-poster-card poster-orange" href="#/auctions"><div class="amz-poster-copy"><h3>校园拍卖</h3><span>1元起拍 ›</span></div><div class="amz-poster-collage"><span class="p-frame f1"><img src="/assets/amz/quad-auction.jpg" alt=""></span><span class="p-frame f2"><img src="/assets/amz/quad-digital.jpg" alt=""></span><span class="p-frame f3"><img src="/assets/amz/quad-books.jpg" alt=""></span><span class="p-frame f4"><img src="/assets/brand/mascot-box.png" alt=""></span></div></a>'
+            + '<button type="button" class="amz-poster-card poster-sage" data-act="estimate"><div class="amz-poster-copy"><h3>AI 好物估价</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-appraise.jpg" alt="AI好物估价"></div></button>'
+            + '<a class="amz-poster-card poster-peach" href="#/relay"><div class="amz-poster-copy"><h3>换物接力</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-relay.jpg" alt="换物接力"></div></a>'
+            + '<a class="amz-poster-card poster-sand" href="#/idle"><div class="amz-poster-copy"><h3>毕业好物</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-grad.jpg" alt="毕业好物"></div></a>'
+            + '<a class="amz-poster-card poster-sky" href="#/community"><div class="amz-poster-copy"><h3>校园社区</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-community.jpg" alt="校园社区"></div></a>'
             + '</div></section>';
 
-        // 亚马逊首页：紧凑 1/4 高森林绿横幅 + 整体上移的 4 列白卡矩阵（吉祥物融入第四张信用分框） + 5 列视觉海报条
+        // 亚马逊首页：紧凑 1/4 高森林绿横幅 + 4 列矩阵 + 5 列视觉海报条
         var amzHomeTop = '<section class="desktop-market amz-home-stage">'
             + '<div class="amz-hero amz-hero-compact">'
             + '<div class="amz-hero-inner">'
             + '<div class="amz-hero-copy">'
-            + '<span class="amz-hero-kicker">重庆移通学院 · 校园闲置集市</span>'
             + '<h1>好东西，再转一圈。</h1>'
-            + '<p>校内面对面交易，以物换物、闲置转让、限时拍卖一站逛齐。</p>'
             + '</div>'
-            + '<div class="amz-hero-btns"><a class="btn amz-btn-orange" href="#/idle">逛校园闲置</a><a class="btn amz-btn-outline" href="#/publish">发布我的闲置</a><a class="btn amz-btn-outline" href="#/appraise">AI 好物估价</a></div>'
+            + '<div class="amz-hero-btns"><a class="btn amz-btn-orange" href="#/idle">逛校园闲置</a><a class="btn amz-btn-outline" href="#/publish">发布闲置</a><a class="btn amz-btn-outline" href="#/appraise">AI 估价</a></div>'
             + '</div></div>'
             + '<div class="amz-quad-grid">'
             + '<div class="amz-quad-card"><h2>热门校园分类</h2><div class="amz-quad-2x2 amz-quad-photos">'
@@ -798,40 +790,38 @@
             + '<div class="amz-quad-card amz-quad-account">'
             + (me ? '<h2>你好，' + esc(me.nickname) + '</h2>'
                   + '<div class="amz-acct-mini amz-credit-mascot-box">'
-                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="换一圈吉祥物信用认证"></div>'
+                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
                   + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>信用分 ' + me.credit + '</b><span class="amz-credit-pill">★ 信用极好</span></div>'
-                  + '<p class="amz-credit-desc">实名学号已核验 · 尊享校内免押金当面换物与极速审核</p>'
+                  + '<div class="amz-credit-score-row"><b>信用分 ' + me.credit + '</b><span class="amz-credit-pill">信用极好</span></div>'
                   + '<div class="amz-credit-quick">'
                   + '<a href="#/me">在架管理</a><a href="#/offers">报价记录</a><a href="#/favorites">收藏足迹</a>'
                   + '</div></div></div>'
                   + '<a class="btn amz-btn-orange btn-block" href="#/publish">立即发布闲置</a><a class="amz-quad-more" href="#/me">进入个人中心</a>'
                   : '<h2>登录获得完整体验</h2>'
                   + '<div class="amz-acct-mini amz-credit-mascot-box">'
-                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="换一圈吉祥物信用认证"></div>'
+                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
                   + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>初始信用 80 分</b><span class="amz-credit-pill">★ 移通认证</span></div>'
-                  + '<p class="amz-credit-desc">登录解锁发布闲置、1元竞拍、三方接力与私聊面交</p>'
+                  + '<div class="amz-credit-score-row"><b>信用分 80</b><span class="amz-credit-pill">移通认证</span></div>'
                   + '<div class="amz-credit-quick">'
                   + '<a href="#/login">学号登录</a><a href="#/appraise">AI估价</a><a href="#/auctions">逛拍卖</a>'
                   + '</div></div></div>'
-                  + '<a class="btn amz-btn-orange btn-block" href="#/login">安全登录</a><a class="amz-quad-more" href="#/login">新同学？立即注册</a>')
+                  + '<a class="btn amz-btn-orange btn-block" href="#/login">安全登录</a><a class="amz-quad-more" href="#/login">立即注册</a>')
             + '</div></div>'
             + posterStrip
             + '</section>';
 
         var desktopSidebar='<aside class="category-panel desktop-market amz-rich-sidebar" aria-label="集市侧栏">'
-            +'<div class="amz-side-hero"><img src="/assets/brand/mascot-wave-320.webp" width="52" height="52" alt=""><div><b>移通校园严选</b><small>实名认证 · 当面验货</small></div></div>'
-            +'<h2 class="category-panel-title">商品部门与分类</h2>'+desktopCats
+            +'<div class="amz-side-hero"><img src="/assets/brand/mascot-wave-320.webp" width="52" height="52" alt="小唤"><div><b>移通校园严选</b></div></div>'
+            +'<h2 class="category-panel-title">商品分类</h2>'+desktopCats
             + condSidebar
             + creditSidebar
             + spotSidebar
             +'<nav class="desktop-market-shortcuts" aria-label="快捷入口"><h2 class="category-panel-title">快捷入口</h2>'+shortcuts+'</nav>'
-            +'<div class="amz-side-promo"><img src="/assets/brand/mascot-search.png" width="56" height="56" alt=""><div><b>不确定定多少价？</b><small>用 AI 估价秒算参考区间</small><button type="button" class="btn btn-primary btn-sm btn-block" data-act="estimate">立即 AI 估价</button></div></div>'
+            +'<div class="amz-side-promo"><img src="/assets/brand/mascot-search.png" width="56" height="56" alt="小唤"><div><b>拿不准定什么价？</b><button type="button" class="btn btn-primary btn-sm btn-block" data-act="estimate">让小唤 AI 估价</button></div></div>'
             +'</aside>';
 
-        var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈校园伙伴"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b><small>查看竞拍</small></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b><small>找想要的</small></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b><small>聊聊近况</small></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b><small>换物进度</small></button></div></section>';
-        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐 · 校园好物')+'</h2><p>'+(isSearch?'“'+esc(h.keyword)+'” 的匹配商品':idle?'标价出售 · 校内面交':'支持以物换物与校园流转')+'</p></div><div class="feed-actions"><span class="feed-count">'+(isSearch?'显示 1–'+h.items.length+' 条，共 '+h.total+' 件':'已展示 '+h.items.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
+        var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b></button></div></section>';
+        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐')+'</h2></div><div class="feed-actions"><span class="feed-count">'+(isSearch?'共 '+h.total+' 件':'共 '+h.items.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
             +((h.category||h.condition)?'<div class="active-filter'+(h.condition?'':' category-only')+'" aria-label="已选筛选">'
                 +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
                 +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')+'</div>':'')
@@ -990,7 +980,7 @@
             + '<span class="amz-view-num">' + (it.viewCount || 0) + ' 次浏览</span></div>'
             + '<hr class="amz-hr">'
             + '<div class="amz-detail-price-block"><div class="amz-price-row"><span class="amz-price-k">交易方式：</span><span class="amz-detail-price">' + esc(priceText) + '</span></div>'
-            + '<p class="amz-free-ship">校园免费自提 · 校内公共点位面对面验货交接</p>'
+            + '<p class="amz-free-ship">校内公共点位当面交接</p>'
             + '<div class="detail-meta">'
             + (it.isDemo ? '<span class="tag brand">' + window.campusExchange.demoLabel(it) + '</span>' : '')
             + '<span class="tag brand">' + esc(it.category) + '</span>'
@@ -1022,7 +1012,7 @@
         var buyBox = '<aside class="amz-buybox">'
             + '<div class="amz-buybox-price">' + esc(priceText) + '</div>'
             + '<p class="amz-buybox-ship">校内免配送费 <strong>' + esc(it.ownerBuilding || '校园公共区域面交') + '</strong></p>'
-            + '<p class="amz-buybox-stock">' + (it.status === 1 ? '校内可换 · 在架中' : esc(it.statusText || '当前不可交易')) + '</p>'
+            + '<p class="amz-buybox-stock">' + (it.status === 1 ? '在架中' : esc(it.statusText || '当前不可交易')) + '</p>'
             + '<div class="action-bar amz-buybox-actions">' + actions + '</div>'
             + '<div class="amz-buybox-meta">'
             + '<div><span>交接方式</span><b>校内公共点位面交</b></div>'
@@ -1221,7 +1211,7 @@
                 no: '339977041664',
                 shop: '北山书院自营闲置站',
                 img: '/assets/amz/quad-digital.jpg',
-                title: '罗技 GPW 二代无线游戏鼠标 + 68键热插拔机械键盘套装（九成新·盒说全）',
+                title: '罗技 GPW 二代无线游戏鼠标 + 68键热插拔机械键盘套装（九成新 盒说全）',
                 qty: 1,
                 user: (state.me && state.me.nickname) || '肚皮一天都在饿',
                 price: '¥269.00',
@@ -1309,7 +1299,7 @@
                 + '<header class="jd-item-head">'
                 + '<span class="jd-item-time">' + fmtRel(o.createTime) + '</span>'
                 + '<span class="jd-item-no">报价单号：<b>#OF' + (100000 + Number(o.id || 0)) + '</b></span>'
-                + '<span class="jd-item-shop">重庆移通学院 · 校内当面换物 <i class="jd-chat-dot">💬</i></span>'
+                + '<span class="jd-item-shop">校内当面换物 <i class="jd-chat-dot">💬</i></span>'
                 + '<span class="jd-item-credit">对方信用：' + (o.fromCredit === undefined ? '80' : o.fromCredit) + ' 分</span>'
                 + '</header>'
                 + '<div class="jd-item-row">'
@@ -1332,7 +1322,7 @@
         var content = '<div class="jd-center-wrap">'
             + jdSideNav('offers')
             + '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的订单</h2><span>报价单与校内换物交易记录</span></div>'
+            + '<div class="jd-order-title-bar"><h2>我的订单</h2></div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
@@ -1349,24 +1339,16 @@
             + '<button type="button" class="jd-btn-adv" data-act="go" data-to="#/exchange">高级 ▾</button>'
             + '</div>'
             + '</div>'
-            + '<div class="jd-order-notice">☀ 换一圈不会以任何理由要求您点击任何校外网址链接进行退款或脱离平台转账，谨防诈骗！校内面交推荐选择书院大厅或图书馆前广场。</div>'
-            + '<div class="jd-table-head">'
-            + '<span class="col-goods">近三个月订单 ▾ &nbsp;&nbsp;&nbsp;&nbsp; 订单详情</span>'
-            + '<span class="col-buyer">交易同学</span>'
-            + '<span class="col-amount">金额 / 方式</span>'
-            + '<span class="col-status">全部状态 ▾</span>'
-            + '<span class="col-ops">操作</span>'
-            + '</div>'
             + (rows ? '<div class="jd-order-list">' + rows + '</div>'
                 : '<div class="jd-empty-order-box">'
-                    + '<img src="/assets/brand/mascot-box.png" alt="">'
+                    + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
                     + '<div class="jd-empty-order-copy">'
-                    + '<p>' + (tab === 'received' ? '最近还没有收到新的换物报价哦~' : '最近还没有发出过换物报价哦~') + '</p>'
+                    + '<p>' + (tab === 'received' ? '暂无收到的换物报价' : '暂无发出的换物报价') + '</p>'
                     + '<div class="jd-empty-btns">'
                     + '<button type="button" class="jd-btn-red" data-act="go" data-to="#/exchange">查看交换单</button>'
-                    + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页看看</button>'
+                    + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页</button>'
                     + '</div></div></div>')
-            + '<div class="jd-demo-divider"><span>近期校园成交订单实例（京东订单样式展示）</span><a href="#/idle">去集市挑好物 ›</a></div>'
+            + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
             + '<div class="jd-order-list">' + jdShowcaseOrderRows() + '</div>'
             + '</div></div></div>';
 
@@ -1391,31 +1373,20 @@
     function relayCard(r) {
         var isSettled = r.state === 'settled';
         var href = r.isDemo ? '#/publish' : '#/cycle/' + Number(r.id);
-        return '<article class="ali-auction-card">'
-            + '<div class="ali-card-media">'
-            + '<img class="ali-card-img" src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy">'
-            + '<span class="ali-stage-badge">' + esc(r.campus || '跨书院接力') + ' | ' + esc(r.stage || 'A→B→C') + '</span>'
-            + '<span class="ali-status-corner ' + (isSettled ? 'is-done' : 'is-live') + '">' + (isSettled ? '已完成闭环' : '正在配对中') + '</span>'
-            + '</div>'
-            + '<div class="ali-card-body">'
-            + '<h2 class="ali-card-title" title="' + esc(r.title) + '">' + esc(r.title) + '</h2>'
-            + '<div class="ali-price-row">'
-            + '<span class="ali-price-k">等价估值</span>'
-            + '<b class="ali-price-v">¥' + esc(r.value || 99) + '</b>'
-            + '<span class="ali-price-orig">求换：' + esc(r.want || '不限品类') + '</span>'
-            + '</div>'
-            + '<div class="ali-time-row"><span>接力模式</span><time>A → B → C 三方闭环</time></div>'
-            + '<div class="ali-seller-row"><span>发起：' + esc(r.seller || '校内同学') + '</span><span>候选环：' + (r.ringCount || 2) + ' 组</span></div>'
-            + '<div class="ali-card-actions">'
-            + '<button type="button" class="ali-bid-btn ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="' + href + '">'
-            + (r.isDemo ? (isSettled ? '查看同类接力好物' : '带我的闲置加入此环') : '立即搜索三方闭环方案')
+        return '<article class="relay-card-clean">'
+            + '<a href="' + href + '" class="clean-card-media">'
+            + '<img src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy">'
+            + (isSettled ? '<span class="clean-state-tag is-done">已闭环</span>' : '')
+            + '</a>'
+            + '<div class="clean-card-body">'
+            + '<h2 class="clean-card-title" title="' + esc(r.title) + '">' + esc(r.title) + '</h2>'
+            + '<div class="clean-card-meta-row">'
+            + '<span class="relay-want-line" title="想换 ' + esc(r.want || '校园好物') + '">想换 ' + esc(r.want || '任意好物') + '</span>'
+            + '<button type="button" class="clean-act-btn is-teal ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="' + href + '">'
+            + (r.isDemo ? (isSettled ? '看同类' : '去加环') : '搜闭环')
             + '</button>'
             + '</div>'
             + '</div>'
-            + '<footer class="ali-card-foot">'
-            + '<span><b>' + (r.views || 1200) + '</b> 次围观</span>'
-            + '<span><b>' + (r.ringCount || 3) + '</b> 组可成环</span>'
-            + '</footer>'
             + '</article>';
     }
 
@@ -1425,7 +1396,7 @@
         try {
             items = (await api('/item/mine?status=1', {optionalAuth:true})).filter(function(item) { return item.allowCycle && !item.isDemo; });
         } catch (error) {
-            authHint = error.code === 401 ? '登录后可一键检测自己名下闲置的三方闭环方案' : esc(error.message);
+            authHint = error.code === 401 ? '登录后可一键匹配我的闲置闭环' : esc(error.message);
         }
         if (currentView.name !== 'relay') return;
 
@@ -1434,87 +1405,59 @@
                 id: Number(it.id),
                 isDemo: false,
                 state: 'active',
-                title: '【我的在架可接力】' + it.title + ' → 期望换入：' + (it.wantCategory || '校园好物'),
-                campus: '我的在架物品',
-                stage: '可立即搜环',
-                value: 120 + idx * 30,
-                want: it.wantCategory || '任意等价物',
-                seller: (state.me && state.me.nickname) || '我',
-                ringCount: 3,
-                views: 680 + idx * 95,
+                title: it.title,
+                want: it.wantCategory || '任意好物',
                 image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'
             };
         });
         var displayList = myRelayCards.concat(DEMO_RELAYS);
         var myQuickLinks = items.length
-            ? '<div class="ali-my-relay-strip"><b>📦 我的可接力在架物品（点击立即计算 A→B→C 闭环）：</b>'
+            ? '<div class="relay-my-strip"><b>我的接力物品：</b>'
               + items.map(function (item) {
-                  return '<a class="ali-my-relay-pill" href="#/cycle/' + Number(item.id) + '">🔄 ' + esc(item.title) + ' · 查看换法 ›</a>';
+                  return '<a class="relay-pill-link" href="#/cycle/' + Number(item.id) + '">🔄 ' + esc(item.title) + ' ›</a>';
               }).join('') + '</div>'
-            : '<div class="ali-my-relay-strip"><b>💡 什么是三方换物接力？</b><span>你有 A 想换 B、乙有 B 想换 C、丙有 C 想换 A —— 系统自动将三人匹配成环，当面同时交接！' + (authHint ? '（' + authHint + '）' : '') + '</span><a class="ali-my-relay-pill" href="#/publish">+ 发布支持接力的物品 ›</a></div>';
+            : '<div class="relay-my-strip"><span>' + (authHint || '发布支持接力的闲置即可参与三方成环') + '</span><a class="relay-pill-link" href="#/publish">+ 发布接力闲置 ›</a></div>';
 
-        var content = '<div class="ali-auction-page">'
-            + '<header class="ali-sub-header">'
-            + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">换一圈 · 三方换物接力大厅</span>'
-            + '<span class="ali-brand-sub">CAMPUS BARTER RELAY · A → B → C 智能跨书院成环引擎</span>'
+        var content = '<div class="relay-eco-page">'
+            + '<header class="relay-topo-hero">'
+            + '<div class="relay-hero-left">'
+            + '<span class="relay-hero-badge">三方接力匹配</span>'
+            + '<h1>换物接力广场</h1>'
+            + '<div class="relay-nav-tabs">'
+            + '<a href="#/relay" class="on">接力池 (' + displayList.length + ')</a>'
+            + '<a href="#/wishes">求换专区</a>'
+            + '<a href="#/auctions">校园拍卖</a>'
+            + '<a href="#/exchange">我的交换单</a>'
             + '</div>'
-            + '<nav class="ali-sub-nav" aria-label="接力导航">'
-            + '<a href="#/relay" class="on">全部接力池 (' + displayList.length + ')</a>'
-            + '<a href="#/wishes">求换心愿单</a>'
-            + '<a href="#/auctions">校园限时拍卖</a>'
-            + '<a href="#/exchange">已成环交换单</a>'
-            + '</nav>'
-            + '<div class="ali-sub-actions">'
-            + '<a class="btn btn-ghost btn-sm" href="#/wishes">去发求换心愿</a>'
-            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布接力闲置</a>'
+            + '</div>'
+            + '<div class="relay-chain-diagram" aria-label="三方换物闭环示意图">'
+            + '<div class="relay-node"><b>甲同学</b><span>出 A 换 B</span></div>'
+            + '<span class="relay-arrow">➔</span>'
+            + '<div class="relay-node"><b>乙同学</b><span>出 B 换 C</span></div>'
+            + '<span class="relay-arrow">➔</span>'
+            + '<div class="relay-node"><b>丙同学</b><span>出 C 换 A</span></div>'
+            + '<span class="relay-arrow is-loop">↺ 成环</span>'
+            + '</div>'
+            + '<div class="relay-hero-mascot">'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 参与接力</a>'
             + '</div>'
             + '</header>'
 
-            + '<section class="ali-filter-box" aria-label="换物接力多维筛选">'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">提供物品分类：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部标的</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=数码">数码与外设</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研与教材</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">球拍与运动</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍神器</button>'
-            + '<button type="button" data-act="go" data-to="#/appraise">AI 等价估值标的</button>'
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">接力交接书院：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全校跨书院通换</button>'
-            + '<button type="button">北山书院环线</button>'
-            + '<button type="button">南山书院环线</button>'
-            + '<button type="button">松格书院环线</button>'
-            + '<button type="button">竹逸书院环线</button>'
-            + '<button type="button">菊轩书院环线</button>'
-            + '<button type="button">图书馆一楼圆桌点</button>'
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">成环匹配状态：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部接力 (' + displayList.length + ')</button>'
-            + '<button type="button">差1人即可闭环</button>'
-            + '<button type="button">零差价等价环</button>'
-            + '<button type="button">已促成闭环示范</button>'
-            + '</div></div>'
-            + '</section>'
-
             + myQuickLinks
 
-            + '<div class="ali-sort-toolbar">'
-            + '<div class="ali-sort-checks">'
-            + '<label><input type="checkbox" checked readonly> 开启 A→B→C 自动拓扑搜环</label>'
-            + '<label><input type="checkbox" checked readonly> 支持书院大厅三方同场验货</label>'
-            + '<label><input type="checkbox" checked readonly> 实名学号信用保障</label>'
+            + '<div class="relay-filter-bar">'
+            + '<div class="relay-cat-pills">'
+            + '<button type="button" class="on">全部标的 (' + displayList.length + ')</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=数码">数码外设</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研教材</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">运动户外</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍生活</button>'
             + '</div>'
-            + '<div class="ali-sort-links">'
-            + '<span class="on">成环概率排序</span>'
-            + '<span>估值区间 ▾</span>'
-            + '<span>围观热度 ▾</span>'
-            + '<span>最新加入 ▾</span>'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="" class="ali-toolbar-mascot">'
-            + '</div>'
+            + '<a class="relay-ai-link" href="#/appraise">拿不准估值？找小唤算算 ›</a>'
             + '</div>'
 
-            + '<div class="ali-auction-grid">'
+            + '<div class="relay-eco-grid">'
             + displayList.map(relayCard).join('')
             + '</div>'
             + '</div>';
@@ -1616,7 +1559,7 @@
                 + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-relay.jpg" alt=""></div>'
                 + '<div class="jd-goods-info">'
                 + stepsHtml(e)
-                + '<p class="jd-goods-note">' + (window.exchangeNeedsConfirmation(e) ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2) + ' · ' : '')
+                + '<p class="jd-goods-note">' + (window.exchangeNeedsConfirmation(e) ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2) + ' ' : '')
                 + '已交付 ' + (e.deliveredCount || 0) + '/' + (e.needConfirm || 2) + '</p>'
                 + '</div>'
                 + '<span class="jd-goods-qty">x1</span>'
@@ -1632,7 +1575,7 @@
         var content = '<div class="jd-center-wrap">'
             + jdSideNav('exchange')
             + '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的交换单</h2><span>线下当面验货与三方接力履约中心</span></div>'
+            + '<div class="jd-order-title-bar"><h2>我的交换单</h2></div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
@@ -1646,9 +1589,8 @@
             + '<button type="button" data-act="go" data-to="#/idle">搜索</button>'
             + '</div>'
             + '</div>'
-            + '<div class="jd-order-notice">☀ 面交时请当场核对物品成色与功能，双方在页面点击「确认收货」后自动结算信用分。</div>'
             + '<div class="jd-table-head">'
-            + '<span class="col-goods">近三个月交换单 ▾ &nbsp;&nbsp;&nbsp;&nbsp; 订单详情</span>'
+            + '<span class="col-goods">交换单详情</span>'
             + '<span class="col-buyer">交易伙伴</span>'
             + '<span class="col-amount">交易模式</span>'
             + '<span class="col-status">全部状态 ▾</span>'
@@ -1656,14 +1598,14 @@
             + '</div>'
             + (rows ? '<div class="jd-order-list">' + rows + '</div>'
                 : '<div class="jd-empty-order-box">'
-                    + '<img src="/assets/brand/mascot-box.png" alt="">'
+                    + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
                     + '<div class="jd-empty-order-copy">'
-                    + '<p>最近没有正在进行的交换单哦~</p>'
+                    + '<p>暂无进行中的交换单</p>'
                     + '<div class="jd-empty-btns">'
-                    + '<button type="button" class="jd-btn-red" data-act="go" data-to="#/offers">查看全部报价</button>'
-                    + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页看看</button>'
+                    + '<button type="button" class="jd-btn-red" data-act="go" data-to="#/offers">查看报价</button>'
+                    + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页</button>'
                     + '</div></div></div>')
-            + '<div class="jd-demo-divider"><span>近期校园成交订单实例</span><a href="#/idle">去集市逛逛 ›</a></div>'
+            + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
             + '<div class="jd-order-list">' + jdShowcaseOrderRows() + '</div>'
             + '</div></div></div>';
 
@@ -1893,7 +1835,7 @@
             + '</a>'
             + '<div class="jd-me-user-meta">'
             + '<h3>' + esc(me.nickname) + (me.role === 1 ? ' <span class="tag brand">管理员</span>' : '') + '</h3>'
-            + '<p>' + esc(me.college || '重庆移通学院') + ' · ' + esc(me.building || '北山书院') + '</p>'
+            + '<p>' + esc(me.college || '重庆移通学院') + ' ' + esc(me.building || '北山书院') + '</p>'
             + '<div class="jd-me-user-links">'
             + '<button type="button" class="link-btn" data-act="open-profile">改资料</button>'
             + '<a href="#/settings">账号安全</a>'
@@ -1901,41 +1843,40 @@
             + '<button type="button" class="link-btn" data-act="logout">退出</button>'
             + '</div></div></div>'
             + '<div class="jd-me-plus-bar">'
-            + '<div><b>PLUS 唤唤会员</b><span>尊享校内优先匹配 & 免费 AI 估价特权</span></div>'
-            + '<a href="#/appraise">立即体验 ›</a>'
+            + '<div><b>PLUS 小唤会员</b></div>'
+            + '<a href="#/appraise">AI估价 ›</a>'
             + '</div></div>'
             + '<div class="jd-me-assets-grid">'
             + '<div class="jd-asset-col"><b>' + me.credit + '</b><span>校园信用分</span><button type="button" class="jd-asset-act" data-act="credit-rule">信用规则</button></div>'
-            + '<div class="jd-asset-col"><b>' + onShelf.length + '</b><span>在架闲置</span><a class="jd-asset-act" href="#/publish">继续发布</a></div>'
-            + '<div class="jd-asset-col"><b>' + (me.dealCount || 0) + '</b><span>累计成交单</span><a class="jd-asset-act" href="#/exchange">查看履约</a></div>'
-            + '<div class="jd-asset-col"><b>' + (me.reviewCount || 0) + '</b><span>收到评价</span><a class="jd-asset-act" href="#/user/' + Number(me.id) + '">查看主页</a></div>'
-            + '<div class="jd-asset-col"><b>' + (me.avgScore ? me.avgScore : '5.0') + '</b><span>综合好评分</span>'
+            + '<div class="jd-asset-col"><b>' + onShelf.length + '</b><span>在架闲置</span><a class="jd-asset-act" href="#/publish">去发布</a></div>'
+            + '<div class="jd-asset-col"><b>' + (me.dealCount || 0) + '</b><span>累计成交</span><a class="jd-asset-act" href="#/exchange">查看履约</a></div>'
+            + '<div class="jd-asset-col"><b>' + (me.reviewCount || 0) + '</b><span>收到评价</span><a class="jd-asset-act" href="#/user/' + Number(me.id) + '">个人主页</a></div>'
+            + '<div class="jd-asset-col"><b>' + (me.avgScore ? me.avgScore : '5.0') + '</b><span>好评分</span>'
             + (pending.length ? '<button type="button" class="jd-asset-act accent" data-act="pending-review">' + pending.length + '单待评</button>' : '<a class="jd-asset-act" href="#/offers">报价中心</a>')
             + '</div></div>'
             + '<a class="jd-me-recycle-card" href="#/appraise">'
             + '<div class="jd-recycle-copy">'
-            + '<span class="jd-recycle-tag">换一圈 AI 实验室</span>'
-            + '<h4>闲置好物 · 秒出估值</h4>'
-            + '<p>拍照上传自动分析成色与校内行情</p>'
+            + '<span class="jd-recycle-tag">小唤实验室</span>'
+            + '<h4>AI 智能估价</h4>'
             + '<b>去估价 ›</b>'
             + '</div>'
-            + '<img src="/assets/brand/mascot-search.png" alt="">'
+            + '<img src="/assets/brand/mascot-search.png" alt="小唤">'
             + '</a>'
             + '</section>'
 
             + '<section class="jd-me-mid-grid">'
             + '<div class="jd-me-card jd-me-orders-card">'
-            + '<header class="jd-card-head"><h3>我的订单</h3><a href="#/offers">查看全部订单 ›</a></header>'
+            + '<header class="jd-card-head"><h3>我的订单</h3><a href="#/offers">全部订单 ›</a></header>'
             + '<div class="jd-order-quick-icons">'
             + '<a href="#/offers"><i>📥</i><span>收到报价</span></a>'
-            + '<a href="#/exchange"><i>🤝</i><span>待面交交换</span></a>'
+            + '<a href="#/exchange"><i>🤝</i><span>待面交</span></a>'
             + '<a href="#/me"><i>💬</i><span>待评价' + (pending.length ? ' (' + pending.length + ')' : '') + '</span></a>'
-            + '<a href="#/relay"><i>🔄</i><span>三方接力环</span></a>'
+            + '<a href="#/relay"><i>🔄</i><span>换物接力</span></a>'
             + '<a href="#/auction/mine"><i>🔨</i><span>我的竞拍</span></a>'
             + '</div>'
             + '<div class="jd-order-mini-preview">'
-            + '<img src="/assets/brand/mascot-box.png" alt="">'
-            + '<div><p>随时查看您的校内换物报价与线下交接进度</p><a href="#/offers">进入京东式订单中心查看明细 ›</a></div>'
+            + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
+            + '<div><a href="#/offers">进入订单中心 ›</a></div>'
             + '</div></div>'
             + '<div class="jd-me-card jd-me-fav-card">'
             + '<div class="jd-fav-stats">'
@@ -1944,8 +1885,8 @@
             + '<a href="#/wishes"><b>' + (items || []).length + '</b><span>发布记录</span></a>'
             + '</div>'
             + '<a class="jd-fav-banner" href="#/auctions">'
-            + '<div><b>校园限时拍卖专场</b><span>数码外设·考研教材 1 元起拍捡漏</span></div>'
-            + '<em>立即进入 ›</em>'
+            + '<div><b>校园限时拍卖</b><span>1元起拍</span></div>'
+            + '<em>进入 ›</em>'
             + '</a>'
             + '</div>'
             + '</section>'
@@ -1957,19 +1898,19 @@
             + '<a href="#/idle?cat=教材"><img src="/assets/amz/quad-books.jpg" alt=""><span>考研与教材</span></a>'
             + '<a href="#/idle?cat=数码"><img src="/assets/amz/quad-digital.jpg" alt=""><span>数码与外设</span></a>'
             + '<a href="#/idle?cat=运动"><img src="/assets/amz/quad-sports.jpg" alt=""><span>球类与骑行</span></a>'
-            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm.jpg" alt=""><span>宿舍神器</span></a>'
+            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm.jpg" alt=""><span>宿舍生活</span></a>'
             + '</div></div>'
             + '<div class="jd-me-3posters">'
-            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><p>失物招领·日常吹水</p><img src="/assets/amz/quad-community.jpg" alt=""></a>'
-            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><p>A→B→C 跨书院成环</p><img src="/assets/amz/quad-relay.jpg" alt=""></a>'
-            + '<a class="jd-poster-tile tone-mint" href="#/community/game"><h4>Scrap Arena ›</h4><p>下课双人同屏格斗</p><img src="/assets/brand/mascot-wave-320.webp" alt=""></a>'
+            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><img src="/assets/amz/quad-community.jpg" alt=""></a>'
+            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><img src="/assets/amz/quad-relay.jpg" alt=""></a>'
+            + '<a class="jd-poster-tile tone-mint" href="#/community/game"><h4>Scrap Arena ›</h4><img src="/assets/brand/mascot-wave-320.webp" alt=""></a>'
             + '</div>'
             + '</section>'
 
             + '<section class="jd-me-card jd-me-footprint-embed">'
             + '<header class="jd-card-head">'
-            + '<div class="jd-fp-embed-title"><h3>☆ 我的足迹与商品收藏</h3><span>11月15日 · 看过与收藏的校园好物</span></div>'
-            + '<div class="jd-fp-embed-links"><a href="#/history" class="on">我的足迹 (' + shelfRead('history').length + ')</a><a href="#/favorites">商品收藏 (' + shelfRead('favorites').length + ') <em class="jd-nav-badge">有降价</em></a><a href="#/history">查看全部与管理 ›</a></div>'
+            + '<div class="jd-fp-embed-title"><h3>☆ 足迹与收藏</h3></div>'
+            + '<div class="jd-fp-embed-links"><a href="#/history" class="on">足迹 (' + shelfRead('history').length + ')</a><a href="#/favorites">收藏 (' + shelfRead('favorites').length + ')</a><a href="#/history">全部 ›</a></div>'
             + '</header>'
             + '<div class="jd-history-grid">'
             + (shelfRead('favorites').concat(shelfRead('history')).slice(0, 4).map(function (it, idx) {
@@ -1979,8 +1920,6 @@
                     title: it.title || '校园好物',
                     category: it.category || '数码',
                     price: (59 + idx * 35) + '.90',
-                    origPrice: (129 + idx * 50) + '.00',
-                    subsidy: '校内实名认证 · 当面验货',
                     images: firstImage(it.images) || DEMO_SHELF_ITEMS[idx % DEMO_SHELF_ITEMS.length].images
                 };
             }).concat(DEMO_SHELF_ITEMS).slice(0, 4).map(function (it) {
@@ -1990,14 +1929,11 @@
                     + '<div class="jd-h-media">'
                     + '<a href="' + href + '" class="jd-h-img-link">'
                     + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital.jpg\'" alt="' + esc(it.title) + '" loading="lazy">'
-                    + '<div class="jd-h-substrip">'
-                    + '<span class="jd-h-subprice"><small>换物参考价 ¥</small><b>' + esc(priceParts[0]) + '</b></span>'
-                    + '<span class="jd-h-subtag">' + esc(it.subsidy || '校园认证好物') + '</span>'
-                    + '</div></a></div>'
+                    + '</a></div>'
                     + '<div class="jd-h-body">'
-                    + '<a href="' + href + '" class="jd-h-title"><span class="jd-self-badge">自营认证</span>' + esc(it.title) + '</a>'
+                    + '<a href="' + href + '" class="jd-h-title">' + esc(it.title) + '</a>'
                     + '<div class="jd-h-price-row">'
-                    + '<div class="jd-h-price"><em>¥</em><b>' + esc(priceParts[0]) + '</b><sup>.' + esc(priceParts[1] || '00') + '</sup><del>到手价 ¥' + esc(it.origPrice || '199.00') + '</del></div>'
+                    + '<div class="jd-h-price"><em>¥</em><b>' + esc(priceParts[0]) + '</b><sup>.' + esc(priceParts[1] || '00') + '</sup></div>'
                     + '<a href="' + href + '" class="jd-h-plus" aria-label="查看详情">+</a>'
                     + '</div></div></article>';
             }).join(''))
@@ -2044,45 +1980,34 @@
     ];
 
     function auctionCard(a, mode) {
-        var labels={active:'正在进行',cancelled:'已撤回',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '待卖家结算' : '已流拍'};
-        var end=String(a.endsAt || '2026-11-18 20:00').replace('T',' ').slice(0,16);
+        var labels={active:'正在进行',cancelled:'已撤回',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '待结算' : '已流拍'};
         var fallbackImgs=['/assets/amz/quad-auction.jpg','/assets/amz/quad-digital.jpg','/assets/amz/quad-books.jpg','/assets/amz/quad-dorm.jpg','/assets/amz/quad-sports.jpg'];
         var image=firstImage(a.image) || fallbackImgs[Math.abs(Number(a.id || 0)) % fallbackImgs.length];
-        var views = a.views || (Number(a.id || 1) * 137 + Number(a.bidCount || 3) * 42);
-        var stage = a.stage || '一拍';
-        var campus = a.campus || '校内书院面交';
-        var marketPrice = a.marketPrice || Math.round((Number(a.currentPrice) || 50) * 1.8);
-        var statusCls = a.state === 'active' ? 'is-live' : (a.state === 'settled' ? 'is-done' : 'is-end');
+        var priceVal = a.state==='settled'&&(a.selectedAmount||a.currentPrice)?(a.selectedAmount||a.currentPrice):a.currentPrice;
+        var actHtml = '';
+        if (mode==='admin'&&a.state==='pending') {
+            actHtml = '<button class="clean-act-btn is-red" data-act="review-listing" data-kind="auctions" data-do="approve" data-id="'+a.id+'">通过</button>';
+        } else if (mode==='mine'&&(a.state==='active'||a.state==='ended')&&a.bidCount&&!a.isDemo) {
+            actHtml = '<button class="clean-act-btn is-red" data-act="auction-bids" data-id="'+a.id+'">结算</button>';
+        } else if (mode==='public'&&a.state==='active') {
+            actHtml = a.isDemo
+                ? '<button class="clean-act-btn is-red" data-act="go" data-to="#/auction/new">竞拍</button>'
+                : '<button class="clean-act-btn is-red" data-act="auction-bid" data-id="'+a.id+'">出价</button>';
+        } else if (a.state!=='active') {
+            actHtml = '<button class="clean-act-btn is-muted" data-act="go" data-to="#/idle">看同类</button>';
+        }
         return '<article class="ali-auction-card">'
-            + '<div class="ali-card-media">'
-            + '<img class="ali-card-img" src="'+esc(image)+'" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
-            + '<span class="ali-stage-badge">'+esc(campus)+' | '+esc(stage)+'</span>'
-            + '<span class="ali-status-corner '+statusCls+'">'+esc(labels[a.state] || '正在进行')+'</span>'
+            + '<div class="clean-card-media">'
+            + '<img src="'+esc(image)+'" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
+            + (a.state!=='active'?'<span class="clean-state-tag is-done">'+esc(labels[a.state] || '已结束')+'</span>':'')
             + '</div>'
-            + '<div class="ali-card-body">'
-            + '<h2 class="ali-card-title" title="'+esc(a.title)+'">'+esc(a.title)+'</h2>'
-            + '<div class="ali-price-row">'
-            + '<span class="ali-price-k">'+(a.state==='settled'?'成交价':(a.bidCount?'当前价':'起拍价'))+'</span>'
-            + '<b class="ali-price-v">¥'+esc(a.state==='settled'&&(a.selectedAmount||a.currentPrice)?(a.selectedAmount||a.currentPrice):a.currentPrice)+'</b>'
-            + '<span class="ali-price-orig">参考价 ¥'+esc(marketPrice)+'</span>'
-            + '</div>'
-            + '<div class="ali-time-row"><span>结束时间</span><time>'+esc(end)+'</time></div>'
-            + '<div class="ali-seller-row"><span>发布：'+esc(a.seller || '校内同学')+'</span>'+(a.bidder?'<span>领先：'+esc(a.bidder)+'</span>':'')+'</div>'
-            + (a.state==='settled'?'<p class="ali-settled-tip">成交同学：'+esc(a.winner || a.bidder || '校内同学')+' · 线下当面交付</p>':'')
-            + '<div class="ali-card-actions">'
-            + (mode==='admin'&&a.state==='pending'?'<button class="btn btn-sm btn-primary" data-act="review-listing" data-kind="auctions" data-do="approve" data-id="'+a.id+'">通过</button><button class="btn btn-sm" data-act="review-listing" data-kind="auctions" data-do="reject" data-id="'+a.id+'">驳回</button>':'')
-            + (mode==='admin'&&(a.state==='active'||a.state==='ended')&&!a.isDemo?'<button class="btn btn-sm" data-act="auction-cancel" data-id="'+a.id+'">取消拍卖</button>':'')
-            + (mode==='mine'&&(a.state==='active'||a.state==='ended')&&a.bidCount&&!a.isDemo?'<button class="btn btn-primary btn-sm" data-act="auction-bids" data-id="'+a.id+'">查看报价并结算</button>':'')
-            + (mode==='public'&&a.state==='active'?(a.isDemo
-                ? '<button class="ali-bid-btn" data-act="go" data-to="#/auction/new">参与竞拍 / 发起同款</button>'
-                : '<button class="ali-bid-btn" data-act="auction-bid" data-id="'+a.id+'">立即出价竞拍</button>'):'')
-            + (mode==='public'&&a.state!=='active'?'<button class="ali-bid-btn is-muted" data-act="go" data-to="#/idle">查看同类在架好物</button>':'')
+            + '<div class="clean-card-body">'
+            + '<h2 class="clean-card-title" title="'+esc(a.title)+'">'+esc(a.title)+'</h2>'
+            + '<div class="clean-card-meta-row">'
+            + '<span class="amz-price"><em>¥</em><b>'+esc(priceVal)+'</b></span>'
+            + actHtml
             + '</div>'
             + '</div>'
-            + '<footer class="ali-card-foot">'
-            + '<span><b>'+views+'</b> 次围观</span>'
-            + '<span><b>'+(a.bidCount || 0)+'</b> 次出价</span>'
-            + '</footer>'
             + '</article>';
     }
 
@@ -2105,75 +2030,50 @@
         var content = '<div class="ali-auction-page">'
             + '<header class="ali-sub-header">'
             + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">换一圈资产 · 校园拍卖</span>'
-            + '<span class="ali-brand-sub">CAMPUS AUCTION · 校内实名竞价与闲置变卖平台</span>'
+            + '<span class="ali-brand-main">校园拍卖专场</span>'
             + '</div>'
             + '<nav class="ali-sub-nav" aria-label="拍卖导航">'
-            + '<a href="#/auctions" class="' + (!mine ? 'on' : '') + '">全部标的物</a>'
-            + '<a href="#/auctions">数码外设专场</a>'
-            + '<a href="#/auctions">考研教材专场</a>'
-            + '<a href="#/auctions">毕业清仓变卖</a>'
-            + '<a href="#/auction/mine" class="' + (mine ? 'on' : '') + '">我的竞拍管理</a>'
+            + '<a href="#/auctions" class="' + (!mine ? 'on' : '') + '">全部拍品</a>'
+            + '<a href="#/idle?cat=数码">数码外设</a>'
+            + '<a href="#/idle?cat=教材">考研教材</a>'
+            + '<a href="#/auction/mine" class="' + (mine ? 'on' : '') + '">我的拍卖</a>'
             + '</nav>'
             + '<div class="ali-sub-actions">'
-            + '<a class="btn btn-ghost btn-sm" href="' + (mine ? '#/auctions' : '#/auction/mine') + '">' + (mine ? '返回拍卖大厅' : '我的拍卖') + '</a>'
-            + '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起校园拍卖</a>'
+            + '<a class="btn btn-ghost btn-sm" href="' + (mine ? '#/auctions' : '#/auction/mine') + '">' + (mine ? '返回大厅' : '我的拍卖') + '</a>'
+            + '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起拍卖</a>'
             + '</div>'
             + '</header>'
 
-            + '<section class="ali-filter-box" aria-label="拍品多维筛选">'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">标的物分类：</span><div class="ali-filter-v">'
+            + '<section class="ali-filter-box" aria-label="拍品筛选">'
+            + '<div class="ali-filter-row"><span class="ali-filter-k">分类：</span><div class="ali-filter-v">'
             + '<button type="button" class="on" data-act="go" data-to="#/auctions">全部</button>'
             + '<button type="button" data-act="go" data-to="#/idle?cat=数码">电脑数码</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研与教材</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍电器与生活</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">运动户外与球拍</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=其他">手办乐器与周边</button>'
-            + '<button type="button" data-act="go" data-to="#/appraise">AI 估价认证标的</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研教材</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍生活</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">运动户外</button>'
+            + '<button type="button" data-act="go" data-to="#/idle?cat=其他">手办周边</button>'
             + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">交接书院点位：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部重庆移通校区</button>'
-            + '<button type="button">北山书院</button>'
-            + '<button type="button">南山书院</button>'
-            + '<button type="button">松格书院</button>'
-            + '<button type="button">竹逸书院</button>'
-            + '<button type="button">菊轩书院</button>'
-            + '<button type="button">梅若书院</button>'
-            + '<button type="button">爱莲书院</button>'
-            + '<button type="button">图书馆一楼大厅</button>'
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">拍品状态与阶段：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部状态 (' + displayList.length + ')</button>'
+            + '<div class="ali-filter-row"><span class="ali-filter-k">状态：</span><div class="ali-filter-v">'
+            + '<button type="button" class="on">全部 (' + displayList.length + ')</button>'
             + '<button type="button">正在进行</button>'
-            + '<button type="button">即将结拍</button>'
-            + '<button type="button">已成交公示</button>'
             + '<button type="button">一拍专场</button>'
-            + '<button type="button">二拍捡漏</button>'
             + '<button type="button">毕业变卖</button>'
             + '</div></div>'
             + '</section>'
 
             + '<div class="ali-sort-toolbar">'
-            + '<div class="ali-sort-checks">'
-            + '<label><input type="checkbox" checked readonly> 全部拍品</label>'
-            + '<label><input type="checkbox" checked readonly> 支持校内当面验货</label>'
-            + '<label><input type="checkbox" checked readonly> 实名信用担保</label>'
-            + '<label><input type="checkbox"> 接受以物抵扣</label>'
-            + '</div>'
             + '<div class="ali-sort-links">'
             + '<span class="on">默认排序</span>'
             + '<span>当前价 ▾</span>'
-            + '<span>围观热度 ▾</span>'
-            + '<span>结拍时间 ▾</span>'
             + '<span>出价次数 ▾</span>'
-            + '<img src="/assets/brand/mascot-success.png" alt="" class="ali-toolbar-mascot">'
+            + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ali-toolbar-mascot">'
             + '</div>'
             + '</div>'
 
             + (loadError && mine ? '<div class="card card-pad"><p>' + esc(loadError) + '</p></div>' : '')
             + (displayList.length
                 ? '<div class="ali-auction-grid">' + displayList.map(function (a) { return auctionCard(a, mine ? 'mine' : 'public'); }).join('') + '</div>'
-                : '<div class="card card-pad"><p>您还没有发起过拍卖，点击右上角「+ 发起校园拍卖」即可上架拍品。</p></div>')
+                : '<div class="card card-pad"><p>暂无拍卖拍品，点击右上角「+ 发起拍卖」上架。</p></div>')
             + '</div>';
         $('#app').innerHTML=shell('auctions',content);
     }
@@ -2298,7 +2198,7 @@
 
             + '<div class="tb-im-center">'
             + '<header class="tb-chat-header">'
-            + '<div class="tb-chat-peer"><b>北山羽毛球穿线社 · 宏羽运动体育</b><span class="tb-online-tag">● 校内实名在线</span></div>'
+            + '<div class="tb-chat-peer"><b>宏羽运动体育</b><span class="tb-online-tag">● 在线</span></div>'
             + '<div class="tb-chat-top-btns">'
             + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
             + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
@@ -2374,10 +2274,9 @@
             + '</div>'
             + '</div>'
             + '<div class="tb-mascot-helper">'
-            + '<img src="/assets/amz/mascot-credit-card.png" alt="换一圈吉祥物小助手">'
-            + '<h5>换一圈安全面交贴士</h5>'
-            + '<p>校内换物推荐约定书院一楼大厅或图书馆前广场，当面验货无误后再点击确认收货。</p>'
-            + '<a href="#/appraise" class="tb-helper-link">🤖 拿不准价格？去 AI 估价 ›</a>'
+            + '<img src="/assets/amz/mascot-credit-card.png" alt="小唤">'
+            + '<h5>小唤提示</h5>'
+            + '<a href="#/appraise" class="tb-helper-link">🤖 让小唤帮你 AI 估价 ›</a>'
             + '</div>'
             + '</aside>'
             + '</div>'
@@ -2447,39 +2346,24 @@
         var isMine = state.me && w.userId === state.me.id;
         var fallbackImgs = ['/assets/amz/quad-wishes.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
         var img = w.image || fallbackImgs[Math.abs(Number(w.id || 0)) % fallbackImgs.length];
-        var campus = w.campus || '校内书院面交';
-        var stage = w.stage || (w.category ? w.category + '求换' : '心愿求换');
-        var budget = w.budget || (45 + (Math.abs(Number(w.id || 1)) * 19) % 160);
-        var offerText = w.offerText || (w.content ? String(w.content).slice(0, 14) : '支持等价好物互换');
-        var views = w.views || (620 + Math.abs(Number(w.id || 1)) * 47);
-        var replies = w.replyCount || (3 + (Math.abs(Number(w.id || 1)) % 9));
-        return '<article class="ali-auction-card wish-card">'
-            + '<div class="ali-card-media">'
-            + '<img class="ali-card-img" src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy">'
-            + '<span class="ali-stage-badge">' + esc(campus) + ' | ' + esc(stage) + '</span>'
-            + '<span class="ali-status-corner ' + (isSettled ? 'is-done' : 'is-live') + '">' + (isSettled ? '心愿已达成' : '急求响应中') + '</span>'
+        var swapLabel = w.offerText ? String(w.offerText).replace(/^提供：/, '拿 ').replace(/^已用：/, '已用 ') : ('心理价 ¥' + (w.budget || 50));
+        var btnHtml = isMine
+            ? '<button type="button" class="clean-act-btn is-muted" data-act="wish-close" data-id="' + w.id + '">关闭</button>'
+            : (w.isDemo
+                ? '<button type="button" class="clean-act-btn is-amber ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="#/idle' + (w.category ? '?cat=' + encodeURIComponent(w.category) : '') + '">' + (isSettled ? '看同类' : '去响应') + '</button>'
+                : '<button type="button" class="clean-act-btn is-amber" data-act="go" data-to="#/user/' + w.userId + '">响应</button>');
+        return '<article class="wish-card-clean">'
+            + '<div class="clean-card-media">'
+            + '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy">'
+            + (isSettled ? '<span class="clean-state-tag is-done">已达成</span>' : '')
             + '</div>'
-            + '<div class="ali-card-body">'
-            + '<h2 class="ali-card-title" title="' + esc(w.title) + '">' + esc(w.title) + '</h2>'
-            + '<div class="ali-price-row">'
-            + '<span class="ali-price-k">心理估值</span>'
-            + '<b class="ali-price-v">¥' + esc(budget) + '</b>'
-            + '<span class="ali-price-orig">' + esc(offerText) + '</span>'
-            + '</div>'
-            + '<div class="ali-time-row"><span>求换分类</span><time>' + esc(w.category || '全品类好物') + '</time></div>'
-            + '<div class="ali-seller-row"><span>许愿同学：' + esc(w.nickname || '移通同学') + '</span><span>信用极好</span></div>'
-            + '<div class="ali-card-actions">'
-            + (isMine
-                ? '<button type="button" class="ali-bid-btn is-muted" data-act="wish-close" data-id="' + w.id + '">关闭我的求换</button>'
-                : (w.isDemo
-                    ? '<button type="button" class="ali-bid-btn ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="#/idle' + (w.category ? '?cat=' + encodeURIComponent(w.category) : '') + '">' + (isSettled ? '查看同类在架好物' : '我有同款 · 去响应交换') + '</button>'
-                    : '<button type="button" class="ali-bid-btn" data-act="go" data-to="#/user/' + w.userId + '">联系发布者响应心愿</button>'))
+            + '<div class="clean-card-body">'
+            + '<h2 class="clean-card-title" title="' + esc(w.title) + '">' + esc(w.title) + '</h2>'
+            + '<div class="clean-card-meta-row">'
+            + '<span class="wish-swap-line" title="' + esc(swapLabel) + '">' + esc(swapLabel) + '</span>'
+            + btnHtml
             + '</div>'
             + '</div>'
-            + '<footer class="ali-card-foot">'
-            + '<span><b>' + views + '</b> 次围观</span>'
-            + '<span><b>' + replies + '</b> 人有同款</span>'
-            + '</footer>'
             + '</article>';
     }
 
@@ -2490,79 +2374,40 @@
         var wishes = await api('/wish' + (matched ? '/' + matched : ''), {optionalAuth: true}).catch(function () { return []; });
         var displayList = (wishes || []).concat(DEMO_WISHES);
 
-        var content = '<div class="ali-auction-page">'
-            + '<header class="ali-sub-header">'
-            + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">换一圈 · 校园求换心愿大厅</span>'
-            + '<span class="ali-brand-sub">CAMPUS WISH & BOUNTY HALL · 发心愿 · 找同款 · 极速配对</span>'
+        var content = '<div class="wish-bounty-page">'
+            + '<header class="wish-top-banner">'
+            + '<div class="wish-banner-left">'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<div><h1>求换心愿专区</h1></div>'
             + '</div>'
-            + '<nav class="ali-sub-nav" aria-label="求换专区导航">'
-            + '<a href="#/wishes" class="on">全部求换心愿 (' + displayList.length + ')</a>'
-            + '<a href="#/relay">三方换物接力</a>'
-            + '<a href="#/auctions">校园限时拍卖</a>'
-            + '<a href="#/community">去社区频道喊话</a>'
+            + '<nav class="wish-banner-cats" aria-label="求换分类">'
+            + '<a href="#/wishes" class="on">全部 (' + displayList.length + ')</a>'
+            + '<a href="#/idle?cat=数码">数码外设</a>'
+            + '<a href="#/idle?cat=教材">考研教材</a>'
+            + '<a href="#/idle?cat=运动">运动户外</a>'
+            + '<a href="#/idle?cat=生活">宿舍生活</a>'
+            + '<a href="#/relay">换物接力</a>'
+            + '<a href="#/auctions">校园拍卖</a>'
             + '</nav>'
-            + '<div class="ali-sub-actions">'
-            + '<button type="button" class="btn btn-primary btn-sm" onclick="var el=document.getElementById(\'ali-wish-composer\');if(el){el.scrollIntoView({behavior:\'smooth\'});el.querySelector(\'input\')?.focus();}">+ 发布求换心愿</button>'
-            + '</div>'
             + '</header>'
 
-            + '<form id="ali-wish-composer" class="ali-wish-bar wish-form" data-form="wish-new">'
-            + '<div class="ali-wish-bar-head"><img src="/assets/brand/mascot-wave-320.webp" alt=""><div><b>✨ 发起我的求换心愿</b><span>写下你想换的物品，系统自动匹配全校在架好物并通知双方</span></div></div>'
-            + '<div class="ali-wish-bar-fields">'
-            + '<input class="input" name="title" maxlength="100" placeholder="我想要：例如 一本高数习题集 / 罗技无线鼠标" aria-label="我想要" required>'
-            + '<select class="select" name="category" aria-label="类别"><option value="">全部类别</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>'
-            + '<select class="select" id="wish-offer" name="offeredItemId" aria-label="我拿什么换"><option value="">不关联物品（普通心愿）</option>' + offerOptions + '</select>'
-            + '<input class="input" name="content" maxlength="500" placeholder="补充说明：成色要求、可交接书院等（选填）" aria-label="补充说明">'
-            + '<button class="btn btn-primary" type="submit">立即发布求换</button>'
-            + '</div>'
+            + '<div class="wish-workbench">'
+            + '<aside class="wish-sidebar">'
+            + '<form id="ali-wish-composer" class="wish-composer-card wish-form" data-form="wish-new">'
+            + '<h2>发布求换心愿</h2>'
+            + '<div class="field"><label class="label">我想换</label><input class="input" name="title" maxlength="100" placeholder="高数习题集 / 罗技鼠标" required></div>'
+            + '<div class="field"><label class="label">分类</label><select class="select" name="category"><option value="">全部类别</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></div>'
+            + '<div class="field"><label class="label">我拿什么换</label><select class="select" id="wish-offer" name="offeredItemId"><option value="">不关联在架物品</option>' + offerOptions + '</select></div>'
+            + '<div class="field"><label class="label">备注</label><input class="input" name="content" maxlength="500" placeholder="成色要求或交接书院（选填）"></div>'
+            + '<button class="btn wish-submit-btn btn-block" type="submit">发布求换</button>'
             + '</form>'
+            + '</aside>'
 
-            + '<section class="ali-filter-box" aria-label="求换心愿多维筛选">'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">求换目标分类：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部心愿</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=数码">电脑数码与外设</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研与期末教材</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">羽毛球拍与运动</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍神器与灯具</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=其他">潮玩手办与绿植</button>'
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">期望交接书院：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全校书院通用</button>'
-            + '<button type="button">北山书院</button>'
-            + '<button type="button">南山书院</button>'
-            + '<button type="button">松格书院</button>'
-            + '<button type="button">竹逸书院</button>'
-            + '<button type="button">菊轩书院</button>'
-            + '<button type="button">爱莲书院</button>'
-            + '<button type="button">图书馆一楼大厅</button>'
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">交换方式偏好：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部方式 (' + displayList.length + ')</button>'
-            + '<button type="button">一对一等价互换</button>'
-            + '<button type="button">可补差价换入</button>'
-            + '<button type="button">支持 A→B→C 三方接力</button>'
-            + '<button type="button">近期已达成心愿</button>'
-            + '</div></div>'
-            + '</section>'
-
-            + '<div class="ali-sort-toolbar">'
-            + '<div class="ali-sort-checks">'
-            + '<label><input type="checkbox" checked readonly> 全部求换心愿</label>'
-            + '<label><input type="checkbox" checked readonly> 已关联在架可换物</label>'
-            + '<label><input type="checkbox" checked readonly> 支持书院当面验货</label>'
-            + '</div>'
-            + '<div class="ali-sort-links">'
-            + '<span class="on">最新发布</span>'
-            + '<span>急求热度 ▾</span>'
-            + '<span>心理估值 ▾</span>'
-            + '<span>同款响应数 ▾</span>'
-            + '<img src="/assets/brand/mascot-empty.png" alt="" class="ali-toolbar-mascot">'
-            + '</div>'
-            + '</div>'
-
-            + '<div class="ali-auction-grid wish-grid">'
+            + '<main class="wish-main">'
+            + '<div class="wish-bounty-grid">'
             + displayList.map(wishAuctionCard).join('')
+            + '</div>'
+            + '</main>'
             + '</div>'
             + '</div>';
 
@@ -2612,8 +2457,8 @@
             + '<a href="#/idle?cat=运动" class="qq-chan-item sub"><i>🏀</i><span>风雨球场约球换拍</span></a>'
             + '</div>'
             + '<div class="qq-left-promo">'
-            + '<img src="/assets/brand/mascot-box.png" alt="">'
-            + '<div><b>换一圈 · 移通频道</b><p>校内实名认证 · 当面0邮费秒换</p></div>'
+            + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
+            + '<div><b>移通频道</b></div>'
             + '</div>'
             + '</aside>'
 
@@ -2621,13 +2466,12 @@
             + '<div class="qq-hero-banner">'
             + '<div class="qq-hero-copy">'
             + '<div class="qq-hero-title-row">'
-            + '<span class="qq-official-tag">官方认证频道</span>'
-            + '<h1>重庆移通学院 · 校园生活与闲置总频道</h1>'
+            + '<span class="qq-official-tag">官方频道</span>'
+            + '<h1>校园生活与闲置频道</h1>'
             + '</div>'
-            + '<p>分享闲置好物、失物招领、期末教材互助、下课同屏开黑，3,840 位移通同学在这里实时互动。</p>'
-            + '<div class="qq-hero-stats"><span>今日发帖 <b>286</b></span><span>在架好物 <b>1,420</b></span><span>换物成功率 <b>98.4%</b></span></div>'
+            + '<div class="qq-hero-stats"><span>今日发帖 <b>286</b></span><span>在架好物 <b>1,420</b></span></div>'
             + '</div>'
-            + '<img class="qq-hero-mascot" src="/assets/brand/mascot-wave-320.webp" alt="">'
+            + '<img class="qq-hero-mascot" src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
             + '</div>'
 
             + '<form class="qq-compose-box chat-compose" data-form="community-text">'
@@ -2655,39 +2499,32 @@
             + '</div>'
 
             + '<section class="qq-realtime-card">'
-            + '<div class="qq-realtime-head"><b>💬 频道实时公共聊天流</b><span>发送文字、图片或分享闲置立即全校可见</span></div>'
+            + '<div class="qq-realtime-head"><b>💬 频道实时聊天</b></div>'
             + '<div class="chat-messages" id="chat-messages" aria-live="polite"></div>'
             + '</section>'
 
             + '<div class="qq-featured-feed">'
             + '<article class="qq-post-card">'
-            + '<header class="qq-post-head"><span class="qq-post-avatar">北</span><div><b>北山书院 · 电竞阿泽</b><span>15 分钟前 · 来自 #数码外设发烧友</span></div><a class="qq-post-tag" href="#/idle?cat=数码">#数码外设置换</a></header>'
-            + '<h3>大三升级桌面，出九五新罗技 GPW 二代 + 68键机械键盘，或者换个 iPad 电容笔！</h3>'
-            + '<p>平时都在寝室接显示器用，成色超级新，无双击无掉漆，包装盒和接收器延长线都在。支持北山书院一楼大厅当面插电脑试手感，想换的同学直接点我头像或者去闲置大厅报价~</p>'
+            + '<header class="qq-post-head"><span class="qq-post-avatar">北</span><div><b>北山书院 电竞阿泽</b><span>15 分钟前 #数码外设</span></div><a class="qq-post-tag" href="#/idle?cat=数码">#数码外设</a></header>'
+            + '<h3>大三升级桌面，出九五新罗技 GPW 二代 + 68键机械键盘，或者换个 iPad 电容笔</h3>'
             + '<div class="qq-post-imgs"><img src="/assets/amz/quad-digital.jpg" alt=""><img src="/assets/amz/quad-swap.jpg" alt=""><img src="/assets/amz/quad-appraise.jpg" alt=""></div>'
-            + '<footer class="qq-post-foot"><span>🔥 128 热度</span><span>👍 36 赞</span><a href="#/idle?cat=数码">💬 去集市看同款 ›</a></footer>'
+            + '<footer class="qq-post-foot"><span>🔥 128</span><span>👍 36</span><a href="#/idle?cat=数码">看同款 ›</a></footer>'
             + '</article>'
             + '<article class="qq-post-card">'
-            + '<header class="qq-post-head"><span class="qq-post-avatar">南</span><div><b>南山书院 · 上岸学姐小林</b><span>42 分钟前 · 来自 #考研教材漂流站</span></div><a class="qq-post-tag" href="#/idle?cat=教材">#考研资料漂流</a></header>'
-            + '<h3>整理了全套同济高数+张宇1000题+六级真题手写笔记，半卖半送或者换两杯瑞幸生椰拿铁☕</h3>'
-            + '<p>重点章节全部用荧光笔标好考点了，祝学弟学妹们期末和考研高分过关！南山书院或图书馆门口均可自提。</p>'
+            + '<header class="qq-post-head"><span class="qq-post-avatar">南</span><div><b>南山书院 上岸学姐小林</b><span>42 分钟前 #考研教材</span></div><a class="qq-post-tag" href="#/idle?cat=教材">#考研资料</a></header>'
+            + '<h3>整理全套同济高数+张宇1000题手写笔记，欢迎换购</h3>'
             + '<div class="qq-post-imgs"><img src="/assets/amz/quad-books.jpg" alt=""><img src="/assets/amz/quad-grad.jpg" alt=""></div>'
-            + '<footer class="qq-post-foot"><span>🔥 94 热度</span><span>👍 52 赞</span><a href="#/idle?cat=教材">💬 立即联系换书 ›</a></footer>'
+            + '<footer class="qq-post-foot"><span>🔥 94</span><span>👍 52</span><a href="#/idle?cat=教材">去换书 ›</a></footer>'
             + '</article>'
             + '</div>'
             + '</main>'
 
             + '<aside class="qq-chan-right" aria-label="频道侧栏">'
-            + '<div class="qq-side-card">'
-            + '<h4>📌 频道官方公告</h4>'
-            + '<p>1. 校内当面交易建议选择各书院大厅、图书馆一楼等公共点位；<br>2. 拿不准价格可先用「AI 好物估价」测算合理换物区间；<br>3. 严禁发布违规代考或校外引流广告。</p>'
-            + '</div>'
             + '<div class="qq-side-card qq-arcade-box">'
-            + '<span class="tag">ARCADE · 频道小游戏</span>'
-            + '<h3>下课无聊？<br>来一局 Scrap Arena！</h3>'
-            + '<p>双人同屏格斗街机 · 键盘即开即玩</p>'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="">'
-            + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">开始双人对战 ' + navIcon('external') + '</button>'
+            + '<span class="tag">ARCADE</span>'
+            + '<h3>Scrap Arena 街机</h3>'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">开始对战 ' + navIcon('external') + '</button>'
             + '</div>'
             + '<div class="qq-side-card">'
             + '<h4>🏆 本周换物活跃书院榜</h4>'
@@ -2994,16 +2831,16 @@
         }).join('');
 
         var sampleBenchmarks = [
-            {name: '罗技 GPW 二代无线游戏鼠标', cat: '数码', orig: 599, est: '260 ~ 320', cond: 'light', hot: '极高 · 平均2小时换出', img: '/assets/amz/quad-digital.jpg'},
-            {name: '2026同济高数+张宇1000题全套', cat: '教材', orig: 128, est: '35 ~ 55', cond: 'light', hot: '极高 · 考研刚需', img: '/assets/amz/quad-books.jpg'},
-            {name: '富士 Instax mini11 拍立得相机', cat: '数码', orig: 520, est: '280 ~ 350', cond: 'new', hot: '高 · 社团热宠', img: '/assets/amz/quad-auction.jpg'},
-            {name: '米家智能LED长臂护眼台灯 1S', cat: '生活', orig: 149, est: '55 ~ 80', cond: 'light', hot: '高 · 宿舍神器', img: '/assets/amz/quad-dorm.jpg'},
-            {name: '尤尼克斯 24磅碳素羽毛球拍', cat: '运动', orig: 260, est: '110 ~ 145', cond: 'light', hot: '中 · 球场约球', img: '/assets/amz/quad-sports.jpg'},
-            {name: '卡西欧 fx-991CN X 函数计算器', cat: '教材', orig: 135, est: '50 ~ 75', cond: 'new', hot: '高 · 期末必备', img: '/assets/amz/quad-grad.jpg'}
+            {name: '罗技 GPW 二代无线游戏鼠标', cat: '数码', orig: 599, est: '260 ~ 320', cond: 'light', img: '/assets/amz/quad-digital.jpg'},
+            {name: '2026同济高数+张宇1000题全套', cat: '教材', orig: 128, est: '35 ~ 55', cond: 'light', img: '/assets/amz/quad-books.jpg'},
+            {name: '富士 Instax mini11 拍立得相机', cat: '数码', orig: 520, est: '280 ~ 350', cond: 'new', img: '/assets/amz/quad-auction.jpg'},
+            {name: '米家智能LED长臂护眼台灯 1S', cat: '生活', orig: 149, est: '55 ~ 80', cond: 'light', img: '/assets/amz/quad-dorm.jpg'},
+            {name: '尤尼克斯 24磅碳素羽毛球拍', cat: '运动', orig: 260, est: '110 ~ 145', cond: 'light', img: '/assets/amz/quad-sports.jpg'},
+            {name: '卡西欧 fx-991CN X 函数计算器', cat: '教材', orig: 135, est: '50 ~ 75', cond: 'new', img: '/assets/amz/quad-grad.jpg'}
         ].map(function (b) {
             return '<div class="ai-bench-row">'
                 + '<img src="' + b.img + '" alt="">'
-                + '<div class="ai-bench-info"><b>' + esc(b.name) + '</b><span>原价 ¥' + b.orig + ' · ' + b.hot + '</span></div>'
+                + '<div class="ai-bench-info"><b>' + esc(b.name) + '</b><span>原价 ¥' + b.orig + '</span></div>'
                 + '<div class="ai-bench-price"><b>¥' + b.est + '</b><button type="button" onclick="document.getElementById(\'estimate-title\').value=\'' + esc(b.name) + '\';document.getElementById(\'estimate-price\').value=\'' + b.orig + '\';document.querySelector(\'[data-form=estimate]\').requestSubmit();">填入测算</button></div>'
                 + '</div>';
         }).join('');
@@ -3011,36 +2848,32 @@
         var content = '<div class="ali-auction-page ai-appraise-page">'
             + '<header class="ali-sub-header">'
             + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">换一圈 AI 实验室 · 智能好物估价中心</span>'
-            + '<span class="ali-brand-sub">CAMPUS AI VALUATION LAB · 基于重庆移通学院 12,800+ 笔历史成交与换物大数据</span>'
+            + '<span class="ali-brand-main">小唤 AI 好物估价中心</span>'
             + '</div>'
             + '<nav class="ali-sub-nav" aria-label="AI估价导航">'
-            + '<a href="#/appraise" class="on">AI 智能估价工作台</a>'
+            + '<a href="#/appraise" class="on">AI 估价</a>'
             + '<a href="#/idle">去集市比价</a>'
-            + '<a href="#/auctions">1元起拍测试行情</a>'
-            + '<a href="#/relay">等价三方换物</a>'
+            + '<a href="#/auctions">校园拍卖</a>'
+            + '<a href="#/relay">换物接力</a>'
             + '</nav>'
             + '<div class="ali-sub-actions">'
-            + '<a class="btn btn-ghost btn-sm" href="#/idle">浏览同款在架</a>'
-            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 带估值去发布</a>'
+            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 去发布</a>'
             + '</div>'
             + '</header>'
 
             + '<div class="ai-workbench-grid">'
             + '<section class="ai-main-card">'
             + '<div class="ai-card-head">'
-            + '<div><h2>🤖 AI 视觉与多维成色估价器</h2><p>上传物品实拍图或输入入手原价，AI 吉祥物小助手为您秒算公允换物与转让区间</p></div>'
-            + '<span class="ai-badge-live">● AI 模型 v3.2 在线</span>'
+            + '<div><h2>AI 智能估价</h2></div>'
             + '</div>'
 
             + '<form class="estimate-form ai-form-body" data-form="estimate">'
             + '<label class="ai-upload-zone" for="ai-photo-input">'
-            + '<input id="ai-photo-input" type="file" accept="image/*" hidden onchange="var f=this.files&&this.files[0];if(f){var u=URL.createObjectURL(f);var p=document.getElementById(\'ai-photo-preview\');p.innerHTML=\'<img src=&quot;\'+u+\'&quot; alt=&quot;预览&quot;><span>✓ 已载入实拍图，AI 将结合成色特征综合估值</span>\';}">'
+            + '<input id="ai-photo-input" type="file" accept="image/*" hidden onchange="var f=this.files&&this.files[0];if(f){var u=URL.createObjectURL(f);var p=document.getElementById(\'ai-photo-preview\');p.innerHTML=\'<img src=&quot;\'+u+\'&quot; alt=&quot;预览&quot;><span>已上传</span>\';}">'
             + '<span class="ai-corner tl"></span><span class="ai-corner tr"></span><span class="ai-corner bl"></span><span class="ai-corner br"></span>'
             + '<div id="ai-photo-preview" class="ai-upload-inner">'
             + '<span class="ai-cam-ico">' + navIcon('camera') + '</span>'
-            + '<b>拍照或上传物品实拍图（选填）</b>'
-            + '<small>支持 JPG / PNG · 自动识别边角磨损与配件完整度</small>'
+            + '<b>上传物品图片（选填）</b>'
             + '</div>'
             + '</label>'
 
@@ -3073,14 +2906,14 @@
             + '</div>'
 
             + '<div id="ai-mascot-Evaluating" class="ai-evaluating-box" hidden>'
-            + '<img src="/assets/brand/mascot-search.png" alt="正在估价中的吉祥物" class="ai-eval-mascot">'
-            + '<div><b>换一圈 AI 吉祥物正在为您扫描校内成交库…</b><span>正在比对北山/南山书院近 90 天同品类换物溢价率</span></div>'
+            + '<img src="/assets/brand/mascot-search.png" alt="小唤正在估价中" class="ai-eval-mascot">'
+            + '<div><b>小唤正在为您估价…</b></div>'
             + '</div>'
 
             + '<div id="estimate-result" class="ai-result-panel" role="status">'
             + '<div class="ai-result-placeholder">'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="">'
-            + '<div><b>等待输入物品参数…</b><p>输入入手原价并点击上方按钮（或点击右侧热门样本「填入测算」），即可生成专属校内估值报告。</p></div>'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<div><b>输入入手原价后点击上方按钮，小唤立即给出参考价</b></div>'
             + '</div>'
             + '</div>'
             + '</form>'
@@ -3088,21 +2921,15 @@
 
             + '<aside class="ai-side-col">'
             + '<div class="ai-mascot-hero-card">'
-            + '<div class="ai-mascot-art-wrap"><img src="/assets/amz/mascot-credit-card.png" alt="AI估价吉祥物顾问"></div>'
+            + '<div class="ai-mascot-art-wrap"><img src="/assets/amz/mascot-credit-card.png" alt="小唤"></div>'
             + '<div class="ai-mascot-copy">'
-            + '<span class="ai-advisor-tag">★ 换一圈官方吉祥物估价师</span>'
-            + '<h3>“拿不准定什么价？让小圈帮你算！”</h3>'
-            + '<p>综合考量期末/毕业季供需波动、书院面交零邮费优势，给出最容易成交的黄金价格带。</p>'
-            + '<div class="ai-mascot-perks">'
-            + '<span>✓ 12,800+ 校内样本</span>'
-            + '<span>✓ 支持等价换物匹配</span>'
-            + '<span>✓ 估完一键带价发布</span>'
-            + '</div>'
+            + '<span class="ai-advisor-tag">小唤估价助手</span>'
+            + '<h3>“拿不准定什么价？让小唤帮你算！”</h3>'
             + '</div>'
             + '</div>'
 
             + '<div class="ai-bench-card">'
-            + '<div class="ai-bench-head"><h3>📊 本周移通校园热换行情参考榜</h3><span>点击一键测算</span></div>'
+            + '<div class="ai-bench-head"><h3>热门估价参考</h3></div>'
             + '<div class="ai-bench-list">' + sampleBenchmarks + '</div>'
             + '</div>'
             + '</aside>'
@@ -3703,15 +3530,15 @@
                 }
                 if (resBox) {
                     resBox.innerHTML = '<div class="ai-report-card">'
-                        + '<img src="/assets/brand/mascot-success.png" alt="估价完成吉祥物" class="ai-report-mascot">'
+                        + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ai-report-mascot">'
                         + '<div class="ai-report-main">'
-                        + '<span class="ai-report-kicker">✓ AI 估价完成 · ' + esc(itemCat) + '品类校内行情报告</span>'
+                        + '<span class="ai-report-kicker">✓ 小唤估值 ' + esc(itemCat) + '</span>'
                         + '<h3>「' + esc(itemTitle) + '」参考区间 <b>¥' + low + '–' + high + '</b></h3>'
-                        + '<p>秒出建议价：<b>¥' + fastPrice + '</b>（较入手价 ¥' + price + ' 保值率约 ' + Math.round(range[1] * 100) + '%，支持等价换物或校内面交）</p>'
+                        + '<p>建议标价：<b>¥' + fastPrice + '</b>（入手价 ¥' + price + '，保值率约 ' + Math.round(range[1] * 100) + '%）</p>'
                         + '</div>'
                         + '<div class="ai-report-actions">'
                         + '<a class="btn btn-primary btn-sm" href="#/publish">带此估值去发布 ›</a>'
-                        + '<a class="btn btn-ghost btn-sm" href="#/auction/new">1元起拍测热度</a>'
+                        + '<a class="btn btn-ghost btn-sm" href="#/auction/new">去拍卖</a>'
                         + '</div>'
                         + '</div>';
                 }
