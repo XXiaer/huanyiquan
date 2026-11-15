@@ -60,7 +60,8 @@
       updateUnreadBadge();
       document.querySelectorAll('[data-message-category]').forEach(row => {
         const hasUnread = system.some(n => !String(n.target || '').startsWith('#/chat/') && (n.category || 'notice') === row.dataset.messageCategory);
-        row.querySelector('.msg-unread-dot').hidden = !hasUnread;
+        const dot = row.querySelector('.msg-unread-dot');
+        if (dot) dot.hidden = !hasUnread;
       });
       const alerts = system.map(n => ({
         id: n.id, key: 'notice:' + n.id, version: String(n.id), date: n.createdAt || '',

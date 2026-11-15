@@ -8,7 +8,7 @@
     height: 18px;
     object-fit: contain;
     border-radius: 5px;
-    vertical-align: -4px;
+    vertical-align: middle;
     mix-blend-mode: multiply;
     flex-shrink: 0;
     display: inline-block;
@@ -17,7 +17,7 @@
     width: 16px;
     height: 16px;
     border-radius: 4px;
-    vertical-align: -3px;
+    vertical-align: middle;
 }
 .clay-ico.is-lg {
     width: 30px;
@@ -25,7 +25,11 @@
     border-radius: 7px;
     vertical-align: middle;
 }
-.btn-primary .clay-ico,
+.btn-primary .clay-ico {
+    mix-blend-mode: multiply;
+    background: transparent;
+    padding: 0;
+}
 .tieba-create-btn .clay-ico,
 .qq-chan-item.on .clay-ico,
 .ali-filter-v button.on .clay-ico {
@@ -77,11 +81,8 @@
     .amz-cart,
     .amz-all-btn,
     .amz-sub-right,
-    .amz-footer,
     .amz-breadcrumb,
-    .amz-buybox,
-    .amz-account-head,
-    .amz-account-grid {
+    .amz-buybox {
         display: none !important;
     }
 }
@@ -2285,6 +2286,22 @@
         margin-left: auto;
         color: #0A7E5C;
         font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        cursor: default;
+        padding: 4px 8px;
+    }
+
+    .qq-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10B981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        display: inline-block;
+        flex-shrink: 0;
     }
 
     .qq-realtime-card {
@@ -2432,10 +2449,14 @@
     }
 
     .qq-side-card h4 {
-        margin: 0 0 8px;
+        margin: 0 0 10px;
         font-size: 14px;
         font-weight: 800;
         color: #0F1111;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1.4;
     }
 
     .qq-side-card p {
@@ -2462,12 +2483,23 @@
         margin-bottom: 10px;
     }
 
-    .qq-arcade-box img {
+    .qq-arcade-box > .qq-arcade-mascot,
+    .qq-arcade-box > img:not(.clay-ico) {
         width: 84px;
         height: 84px;
         object-fit: contain;
         margin: 4px auto 10px;
         display: block;
+    }
+
+    .qq-arcade-box .btn-primary {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 8px;
+        font-weight: 800;
     }
 
     .qq-rank-list {
@@ -3954,13 +3986,22 @@
         object-fit: contain !important;
     }
 
-    .qq-arcade-box img {
+    .qq-arcade-box > .qq-arcade-mascot,
+    .qq-arcade-box > img:not(.clay-ico) {
         width: 96px !important;
         height: 96px !important;
         flex-shrink: 0 !important;
         object-fit: contain !important;
         margin: 8px auto 12px !important;
         display: block !important;
+    }
+    .qq-arcade-box .btn-primary .clay-ico,
+    .btn .clay-ico.is-sm {
+        width: 16px !important;
+        height: 16px !important;
+        margin: 0 !important;
+        display: inline-block !important;
+        flex-shrink: 0 !important;
     }
 
     /* ==========================================================================
@@ -4273,6 +4314,7 @@
     .tb-contact-list {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 4px 6px 12px;
         border: 0 !important;
         background: transparent !important;
@@ -4407,6 +4449,9 @@
     }
 
     .tb-online-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
         font-size: 11.5px;
         color: #0A7E5C;
         font-weight: 700;
@@ -6758,13 +6803,113 @@
     .amz-lang,
     .amz-acct-dropdown,
     .amz-poster-strip,
-    .amz-msg-top,
-    .jd-side-nav,
-    .qq-chan-left,
-    .qq-chan-right,
-    .ali-filter-box,
-    .ali-sort-toolbar,
     .tb-float-dock {
         display: none !important;
+    }
+    body {
+        padding-bottom: 84px;
+    }
+    .qq-channel-shell,
+    .jd-center-wrap,
+    .ali-auction-layout,
+    .ai-workbench-grid,
+    .tb-im-window {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    .qq-chan-left,
+    .qq-chan-center,
+    .qq-chan-right,
+    .jd-side-nav,
+    .ali-filter-box,
+    .tb-im-left,
+    .tb-im-center {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .qq-chan-left .qq-chan-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .qq-chan-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .qq-side-card {
+        background: #FFFFFF;
+        border: 1px solid #D5DBDB;
+        border-radius: 10px;
+        padding: 14px;
+    }
+    .qq-side-card h4 {
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 800;
+    }
+    .qq-arcade-box {
+        background: linear-gradient(160deg, #06302A 0%, #0A5C51 100%);
+        color: #FFFFFF;
+        text-align: center;
+    }
+    .qq-arcade-box h3 {
+        color: #FFFFFF;
+        margin: 6px 0 8px;
+    }
+    .qq-arcade-box > .qq-arcade-mascot,
+    .qq-arcade-box > img:not(.clay-ico) {
+        width: 76px !important;
+        height: 76px !important;
+        margin: 6px auto 10px !important;
+        display: block !important;
+        object-fit: contain;
+    }
+    .qq-arcade-box .btn-primary {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .qq-feed-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+    .tieba-bar-header,
+    .tieba-compose-top {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    .tieba-bar-cover {
+        width: 56px;
+        height: 56px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    .qq-rank-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .qq-rank-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .game-frame {
+        min-height: 420px;
+        height: 60vh;
     }
 }

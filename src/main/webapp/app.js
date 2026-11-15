@@ -57,7 +57,8 @@
     var CLAY_ICONS = ['ai', 'auction', 'chat', 'fire', 'game', 'order', 'pin', 'settings', 'star', 'swap', 'user', 'wallet'];
     function clayIcon(name, alt, cls) {
         var key = CLAY_ICONS.indexOf(name) >= 0 ? name : 'star';
-        return '<img class="clay-ico' + (cls ? ' ' + cls : '') + '" src="/assets/icons/' + key + '.jpg" alt="' + esc(alt || '') + '" loading="lazy" decoding="async">';
+        var px = cls && cls.indexOf('is-lg') >= 0 ? 30 : (cls && cls.indexOf('is-sm') >= 0 ? 16 : 18);
+        return '<img class="clay-ico' + (cls ? ' ' + cls : '') + '" src="/assets/icons/' + key + '.jpg" alt="' + esc(alt || '') + '" width="' + px + '" height="' + px + '" loading="eager" decoding="async">';
     }
 
     var OFFER_STATUS = {
@@ -105,6 +106,21 @@
         });
     }
 
+    function safeRoute(raw, fallback) {
+        var val = String(raw || '').trim();
+        return /^#\/[a-z0-9/_-]+(?:\?[a-z0-9_=&%-]*)?$/i.test(val) ? val : (fallback || '#/notifications');
+    }
+
+    function safeStoreSet(key, val, warnMsg) {
+        try {
+            localStorage.setItem(key, val);
+            return true;
+        } catch (e) {
+            if (warnMsg) toast(warnMsg, 'err');
+            return false;
+        }
+    }
+
     var THEME_DEFAULT = '#00baae';
     var THEME_PALETTE = ["00baae", "e1f8f6", "006e67", "007c74", "008d84", "ddf8f5", "eefaf9", "ccebe8", "a4dcd7", "123a37", "285b57", "4f7773", "006f68", "e7f9f7", "007e76", "e3f7f5", "ceece9", "d5efec", "00a99e", "008e85", "ccf2ee", "103f3b", "397772", "007f76", "d6f5f1", "e3f8f6", "007e75", "e4f5f3", "e8f9f7", "3a746e", "e0f6f4", "00867d", "d8efed", "e2f7f5", "c7eeea", "dce9e7", "738380", "1c302e", "758783", "607b77", "eaf8f6", "00877e", "5b7772", "153d39", "173d39", "e7f8f5", "00645e", "102321", "536966", "687977", "4a5d5b", "71817f", "526663"];
     function themeColor() {
@@ -148,7 +164,7 @@
         var trade=settingsGroup('交易',[['消息通知','#/notifications'],['我的交换','#/exchange']]);
         var local=settingsGroup('本机记录',[['收藏夹','#/favorites'],['浏览历史','#/history']]);
         var exit=readToken()?'<button class="settings-signout" type="button" data-act="logout">退出登录</button>':'';
-        $('#app').innerHTML = shell('settings','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/me">您的账户</a><span>›</span><b>账号与偏好设置</b></nav><div class="settings-page redesigned-settings amz-wide-page"><header class="redesign-heading"><h1>账号与偏好设置</h1></header><div class="amz-settings-grid">'+account+trade+local+'</div><section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section>'+exit+'</div>');
+        $('#app').innerHTML = shell('settings','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/me">您的账户</a><span>›</span><b>账号与偏好设置</b></nav><div class="settings-page redesigned-settings amz-wide-page"><header class="redesign-heading"><h1>账号与偏好设置 <span class="tag ghost" style="margin-left:6px">v2.0</span></h1></header><div class="amz-settings-grid">'+account+trade+local+'</div><section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section>'+exit+'</div>');
     }
 
     function shelfRead(key) {
@@ -491,7 +507,7 @@
             + '<div><h3>交易保障</h3><a href="#/offers">我的报价</a><a href="#/exchange">我的交换单</a><a href="#/favorites">收藏与历史</a></div>'
             + '<div><h3>账户与帮助</h3><a href="#/me">个人中心</a><a href="#/settings">账号设置</a><a href="#/notifications">消息通知</a></div>'
             + '</div></div>'
-            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈</span></div><p>重庆移通学院 校园闲置流转平台</p></div>'
+            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈 v2.0</span></div><p>重庆移通学院 校园闲置流转平台</p></div>'
             + '</footer>';
     }
     function shell(active,content) {
@@ -2143,11 +2159,11 @@
                 + '<input type="hidden" id="ai-cat-input" name="category" value="数码">'
                 + '<input type="hidden" id="estimate-condition" name="condition" value="light">'
                 + '<div class="ai-chip-section"><span class="ai-sec-label">所属分类</span><div class="ai-chip-grid">'
-                + CATS.map(function (c, i) { return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'ai-cat-input\').value=\'' + esc(c) + '\'">' + esc(c) + '</button>'; }).join('')
+                + CATS.map(function (c, i) { return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" data-act="ai-pick-cat" data-v="' + esc(c) + '">' + esc(c) + '</button>'; }).join('')
                 + '</div></div>'
                 + '<div class="ai-chip-section"><span class="ai-sec-label">新旧成色</span><div class="ai-chip-grid cond-grid">'
                 + [['new', '全新', '90%~95%'], ['light', '九成新', '65%~80%'], ['seven', '七成新', '45%~65%'], ['used', '有使用痕迹', '25%~45%']].map(function (c, i) {
-                    return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'estimate-condition\').value=\'' + c[0] + '\'"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>';
+                    return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" data-act="ai-pick-cond" data-v="' + esc(c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>';
                 }).join('')
                 + '</div></div>'
                 + '<div class="ai-submit-row"><button class="btn btn-primary ai-submit-btn" type="submit">' + clayIcon('ai', 'AI', 'is-sm') + ' 立即开始 AI 智能估价</button></div>'
@@ -2293,8 +2309,8 @@
         var noticeList = nRes[0] || [], convList = nRes[1] || [];
         bodyHtml = '<div class="jd-sub-block"><h3>系统与交易通知 (' + noticeList.length + ')</h3><div class="notice-list">'
             + (noticeList.length ? noticeList.map(function (n) {
-                var target = n.target || '#/notifications';
-                return '<a class="notice-row ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + n.id + '" data-to="' + esc(target) + '"><span class="notice-dot"></span><div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div><time>' + esc(String(n.createdAt || '').slice(0, 16)) + '</time></a>';
+                var target = safeRoute(n.target, '#/notifications');
+                return '<a class="notice-row ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + Number(n.id) + '" data-to="' + esc(target) + '"><span class="notice-dot"></span><div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div><time>' + esc(String(n.createdAt || '').slice(0, 16)) + '</time></a>';
             }).join('') : '<p class="hint">暂无未读系统通知，可在上方打开聊天窗口查看同学留言。</p>')
             + '</div></div>'
             + '<div class="jd-sub-block"><h3>最近私聊会话 (' + convList.length + ')</h3><div class="conversation-list">' + conversationRows(convList) + '</div></div>';
@@ -2496,8 +2512,8 @@
         if (currentView.name !== 'notifications') return;
 
         var realNoticeRows = (notices || []).map(function (n) {
-            var target = /^#\/(offers|exchange(?:\/\d+)?|wishes(?:\/\d+)?|auctions|auction\/mine|chat\/\d+|followers|cycle\/\d+|item\/\d+)$/.test(n.target) ? n.target : '#/notifications';
-            return '<a class="notice-row tb-notice-card ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + n.id + '" data-to="' + esc(target) + '">'
+            var target = safeRoute(n.target, '#/notifications');
+            return '<a class="notice-row tb-notice-card ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + Number(n.id) + '" data-to="' + esc(target) + '">'
                 + '<span class="notice-dot"></span>'
                 + '<div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div>'
                 + '<time>' + esc(String(n.createdAt || '').replace('T', ' ').slice(0, 16)) + '</time>'
@@ -2616,7 +2632,7 @@
 
             + '<div class="tb-im-center">'
             + '<header class="tb-chat-header">'
-            + '<div class="tb-chat-peer"><b>' + esc(activePeer.name) + '</b><span class="tb-online-tag">● 在线</span></div>'
+            + '<div class="tb-chat-peer"><b>' + esc(activePeer.name) + '</b><span class="tb-online-tag"><i class="qq-live-dot" aria-hidden="true"></i>在线</span></div>'
             + '<div class="tb-chat-top-btns">'
             + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
             + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
@@ -3169,7 +3185,7 @@
             + '<button type="button" class="' + (activeTab === 'posts' ? 'on' : '') + '" data-act="comm-tab" data-v="posts">' + clayIcon('order', '看帖', 'is-sm') + ' 看帖与发帖 (' + roomPosts.length + ')</button>'
             + '<button type="button" class="' + (activeTab === 'chat' ? 'on' : '') + '" data-act="comm-tab" data-v="chat">' + clayIcon('chat', '聊天', 'is-sm') + ' 本吧实时聊天室</button>'
             + '<button type="button" class="tieba-tab-cta" data-act="open-create-room">+ 创建聊天室</button>'
-            + '<span class="qq-live-pill">● 实时同步中</span>'
+            + '<span class="qq-live-pill"><i class="qq-live-dot" aria-hidden="true"></i>实时同步中</span>'
             + '</div>'
 
             + (activeTab === 'posts'
@@ -3181,7 +3197,7 @@
             + '<div class="qq-side-card qq-arcade-box">'
             + '<span class="tag">ARCADE</span>'
             + '<h3>Scrap Arena 街机</h3>'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<img class="qq-arcade-mascot" src="/assets/brand/mascot-wave-320.webp" alt="小唤" width="96" height="96">'
             + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">' + clayIcon('game', '街机', 'is-sm') + ' 开始对战</button>'
             + '</div>'
             + '<div class="qq-side-card">'
@@ -3488,7 +3504,7 @@
 
     function renderAppraise() {
         var catButtons = CATS.map(function (c, i) {
-            return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'ai-cat-input\').value=\'' + esc(c) + '\'">' + esc(c) + '</button>';
+            return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" data-act="ai-pick-cat" data-v="' + esc(c) + '">' + esc(c) + '</button>';
         }).join('');
         var condOptions = [
             ['new', '全新', '90%~95% 保值'],
@@ -3496,7 +3512,7 @@
             ['seven', '七成新', '45%~65% 性价比'],
             ['used', '有使用痕迹', '25%~45% 秒出']
         ].map(function (c, i) {
-            return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'estimate-condition\').value=\'' + c[0] + '\'"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>';
+            return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" data-act="ai-pick-cond" data-v="' + esc(c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>';
         }).join('');
 
         var sampleBenchmarks = [
@@ -3510,7 +3526,7 @@
             return '<div class="ai-bench-row">'
                 + '<img src="' + b.img + '" alt="">'
                 + '<div class="ai-bench-info"><b>' + esc(b.name) + '</b><span>原价 ¥' + b.orig + '</span></div>'
-                + '<div class="ai-bench-price"><b>¥' + b.est + '</b><button type="button" onclick="document.getElementById(\'estimate-title\').value=\'' + esc(b.name) + '\';document.getElementById(\'estimate-price\').value=\'' + b.orig + '\';document.querySelector(\'[data-form=estimate]\').requestSubmit();">填入测算</button></div>'
+                + '<div class="ai-bench-price"><b>¥' + b.est + '</b><button type="button" data-act="ai-fill-bench" data-name="' + esc(b.name) + '" data-orig="' + b.orig + '">填入测算</button></div>'
                 + '</div>';
         }).join('');
 
@@ -3538,7 +3554,7 @@
 
             + '<form class="estimate-form ai-form-body" data-form="estimate">'
             + '<label class="ai-upload-zone" for="ai-photo-input">'
-            + '<input id="ai-photo-input" type="file" accept="image/*" hidden onchange="var f=this.files&&this.files[0];if(f){var u=URL.createObjectURL(f);var p=document.getElementById(\'ai-photo-preview\');p.innerHTML=\'<img src=&quot;\'+u+\'&quot; alt=&quot;预览&quot;><span>已上传</span>\';}">'
+            + '<input id="ai-photo-input" type="file" accept="image/*" hidden data-act="ai-photo">'
             + '<span class="ai-corner tl"></span><span class="ai-corner tr"></span><span class="ai-corner bl"></span><span class="ai-corner br"></span>'
             + '<div id="ai-photo-preview" class="ai-upload-inner">'
             + '<span class="ai-cam-ico">' + navIcon('camera') + '</span>'
@@ -3643,7 +3659,8 @@
         [/^#\/email$/, function () { return 'email'; }],
         [/^#\/settings$/, function () { return 'settings'; }],
         [/^#\/admin$/, function () { return 'admin'; }],
-        [/^#\/login$/, function () { return 'login'; }]
+        [/^#\/login$/, function () { return 'login'; }],
+        [/^#\/register$/, function () { return 'register'; }]
     ];
 
     var currentView = {name: 'home', arg: null};
@@ -3687,8 +3704,8 @@
         if (view.name === 'shelf') { renderShelf();return; }
         if (view.name === 'appraise') { renderAppraise(); return; }
         if (view.name === 'landing') { renderLanding(); return; }
-        if (view.name === 'login') {
-            renderLogin(state.loginMode || 'login');
+        if (view.name === 'login' || view.name === 'register') {
+            renderLogin(view.name === 'register' ? 'register' : (state.loginMode || 'login'));
             return;
         }
         if (!state.me && view.name !== 'home' && view.name !== 'relay' && view.name !== 'settings' && view.name !== 'auctions' && view.name !== 'item' && view.name !== 'user' && view.name !== 'community' && view.name !== 'wishes') {
@@ -4114,7 +4131,23 @@
             return;
         }
         if (act === 'landing-how') { $('#landing-how').scrollIntoView({behavior:'smooth'}); return; }
-        if (act === 'landing-lang') { localStorage.setItem('hq.lang', el.dataset.lang); renderLanding(); return; }
+        if (act === 'landing-lang') { safeStoreSet('hq.lang', el.dataset.lang); renderLanding(); return; }
+        if (act === 'ai-pick-cat' || act === 'ai-pick-cond') {
+            el.parentElement.querySelectorAll('.ai-chip').forEach(function (b) { b.classList.remove('on'); });
+            el.classList.add('on');
+            var hidden = document.getElementById(act === 'ai-pick-cat' ? 'ai-cat-input' : 'estimate-condition');
+            if (hidden) hidden.value = el.dataset.v || '';
+            return;
+        }
+        if (act === 'ai-fill-bench') {
+            var estTitle = document.getElementById('estimate-title');
+            var estPrice = document.getElementById('estimate-price');
+            var estForm = document.querySelector('[data-form=estimate]');
+            if (estTitle) estTitle.value = el.dataset.name || '';
+            if (estPrice) estPrice.value = el.dataset.orig || '';
+            if (estForm && estForm.requestSubmit) estForm.requestSubmit();
+            return;
+        }
         if (act === 'community-share') { await withBusy(el,async function(){var items=await api('/item/mine?status=1'); openSheet('<h3>分享我的物品</h3><p class="sub">选择一件已上架的物品分享到公共聊天室。</p>'+(items.length?items.map(function(it){return '<button class="chat-share-option" data-act="community-share-send" data-id="'+it.id+'">'+thumb(it)+'<span>'+esc(it.title)+'</span></button>';}).join(''):'<p>你还没有已上架的物品。</p>')); });return; }
         if (act === 'community-share-send') { await withBusy(el,async function(){await api('/community',{method:'POST',body:{kind:'item',itemId:Number(el.dataset.id)}});closeSheet();await refreshCommunity(true);});return; }
         if (act === 'auction-bid') {
@@ -4167,7 +4200,7 @@
             return;
         }
         if (act === 'logout') {
-            await api('/user/logout', {method: 'POST'});
+            try { await api('/user/logout', {method: 'POST'}); } catch (ignore) {}
             writeToken('');
             state.me = null;
             toast('已退出');
@@ -4830,6 +4863,26 @@
             if(file.size>2*1024*1024){toast('图片不能超过 2MB','err');input.value='';return;}
             var body=new FormData();body.append('file',file);input.disabled=true;
             try {var uploaded=await api('/upload',{method:'POST',form:body});await api('/community',{method:'POST',body:{kind:'image',image:uploaded.url}});await refreshCommunity(true);} catch(e){toast(e.message||'发送失败','err');} finally {input.disabled=false;input.value='';}return;
+        }
+        if (ev.target.dataset.act === 'ai-photo') {
+            var aiFile = ev.target.files && ev.target.files[0];
+            var preview = document.getElementById('ai-photo-preview');
+            if (aiFile && preview) {
+                if (preview.dataset.previewUrl) {
+                    try { URL.revokeObjectURL(preview.dataset.previewUrl); } catch (ignore) {}
+                }
+                var url = URL.createObjectURL(aiFile);
+                preview.dataset.previewUrl = url;
+                preview.innerHTML = '';
+                var imgEl = document.createElement('img');
+                imgEl.src = url;
+                imgEl.alt = '预览';
+                var spanEl = document.createElement('span');
+                spanEl.textContent = '已上传';
+                preview.appendChild(imgEl);
+                preview.appendChild(spanEl);
+            }
+            return;
         }
         if (ev.target.dataset.act === 'pick-image') {
             var files = Array.prototype.slice.call(ev.target.files || []);

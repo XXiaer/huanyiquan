@@ -11,7 +11,7 @@
         view.innerHTML = `<div class="admin-denied">
           <img src="assets/brand/mascot-wave-320.webp" alt="">
           <h2>需要管理员权限</h2>
-          <p>用管理员账号 admin / admin123 登录后，再回到这一页。</p>
+          <p>请使用管理员账号登录后，再回到这一页。</p>
           <a class="btn" href="#/login">去登录</a>
         </div>`;
         return;

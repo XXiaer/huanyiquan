@@ -231,7 +231,7 @@
           wrap.className = 'pe-thumb-wrap';
           wrap.draggable = true;
           wrap.dataset.i = i;
-          wrap.innerHTML = `<img class="pe-thumb" src="${p}" alt="">
+          wrap.innerHTML = `<img class="pe-thumb" src="${esc(safeMediaUrl(p, 'assets/brand/placeholder.png'))}" alt="">
             <span class="x" data-del="${i}">${icon('close', 11)}</span>
             ${i === 0 ? '<span class="first">首图</span>' : ''}`;
           wrap.querySelector('[data-del]').addEventListener('click', (e) => {
@@ -286,7 +286,7 @@
         pickSheet('选择分类', CATEGORIES, state.category, (v) => {
           state.category = v;
           const el = document.getElementById('cateVal');
-          el.textContent = ''; el.insertAdjacentHTML('beforeend', v + icon('right', 16));
+          el.textContent = v; el.insertAdjacentHTML('beforeend', icon('right', 16));
           el.classList.add('on'); el.classList.remove('err');
           saveDraft();
         });
@@ -309,10 +309,10 @@
               state[key] = v;
               if (key === 'price') {
                 const el = document.getElementById('priceVal');
-                el.textContent = ''; el.insertAdjacentHTML('beforeend', (v ? '¥' + v : '¥0.00') + icon('right', 16));
+                el.textContent = v ? '¥' + v : '¥0.00'; el.insertAdjacentHTML('beforeend', icon('right', 16));
               } else {
                 const el = document.getElementById('origVal');
-                el.textContent = ''; el.insertAdjacentHTML('beforeend', (v ? '¥' + v : '选填') + icon('right', 16));
+                el.textContent = v ? '¥' + v : '选填'; el.insertAdjacentHTML('beforeend', icon('right', 16));
               }
               state.allowBargain = sw.classList.contains('on');
               const bs = document.getElementById('bargainSw');

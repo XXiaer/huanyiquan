@@ -577,10 +577,12 @@
           ? `<div class="bubble-row bubble-row--me">${avatar(meObj || '我', 36)}<div class="bubble-wrap">${html}</div></div>`
           : `<div class="bubble-row">${peerAv}<div class="bubble-wrap">${html}</div></div>`;
         if (m.kind === 'image') {
-          return card(`<img src="${m.image}" style="max-width:210px;border-radius:12px" alt="">`);
+          const imgUrl = safeMediaUrl(m.image, 'assets/brand/placeholder.png');
+          return card(`<img src="${esc(imgUrl)}" style="max-width:210px;border-radius:12px" alt="">`);
         }
         if (m.kind === 'voice') {
-          return card(`<div class="bubble" style="padding:8px 12px"><audio controls src="${m.image}" style="height:32px;max-width:200px"></audio></div>`);
+          const audioUrl = safeMediaUrl(m.image);
+          return card(`<div class="bubble" style="padding:8px 12px">${audioUrl ? `<audio controls src="${esc(audioUrl)}" style="height:32px;max-width:200px"></audio>` : '语音消息暂不可播放'}</div>`);
         }
         if (m.kind === 'meet') {
           let ex = {};
@@ -608,8 +610,9 @@
           let ex = {};
           try { ex = JSON.parse(m.extra || '{}'); } catch (e) { /* 忽略 */ }
           if (!ex.title) return card(`<div class="bubble">${esc(m.content)}</div>`);
+          const cardPic = safeMediaUrl(ex.image || api.firstPic({ images: ex.images }), 'assets/brand/placeholder.png');
           return card(`<div class="bubble" style="padding:9px;width:220px">
-            <img src="${ex.image || api.firstPic({ images: ex.images })}" style="width:100%;height:130px;object-fit:cover;border-radius:8px" alt="">
+            <img src="${esc(cardPic)}" style="width:100%;height:130px;object-fit:cover;border-radius:8px" alt="">
             <div style="margin-top:7px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(ex.title)}</div>
             <div class="price" style="font-size:16px;margin-top:3px"><em>¥</em><b>${api.yuan(ex.price) || '想换'}</b></div>
           </div>`);
@@ -1281,7 +1284,7 @@
                 <span class="time">${a.state === 'active' ? '剩余 ' + remainText(a.endsAt) : '已结束'}</span>
                 ${a.state === 'active'
                   ? `<button class="chip on" data-bid="${a.id}" data-cur="${a.currentPrice}" data-title="${esc(a.title)}">出价</button>`
-                  : `<a class="chip" href="${a.itemId ? '#/item/' + a.itemId : '#/auction'}">看看</a>`}
+                  : `<a class="chip" href="${a.itemId ? '#/item/' + Number(a.itemId) : '#/market'}">${a.itemId ? '看看' : '去集市'}</a>`}
               </div>
             </div>
           </div>`).join('') : mascotEmpty('还没有正在进行的拍卖', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/auction', text: '发起一场' })}
@@ -1560,11 +1563,11 @@
       </div>
 
       <div class="s-tabrow">
-        <a class="on" href="javascript:void 0">我常换的</a>
-        <a href="javascript:void 0">教材</a>
-        <a href="javascript:void 0">数码</a>
-        <a href="javascript:void 0">运动</a>
-        <a href="javascript:void 0">生活</a>
+        <a class="on" href="#/search">我常换的</a>
+        <a href="#/category/%E6%95%99%E6%9D%90">教材</a>
+        <a href="#/category/%E6%95%B0%E7%A0%81">数码</a>
+        <a href="#/category/%E8%BF%90%E5%8A%A8">运动</a>
+        <a href="#/category/%E7%94%9F%E6%B4%BB">生活</a>
       </div>
       <div class="s-bought">
         ${items.slice(0, 6).map((it) => `
@@ -1686,22 +1689,22 @@
       </div>
 
       <div class="r-tabs">
-        <a class="${tabCls('all')}" data-tab="all" href="javascript:void 0">全部</a>
-        <a class="${tabCls('personal')}" data-tab="personal" href="javascript:void 0">个人闲置</a>
-        <a class="${tabCls('users')}" data-tab="users" href="javascript:void 0">用户</a>
+        <a class="${tabCls('all')}" data-tab="all" href="#/search">全部</a>
+        <a class="${tabCls('personal')}" data-tab="personal" href="#/search">个人闲置</a>
+        <a class="${tabCls('users')}" data-tab="users" href="#/search">用户</a>
       </div>
 
       <div class="sortbar">
-        <a class="${sort === '' ? 'on' : ''}" data-sort="" href="javascript:void 0">综合 ${icon('down', 13)}</a>
-        <a class="${sort === 'price_asc' || sort === 'price_desc' ? 'on' : ''}" data-sort="price" href="javascript:void 0">价格 ${icon('sortPrice', 13)}</a>
-        <a class="${sort === 'drop' ? 'on' : ''}" data-sort="drop" href="javascript:void 0">降价</a>
-        <a class="${sort === 'new' ? 'on' : ''}" data-sort="new" href="javascript:void 0">新发</a>
-        <a data-sort="area" href="javascript:void 0">区域 ${icon('down', 13)}</a>
-        <a class="flt" id="rFilter" href="javascript:void 0">${icon('filter', 14)}筛选</a>
+        <a class="${sort === '' ? 'on' : ''}" data-sort="" href="#/search">综合 ${icon('down', 13)}</a>
+        <a class="${sort === 'price_asc' || sort === 'price_desc' ? 'on' : ''}" data-sort="price" href="#/search">价格 ${icon('sortPrice', 13)}</a>
+        <a class="${sort === 'drop' ? 'on' : ''}" data-sort="drop" href="#/search">降价</a>
+        <a class="${sort === 'new' ? 'on' : ''}" data-sort="new" href="#/search">新发</a>
+        <a data-sort="area" href="#/search">区域 ${icon('down', 13)}</a>
+        <a class="flt" id="rFilter" href="#/search">${icon('filter', 14)}筛选</a>
       </div>
 
       <div class="r-chips">
-        <span class="chip">${icon('user', 14)}个人闲置</span>
+        <span class="chip" id="chipPersonal">${icon('user', 14)}个人闲置</span>
         <span class="chip" id="chipCond">成色 ${icon('down', 12)}</span>
         <span class="chip" id="chipCat">分类 ${icon('down', 12)}</span>
         ${filter.tradeMode ? '<span class="chip on">只看以物换物</span>' : ''}
@@ -1712,10 +1715,12 @@
       ${!list.length && conditions.length ? '<p class="r-chips">没有商品同时满足这些条件，可修改搜索词放宽条件。</p>' : ''}
       ${bodyHtml}`;
 
-      view.querySelectorAll('[data-tab]').forEach((a) => a.addEventListener('click', () => {
+      view.querySelectorAll('[data-tab]').forEach((a) => a.addEventListener('click', (e) => {
+        e.preventDefault();
         window.__searchTab = a.dataset.tab; renderRoute();
       }));
-      view.querySelectorAll('[data-sort]').forEach((a) => a.addEventListener('click', () => {
+      view.querySelectorAll('[data-sort]').forEach((a) => a.addEventListener('click', (e) => {
+        e.preventDefault();
         const k = a.dataset.sort;
         if (k === 'area') {
           openSheet('选区域', `<div class="pe-chips">${['缤果大街', '紫荆 3 号楼', '紫荆 5 号楼', '图书馆', '体育馆']
@@ -1733,6 +1738,12 @@
         renderRoute();
       }));
 
+      document.getElementById('chipPersonal')?.addEventListener('click', () => {
+        window.__searchTab = 'personal';
+        renderRoute();
+      });
+      document.getElementById('chipCond')?.addEventListener('click', () => document.getElementById('rFilter')?.click());
+      document.getElementById('chipCat')?.addEventListener('click', () => document.getElementById('rFilter')?.click());
       document.getElementById('rClear').addEventListener('click', () => { document.getElementById('rInput').value = ''; });
       document.getElementById('rInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') location.hash = '#/search/' + encodeURIComponent(e.target.value.trim());
@@ -1743,7 +1754,8 @@
         localStorage.setItem('searchSubs', JSON.stringify(subs));
         toast('已订阅「' + kw + '」，有新上架会通知你');
       });
-      document.getElementById('rFilter').addEventListener('click', () => {
+      document.getElementById('rFilter').addEventListener('click', (e) => {
+        e.preventDefault();
         openSheet('筛选', `
           <div class="label">分类</div>
           <div class="pe-chips" id="fCat">${['教材', '数码', '运动', '生活', '衣物', '其他']

@@ -1,5 +1,8 @@
 /* 路由与启动 */
 (function () {
+  function safeDecode(s) {
+    try { return decodeURIComponent(s); } catch (e) { return s || ''; }
+  }
   const ROUTES = [
     [/^\/?$/, 'home', () => ({})],
     [/^\/home$/, 'home', () => ({})],
@@ -11,7 +14,7 @@
     [/^\/user\/(\d+)$/, 'profile', (m) => ({ id: Number(m[1]), tab: 'items' })],
     [/^\/user\/(\d+)\/([\w-]+)$/, 'profile', (m) => ({ id: Number(m[1]), tab: m[2] })],
     [/^\/search$/, 'searchLanding', () => ({})],
-    [/^\/search\/(.+)$/, 'searchResult', (m) => ({ kw: decodeURIComponent(m[1]) })],
+    [/^\/search\/(.+)$/, 'searchResult', (m) => ({ kw: safeDecode(m[1]) })],
     [/^\/publish$/, 'publishEntry', () => ({})],
     [/^\/publish\/edit\/(\w+)$/, 'publishEdit', (m) => ({ kind: m[1] })],
     [/^\/item\/(\d+)\/edit$/, 'publishEdit', (m) => ({ kind: 'idle', itemId: Number(m[1]) })],
@@ -21,13 +24,13 @@
     [/^\/cycle\/(\d+)$/, 'cycle', (m) => ({ id: Number(m[1]) })],
     [/^\/exchange\/(\d+)$/, 'exchangeDetail', (m) => ({ id: Number(m[1]) })],
     [/^\/idle$/, 'market', () => ({ idle: true })],
-    [/^\/idle\/category\/(.*)$/, 'market', m => ({ idle: true, category: decodeURIComponent(m[1]) })],
+    [/^\/idle\/category\/(.*)$/, 'market', m => ({ idle: true, category: safeDecode(m[1]) })],
     [/^\/market$/, 'market', () => ({})],
     [/^\/community$/, 'community', () => ({})],
     [/^\/community\/game$/, 'communityGame', () => ({})],
-    [/^\/auction$/, 'auction', () => ({})],
-    [/^\/category\/(.*)$/, 'market', (m) => ({ category: m[1] ? decodeURIComponent(m[1]) : '' })],
-    [/^\/wish$/, 'wish', () => ({})],
+    [/^\/auctions?$/, 'auction', () => ({})],
+    [/^\/category\/(.*)$/, 'market', (m) => ({ category: m[1] ? safeDecode(m[1]) : '' })],
+    [/^\/wish(?:es)?$/, 'wish', () => ({})],
     [/^\/notifications$/, 'notifications', () => ({ cat: '' })],
     [/^\/notifications\/(\w+)$/, 'notifications', (m) => ({ cat: m[1] })],
     [/^\/appraise$/, 'appraise', () => ({})],
@@ -46,7 +49,7 @@
     [/^\/help$/, 'helpCenter', () => ({})],
     [/^\/quote$/, 'marketQuote', () => ({})],
     [/^\/users$/, 'users', () => ({ kw: '' })],
-    [/^\/users\/(.+)$/, 'users', (m) => ({ kw: decodeURIComponent(m[1]) })],
+    [/^\/users\/(.+)$/, 'users', (m) => ({ kw: safeDecode(m[1]) })],
     [/^\/refresh$/, 'refreshPick', () => ({})],
     [/^\/admin$/, 'admin', () => ({ tab: 'items' })],
     [/^\/admin\/(\w+)$/, 'admin', (m) => ({ tab: m[1] })],

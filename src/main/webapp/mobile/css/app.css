@@ -38,7 +38,7 @@
 
   --page-w: 430px;
   --nav-h: 58px;
-  --safe-b: 24px;
+  --safe-b: max(24px, env(safe-area-inset-bottom, 0px));
   --safe-top: env(safe-area-inset-top, 0px);
 
   --font: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans CJK SC", "Microsoft YaHei UI", "Inter",

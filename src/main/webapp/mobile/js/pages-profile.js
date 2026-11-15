@@ -54,7 +54,7 @@
             <div class="hd">${avatar({ nickname: u.nickname, id: u.id, avatar: u.avatar }, 38)}
               <div><b>${esc(u.nickname)}</b><span>${fmtTime(m.createTime)}</span></div></div>
             <p>${esc(m.content || '')}</p>
-            ${m.image ? `<img class="pic" src="${m.image}" alt="">` : ''}
+            ${safeMediaUrl(m.image) ? `<img class="pic" src="${esc(safeMediaUrl(m.image))}" alt="">` : ''}
           </div>`).join('')}</div>` : mascotEmpty('还没有发过动态', 'assets/brand/mascot-wave-320.webp');
       } else {
         body = items.length ? `<div class="r-feed-wrap">${waterfall(items)}</div>`
@@ -67,10 +67,10 @@
           <span class="ico" onclick="history.back()">${icon('back', 22)}</span>
           <span class="spacer"></span>
           ${isMe ? `<span class="pf-pill" id="pfEdit">${icon('edit', 13)}编辑资料</span>` : ''}
-          <span class="ico" id="pfShare">${icon('share', 21)}</span>
+          <button type="button" class="ico" data-share-profile aria-label="分享主页">${icon('share', 21)}</button>
         </div>
         <div class="pf-id">
-          <div class="pf-avt">${u.avatar ? `<img src="${u.avatar}" alt="">` : esc((u.nickname || '?').slice(0, 1))}</div>
+          <div class="pf-avt">${safeMediaUrl(u.avatar) ? `<img src="${esc(safeMediaUrl(u.avatar))}" alt="">` : esc((u.nickname || '?').slice(0, 1))}</div>
           <div class="pf-id__main">
             <div class="pf-name">${esc(u.nickname)}</div>
             <div class="pf-sub"><span><b>${u.fansCount || 0}</b> 粉丝</span><span><b>${u.followingCount || 0}</b> 关注</span><span>${visit}</span></div>
@@ -99,7 +99,7 @@
         ${avatar({ nickname: u.nickname, id: u.id, avatar: u.avatar }, 30)}
         <span class="pf-compact__name">${esc(u.nickname)}</span>
         <span style="flex:1"></span>
-        ${isMe ? `<button class="pf-compact__act" id="pfEdit">${icon('edit', 19)}</button>` : `<button class="pf-compact__act" id="pfShare">${icon('share', 19)}</button>`}
+        ${isMe ? `<button class="pf-compact__act" id="pfEdit">${icon('edit', 19)}</button>` : `<button class="pf-compact__act" data-share-profile aria-label="分享主页">${icon('share', 19)}</button>`}
       </div>`;
 
       view.innerHTML = `
@@ -110,7 +110,7 @@
         ${avatar({ nickname: u.nickname, id: u.id, avatar: u.avatar }, 30)}
         <span class="pf-mini__name">${esc(u.nickname)}</span>
         <span class="spacer" style="flex:1"></span>
-        <span class="ico" style="color:var(--ink-900)">${icon('share', 20)}</span>
+        <button type="button" class="ico" data-share-profile aria-label="分享主页" style="color:var(--ink-900)">${icon('share', 20)}</button>
       </div>` : ''}
 
       <div class="pf-body${isItems ? '' : ' pf-body--compact'}">
@@ -126,12 +126,11 @@
       ${isMe ? `<a class="pf-fab" href="#/publish/edit/idle">${icon('camera', 19)}<span>发闲置</span></a>` : ''}
       `;
 
-      const shareBtn = document.getElementById('pfShare');
-      if (shareBtn) shareBtn.addEventListener('click', async () => {
+      view.querySelectorAll('[data-share-profile]').forEach((btn) => btn.addEventListener('click', async () => {
         const url = location.origin + '/#/user/' + u.id;
         if (navigator.share) { try { await navigator.share({ title: u.nickname + ' 的换一圈主页', url }); return; } catch (e) { /* 取消 */ } }
         try { await navigator.clipboard.writeText(url); toast('主页链接已复制'); } catch (e) { toast('链接：' + url); }
-      });
+      }));
 
       const followBtn = document.getElementById('pfFollow');
       if (followBtn) followBtn.addEventListener('click', async () => {

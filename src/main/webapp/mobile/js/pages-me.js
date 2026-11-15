@@ -87,7 +87,7 @@
         </div>
 
         <section class="member-panel">
-          <div class="member-banner"><img class="member-banner__art" src="assets/brand/member-title-art.png" alt="唤唤会员"><h2>唤唤会员</h2></div>
+          <div class="member-banner"><img class="member-banner__art" src="assets/brand/member-title-art.png?v=2.0.0" alt="换一圈会员"><h2>换一圈会员</h2></div>
         <div class="me-stats">
           <a href="#/collection"><b>${stats.favorite || 0}</b><span>我的收藏</span></a>
           <a href="#/history"><b>${stats.history || 0}</b><span>历史浏览</span></a>
@@ -166,7 +166,7 @@
       { t: '个人信息共享清单', href: '#/settings/share' },
     ] },
     { name: '关于', rows: [
-      { t: '关于换一圈', href: '#/settings/about', v: 'v4.0.0' },
+      { t: '关于换一圈', href: '#/settings/about', v: 'v2.0' },
       { t: '把换一圈推荐给朋友', href: '#/settings/invite' },
       { t: '平台公约', href: '#/settings/pact' },
     ] },
@@ -557,7 +557,7 @@
       const content = {
         collect: ['个人信息采集清单', `我们采集的信息及用途：\n\n- 学号：用于登录与身份识别，不对外展示\n- 昵称、头像、简介：用于个人主页和商品展示\n- 书院、宿舍楼：用于就近面交与区域筛选\n- 信用分与评价：用于交易可信度展示\n- 商品图片与描述：你主动发布的内容\n\n我们不采集通讯录、精确位置轨迹、相册以外的文件。`],
         share: ['个人信息共享清单', `这些信息会对其他同学可见：\n\n- 昵称、头像、个人简介\n- 书院与宿舍楼（可在隐私设置中关闭）\n- 信用分、买家/卖家信用等级\n- 你发布的商品、评价与社区动态\n\n学号、邮箱、登录凭证不会共享给任何人。管理员仅在处理举报与纠纷时查看必要信息。`],
-        about: ['关于换一圈', `换一圈是重庆移通学院的校园以物换物平台。\n\n我们把「以物换物」做成了一件更轻松的事：发布闲置、提出交换、三方凑成换物环、校内面交、双向评价。\n\n当前版本 v4.0.0\n技术栈：原生 HTML/CSS/JS + Java Servlet + MySQL\n联系方式：学生工作处`],
+        about: ['关于换一圈', `换一圈是重庆移通学院的校园以物换物平台。\n\n我们把「以物换物」做成了一件更轻松的事：发布闲置、提出交换、三方凑成换物环、校内面交、双向评价。\n\n当前版本 v2.0\n技术栈：原生 HTML/CSS/JS + Java Servlet + MySQL\n联系方式：学生工作处`],
         pact: ['平台公约', `一、真实发布\n商品描述、成色、价格必须真实，图片应为本人实拍。\n\n二、校内面交\n优先选择图书馆、食堂、宿舍楼下等人多的地方，贵重物品当面验货。\n\n三、友善沟通\n不骚扰、不辱骂、不诱导脱离平台交易。\n\n四、禁止内容\n违禁物品、代写代考、刷单套现、虚假信息一律下架并扣除信用分。\n\n五、纠纷处理\n可在私聊页或商品页举报，管理员会在 24 小时内处理。`],
         invite: ['推荐给朋友', `把换一圈分享给同学，一起把闲置盘活。\n\n点击下方按钮复制你的邀请链接。`],
       }[sub];

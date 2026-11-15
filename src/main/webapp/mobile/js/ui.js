@@ -1,11 +1,24 @@
 /* 通用 UI：toast、弹层、头像、商品卡、瀑布流、底部导航、格式化 */
 (function () {
+  window.safeMediaUrl = function (u, fallback) {
+    const val = String(u || '').trim();
+    if (!val) return fallback || '';
+    if (/^(?:\/|assets\/|https?:\/\/|blob:|data:image\/(?:png|jpeg|jpg|webp|gif);base64,)/i.test(val)) {
+      return val;
+    }
+    return fallback || '';
+  };
+
   /* ------------------------------------------------------------- toast */
   let toastTimer = null;
   window.toast = function (msg, ms) {
     let host = document.getElementById('toastHost');
     if (!host) { host = document.createElement('div'); host.id = 'toastHost'; document.body.appendChild(host); }
-    host.innerHTML = `<div class="toast">${msg}</div>`;
+    host.innerHTML = '';
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg == null ? '' : String(msg);
+    host.appendChild(el);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { host.innerHTML = ''; }, ms || 1800);
   };
@@ -64,13 +77,13 @@
     const s = size || 36;
     const name = typeof user === 'string' ? user : (user && (user.nickname || user.peer || user.name)) || '同';
     const id = typeof user === 'object' && user ? (user.id || user.peerId || 0) : 0;
-    const src = typeof user === 'object' && user ? (user.avatar || user.peerAvatar || user.fromAvatar || '') : '';
+    const src = safeMediaUrl(typeof user === 'object' && user ? (user.avatar || user.peerAvatar || user.fromAvatar || '') : '');
     if (src) {
-      return `<img class="avt ${cls || ''}" style="width:${s}px;height:${s}px" src="${src}" alt="">`;
+      return `<img class="avt ${esc(cls || '')}" style="width:${s}px;height:${s}px" src="${esc(src)}" alt="">`;
     }
-    const ch = String(name).trim().slice(0, 1) || '同';
-    const c = AV_COLORS[Math.abs(Number(id) || name.length) % AV_COLORS.length];
-    return `<span class="avt ${cls || ''}" style="width:${s}px;height:${s}px;background:${c};font-size:${Math.round(s * 0.42)}px">${ch}</span>`;
+    const ch = esc(String(name).trim().slice(0, 1) || '同');
+    const c = AV_COLORS[Math.abs(Number(id) || String(name).length) % AV_COLORS.length];
+    return `<span class="avt ${esc(cls || '')}" style="width:${s}px;height:${s}px;background:${c};font-size:${Math.round(s * 0.42)}px">${ch}</span>`;
   };
 
   /* ------------------------------------------------------------- 时间 */
@@ -274,14 +287,16 @@
   window.esc = function (s) {
     return String(s === null || s === undefined ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   };
 
   window.mascotEmpty = function (text, src, action) {
+    const imgSrc = safeMediaUrl(src, 'assets/brand/mascot-wave-320.webp');
+    const actHref = action && action.href ? String(action.href) : '#/home';
     return `<div class="empty">
-      <div class="mascot-slot"><img src="${src || 'assets/brand/mascot-wave-320.webp'}" alt=""></div>
+      <div class="mascot-slot"><img src="${esc(imgSrc)}" alt=""></div>
       <p>${text}</p>
-      ${action ? `<a class="btn btn--ghost btn--sm" href="${action.href}">${action.text}</a>` : ''}
+      ${action ? `<a class="btn btn--ghost btn--sm" href="${esc(actHref)}">${esc(action.text || '')}</a>` : ''}
     </div>`;
   };
 
