@@ -23,6 +23,7 @@ public class ItemServlet extends BaseServlet {
             throw notFound();
         }
         Params p = Params.of(req);
+        Integer allowBargainInt = p.intOf("allowBargain", null);
         long itemId = ItemService.create(uid(req),
                 p.str("title"),
                 p.str("category"),
@@ -31,7 +32,16 @@ public class ItemServlet extends BaseServlet {
                 p.str("images"),
                 p.str("expectDesc"),
                 p.str("wantCategory"),
-                p.lng("wantItemId"), p.str("matchMode"));
+                p.lng("wantItemId"),
+                p.str("matchMode"),
+                p.intOf("price", null),
+                p.intOf("originalPrice", null),
+                p.intOf("tradeMode", null),
+                p.str("place"),
+                p.str("wantText"),
+                p.str("brand"),
+                p.str("delivery"),
+                allowBargainInt == null ? null : allowBargainInt != 0);
         ok(resp, "已提交审核", java.util.Collections.singletonMap("itemId", itemId));
     }
 
@@ -45,6 +55,8 @@ public class ItemServlet extends BaseServlet {
                     p.str("conditionLevel", p.str("condition")),
                     p.str("building"),
                     p.str("keyword"),
+                    p.intOf("tradeMode", null),
+                    p.str("sort"),
                     p.intOf("page", 1),
                     p.intOf("size", 20)));
             return;
@@ -82,6 +94,7 @@ public class ItemServlet extends BaseServlet {
             ok(resp, on ? "已提交审核" : "已下架", null);
             return;
         }
+        Integer allowBargainInt = p.intOf("allowBargain", null);
         ItemService.update(uid(req), itemId,
                 p.str("title"),
                 p.str("category"),
@@ -90,7 +103,16 @@ public class ItemServlet extends BaseServlet {
                 p.str("images"),
                 p.str("expectDesc"),
                 p.str("wantCategory"),
-                p.lng("wantItemId"), p.str("matchMode"));
+                p.lng("wantItemId"),
+                p.str("matchMode"),
+                p.intOf("price", null),
+                p.intOf("originalPrice", null),
+                p.intOf("tradeMode", null),
+                p.str("place"),
+                p.str("wantText"),
+                p.str("brand"),
+                p.str("delivery"),
+                allowBargainInt == null ? null : allowBargainInt != 0);
         ok(resp, "已保存", null);
     }
 }

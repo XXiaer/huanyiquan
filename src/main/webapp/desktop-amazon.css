@@ -155,11 +155,15 @@
         align-items: center;
         gap: 6px;
         padding: 6px 10px;
+        background: transparent;
         border: 1px solid transparent;
         border-radius: 3px;
         color: #ffffff;
         flex: none;
         line-height: 1.2;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
     }
     .amz-deliver:hover { border-color: rgba(255, 255, 255, .85); }
     .amz-deliver .nav-icon { width: 18px; height: 18px; color: #ffffff; margin-top: 6px; }
@@ -3346,6 +3350,7 @@
         object-fit: cover;
         border-radius: 6px;
         border: 1px solid #EEE;
+        background: #EEF4F2;
     }
 
     .jd-me-3posters {
@@ -3393,6 +3398,7 @@
         height: 76px;
         object-fit: cover;
         border-radius: 4px;
+        background: #E8F1EE;
     }
 
     /* ==========================================================================
@@ -4494,6 +4500,8 @@
     .tb-chat-stream {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
+        min-width: 0;
         padding: 18px 20px;
         display: flex;
         flex-direction: column;
@@ -6998,4 +7006,258 @@
         min-height: 420px;
         height: 60vh;
     }
+}
+
+/* =====================================================================
+   双轨价格筛选条、弹窗交互与桌面端细节打磨 (v2.0.5)
+   ===================================================================== */
+.amz-nowrap {
+    white-space: nowrap;
+}
+.amz-fav-ico .nav-icon {
+    width: 24px;
+    height: 24px;
+    color: #F08C1A;
+}
+.amz-orig-price {
+    font-size: 11.5px;
+    color: #9CA3AF;
+    margin-left: 5px;
+}
+.amz-dual-tag {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #E8F5F1;
+    color: #0A5C51;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.amz-detail-orig {
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-left: 8px;
+}
+.amz-dual-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    margin: 0 0 12px;
+    background: #FFFFFF;
+    border: 1px solid #E5EAE8;
+    border-radius: 6px;
+}
+.amz-tm-pills,
+.amz-sort-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.amz-tm-pill,
+.amz-sort-pill {
+    padding: 5px 12px;
+    border: 1px solid #DCE3E0;
+    border-radius: 5px;
+    background: #F8FAF9;
+    color: #374151;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.amz-tm-pill:hover,
+.amz-sort-pill:hover {
+    border-color: #0A5C51;
+    color: #0A5C51;
+}
+.amz-tm-pill.on,
+.amz-sort-pill.on {
+    background: #0A5C51;
+    border-color: #0A5C51;
+    color: #FFFFFF;
+}
+.amz-side-tag.on {
+    background: #0A5C51;
+    color: #FFFFFF;
+    border-color: #0A5C51;
+}
+.pub-price-group {
+    padding: 12px;
+    border: 1px solid #DCE8E4;
+    border-radius: 6px;
+    background: #F7FBFA;
+}
+.pub-price-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.pub-bargain-chk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+}
+.amz-hero-zoom-wrap {
+    position: relative;
+    cursor: zoom-in;
+}
+.amz-zoom-pill {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(6, 48, 42, 0.78);
+    color: #FFFFFF;
+    font-size: 12px;
+    pointer-events: none;
+}
+.amz-zoom-pill .nav-icon {
+    width: 14px;
+    height: 14px;
+}
+.amz-lightbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 0;
+}
+.amz-lightbox img {
+    max-width: 100%;
+    max-height: 75vh;
+    border-radius: 6px;
+    object-fit: contain;
+}
+.offer-pick-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.offer-pick-card.is-picked {
+    box-shadow: 0 0 0 2px rgba(10, 92, 81, 0.25);
+}
+.auc-modal-box .auc-modal-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.auc-modal-box .auc-modal-top img,
+.wish-modal-box .auc-modal-top img,
+.relay-modal-box .auc-modal-top img {
+    width: 84px;
+    height: 84px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #F3F4F6;
+}
+.wish-modal-box .auc-modal-top,
+.relay-modal-box .auc-modal-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.auc-modal-top h4 {
+    margin: 4px 0 6px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #111827;
+}
+.auc-modal-meta {
+    margin: 0;
+    font-size: 12px;
+    color: #6B7280;
+}
+.auc-modal-desc {
+    margin: 10px 0;
+    padding: 8px 10px;
+    background: #F8FAF9;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+}
+.auc-modal-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+    background: #FFF9F3;
+    border: 1px solid #FFE2C4;
+    border-radius: 6px;
+    text-align: center;
+}
+.auc-modal-stats span {
+    display: block;
+    font-size: 11.5px;
+    color: #6B7280;
+}
+.auc-modal-stats b {
+    font-size: 14px;
+    color: #111827;
+}
+.tb-im-center {
+    min-width: 0;
+}
+.tb-bubble,
+.tb-real-item-card,
+.tb-msg-group {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.tb-tool-icons .tb-tool-pill {
+    width: auto !important;
+    padding: 0 9px;
+    gap: 4px;
+    font-size: 12px;
+    color: #374151;
+}
+.tb-tool-icons .tb-tool-pill .nav-icon {
+    width: 15px;
+    height: 15px;
+    color: #0A5C51;
+}
+.tb-im-side-links {
+    background: #FFFFFF;
+    border: 1px solid #ECEEF2;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.tb-im-side-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: #374151;
+    text-decoration: none;
+}
+.tb-im-side-links a:hover {
+    background: #F0F9F6;
+    color: #0A5C51;
+}
+.tb-im-side-links .nav-icon {
+    width: 15px;
+    height: 15px;
+}
+.jd-order-mini-meta p {
+    margin: 0 0 4px;
+    font-size: 12.5px;
+    color: #6B7280;
 }

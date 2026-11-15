@@ -14,6 +14,15 @@ public class Item {
     /** 图片路径，逗号分隔，只存路径不存二进制 */
     public String images;
     public String expectDesc;
+    public Integer price;
+    public Integer originalPrice;
+    /** 1 明码标价 / 2 以物换物 / 3 拍卖 / 4 可买可换双轨 */
+    public Integer tradeMode;
+    public String place;
+    public String wantText;
+    public String brand;
+    public String delivery;
+    public Boolean allowBargain;
     public Integer status;
     public Boolean isDemo;
     public Boolean allowCycle;

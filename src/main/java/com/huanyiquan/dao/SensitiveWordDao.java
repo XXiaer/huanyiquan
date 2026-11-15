@@ -35,8 +35,14 @@ public final class SensitiveWordDao {
         if (text == null || text.isEmpty()) {
             return;
         }
+        String rawLower = text.toLowerCase(java.util.Locale.ROOT);
+        String normLower = rawLower.replaceAll("[\\s\\p{Punct}·•・_]+", "");
         for (String w : BLOCK_WORDS) {
-            if (!w.isEmpty() && text.contains(w)) {
+            if (w.isEmpty()) {
+                continue;
+            }
+            String wl = w.toLowerCase(java.util.Locale.ROOT);
+            if (rawLower.contains(wl) || normLower.contains(wl)) {
                 throw new BizException(Const.CODE_BAD_REQUEST,
                         fieldName + "含有不允许的词「" + w + "」，请修改后再提交");
             }

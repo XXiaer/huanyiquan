@@ -28,6 +28,18 @@ public final class ItemDao {
         it.description = rs.getString("description");
         it.images = rs.getString("images");
         it.expectDesc = rs.getString("expect_desc");
+        Object priceObj = rs.getObject("price");
+        it.price = priceObj == null ? null : ((Number) priceObj).intValue();
+        Object origObj = rs.getObject("original_price");
+        it.originalPrice = origObj == null ? null : ((Number) origObj).intValue();
+        Object modeObj = rs.getObject("trade_mode");
+        it.tradeMode = modeObj == null ? (it.price != null && it.price > 0 ? 4 : 2) : ((Number) modeObj).intValue();
+        it.place = rs.getString("place");
+        it.wantText = rs.getString("want_text");
+        it.brand = rs.getString("brand");
+        it.delivery = rs.getString("delivery");
+        Object bargainObj = rs.getObject("allow_bargain");
+        it.allowBargain = bargainObj == null || ((Number) bargainObj).intValue() != 0;
         it.status = rs.getInt("status");
         it.isDemo = rs.getBoolean("is_demo");
         it.allowCycle = rs.getBoolean("allow_cycle");
@@ -78,17 +90,33 @@ public final class ItemDao {
     public static long insert(Connection c, Item it) {
         return DBUtil.insert(c,
                 "INSERT INTO `item`(owner_id,title,category,condition_level,description,images,expect_desc,"
+                        + "price,original_price,trade_mode,place,want_text,brand,delivery,allow_bargain,"
                         + "status,allow_cycle,auto_match,offer_count,view_count,create_time,review_submitted_at)"
-                        + " VALUES(?,?,?,?,?,?,?,?,?,?,0,0,?,NOW())",
+                        + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,?,NOW())",
                 it.ownerId, it.title, it.category, it.conditionLevel, it.description, it.images,
-                it.expectDesc, it.status == null ? Const.ITEM_ON : it.status, it.allowCycle == null || it.allowCycle, it.autoMatch == null || it.autoMatch, LocalDateTime.now());
+                it.expectDesc, it.price, it.originalPrice,
+                it.tradeMode == null ? (it.price != null && it.price > 0 ? 4 : 2) : it.tradeMode,
+                it.place, it.wantText, it.brand,
+                it.delivery == null ? "仅面交" : it.delivery,
+                it.allowBargain == null || it.allowBargain ? 1 : 0,
+                it.status == null ? Const.ITEM_ON : it.status,
+                it.allowCycle == null || it.allowCycle,
+                it.autoMatch == null || it.autoMatch,
+                LocalDateTime.now());
     }
 
     public static void updateFields(Connection c, Item it) {
         DBUtil.update(c, "UPDATE `item` SET title=?, category=?, condition_level=?, description=?,"
-                        + " images=?, expect_desc=?, allow_cycle=?, auto_match=? WHERE id=?",
+                        + " images=?, expect_desc=?, price=?, original_price=?, trade_mode=?,"
+                        + " place=?, want_text=?, brand=?, delivery=?, allow_bargain=?,"
+                        + " allow_cycle=?, auto_match=? WHERE id=?",
                 it.title, it.category, it.conditionLevel, it.description, it.images,
-                it.expectDesc, it.allowCycle, it.autoMatch, it.id);
+                it.expectDesc, it.price, it.originalPrice,
+                it.tradeMode == null ? (it.price != null && it.price > 0 ? 4 : 2) : it.tradeMode,
+                it.place, it.wantText, it.brand,
+                it.delivery == null ? "仅面交" : it.delivery,
+                it.allowBargain == null || it.allowBargain ? 1 : 0,
+                it.allowCycle, it.autoMatch, it.id);
     }
 
     public static void updateStatus(long id, int status) {
@@ -147,10 +175,24 @@ public final class ItemDao {
 
     public static List<Item> list(String category, String condition, String building, String keyword,
                                   Long ownerId, Integer status, int offset, int size) {
+        return list(category, condition, building, keyword, ownerId, status, null, null, offset, size);
+    }
+
+    public static List<Item> list(String category, String condition, String building, String keyword,
+                                  Long ownerId, Integer status, Integer tradeMode, String sort,
+                                  int offset, int size) {
         StringBuilder sql = new StringBuilder(BASE_SELECT);
         List<Object> args = new ArrayList<>();
-        appendWhere(sql, args, category, condition, building, keyword, ownerId, status);
-        sql.append(" ORDER BY i.is_demo ASC, CASE WHEN i.is_demo=1 THEN MOD(i.id*7919,997) ELSE 0 END, CASE WHEN EXISTS (SELECT 1 FROM social_refresh r WHERE r.user_id=i.owner_id AND r.item_id=i.id AND r.refreshed_on=CURRENT_DATE) THEN i.update_time ELSE i.create_time END DESC, i.id DESC LIMIT ?,?");
+        appendWhere(sql, args, category, condition, building, keyword, ownerId, status, tradeMode);
+        if ("price_asc".equals(sort)) {
+            sql.append(" ORDER BY (i.price IS NULL OR i.price<=0) ASC, i.price ASC, i.id DESC LIMIT ?,?");
+        } else if ("price_desc".equals(sort)) {
+            sql.append(" ORDER BY (i.price IS NULL OR i.price<=0) ASC, i.price DESC, i.id DESC LIMIT ?,?");
+        } else if ("latest".equals(sort)) {
+            sql.append(" ORDER BY i.is_demo ASC, i.create_time DESC, i.id DESC LIMIT ?,?");
+        } else {
+            sql.append(" ORDER BY i.is_demo ASC, CASE WHEN i.is_demo=1 THEN MOD(i.id*7919,997) ELSE 0 END, CASE WHEN EXISTS (SELECT 1 FROM social_refresh r WHERE r.user_id=i.owner_id AND r.item_id=i.id AND r.refreshed_on=CURRENT_DATE) THEN i.update_time ELSE i.create_time END DESC, i.id DESC LIMIT ?,?");
+        }
         args.add(offset);
         args.add(size);
         return DBUtil.query(sql.toString(), MAP, args.toArray());
@@ -158,15 +200,21 @@ public final class ItemDao {
 
     public static long countList(String category, String condition, String building, String keyword,
                                  Long ownerId, Integer status) {
+        return countList(category, condition, building, keyword, ownerId, status, null);
+    }
+
+    public static long countList(String category, String condition, String building, String keyword,
+                                 Long ownerId, Integer status, Integer tradeMode) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM `item` i JOIN `user` u ON u.id=i.owner_id WHERE i.deleted=0 ");
         List<Object> args = new ArrayList<>();
-        appendWhere(sql, args, category, condition, building, keyword, ownerId, status);
+        appendWhere(sql, args, category, condition, building, keyword, ownerId, status, tradeMode);
         return DBUtil.count(sql.toString(), args.toArray());
     }
 
     private static void appendWhere(StringBuilder sql, List<Object> args, String category, String condition,
-                                    String building, String keyword, Long ownerId, Integer status) {
+                                    String building, String keyword, Long ownerId, Integer status,
+                                    Integer tradeMode) {
         if (status != null) {
             sql.append(" AND i.status=?");
             args.add(status);
@@ -184,8 +232,19 @@ public final class ItemDao {
             args.add(condition.trim());
         }
         if (building != null && !building.trim().isEmpty()) {
-            sql.append(" AND u.building=?");
-            args.add(building.trim());
+            String b = building.trim();
+            sql.append(" AND (u.building=? OR i.place LIKE ?)");
+            args.add(b);
+            args.add("%" + b + "%");
+        }
+        if (tradeMode != null) {
+            if (tradeMode == 1) {
+                sql.append(" AND (i.trade_mode IN (1,4) OR (i.price IS NOT NULL AND i.price>0 AND i.trade_mode<>2))");
+            } else if (tradeMode == 2) {
+                sql.append(" AND (i.trade_mode IN (2,4) OR i.trade_mode IS NULL)");
+            } else if (tradeMode == 4) {
+                sql.append(" AND i.trade_mode=4");
+            }
         }
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (i.title LIKE ? OR i.description LIKE ?)");

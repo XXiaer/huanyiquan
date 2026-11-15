@@ -5,7 +5,7 @@
 
   function supports(item, tradeMode) {
     const value = mode(item);
-    return value === tradeMode || (item.isDemo && value === 4 && (tradeMode === 1 || tradeMode === 2));
+    return value === tradeMode || (value === 4 && (tradeMode === 1 || tradeMode === 2));
   }
 
   function isSwapOnly(item) {

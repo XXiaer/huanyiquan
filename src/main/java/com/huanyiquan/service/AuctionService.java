@@ -1,6 +1,7 @@
 package com.huanyiquan.service;
 import com.huanyiquan.common.BizException;
 import com.huanyiquan.common.ImageCheck;
+import com.huanyiquan.dao.SensitiveWordDao;
 import com.huanyiquan.db.DBUtil;
 import java.math.*;
 import java.time.LocalDateTime;
@@ -26,6 +27,8 @@ public final class AuctionService {
  public static long create(long user,String title,String desc,String amount,Integer hours,String image){
   if(title==null||title.trim().isEmpty()||title.length()>80)throw BizException.badRequest("标题须为 1 至 80 字");
   if(desc!=null&&desc.length()>500)throw BizException.badRequest("描述最多 500 字");
+  SensitiveWordDao.check(title.trim(),"拍品标题");
+  SensitiveWordDao.check(desc,"拍品描述");
   if(hours==null||hours<1||hours>168)throw BizException.badRequest("拍卖时长为 1 至 168 小时");
   ImageCheck.requireImages(image); BigDecimal start=money(amount);
   return DBUtil.insert("INSERT INTO auction(seller_id,title,description,start_price,current_price,ends_at,status,image,duration_hours) VALUES(?,?,?,?,?,?,0,?,?)",user,title.trim(),desc==null?"":desc,start,start,LocalDateTime.now().plusHours(hours),image,hours);

@@ -36,6 +36,19 @@ public final class ItemService {
     public static long create(long userId, String title, String category, String conditionLevel,
                               String description, String images, String expectDesc,
                               String wantCategory, Long wantItemId, String matchMode) {
+        return create(userId, title, category, conditionLevel, description, images, expectDesc,
+                wantCategory, wantItemId, matchMode, null, null, null, null, null, null, null, null);
+    }
+
+    /**
+     * 发布物品。支持「明码标价(1) / 以物换物(2) / 可买可换双轨(4)」，物品和意向同事务写入。
+     */
+    public static long create(long userId, String title, String category, String conditionLevel,
+                              String description, String images, String expectDesc,
+                              String wantCategory, Long wantItemId, String matchMode,
+                              Integer price, Integer originalPrice, Integer tradeMode,
+                              String place, String wantText, String brand,
+                              String delivery, Boolean allowBargain) {
         User me = UserDao.findById(userId);
         if (me == null) {
             throw BizException.notFound("用户不存在");
@@ -69,15 +82,28 @@ public final class ItemService {
         if (expectDesc != null && expectDesc.length() > 100) {
             throw new BizException(400, "期望换物说明不超过 100 个字");
         }
+        if (price != null && (price < 0 || price > 100_000_000)) {
+            throw new BizException(400, "标价金额须在 0 至 100 万元之间");
+        }
+        if (originalPrice != null && (originalPrice < 0 || originalPrice > 100_000_000)) {
+            throw new BizException(400, "入手原价金额须在 0 至 100 万元之间");
+        }
+        int resolvedTradeMode = normalizeTradeMode(tradeMode, price, wantCategory, expectDesc, wantText);
+        if (resolvedTradeMode == 1 && (price == null || price <= 0)) {
+            throw new BizException(400, "明码标价模式下请填写有效的转让价格");
+        }
         if (images != null && images.length() > 500) {
             throw new BizException(400, "图片数量太多了");
         }
         ImageCheck.requireImages(images);
-        java.util.List<String> categories = parseWants(wantCategory, wantItemId);
-        String mode = normalizeMode(matchMode, "passive");
+        java.util.List<String> categories = parseWants(wantCategory, wantItemId, resolvedTradeMode);
+        String mode = normalizeMode(matchMode, resolvedTradeMode == 1 ? "one" : "passive");
         SensitiveWordDao.check(t, "物品名称");
         SensitiveWordDao.check(description, "描述");
         SensitiveWordDao.check(expectDesc, "期望换物");
+        SensitiveWordDao.check(wantText, "期望换物");
+        SensitiveWordDao.check(place, "面交地点");
+        SensitiveWordDao.check(brand, "品牌");
 
         if (ItemDao.findRecentDuplicate(userId, t) != null) {
             throw new BizException(400, "刚刚已经发布过同名物品了，刷新页面看看");
@@ -86,19 +112,35 @@ public final class ItemService {
         return DBUtil.tx(c -> {
             Item it = new Item();
             it.ownerId = userId;
-            it.allowCycle = !"one".equals(mode); it.autoMatch = "passive".equals(mode);
+            it.allowCycle = resolvedTradeMode != 1 && !"one".equals(mode);
+            it.autoMatch = resolvedTradeMode != 1 && "passive".equals(mode);
             it.title = t;
             it.category = category;
             it.conditionLevel = conditionLevel;
             it.description = Str.cut(description, 300);
             it.images = Str.trim(images);
             it.expectDesc = Str.cut(expectDesc, 100);
+            it.price = (price != null && price > 0) ? price : null;
+            it.originalPrice = (originalPrice != null && originalPrice > 0) ? originalPrice : null;
+            it.tradeMode = resolvedTradeMode;
+            it.place = Str.cut(place, 100);
+            it.wantText = Str.cut(Str.isBlank(wantText) ? expectDesc : wantText, 120);
+            it.brand = Str.cut(brand, 50);
+            it.delivery = Str.isBlank(delivery) ? "仅面交" : Str.cut(delivery, 20);
+            it.allowBargain = allowBargain == null || allowBargain;
             it.status = Const.ITEM_PENDING;
-            it.allowCycle = !"one".equals(mode); it.autoMatch = "passive".equals(mode);
             long itemId = ItemDao.insert(c, it);
 
             for (String cat : categories) {
-                Intent want = new Intent(); want.userId=userId; want.itemId=itemId; want.wantCategory=cat; want.wantItemId=wantItemId; IntentDao.insert(c,want);
+                if (cat == null && wantItemId == null) {
+                    continue;
+                }
+                Intent want = new Intent();
+                want.userId = userId;
+                want.itemId = itemId;
+                want.wantCategory = cat;
+                want.wantItemId = wantItemId;
+                IntentDao.insert(c, want);
             }
 
             BizLogDao.log(c, userId, "ITEM", itemId, null, Const.ITEM_PENDING, "提交审核");
@@ -109,6 +151,17 @@ public final class ItemService {
     public static void update(long userId, long itemId, String title, String category,
                               String conditionLevel, String description, String images,
                               String expectDesc, String wantCategory, Long wantItemId, String matchMode) {
+        update(userId, itemId, title, category, conditionLevel, description, images,
+                expectDesc, wantCategory, wantItemId, matchMode,
+                null, null, null, null, null, null, null, null);
+    }
+
+    public static void update(long userId, long itemId, String title, String category,
+                              String conditionLevel, String description, String images,
+                              String expectDesc, String wantCategory, Long wantItemId, String matchMode,
+                              Integer price, Integer originalPrice, Integer tradeMode,
+                              String place, String wantText, String brand,
+                              String delivery, Boolean allowBargain) {
         Item it = ItemDao.findById(itemId);
         if (it == null) {
             throw BizException.notFound("物品不存在");
@@ -126,8 +179,18 @@ public final class ItemService {
         if (t.length() > 30) {
             throw new BizException(400, "物品名称不超过 30 个字");
         }
+        if (price != null && (price < 0 || price > 100_000_000)) {
+            throw new BizException(400, "标价金额须在 0 至 100 万元之间");
+        }
+        if (originalPrice != null && (originalPrice < 0 || originalPrice > 100_000_000)) {
+            throw new BizException(400, "入手原价金额须在 0 至 100 万元之间");
+        }
         SensitiveWordDao.check(t, "物品名称");
         SensitiveWordDao.check(description, "描述");
+        SensitiveWordDao.check(expectDesc, "期望换物");
+        SensitiveWordDao.check(wantText, "期望换物");
+        SensitiveWordDao.check(place, "面交地点");
+        SensitiveWordDao.check(brand, "品牌");
 
         String cat = category == null ? it.category : category;
         String cond = conditionLevel == null ? it.conditionLevel : conditionLevel;
@@ -139,23 +202,56 @@ public final class ItemService {
         }
 
         ImageCheck.requireImages(images == null ? it.images : images);
-        final java.util.List<String> categories = wantCategory == null && wantItemId == null ? null : parseWants(wantCategory, wantItemId);
+        Integer nextPrice = price == null ? it.price : (price > 0 ? price : null);
+        int resolvedTradeMode = tradeMode != null
+                ? normalizeTradeMode(tradeMode, nextPrice, wantCategory, expectDesc, wantText)
+                : (it.tradeMode != null ? it.tradeMode : normalizeTradeMode(null, nextPrice, wantCategory, expectDesc, wantText));
+        if (resolvedTradeMode == 1 && (nextPrice == null || nextPrice <= 0)) {
+            throw new BizException(400, "明码标价模式下请填写有效的转让价格");
+        }
+        final java.util.List<String> categories = wantCategory == null && wantItemId == null ? null : parseWants(wantCategory, wantItemId, resolvedTradeMode);
         String previousMode = !Boolean.TRUE.equals(it.allowCycle) ? "one" : (Boolean.TRUE.equals(it.autoMatch) ? "passive" : "active");
         String mode = normalizeMode(matchMode, previousMode);
         DBUtil.tx(c -> {
-            it.allowCycle = !"one".equals(mode); it.autoMatch = "passive".equals(mode);
+            it.allowCycle = resolvedTradeMode != 1 && !"one".equals(mode);
+            it.autoMatch = resolvedTradeMode != 1 && "passive".equals(mode);
             it.title = t;
             it.category = cat;
             it.conditionLevel = cond;
             it.description = description == null ? it.description : Str.cut(description, 300);
             it.images = images == null ? it.images : Str.trim(images);
             it.expectDesc = expectDesc == null ? it.expectDesc : Str.cut(expectDesc, 100);
+            it.price = nextPrice;
+            if (originalPrice != null) {
+                it.originalPrice = originalPrice > 0 ? originalPrice : null;
+            }
+            it.tradeMode = resolvedTradeMode;
+            if (place != null) {
+                it.place = Str.cut(place, 100);
+            }
+            if (wantText != null || expectDesc != null) {
+                it.wantText = Str.cut(Str.isBlank(wantText) ? it.expectDesc : wantText, 120);
+            }
+            if (brand != null) {
+                it.brand = Str.cut(brand, 50);
+            }
+            if (delivery != null) {
+                it.delivery = Str.isBlank(delivery) ? "仅面交" : Str.cut(delivery, 20);
+            }
+            if (allowBargain != null) {
+                it.allowBargain = allowBargain;
+            }
             ItemDao.updateFields(c, it);
             ItemDao.updateStatus(c, itemId, Const.ITEM_PENDING);
 
             if (categories != null) {
                 IntentDao.deleteByItemId(c,itemId);
-                for (String wanted : categories) { Intent want=new Intent();want.userId=userId;want.itemId=itemId;want.wantCategory=wanted;want.wantItemId=wantItemId;IntentDao.insert(c,want); }
+                for (String wanted : categories) {
+                    if (wanted == null && wantItemId == null) {
+                        continue;
+                    }
+                    Intent want=new Intent();want.userId=userId;want.itemId=itemId;want.wantCategory=wanted;want.wantItemId=wantItemId;IntentDao.insert(c,want);
+                }
             }
             return null;
         });
@@ -188,11 +284,28 @@ public final class ItemService {
                 targetStatus == Const.ITEM_PENDING ? "重新提交审核" : "手动下架");
     }
 
+    private static int normalizeTradeMode(Integer tradeMode, Integer price, String wantCategory, String expectDesc, String wantText) {
+        if (tradeMode != null) {
+            if (tradeMode == 1 || tradeMode == 2 || tradeMode == 4) {
+                return tradeMode;
+            }
+            throw BizException.badRequest("交易方式仅支持：明码标价(1)、以物换物(2)或可买可换(4)");
+        }
+        boolean hasPrice = price != null && price > 0;
+        boolean hasWant = Str.hasText(wantCategory) || Str.hasText(expectDesc) || Str.hasText(wantText);
+        if (hasPrice && hasWant) return 4;
+        if (hasPrice) return 1;
+        return 2;
+    }
+
     private static String normalizeMode(String mode,String fallback) { String m=mode==null||mode.trim().isEmpty()?fallback:mode.trim(); if(!java.util.Arrays.asList("one","active","passive").contains(m))throw BizException.badRequest("交换模式不正确");return m; }
-    private static java.util.List<String> parseWants(String value,Long itemId) {
+    private static java.util.List<String> parseWants(String value,Long itemId,int resolvedTradeMode) {
         java.util.LinkedHashSet<String> cats=new java.util.LinkedHashSet<>();
         if(value!=null)for(String part:value.split(",")){String c=part.trim();if(c.isEmpty()||"不限".equals(c))continue;if(!CATEGORIES.contains(c))throw BizException.badRequest("想换的类别不在可选范围内");cats.add(c);}
-        if(cats.isEmpty()){if(itemId==null)throw BizException.badRequest("请选择至少一个期望品类");return java.util.Collections.singletonList(null);}
+        if(cats.isEmpty()){
+            if(itemId==null && resolvedTradeMode==2)throw BizException.badRequest("请选择至少一个期望品类");
+            return java.util.Collections.emptyList();
+        }
         return new java.util.ArrayList<>(cats);
     }
 
@@ -214,12 +327,18 @@ public final class ItemService {
 
     public static Map<String, Object> list(String category, String condition, String building,
                                            String keyword, int page, int size) {
+        return list(category, condition, building, keyword, null, null, page, size);
+    }
+
+    public static Map<String, Object> list(String category, String condition, String building,
+                                           String keyword, Integer tradeMode, String sort,
+                                           int page, int size) {
         int p = Math.max(1, page);
         int s = size <= 0 ? 20 : Math.min(size, 50);
         int offset = (p - 1) * s;
         List<Item> list = ItemDao.list(category, condition, building, keyword,
-                null, Const.ITEM_ON, offset, s);
-        long total = ItemDao.countList(category, condition, building, keyword, null, Const.ITEM_ON);
+                null, Const.ITEM_ON, tradeMode, sort, offset, s);
+        long total = ItemDao.countList(category, condition, building, keyword, null, Const.ITEM_ON, tradeMode);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("list", list);

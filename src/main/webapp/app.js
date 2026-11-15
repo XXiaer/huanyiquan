@@ -9,6 +9,7 @@
 
     var CATS = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
     var CONDS = ['全新', '九成新', '七成新', '有使用痕迹'];
+    var CAMPUS_SPOTS = ['北山书院', '南山书院', '荷悦书院', '双栀书院', '图书馆正门', '第一食堂', '菜鸟驿站'];
     // Amazon-grade crisp monochrome vector icons (colored via CSS currentColor).
     var path = function (d, fill) { return '<path d="' + d + '" fill="' + (fill || 'none') + '"/>'; };
     var circle = function (x, y, r, fill) { return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + (fill || 'none') + '"/>'; };
@@ -50,7 +51,10 @@
         arrow: path('M5 12h14') + path('m12 5 7 7-7 7'),
         down: path('M12 5v14') + path('m19 12-7 7-7-7'),
         external: path('M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6') + path('M15 3h6v6') + path('M10 14 21 3'),
-        menu: path('M3 6h18') + path('M3 12h18') + path('M3 18h18')
+        menu: path('M3 6h18') + path('M3 12h18') + path('M3 18h18'),
+        bookmark: path('M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z'),
+        image: rect(3, 3, 18, 18, 2) + circle(8.5, 8.5, 1.5) + path('m21 15-5-5L5 21'),
+        zoom: circle(11, 11, 7) + path('m21 21-4.35-4.35') + path('M11 8v6') + path('M8 11h6')
     };
     var CAT_ICON = {教材:navIcon('book'),数码:navIcon('device'),运动:navIcon('sports'),
         生活:navIcon('life'),衣物:navIcon('clothes'),绿植:navIcon('plant'),其他:navIcon('box')};
@@ -70,11 +74,17 @@
         5: ['已还价', 'brand']
     };
 
+    function readSavedCampusSpot() {
+        try { return localStorage.getItem('hq.campusSpot') || ''; } catch (e) { return ''; }
+    }
+
     var state = {
         me: null,
         token: '',
-        home: {category: '', condition: '', minCredit: 0, keyword: '', page: 1, items: [], total: 0, hasMore: false},
+        home: {category: '', condition: '', tradeMode: 0, sort: '', campusSpot: readSavedCampusSpot(), minCredit: 0, keyword: '', page: 1, items: [], total: 0, hasMore: false},
         publishImages: [],
+        _pickedOfferItemId: 0,
+        _demoAuctionBids: {},
         offersTab: 'received',
         offersQuery: '',
         offersAdvOpen: false,
@@ -576,18 +586,18 @@
         var catOpts='<option value="">全部</option>'+CATS.map(function(c){return '<option value="'+esc(c)+'"'+(state.home.category===c?' selected':'')+'>'+esc(c)+'</option>';}).join('');
         var search='<form class="header-search amz-search" data-form="search"><select class="amz-search-cat" name="category" aria-label="选择分类">'+catOpts+'</select><input name="keyword" aria-label="搜索闲置" placeholder="搜索换一圈校园好物..." value="'+esc(state.home.keyword)+'"><button type="submit" aria-label="搜索">'+navIcon('search')+'<span>搜索</span></button></form>';
         var favCount=shelfRead('favorites').length;
-        var amzCartSvg = '<svg class="amz-cart-svg" viewBox="0 0 38 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h5l4.2 15.5h17.6L33 7H9"/><circle cx="13" cy="24" r="2.2" fill="currentColor"/><circle cx="27" cy="24" r="2.2" fill="currentColor"/></svg>';
+        var currentSpot=state.home.campusSpot || readSavedCampusSpot() || '重庆移通学院';
         return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
             +'<header class="appbar"><div class="appbar-inner">'
             +'<a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-word"><span class="brand-name">换一圈</span><svg class="brand-smile" viewBox="0 0 80 14" fill="none"><path d="M4 3c20 10 50 10 70 0" stroke="#f08c1a" stroke-width="2.8" stroke-linecap="round"/><path d="M68 1l7 2-4 6" stroke="#f08c1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>'
-            +'<a class="amz-deliver" href="#/idle">'+navIcon('pin')+'<span><small>面交至</small><b>重庆移通学院</b></span></a>'
+            +'<button type="button" class="amz-deliver" data-act="open-campus-picker" title="选择校内常去面交点">'+navIcon('pin')+'<span><small>面交至</small><b id="amz-campus-label">'+esc(currentSpot)+'</b></span></button>'
             +search
             +'<div class="header-actions">'
             +amzAccount
             +'<a class="amz-nav-item amz-orders-link" href="#/exchange"><b>我的订单</b></a>'
             +'<a class="notice-link amz-nav-item" href="#/notifications" aria-label="消息通知"><b>通知</b><span class="notice-count" hidden></span></a>'
             +'<a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a>'
-            +'<a class="shelf-link amz-cart" href="#/favorites" aria-label="收藏与历史" title="收藏夹"><span class="amz-cart-ico">'+amzCartSvg+'<span class="amz-cart-num">'+favCount+'</span></span><b class="amz-cart-label">收藏夹</b></a>'
+            +'<a class="shelf-link amz-cart" href="#/favorites" aria-label="收藏与历史" title="收藏夹"><span class="amz-cart-ico amz-fav-ico">'+navIcon('bookmark')+'<span class="amz-cart-num">'+favCount+'</span></span><b class="amz-cart-label">收藏夹</b></a>'
             +'<a class="amz-msg-top'+(active==='notifications'?' on':'')+'" href="#/notifications" aria-label="消息中心" title="消息中心"><span class="amz-msg-ico"><img src="/assets/amz/nav-msg-icon.jpg" alt="消息"><span class="notice-count" hidden></span></span><span class="amz-msg-txt"><b>消息</b></span></a>'
             +account+'</div></div>'
             +'<div class="header-nav-wrap"><a class="amz-all-btn" href="#/idle">'+navIcon('menu')+'<span>全部</span></a>'+topnav(active)
@@ -623,24 +633,26 @@
 
     // 两列商品卡：图片占满上半，标题两行，底部左侧信用分（红色强调）
     function demoReferencePrice(item) {
-        return item.isDemo && Number(item.price) > 0 ? '参考价 ¥' + (Number(item.price) / 100).toFixed(2) : '';
+        return Number(item && item.price) > 0 ? '¥' + (Number(item.price) / 100).toFixed(2) : '';
     }
 
     function pCard(it) {
         var locked=it.status&&it.status!==1, img=firstImage(it.images);
         var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="300" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
-        var hasPrice = (it.isDemo && window.campusExchange.supports(it,1) && Number(it.price) > 0) || (!it.isDemo && mode === 1 && Number(it.price) > 0);
+        var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
+        var hasSwap = window.campusExchange.supports(it, 2);
         var priceHtml;
         if (hasPrice) {
             var parts = (Number(it.price) / 100).toFixed(2).split('.');
-            priceHtml = '<span class="amz-price"><em>¥</em><b>' + parts[0] + '</b><sup>.' + parts[1] + '</sup></span>';
+            var orig = Number(it.originalPrice || 0);
+            var origHtml = orig > Number(it.price) ? '<s class="amz-orig-price">¥' + (orig / 100).toFixed(0) + '</s>' : '';
+            var dualBadge = (mode === 4 || (hasSwap && hasPrice)) ? '<span class="amz-dual-tag">可换</span>' : '';
+            priceHtml = '<span class="amz-price"><em>¥</em><b>' + parts[0] + '</b><sup>.' + parts[1] + '</sup></span>' + origHtml + dualBadge;
         } else {
             var wantHint = it.wantText || it.wantCategory;
             priceHtml = '<span class="swap-label">' + (mode === 3 && !it.isDemo ? '拍卖竞价' : (wantHint ? '想换 ' + esc(wantHint) : '以物换物')) + '</span>';
         }
-        var credit = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
-        var stars = credit >= 90 ? 5 : credit >= 75 ? 4 : 3;
         return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
             +(locked?'<span class="pbadge">'+esc(it.statusText||'已换出')+'</span>':'')+'</div>'
             +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p>'
@@ -822,15 +834,20 @@
             var checked = h.condition===c[0];
             return '<button class="desk-category amz-check-row '+(checked?'on':'')+'" data-act="f-cond" data-v="'+esc(c[0])+'"><span class="amz-radio-dot '+(checked?'on':'')+'"></span><span>'+esc(c[1])+'</span></button>';
         }).join('')+'</div>';
+        var tradeSidebar='<div class="amz-side-group"><h3>交易方式</h3>'+[[0,'全部方式'],[1,'明码标价'],[2,'以物换物'],[4,'可买可换']].map(function(t){
+            var on = Number(h.tradeMode||0) === t[0];
+            return '<button class="desk-category amz-check-row '+(on?'on':'')+'" data-act="f-trademode" data-v="'+t[0]+'"><span class="amz-radio-dot '+(on?'on':'')+'"></span><span>'+t[1]+'</span></button>';
+        }).join('')+'</div>';
         var creditSidebar='<div class="amz-side-group"><h3>物主信用</h3>'
             +[[90,'★★★★★','90分以上'],[80,'★★★★☆','80分以上'],[60,'★★★☆☆','60分以上']].map(function(row){
                 var on = minCredit === row[0];
                 return '<button type="button" class="desk-category amz-star-filter '+(on?'on':'')+'" data-act="f-credit" data-v="'+row[0]+'"><span class="amz-stars">'+row[1]+'</span><span class="amz-credit-val">'+row[2]+'</span></button>';
             }).join('')
             +'</div>';
-        var spotSidebar='<div class="amz-side-group"><h3>热门校内面交点</h3><div class="amz-side-tags">'
-            +['北山斋宿舍','南山书院','图书馆正门','第一食堂','菜鸟驿站','双栀书院'].map(function(s){
-                return '<button type="button" class="amz-side-tag" data-act="campus-search" data-v="'+s+'">'+clayIcon('pin','定位','is-sm')+' '+s+'</button>';
+        var spotSidebar='<div class="amz-side-group"><h3>校内面交点</h3><div class="amz-side-tags">'
+            +CAMPUS_SPOTS.map(function(s){
+                var on = h.campusSpot === s;
+                return '<button type="button" class="amz-side-tag '+(on?'on':'')+'" data-act="f-spot" data-v="'+esc(s)+'">'+clayIcon('pin','定位','is-sm')+' '+esc(s)+'</button>';
             }).join('')+'</div></div>';
         var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
         var mobileSearch='<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
@@ -904,6 +921,7 @@
         var desktopSidebar='<aside class="category-panel desktop-market amz-rich-sidebar" aria-label="集市侧栏">'
             +'<div class="amz-side-hero"><img src="/assets/brand/mascot-wave-320.webp" width="52" height="52" alt="小唤"><div><b>移通校园严选</b></div></div>'
             +'<h2 class="category-panel-title">商品分类</h2>'+desktopCats
+            + tradeSidebar
             + condSidebar
             + creditSidebar
             + spotSidebar
@@ -911,11 +929,30 @@
             +'<div class="amz-side-promo"><img src="/assets/brand/mascot-search.png" width="56" height="56" alt="小唤"><div><b>拿不准定什么价？</b><button type="button" class="btn btn-primary btn-sm btn-block" data-act="estimate">让小唤 AI 估价</button></div></div>'
             +'</aside>';
 
+        var tmVal = Number(h.tradeMode || 0);
+        var sortVal = h.sort || '';
+        var dualSortBar = '<div class="amz-dual-toolbar">'
+            + '<div class="amz-tm-pills" role="group" aria-label="交易方式">'
+            + [[0,'全部'],[1,'明码标价'],[2,'以物换物'],[4,'可买可换']].map(function(t){
+                return '<button type="button" class="amz-tm-pill '+(tmVal===t[0]?'on':'')+'" data-act="f-trademode" data-v="'+t[0]+'">'+t[1]+'</button>';
+            }).join('')
+            + '</div>'
+            + '<div class="amz-sort-pills">'
+            + [['','综合'],['latest','最新'],['price_asc','价格↑'],['price_desc','价格↓']].map(function(s){
+                return '<button type="button" class="amz-sort-pill '+(sortVal===s[0]?'on':'')+'" data-act="f-sort" data-v="'+s[0]+'">'+s[1]+'</button>';
+            }).join('')
+            + '</div></div>';
+
         var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b></button></div></section>';
+        var tmLabel = {1:'明码标价',2:'以物换物',4:'可买可换'}[tmVal] || '';
+        var hasActiveFilter = !!(h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit);
         var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐')+'</h2></div><div class="feed-actions"><span class="feed-count">'+(isSearch&&!minCredit?'共 '+h.total+' 件':'共 '+visibleItems.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
-            +((h.category||h.condition||minCredit)?'<div class="active-filter'+(h.condition||minCredit?'':' category-only')+'" aria-label="已选筛选">'
+            +(!isSearch ? dualSortBar : '')
+            +(hasActiveFilter?'<div class="active-filter'+(h.condition||minCredit||tmVal||h.campusSpot?'':' category-only')+'" aria-label="已选筛选">'
                 +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
+                +(tmVal?'<button class="chip on" data-act="f-trademode" data-v="0">方式：'+tmLabel+' ×</button>':'')
                 +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')
+                +(h.campusSpot?'<button class="chip on" data-act="f-spot" data-v="">点位：'+esc(h.campusSpot)+' ×</button>':'')
                 +(minCredit?'<button class="chip on" data-act="f-credit" data-v="0" aria-label="清除信用筛选">信用：≥'+minCredit+'分 ×</button>':'')+'</div>':'')
             +(visibleItems.length?'<div class="pgrid">'+visibleItems.map(pCard).join('')+'</div>':emptyState(isSearch?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物',isSearch && h.searchConditions?.length ? '没有商品同时满足这些条件，可修改搜索词放宽条件。':'换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
@@ -924,7 +961,7 @@
             renderSearchPage('<div class="market-home amz-browse-layout">'+desktopSidebar+'<div class="amz-browse-main">'+(conditions ? '<div class="active-filter" aria-label="已识别搜索条件">'+conditions+'</div>' : '')+results+'</div></div>');
             return;
         }
-        if(idle || h.category || h.condition || minCredit){
+        if(idle || h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit){
             var browseLayout = $('.amz-browse-layout');
             var browseSide = $('.amz-rich-sidebar');
             var prevBrowseY = window.scrollY;
@@ -945,6 +982,9 @@
 
     function openFilterSheet() {
         var h = state.home;
+        var tModes = [[0,'全部'],[1,'明码标价'],[2,'以物换物'],[4,'可买可换']].map(function(t){
+            return '<button class="chip ' + (Number(h.tradeMode||0) === t[0] ? 'on' : '') + '" data-act="f-trademode" data-v="' + t[0] + '">' + t[1] + '</button>';
+        }).join('');
         var cats = '<button class="chip ' + (h.category === '' ? 'on' : '') + '" data-act="f-cat" data-v="">全部</button>'
             + CATS.map(function (c) {
                 return '<button class="chip ' + (h.category === c ? 'on' : '') + '" data-act="f-cat" data-v="'
@@ -956,6 +996,7 @@
                     + esc(c) + '">' + c + '</button>';
             }).join('');
         openSheet('<h3>筛选</h3><p class="sub">选完立刻生效，点空白处关闭。</p>'
+            + '<div class="field"><label class="label">交易方式</label><div class="chips">' + tModes + '</div></div>'
             + '<div class="field"><label class="label">类别</label><div class="chips">' + cats + '</div></div>'
             + '<div class="field" style="margin-bottom:6px"><label class="label">成色</label>'
             + '<div class="chips">' + conds + '</div></div>');
@@ -976,23 +1017,24 @@
         var params = '?page=' + h.page + '&size=20';
         if (h.category) params += '&category=' + encodeURIComponent(h.category);
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
+        if (Number(h.tradeMode) > 0) params += '&tradeMode=' + Number(h.tradeMode);
+        if (h.sort) params += '&sort=' + encodeURIComponent(h.sort);
+        if (h.campusSpot) params += '&building=' + encodeURIComponent(h.campusSpot);
         var baseLoadHash = (location.hash || '#/home').split('?')[0];
         if (baseLoadHash !== '#/search') {
             try {
-                var targetMode = baseLoadHash === '#/idle' ? 1 : 2;
-                var batch = await window.campusExchange.browse(
-                    function (page) { return api('/item/list' + params.replace(/page=\d+/, 'page=' + page), options); },
-                    targetMode, h.page);
+                var dataList = await api('/item/list' + params, options);
                 if (token !== homeLoadToken || currentView.name !== 'home') return false;
-                if (baseLoadHash === '#/idle' && h.page === 1 && (!batch.rows || !batch.rows.length)) {
-                    var fallback = await api('/item/list' + params, options);
+                var rows = (dataList && dataList.list) || [];
+                if (h.page === 1 && !rows.length && h.campusSpot) {
+                    // 若该点位暂无专属记录，提示并回落全校好物列表，不让页面空窗
+                    dataList = await api('/item/list' + params.replace(/&building=[^&]*/, ''), options);
                     if (token !== homeLoadToken || currentView.name !== 'home') return false;
-                    batch = { page: 1, rows: fallback.list || [], hasMore: !!fallback.hasMore };
+                    rows = (dataList && dataList.list) || [];
                 }
-                h.page = batch.page;
-                h.items = h.items.concat(batch.rows);
-                h.total = h.items.length;
-                h.hasMore = batch.hasMore;
+                h.items = h.items.concat(rows);
+                h.total = (dataList && dataList.total) || h.items.length;
+                h.hasMore = !!(dataList && dataList.hasMore);
                 return true;
             } catch (error) {
                 if (error.name === 'AbortError') return false;
@@ -1043,8 +1085,12 @@
         var thumbRail = imgs.length ? '<div class="amz-thumbs-col">' + imgs.map(function (src, idx) {
             return '<button type="button" class="amz-thumb-btn' + (idx === 0 ? ' on' : '') + '" data-act="amz-thumb" data-src="' + esc(src) + '" aria-label="查看第 ' + (idx + 1) + ' 张图片"><img src="' + esc(src) + '" alt=""></button>';
         }).join('') + '</div>' : '';
-        var hero = img ? '<div class="amz-gallery">' + thumbRail + '<div class="hero"><img id="amz-main-img" src="' + esc(img) + '" alt="' + esc(it.title) + '"></div></div>'
+        var hero = img ? '<div class="amz-gallery">' + thumbRail + '<div class="hero amz-hero-zoom-wrap" data-act="zoom-image" data-src="' + esc(img) + '" title="点击查看大图"><img id="amz-main-img" src="' + esc(img) + '" alt="' + esc(it.title) + '"><span class="amz-zoom-pill">' + navIcon('zoom') + ' 点击看大图</span></div></div>'
             : '<div class="hero hero-no-image" data-cat="' + esc(it.category) + '">' + (CAT_ICON[it.category] || navIcon('box')) + '<span>暂无物品照片</span></div>';
+
+        var mode = window.campusExchange.mode(it);
+        var supportsPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
+        var supportsSwap = window.campusExchange.supports(it, 2);
 
         var actions;
         var reportBtn = '';
@@ -1059,8 +1105,10 @@
                     + '<button class="btn btn-ghost btn-block" data-act="toggle-item" data-id="' + it.id + '" data-status="4">下架</button>';
             } else if (it.status===5||it.status===6) { actions = '<button class="btn btn-ghost btn-block" data-act="go" data-to="#/item/'+it.id+'/edit">编辑并重新提交</button>'; } else { actions='<div class="card card-pad">'+esc(it.statusText||'当前不可操作')+'</div>'; }
         } else if (it.status === 1) {
-            actions = '<button class="btn btn-primary btn-block" data-act="open-offer" data-id="' + it.id + '">用我的物品换</button>'
-                + '<button class="btn btn-ghost btn-block" data-act="chat-start" data-id="'+it.id+'">私聊发布者</button>';
+            var buyBtn = '<button class="btn ' + (supportsSwap ? 'btn-ghost' : 'btn-primary') + ' btn-block" data-act="chat-start" data-id="' + it.id + '">'
+                + (supportsPrice ? '私聊面交买 · ¥' + (Number(it.price) / 100).toFixed(0) : '私聊发布者') + '</button>';
+            var swapBtn = supportsSwap ? '<button class="btn btn-primary btn-block" data-act="open-offer" data-id="' + it.id + '">用我的物品换</button>' : '';
+            actions = swapBtn + buyBtn;
             reportBtn = '<button class="amz-report-link" data-act="open-report" data-type="1" data-id="' + it.id + '">' + navIcon('flag') + ' 举报该商品信息</button>';
         } else {
             actions = '<button class="btn btn-ghost btn-block" disabled>这件物品' + esc(it.statusText || '已下架') + '</button>';
@@ -1068,10 +1116,14 @@
 
         var want = d.want || {};
         var saved = shelfRead('favorites').some(function(x){return x.id===id;});
-        var mode = window.campusExchange.mode(it);
-        var priceText = (demoReferencePrice(it) && window.campusExchange.supports(it,1))
-            ? demoReferencePrice(it)
-            : (mode === 1 && Number(it.price) > 0 ? '¥' + (Number(it.price) / 100).toFixed(2) : (mode === 3 ? '拍卖竞价' : '以物换物'));
+        var priceText = supportsPrice
+            ? ('¥' + (Number(it.price) / 100).toFixed(2))
+            : (mode === 3 ? '拍卖竞价' : '以物换物');
+        var origPriceVal = Number(it.originalPrice || 0);
+        var origPriceHtml = supportsPrice && origPriceVal > Number(it.price)
+            ? '<s class="amz-detail-orig">原价 ¥' + (origPriceVal / 100).toFixed(2) + '</s>'
+            : '';
+        var modeBadgeText = mode === 4 ? '可买可换' : (mode === 1 ? '明码标价' : (mode === 3 ? '拍卖竞价' : '以物换物'));
         var credit = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
         var stars = credit >= 90 ? 5 : credit >= 75 ? 4 : 3;
 
@@ -1084,10 +1136,10 @@
             + '<span class="amz-rating-num">信用分 ' + credit + '</span>'
             + '<span class="amz-view-num">' + (it.viewCount || 0) + ' 次浏览</span></div>'
             + '<hr class="amz-hr">'
-            + '<div class="amz-detail-price-block"><div class="amz-price-row"><span class="amz-price-k">交易方式：</span><span class="amz-detail-price">' + esc(priceText) + '</span></div>'
-            + '<p class="amz-free-ship">校内公共点位当面交接</p>'
+            + '<div class="amz-detail-price-block"><div class="amz-price-row"><span class="amz-price-k">流转方式：</span><span class="amz-detail-price">' + esc(priceText) + '</span>' + origPriceHtml + '</div>'
+            + '<p class="amz-free-ship">校内公共点位当面交接' + (it.allowBargain ? ' · 支持小刀议价' : '') + '</p>'
             + '<div class="detail-meta">'
-            + (it.isDemo ? '<span class="tag brand">' + window.campusExchange.demoLabel(it) + '</span>' : '')
+            + '<span class="tag brand">' + modeBadgeText + '</span>'
             + '<span class="tag brand">' + esc(it.category) + '</span>'
             + '<span class="tag">' + esc(it.conditionLevel) + '</span>'
             + '<span class="tag ghost">' + esc(it.statusText || '') + '</span>'
@@ -1095,10 +1147,10 @@
             + '<hr class="amz-hr">'
             + '<div class="amz-specs">'
             + '<div class="kv"><span class="k">新旧成色</span><span class="v">' + esc(it.conditionLevel || '-') + '</span></div>'
-            + '<div class="kv"><span class="k">所在校区</span><span class="v">' + esc(it.ownerBuilding || '重庆移通学院') + '</span></div>'
+            + '<div class="kv"><span class="k">交易地点</span><span class="v">' + esc(it.place || it.ownerBuilding || '重庆移通学院') + '</span></div>'
             + '<div class="kv"><span class="k">发布时间</span><span class="v">' + fmtRel(it.createTime) + '</span></div>'
-            + (!it.isDemo || window.campusExchange.supports(it,2) ? '<div class="kv"><span class="k">期望交换</span><span class="v">'
-            + esc(it.isDemo ? (it.wantText || '同类校园好物') : ((want.wantCategories || []).join('、') || want.wantCategory || '不限类别') + (want.expectDesc ? '，' + want.expectDesc : '')) + '</span></div>' : '')
+            + (supportsSwap ? '<div class="kv"><span class="k">期望交换</span><span class="v">'
+            + esc(it.wantText || ((want.wantCategories || []).join('、') || want.wantCategory || '不限类别') + (want.expectDesc ? '，' + want.expectDesc : '')) + '</span></div>' : '')
             + '</div>'
             + '<hr class="amz-hr">'
             + '<div class="amz-bullets"><h3>关于此好物</h3><ul>'
@@ -1115,8 +1167,8 @@
             + '</div>';
 
         var buyBox = '<aside class="amz-buybox">'
-            + '<div class="amz-buybox-price">' + esc(priceText) + '</div>'
-            + '<p class="amz-buybox-ship">校内免配送费 <strong>' + esc(it.ownerBuilding || '校园公共区域面交') + '</strong></p>'
+            + '<div class="amz-buybox-price">' + esc(priceText) + origPriceHtml + '</div>'
+            + '<p class="amz-buybox-ship">校内免配送费 <strong>' + esc(it.place || it.ownerBuilding || '校园公共区域面交') + '</strong></p>'
             + '<p class="amz-buybox-stock">' + (it.status === 1 ? '在架中' : esc(it.statusText || '当前不可交易')) + '</p>'
             + '<div class="action-bar amz-buybox-actions">' + actions + '</div>'
             + '<div class="amz-buybox-meta">'
@@ -1180,26 +1232,82 @@
             + '<input type="hidden" name="category"></div>'
             + '<div class="field"><label class="label">成色</label><div class="chips" id="cond-chips">' + condChips + '</div>'
             + '<input type="hidden" name="conditionLevel"></div>'
+            + '<div class="field"><label class="label">交易方式</label>'
+            + '<div class="chips" id="trademode-chips">'
+            + '<button type="button" class="chip on" data-act="p-trademode" data-v="4">可买可换（双轨）</button>'
+            + '<button type="button" class="chip" data-act="p-trademode" data-v="1">仅明码标价</button>'
+            + '<button type="button" class="chip" data-act="p-trademode" data-v="2">仅以物换物</button>'
+            + '</div><input type="hidden" name="tradeMode" value="4"></div>'
+            + '<div class="field pub-price-group" id="pub-price-row">'
+            + '<div class="pub-price-cols">'
+            + '<div><label class="label">转让价格（元）<span class="opt" id="pub-price-req">必填</span></label><input class="input" name="priceYuan" type="number" min="0.01" max="99999" step="0.01" placeholder="如 120"></div>'
+            + '<div><label class="label">入手原价（元）<span class="opt">选填</span></label><input class="input" name="originalPriceYuan" type="number" min="0" max="99999" step="0.01" placeholder="如 299"></div>'
+            + '</div>'
+            + '<label class="pub-bargain-chk"><input type="checkbox" name="allowBargain" value="1" checked> 允许买方小刀议价</label>'
+            + '</div>'
+            + '<div class="field"><label class="label">校内面交点</label>'
+            + '<select class="select" name="place">'
+            + '<option value="">优先校内公共点位（选填）</option>'
+            + CAMPUS_SPOTS.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('')
+            + '</select></div>'
             + '<div class="field"><label class="label">描述 <span class="opt">≤300 字</span></label>'
             + '<textarea class="textarea" name="description" aria-label="物品描述" maxlength="300" data-counter="desc" '
             + 'placeholder="哪里旧了、配件齐不齐、能不能自提"></textarea>'
             + '<div class="hint" style="display:flex;justify-content:space-between">'
             + '<span>说清楚瑕疵，换得更快</span><span class="counter" id="desc-counter">0 / 300</span></div><div class="chips publish-templates"><button type="button" class="chip" data-act="publish-template" data-v="成色与瑕疵：">成色说明</button><button type="button" class="chip" data-act="publish-template" data-v="入手来源：">入手来源</button><button type="button" class="chip" data-act="publish-template" data-v="转出原因：">转出原因</button></div></div>'
-            + '<div class="field"><label class="label">想换什么</label><div class="chips" id="want-chips">' + wantChips + '</div>'
+            + '<div class="field" id="pub-want-section"><label class="label">想换什么 <span class="opt" id="pub-want-req">换物建议填写</span></label><div class="chips" id="want-chips">' + wantChips + '</div>'
             + '<input type="hidden" name="wantCategory">'
-            + '<div class="hint">可多选。</div>'
-            + '<div class="hint">必选。这是环匹配的原料：写清楚类别，系统才能把三个人的意向接起来。</div></div>'
+            + '<div class="hint">可多选。纯明码标价可不填；勾选想换类别可同时加入三方换物闭环。</div></div>'
             + '<div class="field"><label class="label">交换模式</label><select class="select" name="matchMode" aria-label="交换模式"><option value="passive">参与闭环 | 等待自动匹配提醒</option><option value="active">参与闭环 | 仅主动找环</option><option value="one">仅一对一交换</option></select></div>'
             + '<div class="field"><label class="label">期望说明 <span class="opt">选填，≤100 字</span></label>'
             + '<input class="input" name="expectDesc" aria-label="期望说明" maxlength="100" placeholder="例如 想换一副羽毛球拍，成色差不多就行"></div>'
             + '<button class="btn btn-primary btn-block" type="submit">提交审核</button>'
-            + '</form><aside class="card card-pad amz-form-aside"><img src="/assets/brand/mascot-box.png" width="76" height="76" alt=""><h3>发布与匹配指南</h3><ul><li>最多上传 3 张实拍图，第一张将作为商品主图。</li><li>勾选「想换什么」类别后，系统可自动为你匹配三方换物闭环。</li><li>提交后 5 分钟内自动审核上架，支持随时编辑或下架。</li></ul><button class="btn btn-ghost btn-block" type="button" data-act="estimate">使用 AI 好物估价</button></aside></div></section>';
+            + '</form><aside class="card card-pad amz-form-aside"><img src="/assets/brand/mascot-box.png" width="76" height="76" alt=""><h3>发布与匹配指南</h3><ul><li>支持「明码标价 + 以物换物」双轨流转，填写价格与想换物品可显著提升成交率。</li><li>最多上传 3 张实拍图，第一张将作为商品主图。</li><li>拿不准定价？先点下方 AI 好物估价一键回填参考价。</li></ul><button class="btn btn-ghost btn-block" type="button" data-act="estimate">使用 AI 好物估价</button></aside></div></section>';
 
         state.publishImages = [];
-        state.publish = {category: '', conditionLevel: '', wantCategory: ''};
+        state.publish = {category: '', conditionLevel: '', wantCategory: '', tradeMode: 4};
         $('#app').innerHTML = shell('publish', content);
         renderImagePreview();
         restorePublishDraft();
+        applyPublishPrefill();
+    }
+
+    function syncPublishTradeMode(modeVal) {
+        var m = Number(modeVal || 4);
+        state.publish.tradeMode = m;
+        var hidden = document.querySelector('#publish-form input[name=tradeMode]');
+        if (hidden) hidden.value = String(m);
+        var wrap = document.getElementById('trademode-chips');
+        if (wrap) {
+            Array.prototype.forEach.call(wrap.children, function (c) {
+                c.classList.toggle('on', Number(c.dataset.v) === m);
+            });
+        }
+        var priceRow = document.getElementById('pub-price-row');
+        if (priceRow) priceRow.hidden = (m === 2);
+        var wantReq = document.getElementById('pub-want-req');
+        if (wantReq) wantReq.textContent = m === 1 ? '选填（可不选）' : '换物必选';
+    }
+
+    function applyPublishPrefill() {
+        var raw = sessionStorage.getItem('hq.appraisePrefill');
+        if (!raw) return;
+        sessionStorage.removeItem('hq.appraisePrefill');
+        var p;
+        try { p = JSON.parse(raw); } catch (e) { return; }
+        var form = document.querySelector('form[data-form=publish]');
+        if (!form) return;
+        if (p.title) form.querySelector('[name=title]').value = String(p.title).slice(0, 30);
+        if (p.category) { state.publish.category = p.category; markChip('#cat-chips', p.category); }
+        if (p.conditionLevel) { state.publish.conditionLevel = p.conditionLevel; markChip('#cond-chips', p.conditionLevel); }
+        if (p.priceYuan) form.querySelector('[name=priceYuan]').value = p.priceYuan;
+        if (p.originalPriceYuan) form.querySelector('[name=originalPriceYuan]').value = p.originalPriceYuan;
+        if (p.wantCategory) { state.publish.wantCategory = p.wantCategory; markMultiWant(p.wantCategory); }
+        if (p.tradeMode) syncPublishTradeMode(p.tradeMode);
+        var savedSpot = state.home.campusSpot || readSavedCampusSpot();
+        if (savedSpot && form.querySelector('[name=place]')) form.querySelector('[name=place]').value = savedSpot;
+        savePublishDraft(form);
+        toast('已为你自动带入参数，可直接补充实拍图后提交', 'ok');
     }
 
     async function renderItemEdit(id) {
@@ -1209,9 +1317,15 @@
         form.querySelector('[name="title"]').value=it.title || '';
         form.querySelector('[name="description"]').value=it.description || '';
         form.querySelector('[name="expectDesc"]').value=it.expectDesc || '';
-        state.publish={category:it.category, conditionLevel:it.conditionLevel, wantCategory:(want.wantCategories || [want.wantCategory]).filter(Boolean).join(',')};
+        var tm = Number(it.tradeMode || 4);
+        if (Number(it.price) > 0) form.querySelector('[name="priceYuan"]').value = (Number(it.price) / 100).toFixed(2).replace(/\.00$/, '');
+        if (Number(it.originalPrice) > 0) form.querySelector('[name="originalPriceYuan"]').value = (Number(it.originalPrice) / 100).toFixed(2).replace(/\.00$/, '');
+        if (it.place && form.querySelector('[name="place"]')) form.querySelector('[name="place"]').value = it.place;
+        if (form.querySelector('[name="allowBargain"]')) form.querySelector('[name="allowBargain"]').checked = it.allowBargain !== false;
+        state.publish={category:it.category, conditionLevel:it.conditionLevel, tradeMode:tm, wantCategory:(want.wantCategories || [want.wantCategory]).filter(Boolean).join(',')};
         form.querySelector('[name=matchMode]').value=it.allowCycle ? (it.autoMatch?'passive':'active') : 'one';
         state.publishImages=it.images?it.images.split(',').filter(Boolean):[];
+        syncPublishTradeMode(tm);
         markChip('#cat-chips',state.publish.category); markChip('#cond-chips',state.publish.conditionLevel); markMultiWant(state.publish.wantCategory); renderImagePreview();
         document.querySelector('.page-head h1').textContent='编辑物品';
     }
@@ -1234,6 +1348,8 @@
         var fields=new FormData(form);
         var draft={
             title:fields.get('title'),description:fields.get('description'),expectDesc:fields.get('expectDesc'),
+            priceYuan:fields.get('priceYuan'),originalPriceYuan:fields.get('originalPriceYuan'),
+            tradeMode:state.publish.tradeMode||4,place:fields.get('place')||'',allowBargain:!!fields.get('allowBargain'),
             matchMode:fields.get('matchMode'),category:state.publish.category,
             conditionLevel:state.publish.conditionLevel,wantCategory:state.publish.wantCategory,
             images:state.publishImages.slice()
@@ -1243,6 +1359,10 @@
 
     function restorePublishDraft() {
         var raw = sessionStorage.getItem('hq.draft');
+        var form = document.querySelector('form[data-form=publish]');
+        if (!form) return;
+        var savedSpot = state.home.campusSpot || readSavedCampusSpot();
+        if (savedSpot && form.querySelector('[name=place]')) form.querySelector('[name=place]').value = savedSpot;
         if (!raw) return;
         var d;
         try {
@@ -1251,10 +1371,12 @@
             sessionStorage.removeItem('hq.draft');
             return;
         }
-        var form = document.querySelector('form[data-form=publish]');
-        if (!form) return;
         if (d.title) form.querySelector('input[name=title]').value = d.title;
         if (d.expectDesc) form.querySelector('input[name=expectDesc]').value = d.expectDesc;
+        if (d.priceYuan && form.querySelector('input[name=priceYuan]')) form.querySelector('input[name=priceYuan]').value = d.priceYuan;
+        if (d.originalPriceYuan && form.querySelector('input[name=originalPriceYuan]')) form.querySelector('input[name=originalPriceYuan]').value = d.originalPriceYuan;
+        if (d.place && form.querySelector('select[name=place]')) form.querySelector('select[name=place]').value = d.place;
+        if (d.allowBargain !== undefined && form.querySelector('input[name=allowBargain]')) form.querySelector('input[name=allowBargain]').checked = !!d.allowBargain;
         if (d.description) {
             var ta = form.querySelector('textarea[name=description]');
             ta.value = d.description;
@@ -1264,12 +1386,13 @@
         state.publish.category = d.category || '';
         state.publish.conditionLevel = d.conditionLevel || '';
         state.publish.wantCategory = d.wantCategory || '';
+        syncPublishTradeMode(d.tradeMode || 4);
         markChip('#cat-chips', d.category);
         markChip('#cond-chips', d.conditionLevel);
         markMultiWant(d.wantCategory);
         if(d.matchMode)form.elements.matchMode.value=d.matchMode;
         if(Array.isArray(d.images)){state.publishImages=d.images.slice(0,3);renderImagePreview();}
-        toast('已恢复上次没发完的内容');
+        if (!sessionStorage.getItem('hq.appraisePrefill')) toast('已恢复上次没发完的内容');
     }
 
     // ------------------------------------------------------------------ 报价
@@ -1499,18 +1622,20 @@
 
     function relayCard(r) {
         var isSettled = r.state === 'settled';
-        var href = r.isDemo ? '#/publish' : '#/cycle/' + Number(r.id);
+        var actAttr = r.isDemo
+            ? 'data-act="relay-join" data-id="' + Number(r.id) + '"'
+            : 'data-act="go" data-to="#/cycle/' + Number(r.id) + '"';
         return '<article class="relay-card-clean">'
-            + '<a href="' + href + '" class="clean-card-media">'
+            + '<div class="clean-card-media" style="cursor:pointer" ' + actAttr + '>'
             + '<img src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy">'
             + (isSettled ? '<span class="clean-state-tag is-done">已闭环</span>' : '')
-            + '</a>'
+            + '</div>'
             + '<div class="clean-card-body">'
             + '<h2 class="clean-card-title" title="' + esc(r.title) + '">' + esc(r.title) + '</h2>'
             + '<div class="clean-card-meta-row">'
             + '<span class="relay-want-line" title="想换 ' + esc(r.want || '校园好物') + '">想换 ' + esc(r.want || '任意好物') + '</span>'
-            + '<button type="button" class="clean-act-btn is-teal ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="' + href + '">'
-            + (r.isDemo ? (isSettled ? '看同类' : '去加环') : '搜闭环')
+            + '<button type="button" class="clean-act-btn is-teal ' + (isSettled ? 'is-muted' : '') + '" ' + actAttr + '>'
+            + (r.isDemo ? (isSettled ? '查看闭环' : '去加环') : '搜闭环')
             + '</button>'
             + '</div>'
             + '</div>'
@@ -2014,7 +2139,7 @@
             + '</div>'
             + '<div class="jd-order-mini-preview">'
             + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
-            + '<div><a href="#/offers">进入订单中心 ›</a></div>'
+            + '<div class="jd-order-mini-meta"><p>面交进度与报价流水一站管理</p><a href="#/offers">进入订单中心 ›</a></div>'
             + '</div></div>'
             + '<div class="jd-me-card jd-me-fav-card">'
             + '<div class="jd-fav-stats">'
@@ -2033,15 +2158,15 @@
             + '<div class="jd-me-card jd-me-follow-card">'
             + '<header class="jd-card-head"><h3>常逛校园专区</h3><a href="#/idle">全部好物 ›</a></header>'
             + '<div class="jd-follow-tags">'
-            + '<a href="#/idle?cat=教材"><img src="/assets/amz/quad-books.jpg" alt=""><span>考研与教材</span></a>'
-            + '<a href="#/idle?cat=数码"><img src="/assets/amz/quad-digital.jpg" alt=""><span>数码与外设</span></a>'
-            + '<a href="#/idle?cat=运动"><img src="/assets/amz/quad-sports.jpg" alt=""><span>球类与骑行</span></a>'
-            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm.jpg" alt=""><span>宿舍生活</span></a>'
+            + '<a href="#/idle?cat=教材"><img src="/assets/amz/quad-books.jpg" alt="考研与教材" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>考研与教材</span></a>'
+            + '<a href="#/idle?cat=数码"><img src="/assets/amz/quad-digital.jpg" alt="数码与外设" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>数码与外设</span></a>'
+            + '<a href="#/idle?cat=运动"><img src="/assets/amz/quad-sports.jpg" alt="球类与骑行" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>球类与骑行</span></a>'
+            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm.jpg" alt="宿舍生活" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>宿舍生活</span></a>'
             + '</div></div>'
             + '<div class="jd-me-3posters">'
-            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><img src="/assets/amz/quad-community.jpg" alt=""></a>'
-            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><img src="/assets/amz/quad-relay.jpg" alt=""></a>'
-            + '<a class="jd-poster-tile tone-mint" href="#/community/game"><h4>Scrap Arena ›</h4><img src="/assets/brand/mascot-wave-320.webp" alt=""></a>'
+            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><img src="/assets/amz/quad-community.jpg" alt="逛频道社区" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
+            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><img src="/assets/amz/quad-relay.jpg" alt="换物接力厅" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
+            + '<a class="jd-poster-tile tone-mint" href="#/community/game"><h4 class="amz-nowrap">Scrap Arena ›</h4><img src="/assets/brand/mascot-wave-320.webp" alt="Scrap Arena" loading="eager"></a>'
             + '</div>'
             + '</section>'
 
@@ -2394,21 +2519,20 @@
         var labels={active:'正在进行',cancelled:'已撤回',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '待结算' : '已流拍'};
         var fallbackImgs=['/assets/amz/quad-auction.jpg','/assets/amz/quad-digital.jpg','/assets/amz/quad-books.jpg','/assets/amz/quad-dorm.jpg','/assets/amz/quad-sports.jpg'];
         var image=firstImage(a.image) || fallbackImgs[Math.abs(Number(a.id || 0)) % fallbackImgs.length];
-        var priceVal = a.state==='settled'&&(a.selectedAmount||a.currentPrice)?(a.selectedAmount||a.currentPrice):a.currentPrice;
+        var demoState = a.isDemo && state._demoAuctionBids ? state._demoAuctionBids[a.id] : null;
+        var priceVal = demoState ? demoState.currentPrice : (a.state==='settled'&&(a.selectedAmount||a.currentPrice)?(a.selectedAmount||a.currentPrice):a.currentPrice);
         var actHtml = '';
         if (mode==='admin'&&a.state==='pending') {
             actHtml = '<button class="clean-act-btn is-red" data-act="review-listing" data-kind="auctions" data-do="approve" data-id="'+a.id+'">通过</button>';
         } else if (mode==='mine'&&(a.state==='active'||a.state==='ended')&&a.bidCount&&!a.isDemo) {
             actHtml = '<button class="clean-act-btn is-red" data-act="auction-bids" data-id="'+a.id+'">结算</button>';
         } else if (mode==='public'&&a.state==='active') {
-            actHtml = a.isDemo
-                ? '<button class="clean-act-btn is-red" data-act="go" data-to="#/auction/new">竞拍</button>'
-                : '<button class="clean-act-btn is-red" data-act="auction-bid" data-id="'+a.id+'">出价</button>';
+            actHtml = '<button class="clean-act-btn is-red" data-act="auction-detail" data-id="'+a.id+'">'+(a.isDemo?'竞拍':'出价')+'</button>';
         } else if (a.state!=='active') {
-            actHtml = '<button class="clean-act-btn is-muted" data-act="go" data-to="#/idle">看同类</button>';
+            actHtml = '<button class="clean-act-btn is-muted" data-act="auction-detail" data-id="'+a.id+'">看详情</button>';
         }
         return '<article class="ali-auction-card">'
-            + '<div class="clean-card-media">'
+            + '<div class="clean-card-media" style="cursor:pointer" data-act="auction-detail" data-id="'+a.id+'">'
             + '<img src="'+esc(image)+'" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
             + (a.state!=='active'?'<span class="clean-state-tag is-done">'+esc(labels[a.state] || '已结束')+'</span>':'')
             + '</div>'
@@ -3019,10 +3143,10 @@
             + '</div>'
             + '<div class="tb-compose-toolbar">'
             + '<div class="tb-tool-icons">'
-            + '<button type="button" title="快捷常用语" data-act="im-phrase-menu">' + clayIcon('user', '常用语') + '</button>'
-            + '<label class="tb-tool-lbl" title="发送图片">' + clayIcon('star', '发图片') + '<input type="file" accept="image/png,image/jpeg,image/webp" data-act="im-image" hidden></label>'
-            + '<button type="button" title="发送交换卡片" data-act="im-insert-card">' + clayIcon('order', '订单卡片') + '</button>'
-            + '<button type="button" title="插入AI估价建议" data-act="im-insert-ai">' + clayIcon('ai', 'AI估价') + '</button>'
+            + '<button type="button" class="tb-tool-pill" title="快捷常用语" data-act="im-phrase-menu">' + navIcon('community') + '<span>常用语</span></button>'
+            + '<label class="tb-tool-lbl tb-tool-pill" title="发送图片">' + navIcon('image') + '<span>发图片</span><input type="file" accept="image/png,image/jpeg,image/webp" data-act="im-image" hidden></label>'
+            + '<button type="button" class="tb-tool-pill" title="发送交换卡片" data-act="im-insert-card">' + navIcon('trade') + '<span>带好物</span></button>'
+            + '<button type="button" class="tb-tool-pill" title="插入AI估价建议" data-act="im-insert-ai">' + navIcon('appraise') + '<span>估价</span></button>'
             + '</div>'
             + '<span class="tb-char-count" id="tb-char-count">0 / 500</span>'
             + '</div>'
@@ -3040,12 +3164,11 @@
             + '<h5>小唤提示</h5>'
             + '<a href="#/appraise" class="tb-helper-link">' + clayIcon('ai', '小唤AI', 'is-sm') + ' 让小唤帮你 AI 估价 ›</a>'
             + '</div>'
-            + '</aside>'
+            + '<div class="tb-im-side-links">'
+            + '<a href="#/me/security">' + navIcon('settings') + '<span>消息设置</span></a>'
+            + '<a href="#/community">' + navIcon('community') + '<span>意见反馈</span></a>'
             + '</div>'
-
-            + '<div class="tb-float-dock">'
-            + '<a href="#/me/security">' + clayIcon('settings', '设置', 'is-sm') + '<span>消息设置</span></a>'
-            + '<a href="#/community">' + clayIcon('chat', '反馈', 'is-sm') + '<span>反馈</span></a>'
+            + '</aside>'
             + '</div>'
             + '</section>';
 
@@ -3114,11 +3237,9 @@
         var swapLabel = w.offerText ? String(w.offerText).replace(/^提供：/, '拿 ').replace(/^已用：/, '已用 ') : ('心理价 ¥' + (w.budget || 50));
         var btnHtml = isMine
             ? '<button type="button" class="clean-act-btn is-muted" data-act="wish-close" data-id="' + w.id + '">关闭</button>'
-            : (w.isDemo
-                ? '<button type="button" class="clean-act-btn is-amber ' + (isSettled ? 'is-muted' : '') + '" data-act="go" data-to="#/idle' + (w.category ? '?cat=' + encodeURIComponent(w.category) : '') + '">' + (isSettled ? '看同类' : '去响应') + '</button>'
-                : '<button type="button" class="clean-act-btn is-amber" data-act="go" data-to="#/user/' + w.userId + '">响应</button>');
+            : '<button type="button" class="clean-act-btn is-amber ' + (isSettled ? 'is-muted' : '') + '" data-act="wish-respond" data-id="' + w.id + '">' + (isSettled ? '查看详情' : (w.isDemo ? '去响应' : '响应')) + '</button>';
         return '<article class="wish-card-clean">'
-            + '<div class="clean-card-media">'
+            + '<div class="clean-card-media" style="cursor:pointer" data-act="wish-respond" data-id="' + w.id + '">'
             + '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy">'
             + (isSettled ? '<span class="clean-state-tag is-done">已达成</span>' : '')
             + '</div>'
@@ -3808,6 +3929,7 @@
     }
 
     async function openOfferSheet(itemId) {
+        state._pickedOfferItemId = 0;
         var mine = await api('/item/mine?status=1');
         if (!mine || mine.length === 0) {
             openSheet('<h3>先发布一件物品</h3><p class="sub">报价要用你的在架物品去换，你还没有在架的物品。</p>'
@@ -3815,23 +3937,26 @@
             return;
         }
         var options = mine.map(function (it) {
-            return '<button class="item-card" style="margin-bottom:8px" data-act="pick-offer-item" data-id="' + it.id + '">'
+            return '<button type="button" class="item-card offer-pick-card" style="margin-bottom:8px" data-act="pick-offer-item" data-id="' + it.id + '" aria-pressed="false">'
                 + thumb(it) + '<div class="item-main"><h3 class="item-title">' + esc(it.title) + '</h3>'
                 + '<div class="item-foot"><span class="tag brand">' + esc(it.category) + '</span>'
                 + '<span class="tag">' + esc(it.conditionLevel) + '</span></div></div></button>';
         }).join('');
-        openSheet('<h3>用哪件去换</h3><p class="sub">选一件你的在架物品，24 小时内等对方回应。</p>'
-            + options
+        openSheet('<h3>用哪件去换</h3><p class="sub">先点选一件在架物品，填写留言后再点下方「确认发起报价」。</p>'
+            + '<div class="offer-pick-list">' + options + '</div>'
             + '<div class="field" style="margin-top:12px"><label class="label">留言 <span class="opt">选填，≤50 字</span></label>'
-            + '<input class="input" id="offer-msg" maxlength="50" placeholder="例如 我就在 5 号楼，随时可以面交"></div>'
-            + '<input type="hidden" id="offer-target" value="' + itemId + '">');
+            + '<input class="input" id="offer-msg" maxlength="50" placeholder="例如 我在北山书院，今天下午就能面交"></div>'
+            + '<input type="hidden" id="offer-target" value="' + itemId + '">'
+            + '<button type="button" class="btn btn-primary btn-block" id="submit-offer-btn" data-act="submit-offer" disabled style="margin-top:8px">请先点选上方一件物品</button>');
     }
 
     async function openPlaceSheet(exchangeId) {
-        openSheet('<h3>约个面交点</h3><p class="sub">优先选择校内公共点位，参与者都能看到。</p>'
+        openSheet('<h3>约个面交点</h3><p class="sub">优先选择移通校内公共点位，参与者都能看到。</p>'
             + '<form data-form="place"><input type="hidden" name="exchangeId" value="' + exchangeId + '">'
             + '<div class="field"><label class="label">地点</label>'
-            + '<select class="select" name="place" required><option value="">请选择校内公共点位</option><option>图书馆门口</option><option>食堂门口</option><option>菜鸟驿站</option><option>校园服务中心</option></select></div>'
+            + '<select class="select" name="place" required><option value="">请选择校内公共点位</option>'
+            + CAMPUS_SPOTS.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('')
+            + '<option>校园服务中心</option></select></div>'
             + '<div class="field"><label class="label">时间 <span class="opt">选填</span></label>'
             + '<input class="input" name="dealTime" placeholder="例如 今日 18:00-19:00"></div>'
             + '<button class="btn btn-primary btn-block" type="submit">确定</button></form>');
@@ -4622,6 +4747,185 @@
         }
         if (act === 'community-share') { await withBusy(el,async function(){var items=await api('/item/mine?status=1'); openSheet('<h3>分享我的物品</h3><p class="sub">选择一件已上架的物品分享到公共聊天室。</p>'+(items.length?items.map(function(it){return '<button class="chat-share-option" data-act="community-share-send" data-id="'+it.id+'">'+thumb(it)+'<span>'+esc(it.title)+'</span></button>';}).join(''):'<p>你还没有已上架的物品。</p>')); });return; }
         if (act === 'community-share-send') { await withBusy(el,async function(){await api('/community',{method:'POST',body:{kind:'item',itemId:Number(el.dataset.id)}});closeSheet();await refreshCommunity(true);});return; }
+        if (act === 'open-campus-picker') {
+            var curSpot = state.home.campusSpot || readSavedCampusSpot() || '';
+            var spotBtns = '<button type="button" class="chip ' + (!curSpot ? 'on' : '') + '" data-act="pick-campus-spot" data-v="">全校公共区域（不限点位）</button>'
+                + CAMPUS_SPOTS.map(function (s) {
+                    return '<button type="button" class="chip ' + (curSpot === s ? 'on' : '') + '" data-act="pick-campus-spot" data-v="' + esc(s) + '">' + esc(s) + '</button>';
+                }).join('');
+            openSheet('<h3>选择常用校内面交点</h3><p class="sub">重庆移通学院校内公共安全交接点位，选定后将自动记忆并优先匹配同区好物。</p>'
+                + '<div class="chips" style="margin-top:10px">' + spotBtns + '</div>');
+            return;
+        }
+        if (act === 'pick-campus-spot') {
+            var chosenSpot = el.dataset.v || '';
+            state.home.campusSpot = chosenSpot;
+            try {
+                if (chosenSpot) localStorage.setItem('hq.campusSpot', chosenSpot);
+                else localStorage.removeItem('hq.campusSpot');
+            } catch (e) {}
+            var lbl = document.getElementById('amz-campus-label');
+            if (lbl) lbl.textContent = chosenSpot || '重庆移通学院';
+            closeSheet();
+            toast(chosenSpot ? '已切换面交点为「' + chosenSpot + '」' : '已切换为全校公共区域', 'ok');
+            if (currentView.name === 'home') {
+                if (await loadHome(true)) renderHome();
+            }
+            return;
+        }
+        if (act === 'zoom-image') {
+            var imgSrc = el.dataset.src || (el.querySelector('img') && el.querySelector('img').getAttribute('src')) || '';
+            if (!imgSrc) return;
+            openSheet('<div class="amz-lightbox"><img src="' + esc(imgSrc) + '" alt="商品大图"></div>');
+            return;
+        }
+        if (act === 'appraise-to-publish') {
+            var prefill = {
+                title: el.dataset.title || '',
+                category: el.dataset.cat || '',
+                conditionLevel: el.dataset.cond || '九成新',
+                priceYuan: el.dataset.price || '',
+                originalPriceYuan: el.dataset.orig || '',
+                tradeMode: 4
+            };
+            try { sessionStorage.setItem('hq.appraisePrefill', JSON.stringify(prefill)); } catch (e) {}
+            go('#/publish');
+            return;
+        }
+        if (act === 'auction-detail') {
+            var aid = Number(el.dataset.id);
+            var demoAuc = DEMO_AUCTIONS.find(function (x) { return Number(x.id) === aid; });
+            var auc = demoAuc;
+            if (!auc) {
+                var liveList = await api('/auction', {optionalAuth: true}).catch(function () { return []; });
+                var arr = Array.isArray(liveList) ? liveList : (liveList && Array.isArray(liveList.list) ? liveList.list : []);
+                auc = arr.find(function (x) { return Number(x.id) === aid; });
+            }
+            if (!auc) { toast('未找到该拍品', 'err'); return; }
+            var dBidState = (auc.isDemo && state._demoAuctionBids && state._demoAuctionBids[aid]) || null;
+            var curPrice = dBidState ? dBidState.currentPrice : Number(auc.selectedAmount || auc.currentPrice || 1);
+            var bidCount = dBidState ? dBidState.bidCount : Number(auc.bidCount || 0);
+            var topBidder = dBidState ? dBidState.bidder : (auc.winner || auc.bidder || '暂无出价');
+            var inc = curPrice >= 100 ? 10 : 5;
+            var quickAmts = [curPrice + inc, curPrice + inc * 2, curPrice + inc * 4];
+            var body = '<div class="auc-modal-box">'
+                + '<div class="auc-modal-top">'
+                + '<img src="' + esc(firstImage(auc.image) || '/assets/amz/quad-auction.jpg') + '" alt="">'
+                + '<div><span class="tag ' + (auc.state === 'active' ? 'brand' : 'ghost') + '">' + (auc.state === 'active' ? '正在竞拍' : '已结束') + '</span>'
+                + '<h4>' + esc(auc.title) + '</h4>'
+                + '<p class="auc-modal-meta">卖家：' + esc(auc.seller || '校园同学') + ' · 面交：' + esc(auc.campus || '重庆移通学院') + ' · 截止：' + esc(auc.endsAt || '24小时内') + '</p></div></div>'
+                + (auc.description ? '<p class="auc-modal-desc">' + esc(auc.description) + '</p>' : '')
+                + '<div class="auc-modal-stats">'
+                + '<div><span>当前领先价</span><b class="amz-price"><em>¥</em>' + esc(curPrice) + '</b></div>'
+                + '<div><span>累计出价</span><b>' + bidCount + ' 次</b></div>'
+                + '<div><span>当前领先者</span><b>' + esc(topBidder) + '</b></div>'
+                + '</div>';
+            if (auc.state === 'active') {
+                if (auc.isDemo) {
+                    body += '<form data-form="demo-auction-bid" style="margin-top:12px">'
+                        + '<input type="hidden" name="id" value="' + aid + '">'
+                        + '<div class="field"><label class="label">加价出价（元）<span class="opt">示例拍品本地模拟试拍</span></label>'
+                        + '<div class="chips" style="margin-bottom:8px">' + quickAmts.map(function (v) {
+                            return '<button type="button" class="chip" data-act="fill-bid-amt" data-v="' + v + '">出价 ¥' + v + '</button>';
+                        }).join('') + '</div>'
+                        + '<input class="input" id="modal-bid-amt" name="amount" type="number" min="' + (curPrice + 1) + '" step="1" value="' + (curPrice + inc) + '" required></div>'
+                        + '<button class="btn btn-primary btn-block" type="submit">确认模拟出价</button></form>';
+                } else {
+                    body += '<form data-form="auction-bid" style="margin-top:12px">'
+                        + '<input type="hidden" name="id" value="' + aid + '">'
+                        + '<div class="field"><label class="label">出价金额（元）<span class="opt">须高于当前价 ¥' + esc(curPrice) + '</span></label>'
+                        + '<div class="chips" style="margin-bottom:8px">' + quickAmts.map(function (v) {
+                            return '<button type="button" class="chip" data-act="fill-bid-amt" data-v="' + v + '">出价 ¥' + v + '</button>';
+                        }).join('') + '</div>'
+                        + '<input class="input" id="modal-bid-amt" name="amount" type="number" min="' + (curPrice + 0.01) + '" step="0.01" value="' + (curPrice + inc) + '" required></div>'
+                        + '<button class="btn btn-primary btn-block" type="submit">确认提交出价</button></form>';
+                }
+            } else {
+                body += '<div class="btn-row" style="margin-top:12px"><button type="button" class="btn btn-primary btn-block" data-act="go" data-to="#/auction/new">我也要发布拍卖</button></div>';
+            }
+            body += '</div>';
+            openSheet(body);
+            return;
+        }
+        if (act === 'fill-bid-amt') {
+            var bidInput = document.getElementById('modal-bid-amt');
+            if (bidInput) bidInput.value = el.dataset.v || '';
+            return;
+        }
+        if (act === 'wish-respond') {
+            var wid = Number(el.dataset.id);
+            var wish = DEMO_WISHES.find(function (x) { return Number(x.id) === wid; });
+            if (!wish) {
+                var wList = await api('/wish', {optionalAuth: true}).catch(function () { return []; });
+                wish = (Array.isArray(wList) ? wList : []).find(function (x) { return Number(x.id) === wid; });
+            }
+            if (!wish) { toast('未找到该求换心愿', 'err'); return; }
+            var myItems = (readToken() || state.me) ? await api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; }) : [];
+            var myPickHtml = (myItems && myItems.length)
+                ? '<div class="field" style="margin-top:12px"><label class="label">选择我的在架物品来匹配响应</label><div class="offer-pick-list">'
+                  + myItems.slice(0, 6).map(function (it) {
+                      return '<button type="button" class="item-card" style="margin-bottom:8px" data-act="wish-match-pick" data-wid="' + wid + '" data-uid="' + (wish.userId || 0) + '" data-demo="' + (wish.isDemo ? '1' : '0') + '" data-cat="' + esc(wish.category || '') + '" data-title="' + esc(it.title) + '">'
+                          + thumb(it) + '<div class="item-main"><h3 class="item-title">' + esc(it.title) + '</h3>'
+                          + '<div class="item-foot"><span class="tag brand">' + esc(it.category) + '</span><span class="tag">' + esc(it.conditionLevel) + '</span></div></div></button>';
+                  }).join('') + '</div></div>'
+                : '<p class="sub" style="margin-top:10px">你当前暂无在架物品，可以直接发布一件同类闲置来响应。</p>';
+            openSheet('<div class="wish-modal-box">'
+                + '<h3>响应同学求换心愿</h3>'
+                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(wish.image || '/assets/amz/quad-wishes.jpg') + '" alt=""><div>'
+                + '<h4>' + esc(wish.title) + '</h4>'
+                + '<p class="auc-modal-meta">发布人：' + esc(wish.nickname || '校园同学') + ' · 面交：' + esc(wish.campus || '重庆移通学院') + (wish.offerText ? ' · ' + esc(wish.offerText) : '') + '</p></div></div>'
+                + (wish.content ? '<p class="auc-modal-desc">' + esc(wish.content) + '</p>' : '')
+                + (wish.state === 'settled' ? '<p class="hint">该心愿已完成交换。</p>' : myPickHtml)
+                + '<div class="btn-row" style="margin-top:12px">'
+                + '<button type="button" class="btn btn-primary" data-act="relay-prefill-publish" data-cat="' + esc(wish.category || '其他') + '">发布符合该心愿的闲置</button>'
+                + '<button type="button" class="btn btn-ghost" data-act="go" data-to="#/idle?cat=' + encodeURIComponent(wish.category || '') + '">逛同类好物</button>'
+                + '</div></div>');
+            return;
+        }
+        if (act === 'wish-match-pick') {
+            var wIsDemo = el.dataset.demo === '1';
+            var wUid = Number(el.dataset.uid || 0);
+            closeSheet();
+            if (wIsDemo || !wUid) {
+                toast('已向「' + (el.dataset.title || '你的物品') + '」生成心愿匹配意向，可在换物接力或集市继续配对', 'ok');
+            } else {
+                toast('已选定「' + (el.dataset.title || '') + '」去与发布人沟通互换', 'ok');
+                go('#/user/' + wUid);
+            }
+            return;
+        }
+        if (act === 'relay-join') {
+            var rid = Number(el.dataset.id);
+            var relay = DEMO_RELAYS.find(function (x) { return Number(x.id) === rid; });
+            if (!relay) { toast('未找到该接力环', 'err'); return; }
+            var myCycleItems = (readToken() || state.me) ? (await api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; })).filter(function (x) { return !x.isDemo; }) : [];
+            var pickHtml = myCycleItems.length
+                ? '<div class="field" style="margin-top:12px"><label class="label">用我的在架闲置一键检测能否入环</label>'
+                  + myCycleItems.slice(0, 6).map(function (it) {
+                      return '<button type="button" class="item-card" style="margin-bottom:8px" data-act="go" data-to="#/cycle/' + Number(it.id) + '">'
+                          + thumb(it) + '<div class="item-main"><h3 class="item-title">' + esc(it.title) + '</h3>'
+                          + '<div class="item-foot"><span class="tag brand">' + esc(it.category) + '</span><span class="tag">去查闭环 ›</span></div></div></button>';
+                  }).join('') + '</div>'
+                : '<p class="sub" style="margin-top:10px">你还没有参与三方环的在架物品，点下方按钮直接带着「' + esc(relay.cat || '其他') + '」分类预填发布！</p>';
+            openSheet('<div class="relay-modal-box">'
+                + '<h3>加入三方换物接力</h3>'
+                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(relay.image || '/assets/amz/quad-relay.jpg') + '" alt=""><div>'
+                + '<h4>' + esc(relay.title) + '</h4>'
+                + '<p class="auc-modal-meta">流转路径：' + esc(relay.campus || '校内书院') + ' · 想换：' + esc(relay.want || '任意好物') + ' · 参考估值 ¥' + esc(relay.value || 100) + '</p></div></div>'
+                + pickHtml
+                + '<div class="btn-row" style="margin-top:12px">'
+                + '<button type="button" class="btn btn-primary" data-act="relay-prefill-publish" data-cat="' + esc(relay.cat || '其他') + '">带该类目去发布入环</button>'
+                + '<button type="button" class="btn btn-ghost" data-act="go" data-to="#/wishes">去看求换心愿</button>'
+                + '</div></div>');
+            return;
+        }
+        if (act === 'relay-prefill-publish') {
+            var preCat = el.dataset.cat || '其他';
+            try { sessionStorage.setItem('hq.appraisePrefill', JSON.stringify({ category: preCat, wantCategory: preCat, tradeMode: 4 })); } catch (e) {}
+            closeSheet();
+            go('#/publish');
+            return;
+        }
         if (act === 'auction-bid') {
             if (!readToken() && !state.me) { sessionStorage.setItem('hq.returnTo', '#/auctions'); go('#/login'); return; }
             openSheet('<h3>参与竞拍</h3><p class="sub">人民币出价，平台不提供支付。请遵守线下交易约定。</p><form data-form="auction-bid"><input type="hidden" name="id" value="' + esc(el.dataset.id) + '"><div class="field"><label class="label">出价（元）</label><input class="input" name="amount" type="number" min="0.01" step="0.01" required></div><button class="btn btn-primary btn-block" type="submit">确认出价</button></form>'); return;
@@ -4679,11 +4983,13 @@
             go('#/login');
             return;
         }
-        if (act === 'f-cat' || act === 'f-cond') {
-            var key = act === 'f-cat' ? 'category' : 'condition';
+        if (act === 'f-cat' || act === 'f-cond' || act === 'f-trademode' || act === 'f-sort' || act === 'f-spot') {
+            var key = { 'f-cat': 'category', 'f-cond': 'condition', 'f-trademode': 'tradeMode', 'f-sort': 'sort', 'f-spot': 'campusSpot' }[act];
             var previous = state.home[key];
+            var nextVal = act === 'f-trademode' ? Number(el.dataset.v || 0) : (el.dataset.v || '');
+            if (act === 'f-spot' && state.home.campusSpot === nextVal && nextVal) nextVal = '';
             var feed = $('.market-feed');
-            state.home[key] = el.dataset.v;
+            state.home[key] = nextVal;
             if (feed) {
                 feed.setAttribute('aria-busy', 'true');
                 feed.querySelector('.feed-count').textContent = '正在筛选…';
@@ -4712,6 +5018,11 @@
             await withBusy(el, async function () {
                 if(await loadHome(false)) renderHome();
             });
+            return;
+        }
+        if (act === 'p-trademode') {
+            syncPublishTradeMode(el.dataset.v);
+            savePublishDraft(el.closest("form"));
             return;
         }
         if (act === 'p-want') { var choices=state.publish.wantCategory ? state.publish.wantCategory.split(',') : []; var at=choices.indexOf(el.dataset.v); if(at>=0)choices.splice(at,1);else choices.push(el.dataset.v); state.publish.wantCategory=choices.join(',');markMultiWant(state.publish.wantCategory);savePublishDraft(el.closest("form"));return; }
@@ -4745,16 +5056,30 @@
             return;
         }
         if (act === 'pick-offer-item') {
+            var pickedId = Number(el.dataset.id || 0);
+            state._pickedOfferItemId = pickedId;
             Array.prototype.forEach.call(document.querySelectorAll('[data-act=pick-offer-item]'), function (c) {
-                c.style.borderColor = c === el ? 'var(--brand-500)' : 'var(--line)';
-                c.style.background = c === el ? 'var(--brand-50)' : 'var(--surface)';
+                var on = c === el;
+                c.classList.toggle('is-picked', on);
+                c.setAttribute('aria-pressed', String(on));
+                c.style.borderColor = on ? 'var(--brand-500)' : 'var(--line)';
+                c.style.background = on ? 'var(--brand-50)' : 'var(--surface)';
             });
-            el.dataset.picked = '1';
-            var target = $('#offer-target').value;
-            var msg = $('#offer-msg').value;
-            closeSheet();
-            await withBusy(null, async function () {
-                await api('/offer', {method: 'POST', body: {itemId: Number(target), myItemId: Number(el.dataset.id), message: msg}});
+            var submitOfferBtn = document.getElementById('submit-offer-btn');
+            if (submitOfferBtn) {
+                submitOfferBtn.disabled = !pickedId;
+                submitOfferBtn.textContent = pickedId ? '确认发起报价' : '请先点选上方一件物品';
+            }
+            return;
+        }
+        if (act === 'submit-offer') {
+            var myPickedId = Number(state._pickedOfferItemId || 0);
+            if (!myPickedId) { toast('请先选择一件你的在架物品', 'err'); return; }
+            var target = Number(($('#offer-target') && $('#offer-target').value) || 0);
+            var msg = ($('#offer-msg') && $('#offer-msg').value) || '';
+            await withBusy(el, async function () {
+                await api('/offer', {method: 'POST', body: {itemId: target, myItemId: myPickedId, message: msg}});
+                closeSheet();
                 toast('报价已发出，等对方回应', 'ok');
                 go('#/offers');
             });
@@ -5065,6 +5390,7 @@
                     await new Promise(function (r) { setTimeout(r, 380); });
                     evalBox.hidden = true;
                 }
+                var condZh = {new: '全新', light: '九成新', seven: '七成新', used: '有使用痕迹'}[condKey] || '九成新';
                 if (resBox) {
                     resBox.innerHTML = '<div class="ai-report-card">'
                         + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ai-report-mascot">'
@@ -5074,7 +5400,7 @@
                         + '<p>建议标价：<b>¥' + fastPrice + '</b>（入手价 ¥' + price + '，保值率约 ' + Math.round(range[1] * 100) + '%）</p>'
                         + '</div>'
                         + '<div class="ai-report-actions">'
-                        + '<a class="btn btn-primary btn-sm" href="#/publish">带此估值去发布 ›</a>'
+                        + '<button type="button" class="btn btn-primary btn-sm" data-act="appraise-to-publish" data-title="' + esc(itemTitle === '您的校园好物' ? '' : itemTitle) + '" data-cat="' + esc(itemCat) + '" data-cond="' + esc(condZh) + '" data-price="' + esc(fastPrice) + '" data-orig="' + esc(price) + '">带此估值去发布 ›</button>'
                         + '<a class="btn btn-ghost btn-sm" href="#/auction/new">去拍卖</a>'
                         + '</div>'
                         + '</div>';
@@ -5083,6 +5409,23 @@
             }
             if (kind === 'email-send') { await api('/user/email/send',{method:'POST',body:{email:fd.get('email')}});toast('验证码已发送，请查收');$('#verify-code')?.focus();return; }
             if (kind === 'email-verify') { await api('/user/email/verify',{method:'POST',body:{code:fd.get('code')}});toast('邮箱认证成功');await renderEmail();return; }
+            if (kind === 'demo-auction-bid') {
+                var dAid = Number(fd.get('id'));
+                var dAmt = Math.round(Number(fd.get('amount') || 0));
+                var demoItem = DEMO_AUCTIONS.find(function (x) { return Number(x.id) === dAid; });
+                var prevDemo = (state._demoAuctionBids && state._demoAuctionBids[dAid]) || null;
+                var prevP = prevDemo ? prevDemo.currentPrice : Number(demoItem ? demoItem.currentPrice : 0);
+                if (!Number.isFinite(dAmt) || dAmt <= prevP) throw new ApiError('出价须高于当前领先价 ¥' + prevP);
+                state._demoAuctionBids[dAid] = {
+                    currentPrice: dAmt,
+                    bidCount: (prevDemo ? prevDemo.bidCount : Number(demoItem ? demoItem.bidCount : 0)) + 1,
+                    bidder: (state.me && state.me.nickname) || '我'
+                };
+                closeSheet();
+                toast('模拟出价 ¥' + dAmt + ' 成功！欢迎到卖家中心发布你的专属拍品', 'ok');
+                await renderAuctions();
+                return;
+            }
             if (kind === 'auction-bid') {
                 await api('/auction/' + encodeURIComponent(fd.get('id')) + '/bid', {method:'POST', body:{amount:fd.get('amount')}}); closeSheet(); toast('出价成功'); await renderAuctions(); return;
             }
@@ -5122,12 +5465,23 @@
                 state.loginMode = 'login';
                 renderLogin('login');
             } else if (kind === 'publish') {
+                var tm = Number(fd.get('tradeMode') || state.publish.tradeMode || 4);
+                var pYuan = String(fd.get('priceYuan') || '').trim();
+                var oYuan = String(fd.get('originalPriceYuan') || '').trim();
+                var priceCents = pYuan ? Math.round(Number(pYuan) * 100) : 0;
+                var origCents = oYuan ? Math.round(Number(oYuan) * 100) : 0;
                 var body = {
                     title: fd.get('title'),
                     category: state.publish.category,
                     conditionLevel: state.publish.conditionLevel,
+                    tradeMode: tm,
+                    price: priceCents,
+                    originalPrice: origCents,
+                    place: fd.get('place') || '',
+                    allowBargain: !!fd.get('allowBargain'),
                     description: fd.get('description'),
                     wantCategory: state.publish.wantCategory,
+                    wantText: fd.get('expectDesc') || '',
                     matchMode: fd.get('matchMode'),
                     expectDesc: fd.get('expectDesc'),
                     images: state.publishImages.join(',')
@@ -5135,9 +5489,9 @@
                 if (!state.publishImages.length) throw new ApiError('请上传物品图片');
                 if (!body.category) throw new ApiError('选一个类别');
                 if (!body.conditionLevel) throw new ApiError('选一个成色');
-                if (!body.wantCategory) throw new ApiError('写一下想换什么');
-                // 先存草稿，万一登录失效重登后还能接着发
-                sessionStorage.setItem('hq.draft', JSON.stringify(body));
+                if (tm !== 2 && (!Number.isFinite(priceCents) || priceCents <= 0)) throw new ApiError('请填写有效的转让价格');
+                if (tm !== 1 && !body.wantCategory) throw new ApiError('请至少选择一个想换物品类别');
+                savePublishDraft(form);
                 var editing = form.dataset.editId;
                 var r = await api(editing ? '/item/'+editing : '/item', {method: editing ? 'PUT' : 'POST', body: body});
                 sessionStorage.removeItem('hq.draft');
