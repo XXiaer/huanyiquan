@@ -81,7 +81,12 @@
     var state = {
         me: null,
         token: '',
-        home: {category: '', condition: '', tradeMode: 0, sort: '', campusSpot: readSavedCampusSpot(), minCredit: 0, keyword: '', page: 1, items: [], total: 0, hasMore: false},
+        home: {category: '', condition: '', tradeMode: 0, sort: '', campusSpot: readSavedCampusSpot(), minCredit: 0, maxPrice: 2000, keyword: '', page: 1, items: [], total: 0, hasMore: false},
+        idleTab: 'all',
+        idleCache: {auctions: null, myRelay: null, wishes: null, myShelf: null},
+        sideMoreCats: false,
+        drawerOpen: false,
+        drawerMoreCats: false,
         publishImages: [],
         _pickedOfferItemId: 0,
         _demoAuctionBids: {},
@@ -225,7 +230,7 @@
         var trade=settingsGroup('交易',[['消息通知','#/notifications'],['我的交换','#/exchange']]);
         var local=settingsGroup('本机记录',[['收藏夹','#/favorites'],['浏览历史','#/history']]);
         var exit=readToken()?'<button class="settings-signout" type="button" data-act="logout">退出登录</button>':'';
-        $('#app').innerHTML = shell('settings','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/me">您的账户</a><span>›</span><b>账号与偏好设置</b></nav><div class="settings-page redesigned-settings amz-wide-page"><header class="redesign-heading"><h1>账号与偏好设置 <span class="tag ghost" style="margin-left:6px">v2.0</span></h1></header><div class="amz-settings-grid">'+account+trade+local+'</div><section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section>'+exit+'</div>');
+        $('#app').innerHTML = shell('settings','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/me">您的账户</a><span>›</span><b>账号与偏好设置</b></nav><div class="settings-page redesigned-settings amz-wide-page"><header class="redesign-heading"><h1>账号与偏好设置</h1></header><div class="amz-settings-grid">'+account+trade+local+'</div><section class="settings-card"><h2>主题颜色</h2><p>选择预设颜色，或自定义任意颜色。</p><div class="theme-options">'+options+'</div><div class="theme-custom"><div><b>自定义颜色</b><small>点击色块选择，立即生效</small></div><output id="theme-value">'+themeColor().toUpperCase()+'</output><input id="theme-color" type="color" value="'+themeColor()+'" aria-label="选择自定义主题颜色"></div><button class="theme-reset" type="button" data-act="theme-reset">恢复默认</button><p class="theme-hint">设置保存在当前浏览器，不需要登录。</p></section>'+exit+'</div>');
     }
 
     function shelfRead(key) {
@@ -546,17 +551,91 @@
             +t('notifications','notice','消息')+t('me','me','我的')+'</nav>';
     }
     function topnav(active) {
-        if(active==='home')active='market';if(active==='offers'||active==='exchange')active='trade';
-        var items=[['market','首页'],['idle','校园闲置'],['community','社区'],['relay','换物接力'],['trade','我的交易'],['wishes','求换专区'],['auctions','拍卖']];
-        if (state.me && state.me.role === 1) items.push(['admin','管理后台']);
+        if(active==='home')active='market';
+        if(active==='idle'){
+            var t = state.idleTab || 'all';
+            active = t === 'auctions' ? 'auctions' : (t === 'relay' ? 'relay' : (t === 'wishes' ? 'wishes' : 'idle'));
+        }
+        if(active==='offers'||active==='exchange')active='trade';
+        var items=[
+            ['#/market','market','首页'],
+            ['#/idle','idle','校园闲置'],
+            ['#/idle?tab=auctions','auctions','校园拍卖'],
+            ['#/idle?tab=relay','relay','换物接力'],
+            ['#/idle?tab=wishes','wishes','求换专区'],
+            ['#/appraise','appraise','AI 估价'],
+            ['#/community','community','校园社区'],
+            ['#/publish','publish','发布闲置'],
+            ['#/trade','trade','我的交易']
+        ];
+        if (state.me && state.me.role === 1) items.push(['#/admin','admin','管理后台']);
         var html = items.map(function (item) {
-            var selected = active === item[0];
-            return '<a href="#/' + item[0] + '"' + (selected ? ' class="on" aria-current="page"' : '') + '>' + item[1] + '</a>';
+            var selected = active === item[1];
+            return '<a href="' + item[0] + '"' + (selected ? ' class="on" aria-current="page"' : '') + '>' + item[2] + '</a>';
         }).join('');
         return '<nav class="topnav" aria-label="网站导航">'+html+'</nav>';
     }
     function logoMarkup() {
         return '<img class="brand-logo" src="/assets/brand/brand-mascot-logo.png" alt="" width="48" height="48">';
+    }
+    function renderAmzDrawerHtml() {
+        var me = state.me;
+        var extraCats = state.drawerMoreCats
+            ? '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('衣物') + '"><span>服饰穿搭</span>' + navIcon('next') + '</a>'
+              + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('绿植') + '"><span>绿植花卉</span>' + navIcon('next') + '</a>'
+              + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('其他') + '"><span>乐器潮玩</span>' + navIcon('next') + '</a>'
+            : '';
+        return '<div class="amz-drawer-backdrop' + (state.drawerOpen ? ' is-open' : '') + '" id="amz-drawer-backdrop" ' + (state.drawerOpen ? '' : 'hidden') + '>'
+            + '<div class="amz-drawer-scrim" data-act="amz-drawer-close"></div>'
+            + '<aside class="amz-drawer" role="dialog" aria-modal="true" aria-label="全部导航菜单">'
+            + '<div class="amz-drawer-head">'
+            + '<a class="amz-drawer-user" href="' + (me ? '#/me' : '#/login') + '" data-act="amz-drawer-close">'
+            + '<span class="amz-drawer-avatar">' + navIcon('me') + '</span>'
+            + '<b>你好，' + (me ? esc(me.nickname) : '请登录') + '</b>'
+            + '</a>'
+            + '</div>'
+            + '<div class="amz-drawer-scroll">'
+            + '<section class="amz-drawer-sec"><h3>校园特色频道</h3>'
+            + '<a class="amz-d-link" href="#/idle?tab=all" data-act="amz-drawer-close"><span>全部校园闲置</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?tab=auctions" data-act="amz-drawer-close"><span>校园拍卖专场</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?tab=relay" data-act="amz-drawer-close"><span>三方换物接力</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?tab=wishes" data-act="amz-drawer-close"><span>求换心愿专区</span>' + navIcon('next') + '</a>'
+            + '<button type="button" class="amz-d-link" data-act="drawer-estimate"><span>AI 好物估价</span>' + navIcon('next') + '</button>'
+            + '</section>'
+            + '<section class="amz-drawer-sec"><h3>按分类逛闲置</h3>'
+            + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('教材') + '" data-act="amz-drawer-close"><span>图书教材</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('数码') + '" data-act="amz-drawer-close"><span>数码设备</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('生活') + '" data-act="amz-drawer-close"><span>宿舍生活</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/idle?cat=' + encodeURIComponent('运动') + '" data-act="amz-drawer-close"><span>运动户外</span>' + navIcon('next') + '</a>'
+            + extraCats
+            + '<button type="button" class="amz-d-more" data-act="amz-drawer-more">'
+            + '<span>' + (state.drawerMoreCats ? '收起部分分类' : '查看全部') + '</span>'
+            + '<span class="amz-d-chev">' + (state.drawerMoreCats ? '▴' : '▾') + '</span>'
+            + '</button>'
+            + '</section>'
+            + '<section class="amz-drawer-sec"><h3>社区与发布</h3>'
+            + '<a class="amz-d-link" href="#/community" data-act="amz-drawer-close"><span>校园社区贴吧</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/community/game" data-act="amz-drawer-close"><span>Scrap Arena 街机</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/publish" data-act="amz-drawer-close"><span>发布闲置好物</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/auction/new" data-act="amz-drawer-close"><span>发起校园拍卖</span>' + navIcon('next') + '</a>'
+            + '</section>'
+            + '<section class="amz-drawer-sec"><h3>帮助与设置</h3>'
+            + '<a class="amz-d-link" href="#/me" data-act="amz-drawer-close"><span>您的账户</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/exchange" data-act="amz-drawer-close"><span>我的订单与交换</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/favorites" data-act="amz-drawer-close"><span>收藏与浏览足迹</span>' + navIcon('next') + '</a>'
+            + '<a class="amz-d-link" href="#/settings" data-act="amz-drawer-close"><span>偏好与主题设置</span>' + navIcon('next') + '</a>'
+            + (me
+                ? '<button type="button" class="amz-d-link" data-act="logout"><span>退出登录</span></button>'
+                : '<a class="amz-d-link" href="#/login" data-act="amz-drawer-close"><span>登录 / 注册</span></a>')
+            + '</section>'
+            + '</div>'
+            + '<button type="button" class="amz-drawer-close-x" data-act="amz-drawer-close" aria-label="关闭菜单">×</button>'
+            + '</aside></div>';
+    }
+    function syncAmzDrawer() {
+        var existing = $('#amz-drawer-backdrop');
+        if (existing) existing.outerHTML = renderAmzDrawerHtml();
+        else document.body.insertAdjacentHTML('beforeend', renderAmzDrawerHtml());
     }
     function amzFooter() {
         return '<footer class="amz-footer">'
@@ -595,14 +674,13 @@
             +search
             +'<div class="header-actions">'
             +amzAccount
-            +'<a class="amz-nav-item amz-orders-link" href="#/exchange"><b>我的订单</b></a>'
-            +'<a class="notice-link amz-nav-item" href="#/notifications" aria-label="消息通知"><b>通知</b><span class="notice-count" hidden></span></a>'
+            +'<a class="amz-nav-item amz-orders-link" href="#/exchange"><small>退换与</small><b>&amp; 订单</b></a>'
+            +'<a class="notice-link amz-nav-item" href="#/notifications" aria-label="消息通知"><small>消息</small><b>与通知</b><span class="notice-count" hidden></span></a>'
             +'<a class="settings-link" href="#/settings" aria-label="设置" title="设置">'+navIcon('settings')+'</a>'
             +'<a class="shelf-link amz-cart" href="#/favorites" aria-label="收藏与历史" title="收藏夹"><span class="amz-cart-ico amz-fav-ico">'+navIcon('bookmark')+'<span class="amz-cart-num">'+favCount+'</span></span><b class="amz-cart-label">收藏夹</b></a>'
-            +'<a class="amz-msg-top'+(active==='notifications'?' on':'')+'" href="#/notifications" aria-label="消息中心" title="消息中心"><span class="amz-msg-ico"><img src="/assets/amz/nav-msg-icon.jpg" alt="消息"><span class="notice-count" hidden></span></span><span class="amz-msg-txt"><b>消息</b></span></a>'
             +account+'</div></div>'
-            +'<div class="header-nav-wrap"><a class="amz-all-btn" href="#/idle">'+navIcon('menu')+'<span>全部</span></a>'+topnav(active)
-            +'<div class="amz-sub-right"><button type="button" class="amz-sub-link" data-act="estimate">AI 好物估价</button><a class="header-publish" href="#/publish">'+navIcon('add')+' 发布闲置</a></div></div></header>'
+            +'<div class="header-nav-wrap"><button type="button" class="amz-all-btn" data-act="amz-drawer-open" aria-expanded="'+(state.drawerOpen?'true':'false')+'">'+navIcon('menu')+'<span>全部</span></button>'+topnav(active)+'</div></header>'
+            +renderAmzDrawerHtml()
             +'<main id="main-content" tabindex="-1" class="shell '+(active==='market'||active==='home'||active==='idle'?'shell-market':'')+'">'+content+'</main>'+amzFooter()+tabbar(active);
     }
     function tradeTabs(active){
@@ -638,8 +716,8 @@
     }
 
     function pCard(it) {
-        var locked=it.status&&it.status!==1, img=firstImage(it.images);
-        var face=img?'<img src="'+esc(window.catalogThumbnail(img))+'" alt="'+esc(it.title)+'" width="300" height="300" loading="lazy" decoding="async">':(CAT_ICON[it.category]||CAT_ICON['其他']);
+        var locked = it.status && it.status !== 1, img = firstImage(it.images);
+        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="lazy" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
         var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
         var hasSwap = window.campusExchange.supports(it, 2);
@@ -648,16 +726,114 @@
             var parts = (Number(it.price) / 100).toFixed(2).split('.');
             var orig = Number(it.originalPrice || 0);
             var origHtml = orig > Number(it.price) ? '<s class="amz-orig-price">¥' + (orig / 100).toFixed(0) + '</s>' : '';
-            var dualBadge = (mode === 4 || (hasSwap && hasPrice)) ? '<span class="amz-dual-tag">可换</span>' : '';
-            priceHtml = '<span class="amz-price"><em>¥</em><b>' + parts[0] + '</b><sup>.' + parts[1] + '</sup></span>' + origHtml + dualBadge;
+            priceHtml = '<span class="amz-price"><em>¥</em><b>' + parts[0] + '</b><sup>.' + parts[1] + '</sup></span>' + origHtml + (mode === 4 ? '<span class="amz-dual-txt"> · 可换</span>' : '');
         } else {
             var wantHint = it.wantText || it.wantCategory;
             priceHtml = '<span class="swap-label">' + (mode === 3 && !it.isDemo ? '拍卖竞价' : (wantHint ? '想换 ' + esc(wantHint) : '以物换物')) + '</span>';
         }
-        return '<button class="pcard '+(locked?'locked':'')+'" data-act="go" data-to="#/item/'+it.id+'"><div class="pimg" data-cat="'+esc(it.category)+'">'+face
-            +(locked?'<span class="pbadge">'+esc(it.statusText||'已换出')+'</span>':'')+'</div>'
-            +'<div class="pbody"><p class="ptitle">'+esc(it.title)+'</p>'
-            +'<div class="pcard-bottom">'+priceHtml+'</div></div></button>';
+        return '<button class="pcard ' + (locked ? 'locked' : '') + '" data-act="go" data-to="#/item/' + it.id + '"><div class="pimg" data-cat="' + esc(it.category) + '">' + face
+            + (locked ? '<span class="pbadge">' + esc(it.statusText || '已换出') + '</span>' : '') + '</div>'
+            + '<div class="pbody"><p class="ptitle">' + esc(it.title) + '</p>'
+            + '<div class="pcard-bottom">' + priceHtml + '</div></div></button>';
+    }
+
+    function amzGoldItemCard(it) {
+        var locked = it.status && it.status !== 1, img = firstImage(it.images);
+        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="lazy" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
+        var mode = window.campusExchange.mode(it);
+        var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
+        var orig = Number(it.originalPrice || 0);
+        var favs = shelfRead('favorites');
+        var isFav = favs.some(function (x) { return Number(x.id) === Number(it.id); });
+        var badgeText = locked ? (it.statusText || '已换出') : (mode === 4 ? '可买可换' : (mode === 2 ? '以物换物' : (orig > Number(it.price) ? Math.max(1, Math.round((Number(it.price) / orig) * 10)) + '折优惠' : '校内好物')));
+        var subNote = it.allowBargain ? '支持小刀' : (it.building || it.conditionLevel || '校内当面换');
+        var priceLine;
+        if (hasPrice) {
+            var parts = (Number(it.price) / 100).toFixed(2).split('.');
+            priceLine = '<span class="amz-gb-price"><em>¥</em><b>' + parts[0] + '</b><sup>' + parts[1] + '</sup></span>'
+                + (orig > Number(it.price) ? '<span class="amz-gb-orig">参考价：<s>¥' + (orig / 100).toFixed(2) + '</s></span>' : '');
+        } else {
+            var wantHint = it.wantText || it.wantCategory;
+            priceLine = '<span class="amz-gb-swap">' + (wantHint ? '想换：' + esc(wantHint) : '以物换物') + '</span>';
+        }
+        var credit = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
+        var stars = credit >= 90 ? 5 : (credit >= 75 ? 4 : 3);
+        return '<article class="amz-gb-card' + (locked ? ' is-locked' : '') + '">'
+            + '<div class="amz-gb-img" data-cat="' + esc(it.category) + '">'
+            + '<a href="#/item/' + Number(it.id) + '" class="amz-gb-img-link">' + face + '</a>'
+            + '<button type="button" class="amz-gb-plus' + (isFav ? ' is-fav' : '') + '" data-act="idle-quick-fav" data-id="' + Number(it.id) + '" title="' + (isFav ? '已收藏' : '加入收藏夹') + '" aria-label="收藏">' + (isFav ? '✓' : '+') + '</button>'
+            + '</div>'
+            + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (locked ? ' is-muted' : '') + '">' + esc(badgeText) + '</span><span class="amz-gb-red-txt">' + esc(subNote) + '</span></div>'
+            + '<div class="amz-gb-price-row">' + priceLine + '</div>'
+            + '<a class="amz-gb-title" href="#/item/' + Number(it.id) + '" title="' + esc(it.title) + '">' + esc(it.title) + '</a>'
+            + '<div class="amz-gb-rating"><span class="amz-stars">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + '</span><span>' + esc(it.conditionLevel || '九成新') + '</span></div>'
+            + '<a class="amz-gb-link" href="#/item/' + Number(it.id) + '">查看好物详情</a>'
+            + '</article>';
+    }
+
+    function amzGoldAuctionCard(a) {
+        var fallbackImgs = ['/assets/amz/quad-auction.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
+        var img = firstImage(a.image) || fallbackImgs[Math.abs(Number(a.id || 0)) % fallbackImgs.length];
+        var dState = a.isDemo && state._demoAuctionBids ? state._demoAuctionBids[a.id] : null;
+        var priceVal = Number(dState ? dState.currentPrice : (a.state === 'settled' && (a.selectedAmount || a.currentPrice) ? (a.selectedAmount || a.currentPrice) : (a.currentPrice || 1)));
+        var marketPrice = Number(a.marketPrice || 0);
+        var bids = dState ? dState.bidCount : Number(a.bidCount || 0);
+        var parts = priceVal.toFixed(2).split('.');
+        var activeAuc = a.state === 'active';
+        var labels = { active: '拍卖中', cancelled: '已撤回', pending: '待审核', rejected: '未通过', settled: '已成交', ended: bids ? '待结算' : '已流拍' };
+        var disc = marketPrice > priceVal ? Math.max(1, Math.round((priceVal / marketPrice) * 10)) + '折起拍' : (labels[a.state] || '拍卖中');
+        return '<article class="amz-gb-card">'
+            + '<div class="amz-gb-img">'
+            + '<button type="button" class="amz-gb-img-link" data-act="auction-detail" data-id="' + Number(a.id) + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="' + esc(a.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-plus" data-act="auction-detail" data-id="' + Number(a.id) + '" title="' + (activeAuc ? '立即出价' : '查看拍品') + '">+</button>'
+            + '</div>'
+            + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (!activeAuc ? ' is-muted' : '') + '">' + esc(disc) + '</span><span class="amz-gb-red-txt">' + (activeAuc ? (bids + ' 次出价') : esc(labels[a.state] || '已结束')) + '</span></div>'
+            + '<div class="amz-gb-price-row"><span class="amz-gb-price"><em>¥</em><b>' + parts[0] + '</b><sup>' + parts[1] + '</sup></span>' + (marketPrice > priceVal ? '<span class="amz-gb-orig">原价：<s>¥' + marketPrice.toFixed(2) + '</s></span>' : '') + '</div>'
+            + '<button type="button" class="amz-gb-title" data-act="auction-detail" data-id="' + Number(a.id) + '" title="' + esc(a.title) + '">' + esc(a.title) + '</button>'
+            + '<div class="amz-gb-rating"><span class="amz-stars">★★★★★</span><span>' + esc(a.campus || '校内面交') + '</span></div>'
+            + '<button type="button" class="amz-gb-link" data-act="auction-detail" data-id="' + Number(a.id) + '">' + (activeAuc ? '立即参与竞拍' : '查看拍卖详情') + '</button>'
+            + '</article>';
+    }
+
+    function amzGoldRelayCard(r) {
+        var isSettled = r.state === 'settled';
+        var actAttr = r.isDemo ? 'data-act="relay-join" data-id="' + Number(r.id) + '"' : 'data-act="go" data-to="#/cycle/' + Number(r.id) + '"';
+        var val = Number(r.value || 100);
+        var parts = val.toFixed(2).split('.');
+        return '<article class="amz-gb-card">'
+            + '<div class="amz-gb-img">'
+            + '<button type="button" class="amz-gb-img-link" ' + actAttr + '><img src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-plus" ' + actAttr + ' title="加入换物接力">+</button>'
+            + '</div>'
+            + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (isSettled ? ' is-muted' : '') + '">' + (isSettled ? '已闭环' : '三方接力') + '</span><span class="amz-gb-red-txt">' + esc(r.stage || '可成环') + '</span></div>'
+            + '<div class="amz-gb-price-row"><span class="amz-gb-price"><em>¥</em><b>' + parts[0] + '</b><sup>' + parts[1] + '</sup></span><span class="amz-gb-orig">换 · ' + esc(r.want || '校园好物') + '</span></div>'
+            + '<button type="button" class="amz-gb-title" ' + actAttr + ' title="' + esc(r.title) + '">' + esc(r.title) + '</button>'
+            + '<div class="amz-gb-rating"><span class="amz-stars">★★★★★</span><span>' + esc(r.campus || 'A→B→C 闭环') + '</span></div>'
+            + '<button type="button" class="amz-gb-link" ' + actAttr + '>' + (r.isDemo ? (isSettled ? '查看闭环示范' : '去加入接力环') : '搜三方闭环') + '</button>'
+            + '</article>';
+    }
+
+    function amzGoldWishCard(w) {
+        var isSettled = w.state === 'settled';
+        var isMine = state.me && w.userId === state.me.id;
+        var fallbackImgs = ['/assets/amz/quad-wishes.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
+        var img = w.image || fallbackImgs[Math.abs(Number(w.id || 0)) % fallbackImgs.length];
+        var budget = Number(w.budget || 60);
+        var parts = budget.toFixed(2).split('.');
+        var actBtn = isMine
+            ? '<button type="button" class="amz-gb-link" data-act="wish-close" data-id="' + w.id + '">关闭此求换</button>'
+            : '<button type="button" class="amz-gb-link" data-act="wish-respond" data-id="' + w.id + '">' + (isSettled ? '查看详情' : '去响应求换') + '</button>';
+        return '<article class="amz-gb-card">'
+            + '<div class="amz-gb-img">'
+            + '<button type="button" class="amz-gb-img-link" data-act="wish-respond" data-id="' + w.id + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-plus" data-act="wish-respond" data-id="' + w.id + '" title="响应求换心愿">+</button>'
+            + '</div>'
+            + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (isSettled ? ' is-muted' : '') + '">' + (isSettled ? '已达成' : esc(w.stage || '求换心愿')) + '</span><span class="amz-gb-red-txt">' + Number(w.replyCount || 3) + ' 人响应</span></div>'
+            + '<div class="amz-gb-price-row"><span class="amz-gb-price"><em>¥</em><b>' + parts[0] + '</b><sup>' + parts[1] + '</sup></span><span class="amz-gb-orig">' + esc(w.offerText || '等价互换') + '</span></div>'
+            + '<button type="button" class="amz-gb-title" data-act="wish-respond" data-id="' + w.id + '" title="' + esc(w.title) + '">' + esc(w.title) + '</button>'
+            + '<div class="amz-gb-rating"><span class="amz-stars">★★★★★</span><span>' + esc(w.campus || '校内面交') + '</span></div>'
+            + actBtn
+            + '</article>';
     }
 
     /** 信用分换算等级，和后端 UserService.creditLevel 的阈值保持一致 */
@@ -878,176 +1054,387 @@
         $('#app').innerHTML=shell('market','<section class="redesign-page search-page"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">'+navIcon('back')+'</a><h1>搜索闲置</h1>'+(term?'<button class="link-btn" data-act="search-term" data-v="">清除关键词</button>':'')+'</header>'+form+(term?results:landing)+'</section>');
     }
 
-    function renderHome() {
-        var h=state.home;
-        var baseHash=(location.hash||'#/home').split('?')[0];
-        var idle=baseHash==='#/idle';
-        var isSearch=baseHash==='#/search';
-        var minCredit=Number(h.minCredit||0);
-        var visibleItems=minCredit>0 ? h.items.filter(function(it){
-            var c = it.ownerCredit===undefined||it.ownerCredit===null ? 80 : Number(it.ownerCredit);
-            return c >= minCredit;
-        }) : h.items;
-        var me=state.me;
-        var categories=[
-            ['','全部好物','全站热换'],
-            ['教材','图书教材','考研/课本'],
-            ['数码','数码设备','键鼠/耳机'],
-            ['运动','运动户外','球拍/器材'],
-            ['生活','宿舍生活','台灯/收纳'],
-            ['衣物','服饰穿搭','潮牌/外套'],
-            ['绿植','绿植花卉','多肉/盆栽'],
-            ['其他','兴趣好物','手办/乐器']
-        ];
-        var desktopCats=categories.map(function(c){return '<button class="desk-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><span class="desk-category-icon">'+(c[0]?(CAT_ICON[c[0]]||CAT_ICON['其他']):navIcon('market'))+'</span><span class="desk-cat-main"><b>'+esc(c[1])+'</b></span><span class="desk-category-arrow">'+navIcon('next')+'</span></button>';}).join('');
-        var condSidebar='<div class="amz-side-group"><h3>新旧成色</h3>'+[['','不限成色'],['全新','全新未拆'],['九成新','九成新'],['七成新','七成新'],['有使用痕迹','有使用痕迹']].map(function(c){
-            var checked = h.condition===c[0];
-            return '<button class="desk-category amz-check-row '+(checked?'on':'')+'" data-act="f-cond" data-v="'+esc(c[0])+'"><span class="amz-radio-dot '+(checked?'on':'')+'"></span><span>'+esc(c[1])+'</span></button>';
-        }).join('')+'</div>';
-        var tradeSidebar='<div class="amz-side-group"><h3>交易方式</h3>'+[[0,'全部方式'],[1,'明码标价'],[2,'以物换物'],[4,'可买可换']].map(function(t){
-            var on = Number(h.tradeMode||0) === t[0];
-            return '<button class="desk-category amz-check-row '+(on?'on':'')+'" data-act="f-trademode" data-v="'+t[0]+'"><span class="amz-radio-dot '+(on?'on':'')+'"></span><span>'+t[1]+'</span></button>';
-        }).join('')+'</div>';
-        var creditSidebar='<div class="amz-side-group"><h3>物主信用</h3>'
-            +[[90,'★★★★★','90分以上'],[80,'★★★★☆','80分以上'],[60,'★★★☆☆','60分以上']].map(function(row){
-                var on = minCredit === row[0];
-                return '<button type="button" class="desk-category amz-star-filter '+(on?'on':'')+'" data-act="f-credit" data-v="'+row[0]+'"><span class="amz-stars">'+row[1]+'</span><span class="amz-credit-val">'+row[2]+'</span></button>';
-            }).join('')
-            +'</div>';
-        var spotSidebar='<div class="amz-side-group"><h3>校内面交点</h3><div class="amz-side-tags">'
-            +CAMPUS_SPOTS.map(function(s){
-                var on = h.campusSpot === s;
-                return '<button type="button" class="amz-side-tag '+(on?'on':'')+'" data-act="f-spot" data-v="'+esc(s)+'">'+clayIcon('pin','定位','is-sm')+' '+esc(s)+'</button>';
-            }).join('')+'</div></div>';
-        var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
-        var mobileSearch='<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
-        var mascotImage='<img src="/assets/brand/mascot-wave-320.webp" width="320" height="320" alt="挥手的换一圈吉祥物猫猫" decoding="async">';
-        var shortcuts=[['#/offers','trade','我的报价'],['#/exchange','trade','我的交换'],['#/favorites','heart','收藏与历史']].map(function(link){
-            return '<a class="desk-category" href="'+link[0]+'"><span class="desk-category-icon">'+navIcon(link[1])+'</span>'+link[2]+'</a>';
+    async function ensureIdleTabData(tab, forceRefresh) {
+        if (tab === 'auctions') {
+            if (!state.idleCache.auctions || forceRefresh) {
+                var aucRes = await api('/auction', {optionalAuth: true}).catch(function () { return []; });
+                state.idleCache.auctions = Array.isArray(aucRes) ? aucRes : (aucRes && Array.isArray(aucRes.list) ? aucRes.list : []);
+            }
+        } else if (tab === 'relay') {
+            if (!state.idleCache.myRelay || forceRefresh) {
+                var mineRelay = (readToken() || state.me)
+                    ? await api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; })
+                    : [];
+                state.idleCache.myRelay = (mineRelay || []).filter(function (item) { return item.allowCycle && !item.isDemo; });
+            }
+        } else if (tab === 'wishes') {
+            if (!state.idleCache.wishes || forceRefresh) {
+                var wRes = await Promise.all([
+                    api('/wish', {optionalAuth: true}).catch(function () { return []; }),
+                    (readToken() || state.me) ? api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; }) : Promise.resolve([])
+                ]);
+                state.idleCache.wishes = Array.isArray(wRes[0]) ? wRes[0] : [];
+                state.idleCache.myShelf = (wRes[1] || []).filter(function (item) { return item.allowCycle && !item.isDemo; });
+            }
+        }
+    }
+
+    function openWishCreateSheet() {
+        if (!readToken() && !state.me) {
+            sessionStorage.setItem('hq.returnTo', '#/idle?tab=wishes');
+            go('#/login');
+            return;
+        }
+        var myItems = (state.idleCache.myShelf || []);
+        var offerOptions = myItems.map(function (item) {
+            return '<option value="' + Number(item.id) + '">' + esc(item.title) + '</option>';
         }).join('');
+        openSheet('<h3>发布求换心愿</h3>'
+            + '<form data-form="wish-new" style="margin-top:12px">'
+            + '<div class="field"><label class="label">我想换</label><input class="input" name="title" maxlength="100" placeholder="高数习题集 / 罗技鼠标" required></div>'
+            + '<div class="field"><label class="label">分类</label><select class="select" name="category"><option value="">全部类别</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></div>'
+            + '<div class="field"><label class="label">我拿什么换（选填）</label><select class="select" name="offeredItemId"><option value="">不关联在架物品</option>' + offerOptions + '</select></div>'
+            + '<div class="field"><label class="label">备注</label><input class="input" name="content" maxlength="500" placeholder="成色要求或交接书院（选填）"></div>'
+            + '<button class="btn btn-primary btn-block" type="submit">发布求换心愿</button>'
+            + '</form>');
+    }
 
-        // 5列彩色大图入口卡片条
-        var posterStrip = '<section class="amz-poster-strip" aria-label="特色频道">'
-            + '<div class="amz-poster-head"><h2>校园特色频道</h2></div>'
-            + '<div class="amz-poster-row">'
-            + '<a class="amz-poster-card poster-orange" href="#/auctions"><div class="amz-poster-copy"><h3>校园拍卖</h3><span>1元起拍 ›</span></div><div class="amz-poster-collage"><span class="p-frame f1"><img src="/assets/amz/quad-auction.jpg" alt=""></span><span class="p-frame f2"><img src="/assets/amz/quad-digital.jpg" alt=""></span><span class="p-frame f3"><img src="/assets/amz/quad-books.jpg" alt=""></span><span class="p-frame f4"><img src="/assets/brand/mascot-box.png" alt=""></span></div></a>'
-            + '<button type="button" class="amz-poster-card poster-sage" data-act="estimate"><div class="amz-poster-copy"><h3>AI 好物估价</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-appraise.jpg" alt="AI好物估价"></div></button>'
-            + '<a class="amz-poster-card poster-peach" href="#/relay"><div class="amz-poster-copy"><h3>换物接力</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-relay.jpg" alt="换物接力"></div></a>'
-            + '<a class="amz-poster-card poster-sand" href="#/idle"><div class="amz-poster-copy"><h3>毕业好物</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-grad.jpg" alt="毕业好物"></div></a>'
-            + '<a class="amz-poster-card poster-sky" href="#/community"><div class="amz-poster-copy"><h3>校园社区</h3></div><div class="amz-poster-art"><img src="/assets/amz/quad-community.jpg" alt="校园社区"></div></a>'
-            + '</div></section>';
+    function renderHome() {
+        var h = state.home;
+        var baseHash = (location.hash || '#/home').split('?')[0];
+        var idle = baseHash === '#/idle' || baseHash === '#/auctions' || baseHash === '#/relay' || baseHash === '#/wishes';
+        var isSearch = baseHash === '#/search';
+        var minCredit = Number(h.minCredit || 0);
+        var maxPrice = Number(h.maxPrice === undefined ? 2000 : h.maxPrice);
+        var activeTab = state.idleTab || 'all';
+        var tmVal = Number(h.tradeMode || 0);
+        var sortVal = h.sort || '';
 
-        // 亚马逊首页：紧凑 1/4 高森林绿横幅 + 4 列矩阵 + 5 列视觉海报条
-        var amzHomeTop = '<section class="desktop-market amz-home-stage">'
-            + '<div class="amz-hero amz-hero-compact">'
-            + '<div class="amz-hero-inner">'
-            + '<div class="amz-hero-copy">'
-            + '<h1>好东西，再转一圈。</h1>'
+        var visibleItems = h.items.filter(function (it) {
+            if (minCredit > 0) {
+                var c = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
+                if (c < minCredit) return false;
+            }
+            if (maxPrice > 0 && maxPrice < 2000) {
+                var yuan = Number(it.price || 0) / 100;
+                if (yuan > maxPrice) return false;
+            }
+            return true;
+        });
+
+        var me = state.me;
+        var categories = [
+            ['', '全部好物'],
+            ['教材', '图书教材'],
+            ['数码', '数码设备'],
+            ['生活', '宿舍生活'],
+            ['运动', '运动户外'],
+            ['衣物', '服饰穿搭'],
+            ['绿植', '绿植花卉'],
+            ['其他', '乐器潮玩']
+        ];
+        var mobileCats = categories.map(function (c) {
+            return '<button class="mobile-category ' + (h.category === c[0] ? 'on' : '') + '" data-act="f-cat" data-v="' + esc(c[0]) + '"><b>' + esc(c[1]) + '</b></button>';
+        }).join('');
+        var mobileSearch = '<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">' + navIcon('search') + '</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="' + esc(h.keyword) + '"><button type="submit">搜索</button></form>';
+        var mascotImage = '<img src="/assets/brand/mascot-wave-320.webp" width="320" height="320" alt="挥手的换一圈吉祥物猫猫" decoding="async">';
+
+        // 首页 5:8 彩色大海报横向滑动卡（1:1 对照亚马逊首页：标题直接嵌在左上角，无蒙版/白框）
+        var posterStrip = '<section class="amz-poster-strip" aria-label="校园特色频道">'
+            + '<button type="button" class="amz-poster-arrow is-prev" data-act="poster-scroll" data-dir="-1" aria-label="向左滑动">‹</button>'
+            + '<div class="amz-poster-track" id="amz-poster-track">'
+            + '<a class="amz-poster-card is-light-text" href="#/idle?tab=auctions">'
+            +   '<img src="/assets/amz/poster-auction.jpg" alt="校园拍卖" loading="eager">'
+            +   '<div class="amz-poster-overlay"><h3>校园拍卖<br>限时捡漏专场</h3><span>1元起拍 · 每日好物竞价</span></div>'
+            + '</a>'
+            + '<button type="button" class="amz-poster-card" data-act="estimate">'
+            +   '<img src="/assets/amz/poster-appraise.jpg" alt="AI好物估价" loading="eager">'
+            +   '<div class="amz-poster-overlay"><h3>AI 好物估价</h3></div>'
+            + '</button>'
+            + '<a class="amz-poster-card" href="#/idle?tab=relay">'
+            +   '<img src="/assets/amz/poster-relay.jpg" alt="换物接力" loading="eager">'
+            +   '<div class="amz-poster-overlay"><h3>多方换物<br>接力成环</h3></div>'
+            + '</a>'
+            + '<a class="amz-poster-card" href="#/idle">'
+            +   '<img src="/assets/amz/poster-grad.jpg" alt="毕业好物" loading="eager">'
+            +   '<div class="amz-poster-overlay"><h3>毕业季好物<br>低价带走</h3></div>'
+            + '</a>'
+            + '<a class="amz-poster-card" href="#/community">'
+            +   '<img src="/assets/amz/poster-community.jpg" alt="校园社区" loading="eager">'
+            +   '<div class="amz-poster-overlay"><h3>校园社区贴吧</h3></div>'
+            + '</a>'
+            + '<a class="amz-poster-card" href="#/idle?tab=wishes">'
+            +   '<img src="/assets/amz/poster-wishes.jpg" alt="求换专区" loading="lazy">'
+            +   '<div class="amz-poster-overlay"><h3>求换专区</h3></div>'
+            + '</a>'
             + '</div>'
-            + '<div class="amz-hero-btns"><a class="btn amz-btn-orange" href="#/idle">逛校园闲置</a><a class="btn amz-btn-outline" href="#/publish">发布闲置</a><a class="btn amz-btn-outline" href="#/appraise">AI 估价</a></div>'
-            + '</div></div>'
+            + '<button type="button" class="amz-poster-arrow is-next" data-act="poster-scroll" data-dir="1" aria-label="向右滑动">›</button>'
+            + '</section>';
+
+        // 首页（1:1 亚马逊主页结构：无顶部绿宣传块，直接大海报轮播 + 4列16px圆角面板）
+        var amzHomeTop = '<section class="desktop-market amz-home-stage">'
+            + posterStrip
             + '<div class="amz-quad-grid">'
-            + '<div class="amz-quad-card"><h2>热门校园分类</h2><div class="amz-quad-2x2 amz-quad-photos">'
+            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/idle"><h2>热门校园分类</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
             + '<button data-act="f-cat" data-v="教材"><span class="amz-q-photo"><img src="/assets/amz/quad-books.jpg" alt="图书教材" loading="lazy"></span><b>图书教材</b></button>'
             + '<button data-act="f-cat" data-v="数码"><span class="amz-q-photo"><img src="/assets/amz/quad-digital.jpg" alt="数码设备" loading="lazy"></span><b>数码设备</b></button>'
             + '<button data-act="f-cat" data-v="运动"><span class="amz-q-photo"><img src="/assets/amz/quad-sports.jpg" alt="运动户外" loading="lazy"></span><b>运动户外</b></button>'
             + '<button data-act="f-cat" data-v="生活"><span class="amz-q-photo"><img src="/assets/amz/quad-dorm.jpg" alt="宿舍生活" loading="lazy"></span><b>宿舍生活</b></button>'
-            + '</div><a class="amz-quad-more" href="#/idle">查看全部分类</a></div>'
-            + '<div class="amz-quad-card"><h2>校园服务直通车</h2><div class="amz-quad-2x2 amz-quad-photos">'
+            + '</div></div>'
+            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/community"><h2>校园服务直通车</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
             + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-delivery.jpg" alt="校内可送" loading="lazy"></span><b>校内可送</b></a>'
-            + '<a href="#/home"><span class="amz-q-photo"><img src="/assets/amz/quad-swap.jpg" alt="以物换物" loading="lazy"></span><b>以物换物</b></a>'
+            + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-swap.jpg" alt="以物换物" loading="lazy"></span><b>以物换物</b></a>'
             + '<a href="#/appraise"><span class="amz-q-photo"><img src="/assets/amz/quad-appraise.jpg" alt="好物估价" loading="lazy"></span><b>好物估价</b></a>'
-            + '<a href="#/auctions"><span class="amz-q-photo"><img src="/assets/amz/quad-grad.jpg" alt="毕业好物" loading="lazy"></span><b>毕业好物</b></a>'
-            + '</div><a class="amz-quad-more" href="#/community">去校园社区看看</a></div>'
-            + '<div class="amz-quad-card"><h2>拍卖与换物接力</h2><div class="amz-quad-2x2 amz-quad-photos">'
-            + '<a href="#/auctions"><span class="amz-q-photo"><img src="/assets/amz/quad-auction.jpg" alt="校园拍卖" loading="lazy"></span><b>校园拍卖</b></a>'
-            + '<a href="#/wishes"><span class="amz-q-photo"><img src="/assets/amz/quad-wishes.jpg" alt="求换专区" loading="lazy"></span><b>求换专区</b></a>'
-            + '<a href="#/relay"><span class="amz-q-photo"><img src="/assets/amz/quad-relay.jpg" alt="换物接力" loading="lazy"></span><b>换物接力</b></a>'
+            + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-grad.jpg" alt="毕业好物" loading="lazy"></span><b>毕业好物</b></a>'
+            + '</div></div>'
+            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/idle?tab=auctions"><h2>拍卖与换物接力</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
+            + '<a href="#/idle?tab=auctions"><span class="amz-q-photo"><img src="/assets/amz/quad-auction.jpg" alt="校园拍卖" loading="lazy"></span><b>校园拍卖</b></a>'
+            + '<a href="#/idle?tab=wishes"><span class="amz-q-photo"><img src="/assets/amz/quad-wishes.jpg" alt="求换专区" loading="lazy"></span><b>求换专区</b></a>'
+            + '<a href="#/idle?tab=relay"><span class="amz-q-photo"><img src="/assets/amz/quad-relay.jpg" alt="换物接力" loading="lazy"></span><b>换物接力</b></a>'
             + '<a href="#/community"><span class="amz-q-photo"><img src="/assets/amz/quad-community.jpg" alt="校内圈子" loading="lazy"></span><b>校内圈子</b></a>'
-            + '</div><a class="amz-quad-more" href="#/auctions">进入拍卖专场</a></div>'
+            + '</div></div>'
             + '<div class="amz-quad-card amz-quad-account">'
-            + (me ? '<h2>你好，' + esc(me.nickname) + '</h2>'
+            + (me ? '<a class="amz-quad-head" href="#/me"><h2>你好，' + esc(me.nickname) + '</h2><span>›</span></a>'
                   + '<div class="amz-acct-mini amz-credit-mascot-box">'
                   + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
                   + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>信用分 ' + me.credit + '</b><span class="amz-credit-pill">信用极好</span></div>'
-                  + '<div class="amz-credit-quick">'
+                  + '<div class="amz-credit-score-row"><b>信用分 ' + me.credit + '</b><span class="amz-credit-txt">信用极好</span></div>'
+                  + '<div class="amz-credit-quick-links">'
                   + '<a href="#/me">在架管理</a><a href="#/offers">报价记录</a><a href="#/favorites">收藏足迹</a>'
                   + '</div></div></div>'
-                  + '<a class="btn amz-btn-orange btn-block" href="#/publish">立即发布闲置</a><a class="amz-quad-more" href="#/me">进入个人中心</a>'
-                  : '<h2>登录获得完整体验</h2>'
+                  + '<a class="btn amz-btn-orange btn-block" href="#/publish">立即发布闲置</a>'
+                  : '<a class="amz-quad-head" href="#/login"><h2>登录获得完整体验</h2><span>›</span></a>'
                   + '<div class="amz-acct-mini amz-credit-mascot-box">'
                   + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
                   + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>信用分 80</b><span class="amz-credit-pill">移通认证</span></div>'
-                  + '<div class="amz-credit-quick">'
-                  + '<a href="#/login">学号登录</a><a href="#/appraise">AI估价</a><a href="#/auctions">逛拍卖</a>'
+                  + '<div class="amz-credit-score-row"><b>信用分 80</b><span class="amz-credit-txt">移通认证</span></div>'
+                  + '<div class="amz-credit-quick-links">'
+                  + '<a href="#/login">学号登录</a><a href="#/appraise">AI估价</a><a href="#/idle?tab=auctions">逛拍卖</a>'
                   + '</div></div></div>'
-                  + '<a class="btn amz-btn-orange btn-block" href="#/login">安全登录</a><a class="amz-quad-more" href="#/login">立即注册</a>')
+                  + '<a class="btn amz-btn-orange btn-block" href="#/login">安全登录</a>')
             + '</div></div>'
-            + posterStrip
             + '</section>';
 
-        var desktopSidebar='<aside class="category-panel desktop-market amz-rich-sidebar" aria-label="集市侧栏">'
-            +'<div class="amz-side-hero"><img src="/assets/brand/mascot-wave-320.webp" width="52" height="52" alt="小唤"><div><b>移通校园严选</b></div></div>'
-            +'<h2 class="category-panel-title">商品分类</h2>'+desktopCats
-            + tradeSidebar
-            + condSidebar
-            + creditSidebar
-            + spotSidebar
-            +'<nav class="desktop-market-shortcuts" aria-label="快捷入口"><h2 class="category-panel-title">快捷入口</h2>'+shortcuts+'</nav>'
-            +'<div class="amz-side-promo"><img src="/assets/brand/mascot-search.png" width="56" height="56" alt="小唤"><div><b>拿不准定什么价？</b><button type="button" class="btn btn-primary btn-sm btn-block" data-act="estimate">让小唤 AI 估价</button></div></div>'
-            +'</aside>';
+        var mobile = '<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/idle">闲置</a><a href="#/community">社区</a><a href="#/idle?tab=auctions">拍卖</a></nav>' + mobileSearch + campusServices() + '<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">' + mascotImage + '</figure></section><div class="mobile-categories">' + mobileCats + '</div><div class="mobile-tools"><button data-act="go" data-to="#/idle?tab=auctions"><span>' + navIcon('auction') + '</span><b>校园拍卖</b></button><button data-act="go" data-to="#/idle?tab=wishes"><span>' + navIcon('wish') + '</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>' + navIcon('community') + '</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>' + navIcon('trade') + '</span><b>我的交易</b></button></div></section>';
 
-        var tmVal = Number(h.tradeMode || 0);
-        var sortVal = h.sort || '';
-        var dualSortBar = '<div class="amz-dual-toolbar">'
-            + '<div class="amz-tm-pills" role="group" aria-label="交易方式">'
-            + [[0,'全部'],[1,'明码标价'],[2,'以物换物'],[4,'可买可换']].map(function(t){
-                return '<button type="button" class="amz-tm-pill '+(tmVal===t[0]?'on':'')+'" data-act="f-trademode" data-v="'+t[0]+'">'+t[1]+'</button>';
-            }).join('')
-            + '</div>'
-            + '<div class="amz-sort-pills">'
-            + [['','综合'],['latest','最新'],['price_asc','价格↑'],['price_desc','价格↓']].map(function(s){
-                return '<button type="button" class="amz-sort-pill '+(sortVal===s[0]?'on':'')+'" data-act="f-sort" data-v="'+s[0]+'">'+s[1]+'</button>';
-            }).join('')
-            + '</div></div>';
+        var homeRecommend = '<section class="market-feed"><div class="feed-heading"><div><h2>为你推荐</h2></div><div class="feed-actions"><a class="amz-quad-more" href="#/idle">查看全部闲置 ›</a></div></div>'
+            + (visibleItems.length ? '<div class="pgrid">' + visibleItems.map(pCard).join('') + '</div>' : emptyState(navIcon('search'), '暂时没有找到好物', '', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
+            + (h.hasMore ? '<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>' : '') + '</section>';
 
-        var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b></button></div></section>';
-        var tmLabel = {1:'明码标价',2:'以物换物',4:'可买可换'}[tmVal] || '';
-        var hasActiveFilter = !!(h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit);
-        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐')+'</h2></div><div class="feed-actions"><span class="feed-count">'+(isSearch&&!minCredit?'共 '+h.total+' 件':'共 '+visibleItems.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
-            +(!isSearch ? dualSortBar : '')
-            +(hasActiveFilter?'<div class="active-filter'+(h.condition||minCredit||tmVal||h.campusSpot?'':' category-only')+'" aria-label="已选筛选">'
-                +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
-                +(tmVal?'<button class="chip on" data-act="f-trademode" data-v="0">方式：'+tmLabel+' ×</button>':'')
-                +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')
-                +(h.campusSpot?'<button class="chip on" data-act="f-spot" data-v="">点位：'+esc(h.campusSpot)+' ×</button>':'')
-                +(minCredit?'<button class="chip on" data-act="f-credit" data-v="0" aria-label="清除信用筛选">信用：≥'+minCredit+'分 ×</button>':'')+'</div>':'')
-            +(visibleItems.length?'<div class="pgrid">'+visibleItems.map(pCard).join('')+'</div>':emptyState(isSearch?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物',isSearch && h.searchConditions?.length ? '没有商品同时满足这些条件，可修改搜索词放宽条件。':'换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
-            +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
-        if(isSearch){
-            var conditions=(h.searchConditions||[]).map(function(label){return '<span class="chip on">'+esc(label)+'</span>';}).join('');
-            renderSearchPage('<div class="market-home amz-browse-layout">'+desktopSidebar+'<div class="amz-browse-main">'+(conditions ? '<div class="active-filter" aria-label="已识别搜索条件">'+conditions+'</div>' : '')+results+'</div></div>');
-            return;
-        }
-        if(idle || h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit){
-            var browseLayout = $('.amz-browse-layout');
-            var browseSide = $('.amz-rich-sidebar');
+        // ---------------- 校园闲置 / 搜索：1:1 亚马逊今日优惠（Goldbox）集成版 ----------------
+        var inIdleBrowse = idle || isSearch || h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit || (maxPrice > 0 && maxPrice < 2000);
+        if (inIdleBrowse) {
+            var subNavHtml = '<nav class="amz-gold-subnav" aria-label="校园闲置频道">'
+                + '<button type="button" class="' + (activeTab === 'all' ? 'on' : '') + '" data-act="idle-tab" data-v="all">全部闲置</button>'
+                + '<button type="button" class="' + (activeTab === 'auctions' ? 'on' : '') + '" data-act="idle-tab" data-v="auctions">校园拍卖</button>'
+                + '<button type="button" class="' + (activeTab === 'relay' ? 'on' : '') + '" data-act="idle-tab" data-v="relay">换物接力</button>'
+                + '<button type="button" class="' + (activeTab === 'wishes' ? 'on' : '') + '" data-act="idle-tab" data-v="wishes">求换专区</button>'
+                + '<a href="#/publish">发布闲置</a>'
+                + '<a href="#/auction/new">发起拍卖</a>'
+                + '<a href="#/auction/mine">我的拍卖</a>'
+                + '</nav>';
+
+            var promoBannerHtml = '<section class="amz-gold-banner" aria-label="换一圈专场活动">'
+                + '<div class="amz-gold-banner-copy">'
+                + '<h1>' + (isSearch ? '搜索：' + esc(h.keyword || '校园好物') : '换一圈 · 校园闲置好物专场') + '</h1>'
+                + '</div>'
+                + '<img class="amz-gold-banner-art" src="/assets/amz/idle-promo-banner.jpg" alt="换一圈吉祥物小唤风">'
+                + '</section>';
+
+            // 亚马逊「玩具与游戏」同款胶囊横向滑动栏（集成 拍卖 / 接力 / 求换 + 分类入口）
+            var pillItems = [
+                { kind: 'tab', v: 'all', label: '全部闲置', active: activeTab === 'all' && !h.category },
+                { kind: 'tab', v: 'auctions', label: '校园拍卖', active: activeTab === 'auctions' },
+                { kind: 'tab', v: 'relay', label: '换物接力', active: activeTab === 'relay' },
+                { kind: 'tab', v: 'wishes', label: '求换专区', active: activeTab === 'wishes' },
+                { kind: 'cat', v: '教材', label: '图书教材', active: h.category === '教材' },
+                { kind: 'cat', v: '数码', label: '数码设备', active: h.category === '数码' },
+                { kind: 'cat', v: '生活', label: '宿舍生活', active: h.category === '生活' },
+                { kind: 'cat', v: '运动', label: '运动户外', active: h.category === '运动' },
+                { kind: 'cat', v: '衣物', label: '服饰穿搭', active: h.category === '衣物' },
+                { kind: 'cat', v: '绿植', label: '绿植花卉', active: h.category === '绿植' },
+                { kind: 'cat', v: '其他', label: '乐器潮玩', active: h.category === '其他' }
+            ];
+            var pillRailHtml = '<div class="amz-pill-rail-wrap">'
+                + '<button type="button" class="amz-pill-arrow" data-act="pill-scroll" data-dir="-1" aria-label="向左滚动">‹</button>'
+                + '<div class="amz-pill-rail" id="amz-pill-rail">'
+                + pillItems.map(function (p) {
+                    return '<button type="button" class="amz-pill-btn' + (p.active ? ' on' : '') + '" data-act="idle-pill" data-kind="' + p.kind + '" data-v="' + esc(p.v) + '">' + esc(p.label) + '</button>';
+                }).join('')
+                + '</div>'
+                + '<button type="button" class="amz-pill-arrow" data-act="pill-scroll" data-dir="1" aria-label="向右滚动">›</button>'
+                + '</div>';
+
+            // 左侧亚马逊极简纯白单选筛选列（无灰框/胶囊框堆砌）
+            var catLimit = state.sideMoreCats ? categories.length : 5;
+            var leftSidebarHtml = '<aside class="amz-gold-sidebar" aria-label="筛选条件">'
+                + '<div class="amz-gs-group"><h3>专区频道</h3>'
+                + [['all', '全部闲置'], ['auctions', '校园拍卖'], ['relay', '换物接力'], ['wishes', '求换专区']].map(function (t) {
+                    var on = activeTab === t[0];
+                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="idle-tab" data-v="' + t[0] + '"><i class="amz-gs-dot"></i><span>' + t[1] + '</span></button>';
+                }).join('')
+                + '</div>'
+                + '<div class="amz-gs-group"><h3>部门分类</h3>'
+                + categories.slice(0, catLimit).map(function (c) {
+                    var on = h.category === c[0];
+                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-cat" data-v="' + esc(c[0]) + '"><i class="amz-gs-dot"></i><span>' + esc(c[1]) + '</span></button>';
+                }).join('')
+                + '<button type="button" class="amz-gs-more" data-act="side-more-cats">' + (state.sideMoreCats ? '▴ 收起分类' : '▾ 查看更多') + '</button>'
+                + '</div>'
+                + (activeTab === 'all'
+                    ? '<div class="amz-gs-group"><h3>交易方式</h3>'
+                      + [[0, '全部方式'], [1, '明码标价'], [2, '以物换物'], [4, '可买可换']].map(function (t) {
+                          var on = tmVal === t[0];
+                          return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-trademode" data-v="' + t[0] + '"><i class="amz-gs-dot"></i><span>' + t[1] + '</span></button>';
+                      }).join('') + '</div>'
+                    : '')
+                + (activeTab === 'auctions'
+                    ? '<div class="amz-gs-group"><h3>拍品状态</h3>'
+                      + [['全部', '全部拍品'], ['正在进行', '正在进行'], ['一拍专场', '一拍专场'], ['毕业变卖', '毕业变卖']].map(function (st) {
+                          var on = (state.auctionState || '全部') === st[0];
+                          return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="auction-state" data-v="' + st[0] + '"><i class="amz-gs-dot"></i><span>' + st[1] + '</span></button>';
+                      }).join('') + '</div>'
+                    : '<div class="amz-gs-group"><h3>新旧成色</h3>'
+                      + [['', '不限成色'], ['全新', '全新未拆'], ['九成新', '九成新'], ['七成新', '七成新'], ['有使用痕迹', '有使用痕迹']].map(function (c) {
+                          var on = h.condition === c[0];
+                          return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-cond" data-v="' + esc(c[0]) + '"><i class="amz-gs-dot"></i><span>' + esc(c[1]) + '</span></button>';
+                      }).join('') + '</div>')
+                + '<div class="amz-gs-group"><h3>物主评价与信用</h3>'
+                + [[0, '全部信用', ''], [90, '★★★★★', '90分以上'], [80, '★★★★☆', '80分以上'], [60, '★★★☆☆', '60分以上']].map(function (row) {
+                    var on = minCredit === row[0];
+                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-credit" data-v="' + row[0] + '"><i class="amz-gs-dot"></i>'
+                        + (row[2] ? '<span class="amz-stars">' + row[1] + '</span><span>' + row[2] + '</span>' : '<span>' + row[1] + '</span>')
+                        + '</button>';
+                }).join('')
+                + '</div>'
+                + '<div class="amz-gs-group"><h3>价格 / 估值上限</h3>'
+                + '<div class="amz-gs-price-val" id="amz-price-readout">¥0 – ' + (maxPrice >= 2000 ? '¥2000+' : '¥' + maxPrice) + '</div>'
+                + '<input type="range" class="amz-price-slider" id="amz-price-range" min="0" max="2000" step="20" value="' + maxPrice + '" aria-label="价格筛选上限">'
+                + '</div>'
+                + '<div class="amz-gs-group"><h3>校内面交点</h3>'
+                + [['', '全部书院点位']].concat(CAMPUS_SPOTS.slice(0, 5).map(function (s) { return [s, s]; })).map(function (sp) {
+                    var on = (h.campusSpot || '') === sp[0];
+                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-spot" data-v="' + esc(sp[0]) + '"><i class="amz-gs-dot"></i><span>' + esc(sp[1]) + '</span></button>';
+                }).join('')
+                + '</div>'
+                + '</aside>';
+
+            // 计算当前专场卡片列表
+            var gridToolbarHtml = '';
+            var cardsHtml = '';
+            var moreHtml = '';
+            var filterCat = h.category || '';
+            var filterSpot = h.campusSpot || '';
+
+            if (activeTab === 'auctions') {
+                var rawAuc = (state.idleCache.auctions || []).concat(DEMO_AUCTIONS);
+                var aSt = state.auctionState || '全部';
+                var aSort = state.auctionSort || 'default';
+                var listAuc = rawAuc.filter(function (a) {
+                    if (filterCat && a.cat !== filterCat && String(a.title + ' ' + (a.description || '')).indexOf(filterCat) < 0) return false;
+                    if (aSt === '正在进行' && a.state !== 'active') return false;
+                    if (aSt === '一拍专场' && a.stage !== '一拍') return false;
+                    if (aSt === '毕业变卖' && a.stage !== '变卖' && String(a.title).indexOf('毕业') < 0) return false;
+                    if (filterSpot && String(a.campus || '').indexOf(filterSpot.slice(0, 2)) < 0) return false;
+                    if (maxPrice > 0 && maxPrice < 2000 && Number(a.currentPrice || 0) > maxPrice) return false;
+                    return true;
+                }).slice();
+                if (aSort === 'price-asc') listAuc.sort(function (a, b) { return Number(a.currentPrice || 0) - Number(b.currentPrice || 0); });
+                else if (aSort === 'price-desc') listAuc.sort(function (a, b) { return Number(b.currentPrice || 0) - Number(a.currentPrice || 0); });
+                else if (aSort === 'bids') listAuc.sort(function (a, b) { return Number(b.bidCount || 0) - Number(a.bidCount || 0); });
+
+                gridToolbarHtml = '<div class="amz-gb-toolbar">'
+                    + '<span class="amz-gb-count">校园拍卖 · 共 ' + listAuc.length + ' 件拍品</span>'
+                    + '<div class="amz-gb-actions">'
+                    + '<button type="button" class="' + (aSort === 'default' ? 'on' : '') + '" data-act="auction-sort" data-v="default">综合</button>'
+                    + '<button type="button" class="' + (aSort === 'price-asc' || aSort === 'price-desc' ? 'on' : '') + '" data-act="auction-sort" data-v="' + (aSort === 'price-desc' ? 'price-asc' : 'price-desc') + '">当前价' + (aSort === 'price-asc' ? '↑' : '↓') + '</button>'
+                    + '<button type="button" class="' + (aSort === 'bids' ? 'on' : '') + '" data-act="auction-sort" data-v="bids">出价最多</button>'
+                    + '<a href="#/auction/mine" class="amz-gb-cta-link">我的拍卖</a>'
+                    + '<a href="#/auction/new" class="amz-gb-cta-btn">+ 发起拍卖</a>'
+                    + '</div></div>';
+                cardsHtml = listAuc.length
+                    ? listAuc.map(amzGoldAuctionCard).join('')
+                    : '<div class="amz-gb-empty">暂无符合条件拍品 <button type="button" class="link-btn" data-act="auction-reset">重置筛选</button></div>';
+            } else if (activeTab === 'relay') {
+                var myRelays = (state.idleCache.myRelay || []).map(function (it) {
+                    return { id: Number(it.id), cat: it.category || '其他', isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', value: Math.round(Number(it.price || 10000) / 100), image: firstImage(it.images) || '/assets/amz/quad-relay.jpg' };
+                });
+                var listRelay = myRelays.concat(DEMO_RELAYS).filter(function (r) {
+                    if (filterCat && r.cat !== filterCat && String(r.title + ' ' + r.want).indexOf(filterCat) < 0) return false;
+                    if (filterSpot && String(r.campus || '').indexOf(filterSpot.slice(0, 2)) < 0) return false;
+                    if (maxPrice > 0 && maxPrice < 2000 && Number(r.value || 0) > maxPrice) return false;
+                    return true;
+                });
+                gridToolbarHtml = '<div class="amz-gb-toolbar">'
+                    + '<span class="amz-gb-count">换物接力 · 共 ' + listRelay.length + ' 组可闭环标的</span>'
+                    + '<div class="amz-gb-actions">'
+                    + (myRelays.length ? myRelays.slice(0, 2).map(function (mr) { return '<a href="#/cycle/' + mr.id + '" class="amz-gb-cta-link">查「' + esc(mr.title.slice(0, 8)) + '」闭环 ›</a>'; }).join('') : '')
+                    + '<a href="#/publish" class="amz-gb-cta-btn">+ 发布接力闲置</a>'
+                    + '</div></div>';
+                cardsHtml = listRelay.length
+                    ? listRelay.map(amzGoldRelayCard).join('')
+                    : '<div class="amz-gb-empty">当前分类暂无接力标的 <button type="button" class="link-btn" data-act="f-cat" data-v="">查看全部</button></div>';
+            } else if (activeTab === 'wishes') {
+                var rawWishes = (state.idleCache.wishes || []).concat(DEMO_WISHES);
+                var listWishes = rawWishes.filter(function (w) {
+                    if (filterCat && w.category !== filterCat && String(w.title + ' ' + (w.offerText || '')).indexOf(filterCat) < 0) return false;
+                    if (filterSpot && String(w.campus || '').indexOf(filterSpot.slice(0, 2)) < 0) return false;
+                    if (maxPrice > 0 && maxPrice < 2000 && Number(w.budget || 0) > maxPrice) return false;
+                    return true;
+                });
+                gridToolbarHtml = '<div class="amz-gb-toolbar">'
+                    + '<span class="amz-gb-count">求换专区 · 共 ' + listWishes.length + ' 条心愿</span>'
+                    + '<div class="amz-gb-actions">'
+                    + '<button type="button" class="amz-gb-cta-btn" data-act="open-wish-modal">+ 发布求换心愿</button>'
+                    + '</div></div>';
+                cardsHtml = listWishes.length
+                    ? listWishes.map(amzGoldWishCard).join('')
+                    : '<div class="amz-gb-empty">暂无求换心愿 <button type="button" class="link-btn" data-act="f-cat" data-v="">查看全部</button></div>';
+            } else {
+                gridToolbarHtml = '<div class="amz-gb-toolbar">'
+                    + '<span class="amz-gb-count">' + (isSearch && !minCredit ? '共 ' + h.total + ' 件搜索结果' : '校园闲置 · 共 ' + visibleItems.length + ' 件好物') + '</span>'
+                    + '<div class="amz-gb-actions">'
+                    + [['', '综合'], ['latest', '最新'], ['price_asc', '价格↑'], ['price_desc', '价格↓']].map(function (s) {
+                        return '<button type="button" class="' + (sortVal === s[0] ? 'on' : '') + '" data-act="f-sort" data-v="' + s[0] + '">' + s[1] + '</button>';
+                    }).join('')
+                    + '<a href="#/publish" class="amz-gb-cta-btn">+ 发布闲置</a>'
+                    + '</div></div>';
+                cardsHtml = visibleItems.length
+                    ? visibleItems.map(amzGoldItemCard).join('')
+                    : emptyState(isSearch ? '<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">' : navIcon('search'), '暂时没有找到好物', '换个搜索词或调整左侧筛选条件试试', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>');
+                moreHtml = h.hasMore ? '<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>' : '';
+            }
+
+            var mainContentHtml = '<div class="amz-gold-main">'
+                + gridToolbarHtml
+                + '<div class="amz-gold-grid">' + cardsHtml + '</div>'
+                + moreHtml
+                + '</div>';
+
+            var goldShellHtml = '<div class="amz-goldbox-page desktop-market">'
+                + subNavHtml
+                + promoBannerHtml
+                + pillRailHtml
+                + '<div class="amz-gold-body">' + leftSidebarHtml + mainContentHtml + '</div>'
+                + '</div>';
+
+            if (isSearch) {
+                renderSearchPage(goldShellHtml);
+                return;
+            }
             var prevBrowseY = window.scrollY;
-            var prevSideScroll = browseSide ? browseSide.scrollTop : 0;
-            var browseInner = desktopSidebar+mobile+'<div class="amz-browse-main">'+results+'</div>';
-            if (browseLayout) {
-                browseLayout.innerHTML = browseInner;
-                var nextSide = $('.amz-rich-sidebar');
-                if (nextSide) nextSide.scrollTop = prevSideScroll;
+            var prevGoldPage = $('.amz-goldbox-page');
+            if (prevGoldPage && $('.shell')) {
+                prevGoldPage.outerHTML = goldShellHtml;
+                var topAs = document.querySelectorAll('.topnav a');
+                topAs.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#/idle'); });
                 window.scrollTo(window.scrollX, prevBrowseY);
             } else {
-                $('#app').innerHTML=shell(idle?'idle':'market','<div class="market-home amz-browse-layout">'+browseInner+'</div>');
+                $('#app').innerHTML = shell('idle', goldShellHtml + mobile);
             }
             return;
         }
-        $('#app').innerHTML=shell('market','<div class="market-home amz-home-layout">'+amzHomeTop+mobile+'<div class="amz-shelf-wrap">'+results+'</div></div>');
+        $('#app').innerHTML = shell('market', '<div class="market-home amz-home-layout">' + amzHomeTop + mobile + '<div class="amz-shelf-wrap">' + homeRecommend + '</div></div>');
     }
 
     function openFilterSheet() {
@@ -1208,11 +1595,11 @@
             + '<hr class="amz-hr">'
             + '<div class="amz-detail-price-block"><div class="amz-price-row"><span class="amz-price-k">流转方式：</span><span class="amz-detail-price">' + esc(priceText) + '</span>' + origPriceHtml + '</div>'
             + '<p class="amz-free-ship">校内公共点位当面交接' + (it.allowBargain ? ' · 支持小刀议价' : '') + '</p>'
-            + '<div class="detail-meta">'
-            + '<span class="tag brand">' + modeBadgeText + '</span>'
-            + '<span class="tag brand">' + esc(it.category) + '</span>'
-            + '<span class="tag">' + esc(it.conditionLevel) + '</span>'
-            + '<span class="tag ghost">' + esc(it.statusText || '') + '</span>'
+            + '<div class="detail-meta detail-meta-clean">'
+            + '<span>' + modeBadgeText + '</span><i>·</i>'
+            + '<span>' + esc(it.category) + '</span><i>·</i>'
+            + '<span>' + esc(it.conditionLevel) + '</span>'
+            + (it.statusText ? '<i>·</i><span>' + esc(it.statusText) + '</span>' : '')
             + '</div></div>'
             + '<hr class="amz-hr">'
             + '<div class="amz-specs">'
@@ -1291,7 +1678,7 @@
         }).join('');
 
         var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/publish">发布中心</a><span>›</span><b>发布闲置物品</b></nav>'
-            + '<section class="redesign-page publish-editor amz-form-layout"><div class="page-head"><div class="redesign-heading"><a class="icon-action" href="#/publish" aria-label="关闭编辑">'+navIcon('close')+'</a><h1>发布闲置物品</h1><button class="btn btn-primary btn-sm" form="publish-form" type="submit">提交审核</button></div>'
+            + '<section class="redesign-page publish-editor amz-form-layout"><div class="page-head"><h1>发布闲置物品</h1>'
             + '<p>上传图片并提交审核，5 分钟未处理将自动通过。</p></div>'
             + '<div class="amz-form-grid"><form id="publish-form" data-form="publish" class="card card-pad"><p class="publish-error" role="alert" tabindex="-1" hidden></p>'
             + '<div class="field"><label class="label">图片 <span class="opt">最多 3 张，每张 ≤2MB</span></label>'
@@ -1618,15 +2005,15 @@
                 + '<div class="jd-col-goods">'
                 + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-swap.jpg" alt=""></div>'
                 + '<div class="jd-goods-info">'
-                + '<p class="jd-goods-title"><b>' + esc(isReceived ? other : '我') + '</b> 提议用 <span class="tag brand">' + esc(o.myTitle || '闲置好物') + '</span> 交换 <span class="tag accent">' + esc(o.targetTitle || '目标好物') + '</span></p>'
-                + (o.message ? '<p class="jd-goods-note">留言：「' + esc(o.message) + '」</p>' : '<p class="jd-goods-note">支持北山斋 / 南山书院线下验货交接</p>')
+                + '<p class="jd-goods-title"><b>' + esc(isReceived ? other : '我') + '</b> 提议用 「<b>' + esc(o.myTitle || '闲置好物') + '</b>」 交换 「<b>' + esc(o.targetTitle || '目标好物') + '</b>」</p>'
+                + (o.message ? '<p class="jd-goods-note">留言：「' + esc(o.message) + '」</p>' : '<p class="jd-goods-note">支持校内线下验货交接</p>')
                 + '</div>'
                 + '<span class="jd-goods-qty">x1</span>'
                 + '<div class="jd-goods-repair"><a href="#/appraise">AI估价</a></div>'
                 + '</div>'
-                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(other) + ' <i>' + clayIcon('user', '同学', 'is-sm') + '</i></span></div>'
+                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(other) + '</span></div>'
                 + '<div class="jd-col-amount"><b>等价互换</b><small>免服务费</small></div>'
-                + '<div class="jd-col-status"><span class="tag ' + st[1] + '">' + st[0] + '</span><small style="display:block;margin-top:4px;color:#888">' + (o.status === 0 ? '24h内有效' : fmtRel(o.handleTime)) + '</small></div>'
+                + '<div class="jd-col-status"><span class="amz-status-txt ' + st[1] + '">' + st[0] + '</span><small style="display:block;margin-top:4px;color:#888">' + (o.status === 0 ? '24h内有效' : fmtRel(o.handleTime)) + '</small></div>'
                 + '<div class="jd-col-ops">' + actions + '</div>'
                 + '</div></article>';
         }).join('');
@@ -1902,9 +2289,9 @@
                 + '<span class="jd-goods-qty">x1</span>'
                 + '<div class="jd-goods-repair"><a href="#/exchange/' + e.id + '">进度追踪</a></div>'
                 + '</div>'
-                + '<div class="jd-col-buyer"><span class="jd-buyer-name">校内同学 <i>' + clayIcon('user', '同学', 'is-sm') + '</i></span></div>'
+                + '<div class="jd-col-buyer"><span class="jd-buyer-name">校内同学</span></div>'
                 + '<div class="jd-col-amount"><b>当面交接</b><small>' + (e.type === 3 ? '三方接力' : '双人互换') + '</small></div>'
-                + '<div class="jd-col-status"><span class="tag ' + st + '">' + esc(e.statusText) + '</span><a href="#/exchange/' + e.id + '">订单详情</a></div>'
+                + '<div class="jd-col-status"><span class="amz-status-txt ' + st + '">' + esc(e.statusText) + '</span><a href="#/exchange/' + e.id + '">订单详情</a></div>'
                 + '<div class="jd-col-ops"><button class="jd-btn-rebuy" data-act="go" data-to="#/exchange/' + e.id + '">查看详情与操作</button></div>'
                 + '</div></article>';
         }).join('');
@@ -1996,8 +2383,8 @@
             + (summary.recipient ? '<small>交给 ' + esc(summary.recipient.nickname || '同学') + '</small>' : '') + '</div>'
             + '<div><span>我收到</span><strong>' + esc(mine.getTitle || '物品') + '</strong>'
             + (summary.sender ? '<small>来自 ' + esc(summary.sender.nickname || '同学') + '</small>' : '') + '</div></section>' : '';
-        var content = '<article class="exchange-detail"><header class="exchange-heading">'
-            + '<a class="exchange-back" href="#/exchange">' + navIcon('back') + ' 返回交换单</a>'
+        var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/exchange">我的交换单</a><span>›</span><b>交换单 #' + e.id + '</b></nav>'
+            + '<article class="exchange-detail"><header class="exchange-heading">'
             + '<p class="hint">#' + e.id + ' | ' + (e.type === 3 ? '三方成环' : '一对一交换')
             + (e.createTime ? ' | 创建于 ' + fmtDate(e.createTime) : '') + '</p>'
             + '<h1>' + esc(e.statusText) + '</h1><p class="exchange-next">' + esc(summary.next) + '</p>'
@@ -2054,11 +2441,12 @@
         var rate = (u.goodRate === null || u.goodRate === undefined) ? '—' : u.goodRate + '%';
         var pct = Math.max(3, Math.min(100, u.credit || 0));
 
-        var content = '<section class="redesign-page public-profile"><header class="redesign-heading"><a class="icon-action" href="#/home" aria-label="返回首页">'+navIcon('back')+'</a><h1>个人主页</h1><button type="button" class="link-btn" data-act="profile-share">分享</button></header><div class="card card-pad">'
+        var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><b>' + esc(u.nickname) + ' 的主页</b></nav>'
+            + '<section class="redesign-page public-profile"><header class="redesign-heading"><h1>' + esc(u.nickname) + ' 的个人主页</h1><button type="button" class="link-btn" data-act="profile-share">分享主页</button></header><div class="card card-pad">'
             + '<div class="user-row">'
             + '<div class="avatar lg">' + esc((u.nickname || '同').slice(0, 1)) + '</div>'
             + '<div class="u-main"><p class="u-name" style="font-size:19px">' + esc(u.nickname)
-            + ' <span class="tag ' + lvl.cls + '">' + esc(lvl.text) + '</span></p>'
+            + ' <span class="amz-status-txt ' + lvl.cls + '">· ' + esc(lvl.text) + '</span></p>'
             + '<p class="u-sub">重庆移通学院 | ' + esc(u.college || '未填院系')
             + ' | ' + esc(u.building || '未填宿舍楼') + '</p></div>'
             + creditBadge(u)
@@ -2130,8 +2518,8 @@
                 + thumb(it)
                 + '<div style="flex:1;min-width:0">'
                 + '<p class="item-title">' + esc(it.title) + '</p>'
-                + '<div class="item-foot" style="margin-top:6px"><span class="tag ' + st + '">'
-                + esc(it.statusText) + '</span><span class="tag ghost">'
+                + '<div class="item-foot" style="margin-top:6px"><span class="amz-status-txt ' + st + '">'
+                + esc(it.statusText) + '</span><span> · '
                 + (it.offerCount > 0 ? it.offerCount + ' 报价' : '暂无报价') + '</span></div>'
                 + '</div>'
                 + '<div style="display:flex;flex-direction:column;gap:6px">'
@@ -2164,21 +2552,16 @@
             + '<div class="jd-me-user-top">'
             + '<a class="jd-me-avatar" href="#/user/' + Number(me.id) + '" aria-label="打开个人主页">'
             + '<img src="/assets/brand/mascot-wave-320.webp" alt="">'
-            + '<span class="jd-vip-pill">VIP 会员</span>'
             + '</a>'
             + '<div class="jd-me-user-meta">'
-            + '<h3>' + esc(me.nickname) + (me.role === 1 ? ' <span class="tag brand">管理员</span>' : '') + '</h3>'
+            + '<h3>' + esc(me.nickname) + (me.role === 1 ? ' · 管理员' : '') + '</h3>'
             + '<p>' + esc(me.college || '重庆移通学院') + ' ' + esc(me.building || '北山书院') + '</p>'
             + '<div class="jd-me-user-links">'
             + '<button type="button" class="link-btn" data-act="open-profile">改资料</button>'
             + '<a href="#/settings">账号安全</a>'
             + (me.role === 1 ? '<button type="button" class="link-btn" data-act="go" data-to="#/admin">管理后台</button>' : '')
             + '<button type="button" class="link-btn" data-act="logout">退出</button>'
-            + '</div></div></div>'
-            + '<div class="jd-me-plus-bar">'
-            + '<div><b>PLUS 小唤会员</b></div>'
-            + '<a href="#/appraise">AI估价 ›</a>'
-            + '</div></div>'
+            + '</div></div></div></div>'
             + '<div class="jd-me-assets-grid">'
             + '<div class="jd-asset-col"><b>' + me.credit + '</b><span>校园信用分</span><button type="button" class="jd-asset-act" data-act="credit-rule">信用规则</button></div>'
             + '<div class="jd-asset-col"><b>' + onShelf.length + '</b><span>在架闲置</span><a class="jd-asset-act" href="#/publish">去发布</a></div>'
@@ -2189,7 +2572,6 @@
             + '</div></div>'
             + '<a class="jd-me-recycle-card" href="#/appraise">'
             + '<div class="jd-recycle-copy">'
-            + '<span class="jd-recycle-tag">小唤实验室</span>'
             + '<h4>AI 智能估价</h4>'
             + '<b>去估价 ›</b>'
             + '</div>'
@@ -3606,7 +3988,6 @@
                 + '<button type="button" class="qq-chan-item sub ' + (on ? 'on' : '') + '" data-act="comm-room" data-room="' + esc(r.id) + '">'
                 + clayIcon(r.icon || 'fire', r.name, 'is-sm')
                 + '<span>' + esc(r.name) + '</span>'
-                + (r.badge ? '<small>' + esc(r.badge) + '</small>' : '')
                 + '</button>'
                 + (r.custom ? '<button type="button" class="qq-room-del" data-act="delete-custom-room" data-room="' + esc(r.id) + '" title="删除自建聊天室">×</button>' : '')
                 + '</div>';
@@ -3720,12 +4101,10 @@
             + '<div class="tieba-bar-cover"><img src="' + esc(activeRoom.img || '/assets/amz/quad-community.jpg') + '" alt=""></div>'
             + '<div class="tieba-bar-meta">'
             + '<div class="tieba-bar-title-row">'
-            + '<span class="qq-official-tag">' + (activeRoom.custom ? '同学自建吧' : '校园主题吧') + '</span>'
             + '<h1>' + esc(activeRoom.name) + '</h1>'
             + '<button type="button" class="btn btn-sm ' + (isFollowed ? 'btn-ghost' : 'btn-primary') + '" data-act="toggle-follow-room" data-room="' + esc(activeRoomId) + '">' + (isFollowed ? '已关注' : '+ 关注本吧') + '</button>'
             + '</div>'
-            + '<p class="tieba-bar-desc">' + esc(activeRoom.desc || '移通同学自由交流与闲置互换专属空间') + '</p>'
-            + '<div class="qq-hero-stats"><span>关注人数 <b>' + (Number(activeRoom.members || 100) + (isFollowed ? 1 : 0)) + '</b></span><span>贴子总数 <b>' + roomPosts.length + '</b></span></div>'
+            + '<div class="qq-hero-stats"><span>关注 ' + (Number(activeRoom.members || 100) + (isFollowed ? 1 : 0)) + '</span><span>帖子 ' + roomPosts.length + '</span></div>'
             + '</div>'
             + '</header>'
 
@@ -3733,7 +4112,6 @@
             + '<button type="button" class="' + (activeTab === 'posts' ? 'on' : '') + '" data-act="comm-tab" data-v="posts">' + clayIcon('order', '看帖', 'is-sm') + ' 看帖与发帖 (' + roomPosts.length + ')</button>'
             + '<button type="button" class="' + (activeTab === 'chat' ? 'on' : '') + '" data-act="comm-tab" data-v="chat">' + clayIcon('chat', '聊天', 'is-sm') + ' 本吧实时聊天室</button>'
             + '<button type="button" class="tieba-tab-cta" data-act="open-create-room">+ 创建聊天室</button>'
-            + '<span class="qq-live-pill"><i class="qq-live-dot" aria-hidden="true"></i>实时同步中</span>'
             + '</div>'
 
             + '<div class="qq-tab-body">' + tabBodyHtml + '</div>';
@@ -3741,20 +4119,16 @@
         var commInner = '<aside class="qq-chan-left" aria-label="校园贴吧与聊天室列表">'
             + '<div class="qq-guild-head">'
             + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
-            + '<div><b>换一圈校园贴吧</b><span>' + rooms.length + ' 个活跃聊天室</span></div>'
+            + '<div><b>换一圈校园贴吧</b><span>' + rooms.length + ' 个聊天室</span></div>'
             + '</div>'
-            + '<button type="button" class="btn btn-primary btn-sm btn-block tieba-create-btn" data-act="open-create-room">+ 创建我的聊天室</button>'
+            + '<button type="button" class="btn btn-primary btn-sm btn-block tieba-create-btn" data-act="open-create-room">+ 创建聊天室</button>'
             + '<div class="qq-chan-group" style="margin-top:10px">'
-            + '<button type="button" class="qq-chan-item ' + (activeRoomId === 'hall' ? 'on' : '') + '" data-act="comm-room" data-room="hall">' + clayIcon('fire', '热门', 'is-sm') + '<span>全校热帖广场</span><em class="qq-badge-hot">热</em></button>'
-            + '<a href="#/wishes" class="qq-chan-item">' + clayIcon('swap', '心愿', 'is-sm') + '<span>全校求换心愿榜</span></a>'
+            + '<button type="button" class="qq-chan-item ' + (activeRoomId === 'hall' ? 'on' : '') + '" data-act="comm-room" data-room="hall">' + clayIcon('fire', '热门', 'is-sm') + '<span>全校热帖广场</span></button>'
+            + '<a href="#/idle?tab=wishes" class="qq-chan-item">' + clayIcon('swap', '心愿', 'is-sm') + '<span>全校求换心愿榜</span></a>'
             + '<a href="#/appraise" class="qq-chan-item">' + clayIcon('ai', 'AI', 'is-sm') + '<span>AI 估价讨论室</span></a>'
             + '</div>'
-            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 贴吧与专题聊天室</div>'
+            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 专题聊天室</div>'
             + roomNavHtml
-            + '</div>'
-            + '<div class="qq-left-promo">'
-            + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
-            + '<div><b>移通贴吧联盟</b></div>'
             + '</div>'
             + '</aside>'
 
@@ -3762,20 +4136,12 @@
 
             + '<aside class="qq-chan-right" aria-label="频道侧栏">'
             + '<div class="qq-side-card qq-arcade-box">'
-            + '<span class="tag">ARCADE</span>'
             + '<h3>Scrap Arena 街机</h3>'
             + '<img class="qq-arcade-mascot" src="/assets/brand/mascot-wave-320.webp" alt="小唤" width="96" height="96">'
             + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">' + clayIcon('game', '街机', 'is-sm') + ' 开始对战</button>'
             + '</div>'
             + '<div class="qq-side-card">'
-            + '<h4>' + clayIcon('chat', '自建吧', 'is-sm') + ' 快速切换聊天室</h4>'
-            + '<div class="tieba-side-pills">' + rooms.slice(0, 6).map(function (r) {
-                return '<button type="button" class="chip ' + (r.id === activeRoomId ? 'on' : '') + '" data-act="comm-room" data-room="' + esc(r.id) + '">' + esc(r.name) + '</button>';
-            }).join('') + '</div>'
-            + '<button type="button" class="btn btn-ghost btn-sm btn-block" style="margin-top:10px" data-act="open-create-room">+ 新建专属聊天室</button>'
-            + '</div>'
-            + '<div class="qq-side-card">'
-            + '<h4>' + clayIcon('fire', '排行榜', 'is-sm') + ' 本周换物活跃书院榜</h4>'
+            + '<h4>' + clayIcon('fire', '排行榜', 'is-sm') + ' 活跃书院榜</h4>'
             + '<ul class="qq-rank-list">'
             + '<li><b>1</b><span>北山书院</span><em>428 单</em></li>'
             + '<li><b>2</b><span>南山书院</span><em>365 单</em></li>'
@@ -3887,7 +4253,7 @@
             var rows = (reports || []).map(function (r) {
                 return '<div class="card card-pad" style="margin-bottom:10px">'
                     + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'
-                    + '<span class="tag danger">' + (r.targetType === 1 ? '物品' : '用户') + ' #' + r.targetId + '</span>'
+                    + '<span class="amz-status-txt danger">' + (r.targetType === 1 ? '物品' : '用户') + ' #' + r.targetId + '</span>'
                     + '<span style="flex:1"></span><span class="hint" style="margin:0">' + fmtRel(r.createTime) + '</span></div>'
                     + '<p style="margin:0 0 4px;font-size:14px">' + esc(r.reason) + '</p>'
                     + '<p class="hint" style="margin:0">举报人 ' + esc(r.reporterNickname || '匿名')
@@ -4163,19 +4529,15 @@
                 + '</div>';
         }).join('');
 
-        var content = '<div class="ali-auction-page ai-appraise-page">'
-            + '<header class="ali-sub-header">'
-            + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">小唤 AI 好物估价中心</span>'
-            + '</div>'
-            + '<nav class="ali-sub-nav" aria-label="AI估价导航">'
-            + '<a href="#/appraise" class="on">AI 估价</a>'
+        var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><b>AI 好物估价</b></nav>'
+            + '<div class="ali-auction-page ai-appraise-page">'
+            + '<header class="amz-page-bar">'
+            + '<h1>小唤 AI 好物估价中心</h1>'
+            + '<div class="amz-page-bar-links">'
             + '<a href="#/idle">去集市比价</a>'
-            + '<a href="#/auctions">校园拍卖</a>'
-            + '<a href="#/relay">换物接力</a>'
-            + '</nav>'
-            + '<div class="ali-sub-actions">'
-            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 去发布</a>'
+            + '<a href="#/idle?tab=auctions">校园拍卖</a>'
+            + '<a href="#/idle?tab=relay">换物接力</a>'
+            + '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布闲置</a>'
             + '</div>'
             + '</header>'
 
@@ -4312,6 +4674,11 @@
             } else if (base === '#/idle' && prevHash.indexOf('cat=') >= 0) {
                 state.home.category = '';
             }
+            if (qs && qs.has('tab')) {
+                state.idleTab = qs.get('tab') || 'all';
+            } else if (base === '#/idle' && !qs) {
+                state.idleTab = 'all';
+            }
             if (qs && qs.has('room')) {
                 state.commRoom = qs.get('room') || 'hall';
             }
@@ -4362,10 +4729,23 @@
             if (view.name === 'email') { await renderEmail(); } else if (view.name === 'settings') {
                 renderSettings();
             } else if (view.name === 'home') {
-                if((location.hash || '').split('?')[0]==='#/search'&&!state.home.keyword){renderSearchPage('');}
-                else if(await loadHome(true))renderHome();
-            } else if (view.name === 'auctions') {
-                await renderAuctions();
+                if ((location.hash || '').split('?')[0] === '#/search' && !state.home.keyword) { renderSearchPage(''); }
+                else {
+                    await ensureIdleTabData(state.idleTab || 'all');
+                    if (await loadHome(true)) renderHome();
+                }
+            } else if (view.name === 'auctions' || view.name === 'relay' || view.name === 'wishes') {
+                if (window.innerWidth >= 900) {
+                    var targetIdleTab = view.name;
+                    state.idleTab = targetIdleTab;
+                    currentView = { name: 'home', arg: null };
+                    await ensureIdleTabData(targetIdleTab);
+                    if (await loadHome(true)) renderHome();
+                } else {
+                    if (view.name === 'auctions') await renderAuctions();
+                    else if (view.name === 'relay') await renderRelay();
+                    else await renderWishes();
+                }
             } else if (view.name === 'auctionMine') {
                 await renderAuctions(true);
             } else if (view.name === 'followers') {
@@ -4375,7 +4755,6 @@
             } else if (view.name === 'chats') { await renderNotifications();
             } else if (view.name === 'chat') { await renderNotifications(view.arg);
             } else if (view.name === 'ringChat') { await renderRoom(view.arg,true);
-            } else if (view.name === 'wishes') { await renderWishes();
             } else if (view.name === 'community') {
                 await renderCommunity();
             } else if (view.name === 'communityGame') {
@@ -4443,6 +4822,97 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
+        if (act === 'amz-drawer-open') {
+            state.drawerOpen = true;
+            syncAmzDrawer();
+            var clsBtn = $('.amz-drawer-close-x');
+            if (clsBtn) clsBtn.focus();
+            return;
+        }
+        if (act === 'amz-drawer-close') {
+            state.drawerOpen = false;
+            syncAmzDrawer();
+            return;
+        }
+        if (act === 'amz-drawer-more') {
+            state.drawerMoreCats = !state.drawerMoreCats;
+            syncAmzDrawer();
+            return;
+        }
+        if (act === 'drawer-estimate') {
+            state.drawerOpen = false;
+            syncAmzDrawer();
+            openEstimate();
+            return;
+        }
+        if (act === 'poster-scroll') {
+            var pTrack = $('#amz-poster-track');
+            if (pTrack) pTrack.scrollBy({ left: Number(el.dataset.dir || 1) * 520, behavior: 'smooth' });
+            return;
+        }
+        if (act === 'pill-scroll') {
+            var pRail = $('#amz-pill-rail');
+            if (pRail) pRail.scrollBy({ left: Number(el.dataset.dir || 1) * 340, behavior: 'smooth' });
+            return;
+        }
+        if (act === 'idle-tab') {
+            state.idleTab = el.dataset.v || 'all';
+            await withBusy(el, async function () {
+                await ensureIdleTabData(state.idleTab);
+                if (state.idleTab === 'all' && (!state.home.items || !state.home.items.length)) await loadHome(true);
+                renderHome();
+            });
+            return;
+        }
+        if (act === 'idle-pill') {
+            var pKind = el.dataset.kind;
+            var pVal = el.dataset.v || '';
+            if (pKind === 'tab') {
+                if (pVal === 'all') {
+                    state.idleTab = 'all';
+                    state.home.category = '';
+                } else {
+                    state.idleTab = pVal;
+                }
+                await ensureIdleTabData(state.idleTab);
+                if (state.idleTab === 'all' && (!state.home.items || !state.home.items.length)) await loadHome(true);
+                renderHome();
+            } else {
+                state.home.category = (state.home.category === pVal ? '' : pVal);
+                if (state.idleTab === 'all') await loadHome(true);
+                renderHome();
+            }
+            return;
+        }
+        if (act === 'side-more-cats') {
+            state.sideMoreCats = !state.sideMoreCats;
+            renderHome();
+            return;
+        }
+        if (act === 'open-wish-modal') {
+            await ensureIdleTabData('wishes');
+            openWishCreateSheet();
+            return;
+        }
+        if (act === 'idle-quick-fav') {
+            var qId = Number(el.dataset.id);
+            var favItems = shelfRead('favorites');
+            var wasSaved = favItems.some(function (x) { return Number(x.id) === qId; });
+            var itemObj = (state.home.items || []).find(function (x) { return Number(x.id) === qId; });
+            var qOk = wasSaved
+                ? shelfWrite('favorites', favItems.filter(function (x) { return Number(x.id) !== qId; }))
+                : (itemObj ? shelfRemember('favorites', itemObj) : shelfRemember('favorites', (await api('/item/' + qId)).item));
+            if (qOk) {
+                var nowFav = !wasSaved;
+                el.classList.toggle('is-fav', nowFav);
+                el.textContent = nowFav ? '✓' : '+';
+                el.title = nowFav ? '已收藏' : '加入收藏夹';
+                var cNum = $('.amz-cart-num');
+                if (cNum) cNum.textContent = String(shelfRead('favorites').length);
+                toast(nowFav ? '已加入收藏夹' : '已移出收藏夹');
+            }
+            return;
+        }
         if (act === 'f-credit') {
             var nextCredit = Number(el.dataset.v || 0);
             state.home.minCredit = state.home.minCredit === nextCredit ? 0 : nextCredit;
@@ -4460,21 +4930,30 @@
         }
         if (act === 'auction-cat') {
             state.auctionCat = state.auctionCat === el.dataset.v ? '全部' : (el.dataset.v || '全部');
+            if ($('.amz-goldbox-page')) { renderHome(); return; }
             await renderAuctions(currentView.name === 'auctionMine');
             return;
         }
         if (act === 'auction-state') {
             state.auctionState = el.dataset.v || 'all';
+            if ($('.amz-goldbox-page')) { renderHome(); return; }
             await renderAuctions(currentView.name === 'auctionMine');
             return;
         }
         if (act === 'auction-sort') {
             state.auctionSort = el.dataset.v || 'default';
+            if ($('.amz-goldbox-page')) { renderHome(); return; }
             await renderAuctions(currentView.name === 'auctionMine');
             return;
         }
         if (act === 'auction-reset') {
             state.auctionCat = '全部';
+            if ($('.amz-goldbox-page')) {
+                state.auctionState = '全部';
+                state.auctionSort = 'default';
+                renderHome();
+                return;
+            }
             state.auctionState = 'all';
             state.auctionSort = 'default';
             await renderAuctions(currentView.name === 'auctionMine');
@@ -4784,7 +5263,7 @@
         if (act === 'theme-select') { applyTheme(el.dataset.theme, true); return; }
         if (act === 'theme-reset') { applyTheme(THEME_DEFAULT, true); return; }
         if (act === 'chat-start') { await withBusy(el,async function(){var t=await api('/conversation/start',{method:'POST',body:{itemId:Number(el.dataset.id)}});go('#/chat/'+t.id);});return; }
-        if (act === 'wish-close') { if(!confirm('关闭这条求换信息？'))return;await withBusy(el,async function(){await api('/wish/'+el.dataset.id+'/close',{method:'POST'});await renderWishes();});return; }
+        if (act === 'wish-close') { if(!confirm('关闭这条求换信息？'))return;await withBusy(el,async function(){await api('/wish/'+el.dataset.id+'/close',{method:'POST'}); if ($('.amz-goldbox-page')) { await ensureIdleTabData('wishes', true); renderHome(); } else { await renderWishes(); }});return; }
         if (act === 'notice-open') { ev.preventDefault(); await withBusy(el,async function(){await api('/notification/'+el.dataset.id+'/read',{method:'POST'});await refreshNoticeCount();go(el.dataset.to);});return; }
         if (act === 'notice-read') { await withBusy(el,async function(){await api('/notification/read',{method:'POST'});await renderNotifications();toast('已全部标为已读');});return; }
         if (act === 'landing-menu' || act === 'landing-menu-close') {
@@ -5048,8 +5527,12 @@
             var previous = state.home[key];
             var nextVal = act === 'f-trademode' ? Number(el.dataset.v || 0) : (el.dataset.v || '');
             if (act === 'f-spot' && state.home.campusSpot === nextVal && nextVal) nextVal = '';
-            var feed = $('.market-feed');
             state.home[key] = nextVal;
+            if ($('.amz-goldbox-page') && state.idleTab && state.idleTab !== 'all' && (act === 'f-cat' || act === 'f-cond' || act === 'f-spot')) {
+                renderHome();
+                return;
+            }
+            var feed = $('.market-feed');
             if (feed) {
                 feed.setAttribute('aria-busy', 'true');
                 feed.querySelector('.feed-count').textContent = '正在筛选…';
@@ -5428,7 +5911,7 @@
                 return;
             }
             if (kind === 'room-text') {var roomId=currentView.arg,ringRoom=currentView.name==='ringChat';await api('/conversation/'+(ringRoom?'ring/':'')+roomId,{method:'POST',body:{kind:'text',content:fd.get('content')}});form.reset();await refreshRoom(true);return;}
-            if (kind === 'wish-new') {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});toast('求换已发布');await renderWishes();return;}
+            if (kind === 'wish-new') {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});closeSheet();toast('求换已发布');if($('.amz-goldbox-page')){await ensureIdleTabData('wishes',true);renderHome();}else{await renderWishes();}return;}
             if (kind === 'community-text') { await api('/community',{method:'POST',body:{kind:'text',content:fd.get('content')}}); form.reset(); form.querySelector('.community-draft-note')?.remove(); await refreshCommunity(true); return; }
             if (kind === 'auction-new') {
                 if (!state.publishImages.length) throw new ApiError('请上传拍品图片'); await api('/auction', {method:'POST', body:{title:fd.get('title'), description:fd.get('description'), amount:fd.get('amount'), hours:fd.get('hours'), image:state.publishImages.join(',')}}); toast('已提交审核'); go('#/auction/mine'); return;
@@ -5489,11 +5972,12 @@
                 };
                 closeSheet();
                 toast('模拟出价 ¥' + dAmt + ' 成功！欢迎到卖家中心发布你的专属拍品', 'ok');
-                await renderAuctions();
+                if ($('.amz-goldbox-page')) { renderHome(); }
+                else { await renderAuctions(); }
                 return;
             }
             if (kind === 'auction-bid') {
-                await api('/auction/' + encodeURIComponent(fd.get('id')) + '/bid', {method:'POST', body:{amount:fd.get('amount')}}); closeSheet(); toast('出价成功'); await renderAuctions(); return;
+                await api('/auction/' + encodeURIComponent(fd.get('id')) + '/bid', {method:'POST', body:{amount:fd.get('amount')}}); closeSheet(); toast('出价成功'); if($('.amz-goldbox-page')){await ensureIdleTabData('auctions',true);renderHome();}else{await renderAuctions();} return;
             }
             if (kind === 'register' || (kind === 'login' && (!state.loginMethod || state.loginMethod === 'student'))) {
                 var no = String(fd.get('studentNo') || '').trim();
@@ -5849,6 +6333,17 @@
             var cnt = $('#tb-char-count');
             if (cnt) cnt.textContent = String(ev.target.value.length) + ' / 500';
         }
+        if (ev.target.id === 'amz-price-range') {
+            var pv = Number(ev.target.value);
+            var outEl = $('#amz-price-readout');
+            if (outEl) outEl.textContent = '¥0 – ' + (pv >= 2000 ? '¥2000+' : '¥' + pv);
+        }
+    });
+    document.addEventListener('change', function (ev) {
+        if (ev.target.id === 'amz-price-range') {
+            state.home.maxPrice = Number(ev.target.value);
+            renderHome();
+        }
     });
     document.addEventListener('keydown', function (ev) {
         if (ev.target && ev.target.id === 'tb-im-input' && ev.key === 'Enter' && !ev.shiftKey) {
@@ -5870,7 +6365,13 @@
         if(ev.shiftKey&&(active===first||active===panel)){ev.preventDefault();last.focus();}
         else if(!ev.shiftKey&&active===last){ev.preventDefault();first.focus();}
     });
-    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { var drawer = $('#landing-menu'); if (drawer && !drawer.hidden) { drawer.hidden = true; $('.land-scrim').hidden = true; $('.land-menu-toggle').setAttribute('aria-expanded', 'false'); $('.land-menu-toggle').focus(); } } });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') {
+            if (state.drawerOpen) { state.drawerOpen = false; syncAmzDrawer(); }
+            var drawer = $('#landing-menu');
+            if (drawer && !drawer.hidden) { drawer.hidden = true; $('.land-scrim').hidden = true; $('.land-menu-toggle').setAttribute('aria-expanded', 'false'); $('.land-menu-toggle').focus(); }
+        }
+    });
     window.addEventListener('hashchange', function () {
         if (location.hash === '#/notifications') { noticeTracker.pending = 0; closeNoticePopup(); }
         var prevViewName = currentView ? currentView.name : '';
