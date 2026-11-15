@@ -105,6 +105,11 @@
         --amz-price-red: #b12704;
     }
 
+    html {
+        scroll-padding-top: 116px;
+        overflow-anchor: none;
+    }
+
     html, body {
         background: var(--amz-canvas);
         color: var(--amz-ink);
@@ -2028,7 +2033,9 @@
         border-radius: 10px;
         padding: 14px 12px;
         position: sticky;
-        top: 16px;
+        top: 116px;
+        max-height: calc(100vh - 132px);
+        overflow-y: auto;
     }
 
     .qq-guild-head {
@@ -2556,6 +2563,10 @@
         border: 1px solid #E3E6E6;
         border-radius: 4px;
         padding: 14px 16px;
+        position: sticky;
+        top: 116px;
+        max-height: calc(100vh - 132px);
+        overflow-y: auto;
     }
 
     .jd-nav-group {
@@ -5945,7 +5956,7 @@
     }
     .wish-sidebar {
         position: sticky;
-        top: 84px;
+        top: 116px;
     }
     .wish-composer-card {
         background: #FFFBF4;
@@ -6795,6 +6806,81 @@
         flex-wrap: wrap;
         gap: 6px;
         margin-top: 8px;
+    }
+
+    /* 私聊三栏桌面端统一交互优化（按钮化联系人、自己气泡右对齐、无跳动加载态） */
+    button.tb-contact-item {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        appearance: none;
+    }
+    .tb-contact-ava.tone-notice {
+        background: linear-gradient(135deg, #FF7A45, #FF5000);
+    }
+    .tb-text-bubble.is-mine {
+        margin-left: 0;
+        margin-right: 0;
+        background: #0A5C51;
+        color: #FFFFFF;
+    }
+    .tb-real-item-card {
+        width: 100%;
+        max-width: 520px;
+    }
+    .tb-chat-stream {
+        position: relative;
+    }
+    .tb-bottom-pill {
+        position: sticky;
+        bottom: 4px;
+        z-index: 4;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .tb-bottom-pill[hidden] {
+        display: none !important;
+    }
+    .tb-chat-compose {
+        height: auto;
+        min-height: 146px;
+    }
+    .tb-chat-compose.is-readonly {
+        background: #FAFAFB;
+    }
+    .tb-chat-compose.is-readonly textarea {
+        color: #9CA3AF;
+        cursor: not-allowed;
+    }
+    .tb-chat-msgs {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .tb-im-empty-tip {
+        align-self: center;
+        margin: 14px 0;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        color: #6B7280;
+        font-size: 12.5px;
+    }
+    [aria-busy="true"] {
+        opacity: 0.72;
+        transition: opacity 0.15s ease;
+    }
+    .ali-auction-page,
+    .wish-bounty-page,
+    .relay-eco-page,
+    .qq-channel-shell,
+    .qq-chan-center,
+    .jd-center-wrap,
+    .amz-browse-layout {
+        min-height: 960px;
     }
 }
 

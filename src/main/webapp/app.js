@@ -87,6 +87,7 @@
         auctionSort: 'default',
         wishCat: '全部',
         activeNoticeIdx: 0,
+        activeImKey: '',
         commRoom: 'hall',
         commTab: 'posts',
         tiebaPostImg: '',
@@ -98,6 +99,56 @@
 
     function $(sel, root) {
         return (root || document).querySelector(sel);
+    }
+
+    /** 更新个人/订单工作区右侧面板，保持左侧导航栏与页面当前滚动位置不跳动 */
+    function renderJdWorkspace(shellTab, sideKey, mainOuterHtml, preserveScroll) {
+        var wrap = $('.jd-center-wrap');
+        var side = wrap && wrap.querySelector('.jd-side-nav');
+        var oldMain = wrap && (wrap.querySelector('.jd-order-main') || wrap.querySelector('.jd-me-main'));
+        var saved = state._jdPendingScroll;
+        state._jdPendingScroll = null;
+        if (wrap && side && oldMain) {
+            var winY = saved ? saved.winY : window.scrollY;
+            var sideY = saved ? saved.sideY : side.scrollTop;
+            oldMain.outerHTML = mainOuterHtml;
+            var navAlias = { 'campus-auctions': 'campus-auctions', offers: 'offers', exchange: 'exchange', me: 'me' }[sideKey] || sideKey;
+            side.querySelectorAll('a[href]').forEach(function (a) {
+                var href = a.getAttribute('href') || '';
+                var hit = (navAlias === 'me' && href === '#/me')
+                    || (navAlias === 'offers' && href === '#/offers')
+                    || (navAlias === 'exchange' && href === '#/exchange')
+                    || (navAlias === 'history' && href === '#/history')
+                    || (navAlias === 'favorites' && href === '#/favorites')
+                    || (href === '#/me/' + navAlias);
+                a.classList.toggle('on', hit);
+            });
+            var topKey = shellTab === 'offers' || shellTab === 'exchange' ? 'trade' : shellTab;
+            document.querySelectorAll('.topnav a').forEach(function (a) {
+                var on = (a.getAttribute('href') || '') === '#/' + topKey;
+                a.classList.toggle('on', on);
+                if (on) a.setAttribute('aria-current', 'page');
+                else a.removeAttribute('aria-current');
+            });
+            side.scrollTop = sideY;
+            if (preserveScroll) window.scrollTo(window.scrollX, winY);
+            return;
+        }
+        $('#app').innerHTML = shell(shellTab, '<div class="jd-center-wrap">' + jdSideNav(sideKey) + mainOuterHtml + '</div>');
+    }
+
+    function markJdWorkspaceBusy() {
+        var wrap = $('.jd-center-wrap');
+        var side = wrap && wrap.querySelector('.jd-side-nav');
+        var oldMain = wrap && (wrap.querySelector('.jd-order-main') || wrap.querySelector('.jd-me-main'));
+        if (oldMain) {
+            if (!state._jdPendingScroll) {
+                state._jdPendingScroll = { winY: window.scrollY, sideY: side ? side.scrollTop : 0 };
+            }
+            oldMain.setAttribute('aria-busy', 'true');
+            return true;
+        }
+        return false;
     }
 
     function esc(s) {
@@ -222,9 +273,7 @@
                 + '</article>';
         }).join('');
 
-        var content = '<div class="jd-center-wrap">'
-            + jdSideNav(key)
-            + '<div class="jd-order-main jd-footprint-main">'
+        var mainHtml = '<div class="jd-order-main jd-footprint-main">'
             + '<header class="jd-footprint-head">'
             + '<div class="jd-footprint-brand">'
             + '<img src="/assets/brand/mascot-search.png" alt="">'
@@ -248,9 +297,9 @@
             + '</div>'
             + '<div class="jd-history-grid">' + cards + '</div>'
             + '<p class="jd-fp-end"><img src="/assets/brand/mascot-wave-320.webp" alt=""> 没有更多' + (key === 'favorites' ? '收藏商品' : '浏览记录') + '啦~</p>'
-            + '</div></div>';
+            + '</div>';
 
-        $('#app').innerHTML = shell('me', content);
+        renderJdWorkspace('me', key, mainHtml, true);
     }
     async function renderEmail() {
         var data=await api('/user/email');
@@ -876,7 +925,19 @@
             return;
         }
         if(idle || h.category || h.condition || minCredit){
-            $('#app').innerHTML=shell(idle?'idle':'market','<div class="market-home amz-browse-layout">'+desktopSidebar+mobile+'<div class="amz-browse-main">'+results+'</div></div>');
+            var browseLayout = $('.amz-browse-layout');
+            var browseSide = $('.amz-rich-sidebar');
+            var prevBrowseY = window.scrollY;
+            var prevSideScroll = browseSide ? browseSide.scrollTop : 0;
+            var browseInner = desktopSidebar+mobile+'<div class="amz-browse-main">'+results+'</div>';
+            if (browseLayout) {
+                browseLayout.innerHTML = browseInner;
+                var nextSide = $('.amz-rich-sidebar');
+                if (nextSide) nextSide.scrollTop = prevSideScroll;
+                window.scrollTo(window.scrollX, prevBrowseY);
+            } else {
+                $('#app').innerHTML=shell(idle?'idle':'market','<div class="market-home amz-browse-layout">'+browseInner+'</div>');
+            }
             return;
         }
         $('#app').innerHTML=shell('market','<div class="market-home amz-home-layout">'+amzHomeTop+mobile+'<div class="amz-shelf-wrap">'+results+'</div></div>');
@@ -1326,7 +1387,7 @@
     }
 
     async function renderOffers() {
-        $('#app').innerHTML = shell('offers', loading());
+        if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('offers', loading());
         var tab = state.offersTab;
         var list = await api(tab === 'received' ? '/offer/received' : '/offer/sent');
         var q = String(state.offersQuery || '').trim().toLowerCase();
@@ -1386,9 +1447,7 @@
               + '</div>'
             : '';
 
-        var content = '<div class="jd-center-wrap">'
-            + jdSideNav('offers')
-            + '<div class="jd-order-main">'
+        var mainHtml = '<div class="jd-order-main">'
             + '<div class="jd-order-title-bar"><h2>我的订单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
@@ -1418,9 +1477,9 @@
                     + '</div></div></div>')
             + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
             + '<div class="jd-order-list">' + (jdShowcaseOrderRows() || '<p class="hint" style="padding:12px">暂无匹配订单示例 <button type="button" class="link-btn" data-act="orders-reset">恢复全部</button></p>') + '</div>'
-            + '</div></div></div>';
+            + '</div></div>';
 
-        $('#app').innerHTML = shell('trade', content);
+        renderJdWorkspace('trade', 'offers', mainHtml, true);
     }
 
     // ------------------------------------------------------------------ 三方环
@@ -1533,7 +1592,14 @@
             + '</div>'
             + '</div>';
 
-        $('#app').innerHTML = shell('relay', content);
+        var prevRelayY = window.scrollY;
+        var relayRoot = $('.relay-eco-page');
+        if (relayRoot) {
+            relayRoot.outerHTML = content;
+            window.scrollTo(window.scrollX, prevRelayY);
+        } else {
+            $('#app').innerHTML = shell('relay', content);
+        }
     }
 
     async function renderCycle(itemId) {
@@ -1614,7 +1680,7 @@
     // ------------------------------------------------------------------ 交换单
 
     async function renderExchanges() {
-        $('#app').innerHTML = shell('exchange', loading());
+        if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('exchange', loading());
         var list = await api('/exchange/mine');
         var q = String(state.offersQuery || '').trim().toLowerCase();
         var filtered = (list || []).filter(function (e) {
@@ -1648,9 +1714,7 @@
                 + '</div></article>';
         }).join('');
 
-        var content = '<div class="jd-center-wrap">'
-            + jdSideNav('exchange')
-            + '<div class="jd-order-main">'
+        var mainHtml = '<div class="jd-order-main">'
             + '<div class="jd-order-title-bar"><h2>我的交换单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
@@ -1683,9 +1747,9 @@
                     + '</div></div></div>')
             + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
             + '<div class="jd-order-list">' + (jdShowcaseOrderRows() || '<p class="hint" style="padding:12px">暂无匹配订单示例 <button type="button" class="link-btn" data-act="orders-reset">恢复全部</button></p>') + '</div>'
-            + '</div></div></div>';
+            + '</div></div>';
 
-        $('#app').innerHTML = shell('trade', content);
+        renderJdWorkspace('trade', 'exchange', mainHtml, true);
     }
 
     async function renderExchangeDetail(id) {
@@ -1846,7 +1910,7 @@
     // ------------------------------------------------------------------ 我的
 
     async function renderMe() {
-        $('#app').innerHTML = shell('me', loading());
+        if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('me', loading());
         var me = await api('/user/me');
         state.me = me;
         var results = await Promise.all([
@@ -1899,9 +1963,7 @@
                 + '<span class="hint">' + fmtDate(r.createTime) + '</span></div>';
         }).join('');
 
-        var content = '<div class="jd-center-wrap">'
-            + jdSideNav('me')
-            + '<div class="jd-me-main">'
+        var mainHtml = '<div class="jd-me-main">'
             + '<section class="jd-me-hero-card">'
             + '<div class="jd-me-user-box">'
             + '<div class="jd-me-user-top">'
@@ -2037,26 +2099,24 @@
             + (reviewRows ? '<div class="desk-grid-2">' + reviewRows + '</div>'
                 : emptyState(clayIcon('star', '评价', 'is-lg'), '还没有评价', ''))
             + '</section>'
-            + '</div></div>';
+            + '</div>';
 
-        $('#app').innerHTML = shell('me', content);
+        renderJdWorkspace('me', 'me', mainHtml, true);
     }
 
     async function renderMeSub(tab) {
         var me = state.me || {};
-        $('#app').innerHTML = shell('me', loading());
+        if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('me', loading());
         var panelTitle = '个人中心', panelSub = '', panelActions = '', bodyHtml = '';
 
         function wrapPanel() {
-            return '<div class="jd-center-wrap">'
-                + jdSideNav(tab)
-                + '<div class="jd-order-main jd-me-subpanel">'
+            return '<div class="jd-order-main jd-me-subpanel">'
                 + '<div class="jd-order-title-bar"><h2>' + esc(panelTitle) + '</h2>'
                 + (panelSub ? '<span>' + esc(panelSub) + '</span>' : '')
                 + (panelActions ? '<div class="jd-subbar-right">' + panelActions + '</div>' : '')
                 + '</div>'
                 + '<div class="jd-order-panel">' + bodyHtml + '</div>'
-                + '</div></div>';
+                + '</div>';
         }
 
         if (tab === 'auctions') {
@@ -2067,7 +2127,7 @@
             bodyHtml = (myAuctions && myAuctions.length)
                 ? '<div class="ali-auction-grid jd-sub-grid">' + myAuctions.map(function (a) { return auctionCard(a, 'mine'); }).join('') + '</div>'
                 : '<div class="jd-empty-order-box"><img src="/assets/brand/mascot-box.png" alt="小唤"><div class="jd-empty-order-copy"><p>暂未发布过个人拍卖</p><div class="jd-empty-btns"><a class="jd-btn-red" href="#/auction/new">立即发起拍卖</a><a class="jd-btn-outline" href="#/auctions">去竞拍大厅捡漏</a></div></div></div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2097,7 +2157,7 @@
                   }).join('') + '</div></div>'
                 : '<div class="jd-sub-block"><h3>历史晒单示范</h3><div class="jd-sub-cards"><div class="jd-sub-item-card"><div><b>罗技 GPW 二代无线鼠标互换成功</b><span class="amz-stars">★★★★★</span><small>北山书院当面验货，成色和描述一模一样！</small></div><span class="tag success">+2 信用分</span></div></div></div>';
             bodyHtml = pendingHtml + recHtml;
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2122,7 +2182,7 @@
             bodyHtml = '<div class="jd-sub-block"><h3>' + clayIcon('star', '心愿', 'is-sm') + ' 快速新增求换心愿</h3>' + wishQuickForm + '</div>'
                 + '<div class="jd-sub-block"><h3>我的求换列表 (' + myWishes.length + ')</h3><div class="jd-sub-cards">' + myWishHtml + '</div></div>'
                 + '<div class="jd-sub-block"><h3>校园热门求换推荐</h3><div class="wish-bounty-grid jd-sub-4col">' + DEMO_WISHES.slice(0, 4).map(wishAuctionCard).join('') + '</div></div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2142,7 +2202,7 @@
                     + '<button type="button" class="btn btn-sm btn-primary" data-act="open-room" data-room="' + esc(r.id) + '">进入贴吧</button>'
                     + '</div></div>';
             }).join('') + '</div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2171,7 +2231,7 @@
                 + '<div id="estimate-result" class="ai-result-panel" role="status"><div class="ai-result-placeholder"><img src="/assets/brand/mascot-wave-320.webp" alt="小唤"><div><b>输入入手原价后点击上方按钮，“小唤”立即给出参考价</b></div></div></div>'
                 + '</form>'
                 + '</div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2189,7 +2249,7 @@
                 + '<p>罗技 GPW 二代无线鼠标 ➔ 张宇考研高数笔记 ➔ 拍立得相机礼盒（A→B→C 同城三方免差价闭环）</p>'
                 + '<div class="jd-v-foot"><span>核验书院：图书馆一楼大厅</span><a href="#/relay" class="btn btn-sm btn-primary">去参与三方接力</a></div></div>';
             bodyHtml = '<div class="jd-sub-cards">' + (realVouchers || '') + demoVoucher + '</div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2214,7 +2274,7 @@
                         + '</div>';
                 }).join('') : '<p class="hint">暂无上架商品，点击右上角发布第一件闲置好物吧。</p>')
                 + '</div></div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2237,7 +2297,7 @@
                 + '<div class="jd-rule-box"><b>完成学校官方邮箱认证</b><span>+5 分</span></div>'
                 + '<div class="jd-rule-box is-warn"><b>爽约未面交或恶意出价</b><span>-10 分</span></div>'
                 + '</div></div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2248,7 +2308,7 @@
             var aucRes = await api('/auction', {optionalAuth: true}).catch(function () { return []; });
             var aList = (Array.isArray(aucRes) ? aucRes : (aucRes && aucRes.list) || []).concat(DEMO_AUCTIONS);
             bodyHtml = '<div class="ali-auction-grid jd-sub-grid">' + aList.slice(0, 8).map(function (a) { return auctionCard(a, 'public'); }).join('') + '</div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2261,7 +2321,7 @@
                 return relayCard({id: it.id, isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'});
             }).concat(DEMO_RELAYS.slice(0, 8).map(relayCard)).join('');
             bodyHtml = '<div class="relay-eco-grid jd-sub-4col">' + rHtml + '</div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2271,7 +2331,7 @@
             panelActions = '<a class="btn btn-primary btn-sm" href="/scrap-arena/index.html" target="_blank" rel="noopener">新窗口全屏</a><a class="btn btn-ghost btn-sm" href="#/community/game">全屏街机房 ›</a>';
             bodyHtml = '<div class="game-frame-wrap jd-arcade-embed"><iframe class="game-frame" src="/scrap-arena/index.html" title="Scrap Arena 游戏" allow="fullscreen; autoplay"></iframe></div>'
                 + '<p class="game-note" style="margin-top:10px">操作提示：点击画面开始，P1：W/A/S/D + J/K/L；P2：方向键 + 1/2/3；按 Enter 开战。</p>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2294,7 +2354,7 @@
                     : '<p class="hint">校内邮箱验证通道由管理员统一配置，当前学号登录已受本地加密凭证保护。</p>')
                 + '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #EEE;display:flex;gap:10px"><a href="#/settings" class="btn btn-sm btn-ghost">切换主题色</a><button type="button" class="btn btn-sm btn-ghost" data-act="logout">退出当前账号</button></div>'
                 + '</div></div>';
-            $('#app').innerHTML = shell('me', wrapPanel());
+            renderJdWorkspace('me', tab, wrapPanel(), true);
             return;
         }
 
@@ -2314,7 +2374,7 @@
             }).join('') : '<p class="hint">暂无未读系统通知，可在上方打开聊天窗口查看同学留言。</p>')
             + '</div></div>'
             + '<div class="jd-sub-block"><h3>最近私聊会话 (' + convList.length + ')</h3><div class="conversation-list">' + conversationRows(convList) + '</div></div>';
-        $('#app').innerHTML = shell('me', wrapPanel());
+        renderJdWorkspace('me', tab, wrapPanel(), true);
     }
 
     var DEMO_AUCTIONS = [
@@ -2363,7 +2423,10 @@
     }
 
     async function renderAuctions(mine) {
-        $('#app').innerHTML=shell('auctions',loading());
+        var aucRoot = $('.ali-auction-page');
+        var prevAucY = window.scrollY;
+        if (aucRoot) aucRoot.setAttribute('aria-busy', 'true');
+        else $('#app').innerHTML = shell('auctions', loading());
         var auctions=[];
         var loadError='';
         try {
@@ -2395,52 +2458,79 @@
         else if (aSort === 'price-desc') displayList.sort(function (a, b) { return Number(b.currentPrice || 0) - Number(a.currentPrice || 0); });
         else if (aSort === 'bids') displayList.sort(function (a, b) { return Number(b.bidCount || 0) - Number(a.bidCount || 0); });
 
-        var content = '<div class="ali-auction-page">'
-            + '<header class="ali-sub-header">'
-            + '<div class="ali-sub-brand">'
-            + '<span class="ali-brand-main">校园拍卖专场</span>'
-            + '</div>'
-            + '<nav class="ali-sub-nav" aria-label="拍卖导航">'
-            + '<a href="#/auctions" class="' + (!mine ? 'on' : '') + '">全部拍品</a>'
-            + '<button type="button" data-act="auction-cat" data-v="数码" class="' + (aCat === '数码' ? 'on' : '') + '">数码外设</button>'
-            + '<button type="button" data-act="auction-cat" data-v="教材" class="' + (aCat === '教材' ? 'on' : '') + '">考研教材</button>'
-            + '<a href="#/auction/mine" class="' + (mine ? 'on' : '') + '">我的拍卖</a>'
-            + '</nav>'
-            + '<div class="ali-sub-actions">'
-            + '<a class="btn btn-ghost btn-sm" href="' + (mine ? '#/auctions' : '#/auction/mine') + '">' + (mine ? '返回大厅' : '我的拍卖') + '</a>'
-            + '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起拍卖</a>'
-            + '</div>'
-            + '</header>'
-
-            + '<section class="ali-filter-box" aria-label="拍品筛选">'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">分类：</span><div class="ali-filter-v">'
-            + [['全部', '全部'], ['数码', '电脑数码'], ['教材', '考研教材'], ['生活', '宿舍生活'], ['运动', '运动户外'], ['其他', '手办周边']].map(function (c) {
-                return '<button type="button" class="' + (aCat === c[0] ? 'on' : '') + '" data-act="auction-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
-            }).join('')
-            + '</div></div>'
-            + '<div class="ali-filter-row"><span class="ali-filter-k">状态：</span><div class="ali-filter-v">'
-            + [['全部', '全部 (' + rawList.length + ')'], ['正在进行', '正在进行'], ['一拍专场', '一拍专场'], ['毕业变卖', '毕业变卖']].map(function (s) {
-                return '<button type="button" class="' + (aSt === s[0] ? 'on' : '') + '" data-act="auction-state" data-v="' + s[0] + '">' + s[1] + '</button>';
-            }).join('')
-            + '</div></div>'
-            + '</section>'
-
-            + '<div class="ali-sort-toolbar">'
-            + '<div class="ali-sort-links">'
-            + '<button type="button" class="' + (aSort === 'default' ? 'on' : '') + '" data-act="auction-sort" data-v="default">默认排序</button>'
-            + '<button type="button" class="' + (aSort === 'price-asc' || aSort === 'price-desc' ? 'on' : '') + '" data-act="auction-sort" data-v="' + (aSort === 'price-desc' ? 'price-asc' : 'price-desc') + '">当前价 ' + (aSort === 'price-asc' ? '▴' : '▾') + '</button>'
-            + '<button type="button" class="' + (aSort === 'bids' ? 'on' : '') + '" data-act="auction-sort" data-v="bids">出价次数 ▾</button>'
-            + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ali-toolbar-mascot">'
-            + '</div>'
-            + '<span class="hint">当前展示 ' + displayList.length + ' 件拍品</span>'
-            + '</div>'
-
-            + (loadError && mine ? '<div class="card card-pad"><p>' + esc(loadError) + '</p></div>' : '')
+        var resultsInnerHtml = (loadError && mine ? '<div class="card card-pad"><p>' + esc(loadError) + '</p></div>' : '')
             + (displayList.length
                 ? '<div class="ali-auction-grid">' + displayList.map(function (a) { return auctionCard(a, mine ? 'mine' : 'public'); }).join('') + '</div>'
-                : '<div class="card card-pad"><p>暂无符合筛选条件的拍品 <button type="button" class="btn btn-sm btn-primary" data-act="auction-reset">重置筛选</button></p></div>')
-            + '</div>';
-        $('#app').innerHTML=shell('auctions',content);
+                : '<div class="card card-pad"><p>暂无符合筛选条件的拍品 <button type="button" class="btn btn-sm btn-primary" data-act="auction-reset">重置筛选</button></p></div>');
+
+        var nextAucRoot = $('.ali-auction-page');
+        if (nextAucRoot && nextAucRoot.dataset.mine === String(!!mine) && nextAucRoot.querySelector('.ali-auction-results')) {
+            nextAucRoot.removeAttribute('aria-busy');
+            nextAucRoot.querySelectorAll('[data-act="auction-cat"]').forEach(function (btn) {
+                btn.classList.toggle('on', btn.dataset.v === aCat);
+            });
+            nextAucRoot.querySelectorAll('[data-act="auction-state"]').forEach(function (btn) {
+                btn.classList.toggle('on', btn.dataset.v === aSt);
+            });
+            nextAucRoot.querySelectorAll('[data-act="auction-sort"]').forEach(function (btn) {
+                var dv = btn.dataset.v || '';
+                if (dv === 'default') btn.classList.toggle('on', aSort === 'default');
+                else if (dv === 'bids') btn.classList.toggle('on', aSort === 'bids');
+                else {
+                    btn.classList.toggle('on', aSort === 'price-asc' || aSort === 'price-desc');
+                    btn.dataset.v = aSort === 'price-desc' ? 'price-asc' : 'price-desc';
+                    btn.textContent = '当前价 ' + (aSort === 'price-asc' ? '▴' : '▾');
+                }
+            });
+            var cntHint = nextAucRoot.querySelector('.ali-sort-toolbar .hint');
+            if (cntHint) cntHint.textContent = '当前展示 ' + displayList.length + ' 件拍品';
+            nextAucRoot.querySelector('.ali-auction-results').innerHTML = resultsInnerHtml;
+            window.scrollTo(window.scrollX, prevAucY);
+        } else {
+            var content = '<div class="ali-auction-page" data-mine="' + (!!mine) + '">'
+                + '<header class="ali-sub-header">'
+                + '<div class="ali-sub-brand">'
+                + '<span class="ali-brand-main">校园拍卖专场</span>'
+                + '</div>'
+                + '<nav class="ali-sub-nav" aria-label="拍卖导航">'
+                + '<a href="#/auctions" class="' + (!mine ? 'on' : '') + '">全部拍品</a>'
+                + '<button type="button" data-act="auction-cat" data-v="数码" class="' + (aCat === '数码' ? 'on' : '') + '">数码外设</button>'
+                + '<button type="button" data-act="auction-cat" data-v="教材" class="' + (aCat === '教材' ? 'on' : '') + '">考研教材</button>'
+                + '<a href="#/auction/mine" class="' + (mine ? 'on' : '') + '">我的拍卖</a>'
+                + '</nav>'
+                + '<div class="ali-sub-actions">'
+                + '<a class="btn btn-ghost btn-sm" href="' + (mine ? '#/auctions' : '#/auction/mine') + '">' + (mine ? '返回大厅' : '我的拍卖') + '</a>'
+                + '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起拍卖</a>'
+                + '</div>'
+                + '</header>'
+
+                + '<section class="ali-filter-box" aria-label="拍品筛选">'
+                + '<div class="ali-filter-row"><span class="ali-filter-k">分类：</span><div class="ali-filter-v">'
+                + [['全部', '全部'], ['数码', '电脑数码'], ['教材', '考研教材'], ['生活', '宿舍生活'], ['运动', '运动户外'], ['其他', '手办周边']].map(function (c) {
+                    return '<button type="button" class="' + (aCat === c[0] ? 'on' : '') + '" data-act="auction-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
+                }).join('')
+                + '</div></div>'
+                + '<div class="ali-filter-row"><span class="ali-filter-k">状态：</span><div class="ali-filter-v">'
+                + [['全部', '全部 (' + rawList.length + ')'], ['正在进行', '正在进行'], ['一拍专场', '一拍专场'], ['毕业变卖', '毕业变卖']].map(function (s) {
+                    return '<button type="button" class="' + (aSt === s[0] ? 'on' : '') + '" data-act="auction-state" data-v="' + s[0] + '">' + s[1] + '</button>';
+                }).join('')
+                + '</div></div>'
+                + '</section>'
+
+                + '<div class="ali-sort-toolbar">'
+                + '<div class="ali-sort-links">'
+                + '<button type="button" class="' + (aSort === 'default' ? 'on' : '') + '" data-act="auction-sort" data-v="default">默认排序</button>'
+                + '<button type="button" class="' + (aSort === 'price-asc' || aSort === 'price-desc' ? 'on' : '') + '" data-act="auction-sort" data-v="' + (aSort === 'price-desc' ? 'price-asc' : 'price-desc') + '">当前价 ' + (aSort === 'price-asc' ? '▴' : '▾') + '</button>'
+                + '<button type="button" class="' + (aSort === 'bids' ? 'on' : '') + '" data-act="auction-sort" data-v="bids">出价次数 ▾</button>'
+                + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ali-toolbar-mascot">'
+                + '</div>'
+                + '<span class="hint">当前展示 ' + displayList.length + ' 件拍品</span>'
+                + '</div>'
+
+                + '<div class="ali-auction-results">' + resultsInnerHtml + '</div>'
+                + '</div>';
+            $('#app').innerHTML = shell('auctions', content);
+        }
     }
     function renderAuctionNew() {
         state.publishImages=[];
@@ -2506,98 +2596,220 @@
         $('#app').innerHTML=shell('me','<section class="redesign-page"><header class="redesign-heading"><h1>谁关注了我</h1></header><div class="notice-list">'+(rows||'<p class="hint">还没有同学关注你。</p>')+'</div></section>');
     }
 
-    async function renderNotifications() {
-        var notices = await api('/notification').catch(function () { return []; });
-        var conversations = await api('/conversation').catch(function () { return []; });
-        if (currentView.name !== 'notifications') return;
+    var IM_SEED_THREADS = [
+        {
+            ava: '宏', tone: 'tone-blue', name: '北山羽毛球穿线社', date: '2026/11/15', msg: '亲，您有一笔换物报价待确认哦', unread: 1, to: '#/offers',
+            credit: '96 极好', campus: '北山书院', shopImg: '/assets/amz/quad-sports.jpg', shopLink: '#/idle?cat=运动',
+            card: {title: '亲，您有一笔校园换物单待确认哦', img: '/assets/amz/quad-sports.jpg', goods: '正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅', sub: '支持以物换物 / 书院当面验拍', price: '¥102.0', qty: '共1件', btn: '去确认报价', to: '#/offers'},
+            msgs: [
+                '亲，您有一笔换物订单待确认面交点位，如您换的羽毛球拍已拉好24磅BG65线，北山书院一楼大厅可当场试挥验货，满意再点确认收货哦~'
+            ]
+        },
+        {
+            ava: '诺', tone: 'tone-navy', name: '一诺体育器材流转', date: '2026/11/14', msg: '请确认北山书院一楼大厅面交点位', unread: 1, to: '#/exchange',
+            credit: '94 优秀', campus: '松格书院', shopImg: '/assets/amz/quad-relay.jpg', shopLink: '#/relay',
+            card: {title: '亲，您有一笔三方接力环待锁定哦', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记', sub: 'A→B→C 三方闭环匹配成功', price: '等价换', qty: '共1组', btn: '去查看接力环', to: '#/relay'},
+            msgs: ['下午 16:30 图书馆东门可以吗？我把球包也一起带来给你看成色。']
+        },
+        {
+            ava: '烁', tone: 'tone-teal', name: '烁羽球拍与外设铺', date: '2026/11/13', msg: '罗技 GPW 二代已充好电随时可试', unread: 0, to: '#/idle?cat=数码',
+            credit: '92 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-digital.jpg', shopLink: '#/idle?cat=数码',
+            card: {title: '数码外设当面验机单', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代 白色 95新 盒说全', sub: '微动清脆无双击，支持以物换物', price: '¥265.0', qty: '共1件', btn: '查看数码专区', to: '#/idle?cat=数码'},
+            msgs: ['鼠标盒说接收器都在，如果你那把机械键盘也是茶轴，咱们可以直接平换！']
+        },
+        {
+            ava: '琪', tone: 'tone-orange', name: '琪琪电竞外设学长', date: '2026/11/12', msg: '富士拍立得还能参与今晚拍卖吗', unread: 1, to: '#/auctions',
+            credit: '90 优秀', campus: '菊轩书院', shopImg: '/assets/amz/quad-auction.jpg', shopLink: '#/auctions',
+            card: null,
+            msgs: ['今晚 20:00 拍立得专场快截拍了，我准备再加 10 元冲一下~']
+        },
+        {
+            ava: '青', tone: 'tone-green', name: '青禾考研资料漂流', date: '2026/11/10', msg: '——免费附送同济高数期末真题笔记——', unread: 0, to: '#/idle?cat=教材',
+            credit: '95 极好', campus: '南山书院', shopImg: '/assets/amz/quad-books.jpg', shopLink: '#/idle?cat=教材',
+            card: null,
+            msgs: ['同济高数上下册我做了一整套错题本索引，一起打包换你的小台灯行吗？']
+        },
+        {
+            ava: '纯', tone: 'tone-pink', name: '小纯桌搭与拍立得', date: '2026/11/09', msg: '下课10分钟左右到图书馆一楼大厅交接', unread: 0, to: '#/wishes',
+            credit: '89 良好', campus: '竹逸书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/wishes',
+            card: null,
+            msgs: ['刚下课正在赶去图书馆一楼大厅，穿白色卫衣那个就是我~']
+        },
+        {
+            ava: '浩', tone: 'tone-red', name: '浩迪数卡与计算器', date: '2026/11/08', msg: '卡西欧 fx-991CN X 中文版考场可用', unread: 1, to: '#/appraise',
+            credit: '91 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-grad.jpg', shopLink: '#/idle?cat=教材',
+            card: null,
+            msgs: ['我用小唤 AI 估价测了下，计算器+工程制图套装大概值 50~65 元，你看看想换啥？']
+        },
+        {
+            ava: '国', tone: 'tone-brown', name: '移通严选宿舍好物', date: '2026/11/06', msg: '米家护眼灯支持三方换物接力成环', unread: 1, to: '#/relay',
+            credit: '93 优秀', campus: '爱莲书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/relay',
+            card: null,
+            msgs: ['系统刚刚推了一条三方接力匹配给我们，点进去就能直接锁环！']
+        }
+    ];
 
-        var realNoticeRows = (notices || []).map(function (n) {
-            var target = safeRoute(n.target, '#/notifications');
-            return '<a class="notice-row tb-notice-card ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + Number(n.id) + '" data-to="' + esc(target) + '">'
-                + '<span class="notice-dot"></span>'
-                + '<div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div>'
-                + '<time>' + esc(String(n.createdAt || '').replace('T', ' ').slice(0, 16)) + '</time>'
-                + '</a>';
-        }).join('');
+    var imPollTimer = null;
+    var imPollBusy = false;
+    var imSelectSeq = 0;
 
-        var realConvRows = (conversations || []).map(function (c) {
-            return '<a class="conversation-row tb-contact-item" href="#/chat/' + c.id + '">'
-                + '<span class="tb-contact-ava tone-emerald">' + esc((c.peer || '同').slice(0, 1)) + '</span>'
-                + '<div class="tb-contact-meta"><div class="tb-contact-top"><b>' + esc(c.peer) + '</b><time>刚刚</time></div><p>' + esc(c.lastText || c.title || '点击进入私聊会话') + '</p></div>'
-                + '</a>';
-        }).join('');
+    function updateImBottomPill() {
+        var st = $('#tb-chat-stream');
+        var pill = $('#tb-chat-stream .tb-bottom-pill');
+        if (!st || !pill) return;
+        pill.hidden = st.scrollHeight <= st.clientHeight + 24;
+    }
 
-        var IM_SEED_THREADS = [
-            {
-                ava: '宏', tone: 'tone-blue', name: '北山羽毛球穿线社', date: '2026/11/15', msg: '亲，您有一笔换物报价待确认哦', unread: 1, to: '#/offers',
-                credit: '96 极好', campus: '北山书院', shopImg: '/assets/amz/quad-sports.jpg', shopLink: '#/idle?cat=运动',
-                card: {title: '亲，您有一笔校园换物单待确认哦', img: '/assets/amz/quad-sports.jpg', goods: '正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅', sub: '支持以物换物 / 书院当面验拍', price: '¥102.0', qty: '共1件', btn: '去确认报价', to: '#/offers'},
-                msgs: [
-                    '亲，您有一笔换物订单待确认面交点位，如您换的羽毛球拍已拉好24磅BG65线，北山书院一楼大厅可当场试挥验货，满意再点确认收货哦~'
-                ]
-            },
-            {
-                ava: '诺', tone: 'tone-navy', name: '一诺体育器材流转', date: '2026/11/14', msg: '请确认北山书院一楼大厅面交点位', unread: 1, to: '#/exchange',
-                credit: '94 优秀', campus: '松格书院', shopImg: '/assets/amz/quad-relay.jpg', shopLink: '#/relay',
-                card: {title: '亲，您有一笔三方接力环待锁定哦', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记', sub: 'A→B→C 三方闭环匹配成功', price: '等价换', qty: '共1组', btn: '去查看接力环', to: '#/relay'},
-                msgs: ['下午 16:30 图书馆东门可以吗？我把球包也一起带来给你看成色。']
-            },
-            {
-                ava: '烁', tone: 'tone-teal', name: '烁羽球拍与外设铺', date: '2026/11/13', msg: '罗技 GPW 二代已充好电随时可试', unread: 0, to: '#/idle?cat=数码',
-                credit: '92 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-digital.jpg', shopLink: '#/idle?cat=数码',
-                card: {title: '数码外设当面验机单', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代 白色 95新 盒说全', sub: '微动清脆无双击，支持以物换物', price: '¥265.0', qty: '共1件', btn: '查看数码专区', to: '#/idle?cat=数码'},
-                msgs: ['鼠标盒说接收器都在，如果你那把机械键盘也是茶轴，咱们可以直接平换！']
-            },
-            {
-                ava: '琪', tone: 'tone-orange', name: '琪琪电竞外设学长', date: '2026/11/12', msg: '富士拍立得还能参与今晚拍卖吗', unread: 1, to: '#/auctions',
-                credit: '90 优秀', campus: '菊轩书院', shopImg: '/assets/amz/quad-auction.jpg', shopLink: '#/auctions',
-                card: null,
-                msgs: ['今晚 20:00 拍立得专场快截拍了，我准备再加 10 元冲一下~']
-            },
-            {
-                ava: '青', tone: 'tone-green', name: '青禾考研资料漂流', date: '2026/11/10', msg: '——免费附送同济高数期末真题笔记——', unread: 0, to: '#/idle?cat=教材',
-                credit: '95 极好', campus: '南山书院', shopImg: '/assets/amz/quad-books.jpg', shopLink: '#/idle?cat=教材',
-                card: null,
-                msgs: ['同济高数上下册我做了一整套错题本索引，一起打包换你的小台灯行吗？']
-            },
-            {
-                ava: '纯', tone: 'tone-pink', name: '小纯桌搭与拍立得', date: '2026/11/09', msg: '下课10分钟左右到图书馆一楼大厅交接', unread: 0, to: '#/wishes',
-                credit: '89 良好', campus: '竹逸书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/wishes',
-                card: null,
-                msgs: ['刚下课正在赶去图书馆一楼大厅，穿白色卫衣那个就是我~']
-            },
-            {
-                ava: '浩', tone: 'tone-red', name: '浩迪数卡与计算器', date: '2026/11/08', msg: '卡西欧 fx-991CN X 中文版考场可用', unread: 1, to: '#/appraise',
-                credit: '91 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-grad.jpg', shopLink: '#/idle?cat=教材',
-                card: null,
-                msgs: ['我用小唤 AI 估价测了下，计算器+工程制图套装大概值 50~65 元，你看看想换啥？']
-            },
-            {
-                ava: '国', tone: 'tone-brown', name: '移通严选宿舍好物', date: '2026/11/06', msg: '米家护眼灯支持三方换物接力成环', unread: 1, to: '#/relay',
-                credit: '93 优秀', campus: '爱莲书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/relay',
-                card: null,
-                msgs: ['系统刚刚推了一条三方接力匹配给我们，点进去就能直接锁环！']
-            }
-        ];
+    function formatImRealMsg(m) {
+        var mine = state.me && m.senderId === state.me.id;
+        var nick = mine ? ('我（' + esc((state.me && state.me.nickname) || '移通同学') + '）') : esc(m.nickname || '校内同学');
+        var tStr = esc(String(m.createdAt || '').replace('T', ' ').slice(5, 16));
+        var inner = m.kind === 'image' && m.image
+            ? '<a href="' + esc(m.image) + '" target="_blank" rel="noopener"><img class="tb-chat-img" src="' + esc(m.image) + '" alt="聊天图片"></a>'
+            : '';
+        if (m.content) inner += (inner ? '<div style="margin-top:6px">' : '') + esc(m.content) + (inner ? '</div>' : '');
+        return '<div class="tb-msg-group ' + (mine ? 'is-mine' : '') + '">'
+            + '<div class="tb-msg-sender">' + (mine ? '' : '<img src="/assets/brand/mascot-wave-320.webp" alt="">')
+            + '<span>' + nick + '</span><time>' + tStr + '</time></div>'
+            + '<div class="tb-text-bubble ' + (mine ? 'is-mine' : '') + '">' + inner + '</div>'
+            + '</div>';
+    }
+
+    function buildImContactsHtml(notices, conversations, activeKey) {
         var customIm = {};
         try { customIm = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { customIm = {}; }
         var readIm = {};
         try { readIm = JSON.parse(localStorage.getItem('hq.imRead') || '{}') || {}; } catch (e) { readIm = {}; }
-        var activeIdx = Math.max(0, Math.min(IM_SEED_THREADS.length - 1, Number(state.activeNoticeIdx || 0)));
-        var activePeer = IM_SEED_THREADS[activeIdx];
-        var extraMsgs = Array.isArray(customIm[activeIdx]) ? customIm[activeIdx] : [];
+
+        var unreadNoticeCount = (notices || []).filter(function (n) { return !n.read; }).length;
+        var latestNotice = (notices && notices[0]) ? notices[0].title : '报价、面交与审核系统提醒';
+        var noticeRow = '<button type="button" class="conversation-row tb-contact-item ' + (activeKey === 'notices' ? 'on' : '') + '" data-act="im-select" data-key="notices">'
+            + '<span class="tb-contact-ava tone-notice">通</span>'
+            + '<div class="tb-contact-meta">'
+            + '<div class="tb-contact-top"><b>系统与交易通知</b><time>' + (notices && notices[0] ? esc(String(notices[0].createdAt || '').replace('T', ' ').slice(5, 10)) : '置顶') + '</time></div>'
+            + '<div class="tb-contact-sub"><p>' + esc(latestNotice) + '</p>' + (unreadNoticeCount ? '<em class="tb-unread-dot">' + unreadNoticeCount + '</em>' : '') + '</div>'
+            + '</div></button>';
+
+        var realConvRows = (conversations || []).map(function (c) {
+            var key = 'real:' + Number(c.id);
+            var isAct = activeKey === key;
+            return '<button type="button" class="conversation-row tb-contact-item ' + (isAct ? 'on' : '') + '" data-act="im-select" data-key="' + key + '">'
+                + '<span class="tb-contact-ava tone-emerald">' + esc((c.peer || '同').slice(0, 1)) + '</span>'
+                + '<div class="tb-contact-meta">'
+                + '<div class="tb-contact-top"><b>' + esc(c.peer || '校内同学') + '</b><time>私聊</time></div>'
+                + '<div class="tb-contact-sub"><p>' + esc(c.lastText || c.title || '点击查看私聊记录') + '</p></div>'
+                + '</div></button>';
+        }).join('');
 
         var demoContacts = IM_SEED_THREADS.map(function (c, idx) {
-            var isAct = idx === activeIdx;
+            var key = 'demo:' + idx;
+            var isAct = activeKey === key;
             var unreadCount = (isAct || readIm[idx]) ? 0 : c.unread;
             var lastCustom = Array.isArray(customIm[idx]) && customIm[idx].length ? customIm[idx][customIm[idx].length - 1].text : c.msg;
-            return '<button type="button" class="conversation-row tb-contact-item ' + (isAct ? 'on' : '') + '" data-act="im-select" data-idx="' + idx + '">'
+            return '<button type="button" class="conversation-row tb-contact-item ' + (isAct ? 'on' : '') + '" data-act="im-select" data-key="' + key + '">'
                 + '<span class="tb-contact-ava ' + c.tone + '">' + c.ava + '</span>'
                 + '<div class="tb-contact-meta">'
                 + '<div class="tb-contact-top"><b>' + esc(c.name) + '</b><time>' + c.date + '</time></div>'
                 + '<div class="tb-contact-sub"><p>' + esc(lastCustom) + '</p>' + (unreadCount ? '<em class="tb-unread-dot">' + unreadCount + '</em>' : '') + '</div>'
                 + '</div></button>';
         }).join('');
+
+        return noticeRow + realConvRows + demoContacts;
+    }
+
+    async function buildImRightAndCenter(activeKey, notices) {
+        if (activeKey === 'notices') {
+            var noticeListHtml = (notices || []).map(function (n) {
+                var target = safeRoute(n.target, '#/notifications');
+                return '<a class="notice-row tb-notice-card ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + Number(n.id) + '" data-to="' + esc(target) + '">'
+                    + '<span class="notice-dot"></span>'
+                    + '<div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div>'
+                    + '<time>' + esc(String(n.createdAt || '').replace('T', ' ').slice(0, 16)) + '</time>'
+                    + '</a>';
+            }).join('');
+            return {
+                headerHtml: '<div class="tb-chat-peer"><b>系统与交易通知</b><span class="tb-online-tag"><i class="qq-live-dot" aria-hidden="true"></i>实时同步</span></div>'
+                    + '<div class="tb-chat-top-btns">'
+                    + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
+                    + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
+                    + '<button type="button" class="tb-top-chip primary" data-act="notice-read">全部标为已读</button>'
+                    + '</div>',
+                streamHtml: '<div class="tb-real-notices"><div class="tb-stream-divider"><span>' + clayIcon('chat', '通知', 'is-sm') + ' 最新系统与交易通知（点击直达）</span></div>'
+                    + (noticeListHtml || '<div class="tb-im-empty-tip">暂无系统或交易通知，请在左侧选择同学继续私聊~</div>')
+                    + '</div><button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
+                shopCardHtml: '<div class="tb-shop-top">'
+                    + '<img src="/assets/brand/mascot-wave-320.webp" alt="">'
+                    + '<div><b>换一圈通知助手</b><a href="#/me" class="tb-enter-shop">个人中心</a></div>'
+                    + '</div>'
+                    + '<div class="tb-shop-stats">'
+                    + '<div><span>未读提醒</span><b>' + (notices || []).filter(function (n) { return !n.read; }).length + ' 条</b></div>'
+                    + '<div><span>担保方式</span><b>校内面交</b></div>'
+                    + '<div><span>覆盖书院</span><b>全校区</b></div>'
+                    + '</div>',
+                placeholder: '当前为系统通知只读频道，请点击左侧同学名字开启私聊',
+                readOnly: true
+            };
+        }
+
+        if (activeKey.indexOf('real:') === 0) {
+            var convId = Number(activeKey.slice(5));
+            var thread = await api('/conversation/' + convId, { noCache: true });
+            var isSeller = state.me && thread.sellerId === state.me.id;
+            var peerId = isSeller ? thread.buyerId : thread.sellerId;
+            var peerName = (isSeller ? thread.buyer : thread.seller) || '校内同学';
+            var peerProfile = peerId ? await api('/user/' + peerId, { optionalAuth: true }).catch(function () { return null; }) : null;
+            var itemImg = firstImage(thread.images) || '/assets/amz/quad-swap.jpg';
+            var messages = Array.isArray(thread.messages) ? thread.messages : [];
+            var msgSig = messages.map(function (m) { return m.id; }).join(',');
+            var creditScore = peerProfile && peerProfile.credit != null ? Number(peerProfile.credit) : 80;
+            var creditText = creditScore + ' ' + creditLevelOf(creditScore).text;
+            var campusText = (peerProfile && (peerProfile.building || peerProfile.college)) ? (peerProfile.building || peerProfile.college) : '移通学院';
+
+            var itemCardHtml = '<div class="tb-msg-group">'
+                + '<div class="tb-order-card tb-real-item-card">'
+                + '<h4>面交请选校内公共地点，确认物品状态后再交付</h4>'
+                + '<div class="tb-order-item-box">'
+                + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap.jpg\'" alt="">'
+                + '<div class="tb-order-item-info"><p>' + esc(thread.title || '校园闲置好物') + '</p><small>与 ' + esc(peerName) + ' 的专属私聊会话</small></div>'
+                + '</div>'
+                + '<a href="#/item/' + Number(thread.itemId) + '" class="tb-order-orange-btn">查看物品详情</a>'
+                + '</div></div>';
+
+            var msgsHtml = '<div class="tb-chat-msgs" id="tb-real-msgs" data-conv="' + convId + '" data-sig="' + esc(msgSig) + '">'
+                + (messages.length ? messages.map(formatImRealMsg).join('') : '<div class="tb-im-empty-tip">还没有聊天记录，在下方发消息和 TA 打个招呼吧~</div>')
+                + '</div>';
+
+            return {
+                headerHtml: '<div class="tb-chat-peer"><b>' + esc(peerName) + '</b><span class="tb-online-tag"><i class="qq-live-dot" aria-hidden="true"></i>校内私聊</span></div>'
+                    + '<div class="tb-chat-top-btns">'
+                    + '<a href="#/user/' + Number(peerId) + '" class="tb-top-chip">TA的主页</a>'
+                    + '<a href="#/item/' + Number(thread.itemId) + '" class="tb-top-chip">查看物品</a>'
+                    + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
+                    + '<button type="button" class="tb-top-chip primary" data-act="notice-read">全部标为已读</button>'
+                    + '</div>',
+                streamHtml: itemCardHtml + msgsHtml + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
+                shopCardHtml: '<div class="tb-shop-top">'
+                    + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap.jpg\'" alt="">'
+                    + '<div><b>' + esc(peerName) + '</b><a href="#/user/' + Number(peerId) + '" class="tb-enter-shop">进入主页</a></div>'
+                    + '</div>'
+                    + '<div class="tb-shop-stats">'
+                    + '<div><span>校园信用</span><b>' + esc(creditText) + '</b></div>'
+                    + '<div><span>累计成交</span><b>' + (peerProfile && peerProfile.dealCount != null ? Number(peerProfile.dealCount) + ' 单' : '校内认证') + '</b></div>'
+                    + '<div><span>常驻书院</span><b>' + esc(campusText) + '</b></div>'
+                    + '</div>',
+                placeholder: '请输入消息给 ' + peerName + '，按 Enter 键 或 点击发送',
+                readOnly: false,
+                peerName: peerName,
+                lastMsgText: messages.length ? (messages[messages.length - 1].kind === 'image' ? '[图片]' : messages[messages.length - 1].content) : ''
+            };
+        }
+
+        var idxNum = Number(activeKey.indexOf('demo:') === 0 ? activeKey.slice(5) : 0);
+        var activeIdx = Math.max(0, Math.min(IM_SEED_THREADS.length - 1, isNaN(idxNum) ? 0 : idxNum));
+        var activePeer = IM_SEED_THREADS[activeIdx];
+        var customIm = {};
+        try { customIm = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { customIm = {}; }
+        var extraMsgs = Array.isArray(customIm[activeIdx]) ? customIm[activeIdx] : [];
 
         var streamItemsHtml = ''
             + (activePeer.card ? '<div class="tb-msg-group"><div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>' + esc(activePeer.name) + '</span><time>' + activePeer.date + ' 15:16</time></div><div class="tb-order-card"><h4>' + esc(activePeer.card.title) + '</h4><div class="tb-order-item-box"><img src="' + activePeer.card.img + '" alt=""><div class="tb-order-item-info"><p>' + esc(activePeer.card.goods) + '</p><small>' + esc(activePeer.card.sub) + '</small></div><div class="tb-order-item-price"><b>' + esc(activePeer.card.price) + '</b><span>' + esc(activePeer.card.qty) + '</span></div></div><a href="' + activePeer.card.to + '" class="tb-order-orange-btn">' + esc(activePeer.card.btn) + '</a></div></div>' : '')
@@ -2614,6 +2826,169 @@
                 return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我（' + esc((state.me && state.me.nickname) || '移通同学') + '）</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-text-bubble is-mine">' + esc(m.text) + '</div></div>';
             }).join('');
 
+        return {
+            headerHtml: '<div class="tb-chat-peer"><b>' + esc(activePeer.name) + '</b><span class="tb-online-tag"><i class="qq-live-dot" aria-hidden="true"></i>在线</span></div>'
+                + '<div class="tb-chat-top-btns">'
+                + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
+                + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
+                + '<button type="button" class="tb-top-chip primary" data-act="notice-read">全部标为已读</button>'
+                + '</div>',
+            streamHtml: streamItemsHtml + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
+            shopCardHtml: '<div class="tb-shop-top">'
+                + '<img src="' + esc(activePeer.shopImg) + '" alt="">'
+                + '<div><b>' + esc(activePeer.name) + '</b><a href="' + esc(activePeer.shopLink) + '" class="tb-enter-shop">进入主页</a></div>'
+                + '</div>'
+                + '<div class="tb-shop-stats">'
+                + '<div><span>校园信用</span><b>' + esc(activePeer.credit) + '</b></div>'
+                + '<div><span>平均响应</span><b>3 分钟</b></div>'
+                + '<div><span>常驻书院</span><b>' + esc(activePeer.campus) + '</b></div>'
+                + '</div>',
+            placeholder: '请输入消息给 ' + activePeer.name + '，按 Enter 键 或 点击发送',
+            readOnly: false
+        };
+    }
+
+    async function patchImRightPanel(activeKey, opts) {
+        opts = opts || {};
+        var seq = ++imSelectSeq;
+        var win = $('.tb-im-window');
+        if (!win) {
+            await renderNotifications();
+            return;
+        }
+        var winY = window.scrollY;
+        var contactList = $('.tb-contact-list');
+        var leftScroll = contactList ? contactList.scrollTop : 0;
+
+        if (contactList) {
+            contactList.querySelectorAll('.tb-contact-item').forEach(function (btn) {
+                var hit = btn.dataset.key === activeKey;
+                btn.classList.toggle('on', hit);
+                if (hit) {
+                    var dot = btn.querySelector('.tb-unread-dot');
+                    if (dot && activeKey.indexOf('demo:') === 0) dot.remove();
+                }
+            });
+        }
+
+        var centerBox = $('.tb-im-center');
+        if (centerBox) centerBox.setAttribute('aria-busy', 'true');
+        var notices = opts.notices || (activeKey === 'notices' ? await api('/notification').catch(function () { return []; }) : []);
+        var panels;
+        try {
+            panels = await buildImRightAndCenter(activeKey, notices);
+        } catch (err) {
+            if (centerBox) centerBox.removeAttribute('aria-busy');
+            toast((err && err.message) || '会话加载失败', 'err');
+            return;
+        }
+        if (seq !== imSelectSeq || !$('.tb-im-window')) return;
+        if (centerBox) centerBox.removeAttribute('aria-busy');
+
+        var hdr = $('.tb-chat-header');
+        var stream = $('#tb-chat-stream');
+        var shopCard = $('#tb-shop-card');
+        var compose = $('.tb-chat-compose');
+        var input = $('#tb-im-input');
+
+        if (hdr) hdr.innerHTML = panels.headerHtml;
+        if (stream) {
+            stream.innerHTML = panels.streamHtml;
+            stream.scrollTop = opts.scrollBottom ? stream.scrollHeight : 0;
+        }
+        if (shopCard) shopCard.innerHTML = panels.shopCardHtml;
+        if (compose) compose.classList.toggle('is-readonly', !!panels.readOnly);
+        if (input) {
+            input.placeholder = panels.placeholder || '请输入消息…';
+            input.readOnly = !!panels.readOnly;
+        }
+        if (opts.previewText && contactList) {
+            var activeRowP = contactList.querySelector('.tb-contact-item[data-key="' + activeKey + '"] .tb-contact-sub p');
+            if (activeRowP) activeRowP.textContent = opts.previewText;
+        }
+        if (contactList) contactList.scrollTop = leftScroll;
+        updateImBottomPill();
+        window.scrollTo(window.scrollX, winY);
+        if (activeKey.indexOf('real:') === 0) refreshNoticeCount();
+    }
+
+    async function refreshImActiveThread() {
+        if (imPollBusy || !['notifications', 'chat', 'chats'].includes(currentView.name)) return;
+        if (!state.activeImKey || state.activeImKey.indexOf('real:') !== 0) return;
+        var box = $('#tb-real-msgs');
+        var stream = $('#tb-chat-stream');
+        if (!box || !stream) return;
+        var convId = Number(state.activeImKey.slice(5));
+        if (!convId || Number(box.dataset.conv) !== convId) return;
+        imPollBusy = true;
+        try {
+            var thread = await api('/conversation/' + convId, { noCache: true });
+            if (currentView.name !== 'notifications' && currentView.name !== 'chat' && currentView.name !== 'chats') return;
+            box = $('#tb-real-msgs');
+            stream = $('#tb-chat-stream');
+            if (!box || !stream || state.activeImKey !== 'real:' + convId) return;
+            var messages = Array.isArray(thread.messages) ? thread.messages : [];
+            var sig = messages.map(function (m) { return m.id; }).join(',');
+            if (box.dataset.sig !== sig) {
+                var prevScroll = stream.scrollTop;
+                var wasNearBottom = stream.scrollHeight - prevScroll - stream.clientHeight < 60;
+                box.innerHTML = messages.length ? messages.map(formatImRealMsg).join('') : '<div class="tb-im-empty-tip">还没有聊天记录，在下方发消息和 TA 打个招呼吧~</div>';
+                box.dataset.sig = sig;
+                if (wasNearBottom) stream.scrollTop = stream.scrollHeight;
+                else stream.scrollTop = prevScroll;
+                updateImBottomPill();
+                if (messages.length) {
+                    var lastM = messages[messages.length - 1];
+                    var previewEl = $('.tb-contact-item[data-key="real:' + convId + '"] .tb-contact-sub p');
+                    if (previewEl) previewEl.textContent = lastM.kind === 'image' ? '[图片]' : (lastM.content || '');
+                }
+            }
+        } catch (ignore) {
+        } finally {
+            imPollBusy = false;
+        }
+    }
+
+    async function renderNotifications(forcedConvId) {
+        var existingWin = $('.tb-im-window');
+        if (forcedConvId && existingWin) {
+            state.activeImKey = 'real:' + Number(forcedConvId);
+            await patchImRightPanel(state.activeImKey, { scrollBottom: false });
+            return;
+        }
+        var notices = await api('/notification').catch(function () { return []; });
+        var conversations = await api('/conversation', { noCache: true }).catch(function () { return []; });
+        if (!['notifications', 'chat', 'chats'].includes(currentView.name)) return;
+
+        if (forcedConvId) {
+            state.activeImKey = 'real:' + Number(forcedConvId);
+        } else if (!state.activeImKey) {
+            state.activeImKey = (conversations && conversations.length)
+                ? ('real:' + Number(conversations[0].id))
+                : ('demo:' + Math.max(0, Math.min(IM_SEED_THREADS.length - 1, Number(state.activeNoticeIdx || 0))));
+        }
+
+        if (existingWin) {
+            var listEl = $('.tb-contact-list');
+            var prevLeftY = listEl ? listEl.scrollTop : 0;
+            if (listEl) {
+                listEl.innerHTML = buildImContactsHtml(notices, conversations, state.activeImKey);
+                listEl.scrollTop = prevLeftY;
+            }
+            await patchImRightPanel(state.activeImKey, { notices: notices, scrollBottom: false });
+            return;
+        }
+
+        var panels;
+        try {
+            panels = await buildImRightAndCenter(state.activeImKey, notices);
+        } catch (e) {
+            state.activeImKey = 'demo:0';
+            panels = await buildImRightAndCenter(state.activeImKey, notices);
+        }
+        if (!['notifications', 'chat', 'chats'].includes(currentView.name)) return;
+
+        var contactsHtml = buildImContactsHtml(notices, conversations, state.activeImKey);
         var content = '<section class="messages-page tb-im-backdrop" aria-label="消息与聊天窗口">'
             + '<div class="tb-im-window">'
             + '<aside class="tb-im-left">'
@@ -2625,28 +3000,18 @@
             + '<input type="search" id="message-filter" placeholder="搜索最近联系人" aria-label="搜索消息联系人">'
             + '</div>'
             + '<div class="tb-contact-list conversation-list">'
-            + realConvRows
-            + demoContacts
+            + contactsHtml
             + '</div>'
             + '</aside>'
 
             + '<div class="tb-im-center">'
-            + '<header class="tb-chat-header">'
-            + '<div class="tb-chat-peer"><b>' + esc(activePeer.name) + '</b><span class="tb-online-tag"><i class="qq-live-dot" aria-hidden="true"></i>在线</span></div>'
-            + '<div class="tb-chat-top-btns">'
-            + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
-            + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
-            + '<button type="button" class="tb-top-chip primary" data-act="notice-read">全部标为已读</button>'
-            + '</div>'
-            + '</header>'
+            + '<header class="tb-chat-header">' + panels.headerHtml + '</header>'
 
             + '<div class="tb-chat-stream" id="tb-chat-stream">'
-            + (realNoticeRows ? '<div class="tb-real-notices"><div class="tb-stream-divider"><span>' + clayIcon('chat', '通知', 'is-sm') + ' 最新系统与交易通知（点击直达）</span></div>' + realNoticeRows + '</div>' : '')
-            + streamItemsHtml
-            + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom">回到底部 ∨</button>'
+            + panels.streamHtml
             + '</div>'
 
-            + '<div class="tb-chat-compose">'
+            + '<div class="tb-chat-compose ' + (panels.readOnly ? 'is-readonly' : '') + '">'
             + '<div class="tb-phrase-bar" id="tb-phrase-bar" hidden>'
             + ['方便在北山斋面交吗？', '可以看看成色细节图吗？', '我出一件数码外设互换如何？', '没问题，就约明天下午！'].map(function (ph) {
                 return '<button type="button" data-act="im-phrase-pick" data-v="' + esc(ph) + '">' + esc(ph) + '</button>';
@@ -2661,7 +3026,7 @@
             + '</div>'
             + '<span class="tb-char-count" id="tb-char-count">0 / 500</span>'
             + '</div>'
-            + '<textarea id="tb-im-input" maxlength="500" rows="3" placeholder="请输入消息给 ' + esc(activePeer.name) + '，按 Enter 键 或 点击发送"></textarea>'
+            + '<textarea id="tb-im-input" maxlength="500" rows="3" ' + (panels.readOnly ? 'readonly ' : '') + 'placeholder="' + esc(panels.placeholder) + '"></textarea>'
             + '<div class="tb-compose-foot">'
             + '<button type="button" class="tb-send-btn" data-act="im-send">发送 <span>| ▾</span></button>'
             + '</div>'
@@ -2669,17 +3034,7 @@
             + '</div>'
 
             + '<aside class="tb-im-right">'
-            + '<div class="tb-shop-card">'
-            + '<div class="tb-shop-top">'
-            + '<img src="' + esc(activePeer.shopImg) + '" alt="">'
-            + '<div><b>' + esc(activePeer.name) + '</b><a href="' + esc(activePeer.shopLink) + '" class="tb-enter-shop">进入主页</a></div>'
-            + '</div>'
-            + '<div class="tb-shop-stats">'
-            + '<div><span>校园信用</span><b>' + esc(activePeer.credit) + '</b></div>'
-            + '<div><span>平均响应</span><b>3 分钟</b></div>'
-            + '<div><span>常驻书院</span><b>' + esc(activePeer.campus) + '</b></div>'
-            + '</div>'
-            + '</div>'
+            + '<div class="tb-shop-card" id="tb-shop-card">' + panels.shopCardHtml + '</div>'
             + '<div class="tb-mascot-helper">'
             + '<img src="/assets/amz/mascot-credit-card.png" alt="小唤">'
             + '<h5>小唤提示</h5>'
@@ -2696,8 +3051,11 @@
 
         $('#app').innerHTML = shell('notifications', content);
         var stream = document.getElementById('tb-chat-stream');
-        if (stream) stream.scrollTop = stream.scrollHeight;
+        if (stream) stream.scrollTop = 0;
+        updateImBottomPill();
         refreshNoticeCount();
+        if (imPollTimer) clearInterval(imPollTimer);
+        imPollTimer = setInterval(refreshImActiveThread, 5000);
     }
 
     var roomTimer=null, roomBusy=false;
@@ -2707,9 +3065,7 @@
         }).join('')||'<div class="card card-pad">还没有私聊。</div>';
     }
     async function renderChats() {
-        var list=await api('/conversation');
-        if(currentView.name!=='chats')return;
-        $('#app').innerHTML=shell('notifications','<section class="redesign-page"><header class="redesign-heading"><h1>私聊</h1><a href="#/notifications">返回消息</a></header><div class="conversation-list">'+conversationRows(list)+'</div></section>');
+        await renderNotifications();
     }
     function roomMessage(m) {
         var mine=state.me&&m.senderId===state.me.id;var img=m.kind==='image'?'<a href="'+esc(m.image)+'" target="_blank" rel="noopener"><img class="chat-image" src="'+esc(m.image)+'" alt="私聊图片"></a>':'';
@@ -2777,11 +3133,35 @@
     }
 
     async function renderWishes() {
+        var prevWishY = window.scrollY;
+        var existingWishRoot = $('.wish-bounty-page');
+        if (existingWishRoot) existingWishRoot.setAttribute('aria-busy', 'true');
         var offered = (await api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; })).filter(function (item) { return item.allowCycle && !item.isDemo; });
         var offerOptions = offered.map(function (item) { return '<option value="' + Number(item.id) + '">' + esc(item.title) + '</option>'; }).join('');
         var matched = currentView.name === 'wishes' ? currentView.arg : null;
         var wishes = await api('/wish' + (matched ? '/' + matched : ''), {optionalAuth: true}).catch(function () { return []; });
         var displayList = (wishes || []).concat(DEMO_WISHES);
+
+        var wCat = state.wishCat || '全部';
+        var wShown = wCat === '全部' ? displayList : displayList.filter(function (w) {
+            return w.category === wCat || String(w.title + ' ' + (w.offerText || '')).indexOf(wCat) >= 0;
+        });
+        var wishGridInner = wShown.length
+            ? wShown.map(wishAuctionCard).join('')
+            : '<div class="card card-pad" style="grid-column:1/-1;text-align:center">当前分类暂无求换心愿 <button type="button" class="btn btn-sm btn-primary" data-act="wish-cat" data-v="全部">查看全部</button></div>';
+
+        var wishRoot = $('.wish-bounty-page');
+        if (wishRoot && wishRoot.querySelector('.wish-bounty-grid')) {
+            wishRoot.removeAttribute('aria-busy');
+            wishRoot.querySelectorAll('[data-act="wish-cat"]').forEach(function (btn) {
+                btn.classList.toggle('on', (btn.dataset.v || '全部') === wCat);
+            });
+            var allWishBtn = wishRoot.querySelector('.wish-banner-cats [data-act="wish-cat"][data-v="全部"]');
+            if (allWishBtn) allWishBtn.textContent = '全部 (' + displayList.length + ')';
+            wishRoot.querySelector('.wish-bounty-grid').innerHTML = wishGridInner;
+            window.scrollTo(window.scrollX, prevWishY);
+            return;
+        }
 
         var content = '<div class="wish-bounty-page">'
             + '<header class="wish-top-banner">'
@@ -2791,7 +3171,7 @@
             + '</div>'
             + '<nav class="wish-banner-cats" aria-label="求换分类">'
             + [['全部', '全部 (' + displayList.length + ')'], ['数码', '数码外设'], ['教材', '考研教材'], ['运动', '运动户外'], ['生活', '宿舍生活']].map(function (c) {
-                return '<button type="button" class="' + ((state.wishCat || '全部') === c[0] ? 'on' : '') + '" data-act="wish-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
+                return '<button type="button" class="' + (wCat === c[0] ? 'on' : '') + '" data-act="wish-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
             }).join('')
             + '<a href="#/relay">换物接力</a>'
             + '<a href="#/auctions">校园拍卖</a>'
@@ -2812,13 +3192,7 @@
 
             + '<main class="wish-main">'
             + '<div class="wish-bounty-grid">'
-            + (function () {
-                var wCat = state.wishCat || '全部';
-                var wShown = wCat === '全部' ? displayList : displayList.filter(function (w) {
-                    return w.category === wCat || String(w.title + ' ' + (w.offerText || '')).indexOf(wCat) >= 0;
-                });
-                return wShown.length ? wShown.map(wishAuctionCard).join('') : '<div class="card card-pad" style="grid-column:1/-1;text-align:center">当前分类暂无求换心愿 <button type="button" class="btn btn-sm btn-primary" data-act="wish-cat" data-v="全部">查看全部</button></div>';
-            })()
+            + wishGridInner
             + '</div>'
             + '</main>'
             + '</div>'
@@ -3020,6 +3394,7 @@
     }
 
     async function renderCommunity() {
+        var prevCommY = window.scrollY;
         var rooms = getAllRooms();
         var activeRoomId = state.commRoom || 'hall';
         var activeRoom = rooms.find(function (r) { return r.id === activeRoomId; }) || rooms[0];
@@ -3145,30 +3520,11 @@
             }
         }
 
-        $('#app').innerHTML = shell('community',
-            '<div class="qq-channel-shell">'
-            + '<aside class="qq-chan-left" aria-label="校园贴吧与聊天室列表">'
-            + '<div class="qq-guild-head">'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
-            + '<div><b>换一圈校园贴吧</b><span>' + rooms.length + ' 个活跃聊天室</span></div>'
-            + '</div>'
-            + '<button type="button" class="btn btn-primary btn-sm btn-block tieba-create-btn" data-act="open-create-room">+ 创建我的聊天室</button>'
-            + '<div class="qq-chan-group" style="margin-top:10px">'
-            + '<button type="button" class="qq-chan-item ' + (activeRoomId === 'hall' ? 'on' : '') + '" data-act="comm-room" data-room="hall">' + clayIcon('fire', '热门', 'is-sm') + '<span>全校热帖广场</span><em class="qq-badge-hot">热</em></button>'
-            + '<a href="#/wishes" class="qq-chan-item">' + clayIcon('swap', '心愿', 'is-sm') + '<span>全校求换心愿榜</span></a>'
-            + '<a href="#/appraise" class="qq-chan-item">' + clayIcon('ai', 'AI', 'is-sm') + '<span>AI 估价讨论室</span></a>'
-            + '</div>'
-            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 贴吧与专题聊天室</div>'
-            + roomNavHtml
-            + '</div>'
-            + '<div class="qq-left-promo">'
-            + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
-            + '<div><b>移通贴吧联盟</b></div>'
-            + '</div>'
-            + '</aside>'
+        var tabBodyHtml = activeTab === 'posts'
+            ? composerBar + '<div class="qq-featured-feed">' + postsFeedHtml + '</div>'
+            : roomChatHtml;
 
-            + '<main class="qq-chan-center">'
-            + '<header class="tieba-bar-header">'
+        var centerInnerHtml = '<header class="tieba-bar-header">'
             + '<div class="tieba-bar-cover"><img src="' + esc(activeRoom.img || '/assets/amz/quad-community.jpg') + '" alt=""></div>'
             + '<div class="tieba-bar-meta">'
             + '<div class="tieba-bar-title-row">'
@@ -3188,10 +3544,29 @@
             + '<span class="qq-live-pill"><i class="qq-live-dot" aria-hidden="true"></i>实时同步中</span>'
             + '</div>'
 
-            + (activeTab === 'posts'
-                ? composerBar + '<div class="qq-featured-feed">' + postsFeedHtml + '</div>'
-                : roomChatHtml)
-            + '</main>'
+            + '<div class="qq-tab-body">' + tabBodyHtml + '</div>';
+
+        var commInner = '<aside class="qq-chan-left" aria-label="校园贴吧与聊天室列表">'
+            + '<div class="qq-guild-head">'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<div><b>换一圈校园贴吧</b><span>' + rooms.length + ' 个活跃聊天室</span></div>'
+            + '</div>'
+            + '<button type="button" class="btn btn-primary btn-sm btn-block tieba-create-btn" data-act="open-create-room">+ 创建我的聊天室</button>'
+            + '<div class="qq-chan-group" style="margin-top:10px">'
+            + '<button type="button" class="qq-chan-item ' + (activeRoomId === 'hall' ? 'on' : '') + '" data-act="comm-room" data-room="hall">' + clayIcon('fire', '热门', 'is-sm') + '<span>全校热帖广场</span><em class="qq-badge-hot">热</em></button>'
+            + '<a href="#/wishes" class="qq-chan-item">' + clayIcon('swap', '心愿', 'is-sm') + '<span>全校求换心愿榜</span></a>'
+            + '<a href="#/appraise" class="qq-chan-item">' + clayIcon('ai', 'AI', 'is-sm') + '<span>AI 估价讨论室</span></a>'
+            + '</div>'
+            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 贴吧与专题聊天室</div>'
+            + roomNavHtml
+            + '</div>'
+            + '<div class="qq-left-promo">'
+            + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
+            + '<div><b>移通贴吧联盟</b></div>'
+            + '</div>'
+            + '</aside>'
+
+            + '<main class="qq-chan-center">' + centerInnerHtml + '</main>'
 
             + '<aside class="qq-chan-right" aria-label="频道侧栏">'
             + '<div class="qq-side-card qq-arcade-box">'
@@ -3217,9 +3592,61 @@
             + '<li><b>5</b><span>菊轩书院</span><em>198 单</em></li>'
             + '</ul>'
             + '</div>'
-            + '</aside>'
-            + '</div>'
-        );
+            + '</aside>';
+
+        var roomsSig = rooms.map(function (r) { return r.id; }).join(',');
+        var commShell = $('.qq-channel-shell');
+        var hadCommShell = !!commShell;
+        if (commShell && commShell.dataset.roomsSig === roomsSig) {
+            var prevLeftY = ($('.qq-chan-left') && $('.qq-chan-left').scrollTop) || 0;
+            var prevRightY = ($('.qq-chan-right') && $('.qq-chan-right').scrollTop) || 0;
+            var centerEl = commShell.querySelector('.qq-chan-center');
+            var tabBodyEl = commShell.querySelector('.qq-tab-body');
+            if (centerEl && tabBodyEl && commShell.dataset.room === activeRoomId) {
+                tabBodyEl.innerHTML = tabBodyHtml;
+                commShell.querySelectorAll('[data-act="comm-tab"]').forEach(function (btn) {
+                    var on = btn.dataset.v === activeTab;
+                    btn.classList.toggle('on', on);
+                    if (btn.dataset.v === 'posts' && btn.closest('.tieba-mode-tabs')) {
+                        btn.innerHTML = clayIcon('order', '看帖', 'is-sm') + ' 看帖与发帖 (' + roomPosts.length + ')';
+                    }
+                });
+                var followBtn = centerEl.querySelector('[data-act="toggle-follow-room"]');
+                if (followBtn) {
+                    followBtn.className = 'btn btn-sm ' + (isFollowed ? 'btn-ghost' : 'btn-primary');
+                    followBtn.textContent = isFollowed ? '已关注' : '+ 关注本吧';
+                }
+                var statsEl = centerEl.querySelector('.qq-hero-stats');
+                if (statsEl) {
+                    statsEl.innerHTML = '<span>关注人数 <b>' + (Number(activeRoom.members || 100) + (isFollowed ? 1 : 0)) + '</b></span><span>贴子总数 <b>' + roomPosts.length + '</b></span>';
+                }
+            } else if (centerEl) {
+                centerEl.innerHTML = centerInnerHtml;
+                commShell.dataset.room = activeRoomId;
+                commShell.querySelectorAll('[data-act="comm-room"]').forEach(function (btn) {
+                    btn.classList.toggle('on', btn.dataset.room === activeRoomId);
+                });
+            } else {
+                commShell.innerHTML = commInner;
+                commShell.dataset.room = activeRoomId;
+            }
+            var newLeft = $('.qq-chan-left'), newRight = $('.qq-chan-right');
+            if (newLeft) newLeft.scrollTop = prevLeftY;
+            if (newRight) newRight.scrollTop = prevRightY;
+            window.scrollTo(window.scrollX, prevCommY);
+        } else if (commShell) {
+            var prevLeftY2 = ($('.qq-chan-left') && $('.qq-chan-left').scrollTop) || 0;
+            var prevRightY2 = ($('.qq-chan-right') && $('.qq-chan-right').scrollTop) || 0;
+            commShell.innerHTML = commInner;
+            commShell.dataset.room = activeRoomId;
+            commShell.dataset.roomsSig = roomsSig;
+            var newLeft2 = $('.qq-chan-left'), newRight2 = $('.qq-chan-right');
+            if (newLeft2) newLeft2.scrollTop = prevLeftY2;
+            if (newRight2) newRight2.scrollTop = prevRightY2;
+            window.scrollTo(window.scrollX, prevCommY);
+        } else {
+            $('#app').innerHTML = shell('community', '<div class="qq-channel-shell" data-room="' + esc(activeRoomId) + '" data-rooms-sig="' + esc(roomsSig) + '">' + commInner + '</div>');
+        }
 
         var communityDraft = sessionStorage.getItem('hq.communityDraft');
         if (communityDraft) {
@@ -3233,6 +3660,7 @@
         }
         if (activeTab === 'chat' && activeRoomId === 'hall') {
             await refreshCommunity(true);
+            if (hadCommShell) window.scrollTo(window.scrollX, prevCommY);
             if (currentView.name === 'community') communityTimer = setInterval(function () { refreshCommunity(false); }, 5000);
         }
     }
@@ -3343,11 +3771,20 @@
             return '<button class="'+(selected?'on':'')+'" aria-pressed="'+selected+'" data-act="admin-tab" data-v="'+section[0]+'">'+section[1]+'</button>';
         }).join('');
         var title = adminSections.find(function(section) { return section[0] === tab; })[1];
-        var content = '<div class="admin-workspace"><nav class="admin-side" aria-label="运营后台"><h1>运营后台</h1>'+navigation
-            +'</nav><section class="admin-main"><header class="admin-heading"><h2>'+title+'</h2>'
-            +'<button class="btn btn-ghost btn-sm" data-act="admin-refresh">刷新</button></header>'+body+'</section></div>';
-
-        $('#app').innerHTML = shell('admin', content);
+        var adminInner = '<nav class="admin-side" aria-label="运营后台"><h1>运营后台</h1>' + navigation
+            + '</nav><section class="admin-main"><header class="admin-heading"><h2>' + title + '</h2>'
+            + '<button class="btn btn-ghost btn-sm" data-act="admin-refresh">刷新</button></header>' + body + '</section>';
+        var adminRoot = $('.admin-workspace');
+        if (adminRoot) {
+            var prevAdminY = window.scrollY;
+            var prevAdminSideY = ($('.admin-side') && $('.admin-side').scrollTop) || 0;
+            adminRoot.innerHTML = adminInner;
+            var nextAdminSide = $('.admin-side');
+            if (nextAdminSide) nextAdminSide.scrollTop = prevAdminSideY;
+            window.scrollTo(window.scrollX, prevAdminY);
+        } else {
+            $('#app').innerHTML = shell('admin', '<div class="admin-workspace">' + adminInner + '</div>');
+        }
     }
 
     // ------------------------------------------------------------------ 弹层
@@ -3697,6 +4134,7 @@
     async function render() {
         if (communityTimer) { clearInterval(communityTimer); communityTimer = null; }
         if (roomTimer) { clearInterval(roomTimer); roomTimer = null; }
+        if (imPollTimer) { clearInterval(imPollTimer); imPollTimer = null; }
         var view = parseRoute();
         currentView = view;
         setTimeout(refreshNoticeCount, 0);
@@ -3738,8 +4176,8 @@
                 await renderFollowers();
             } else if (view.name === 'notifications') {
                 await renderNotifications();
-            } else if (view.name === 'chats') { await renderChats();
-            } else if (view.name === 'chat') { await renderRoom(view.arg,false);
+            } else if (view.name === 'chats') { await renderNotifications();
+            } else if (view.name === 'chat') { await renderNotifications(view.arg);
             } else if (view.name === 'ringChat') { await renderRoom(view.arg,true);
             } else if (view.name === 'wishes') { await renderWishes();
             } else if (view.name === 'community') {
@@ -3793,6 +4231,14 @@
     // ------------------------------------------------------------------ 交互绑定
 
     document.addEventListener('click', async function (ev) {
+        var jdLink = ev.target.closest('.jd-side-nav a[href^="#/"]');
+        if (jdLink) {
+            var sideEl = jdLink.closest('.jd-side-nav');
+            state._jdPendingScroll = { winY: window.scrollY, sideY: sideEl ? sideEl.scrollTop : 0 };
+            ev.preventDefault();
+            go(jdLink.getAttribute('href'));
+            return;
+        }
         var el = ev.target.closest('[data-act]');
         if (!el) return;
         var act = el.dataset.act;
@@ -3871,14 +4317,18 @@
             return;
         }
         if (act === 'im-select') {
-            var nextIdx = Number(el.dataset.idx || 0);
-            state.activeNoticeIdx = nextIdx;
-            try {
-                var readMap = JSON.parse(localStorage.getItem('hq.imRead') || '{}') || {};
-                readMap[nextIdx] = true;
-                localStorage.setItem('hq.imRead', JSON.stringify(readMap));
-            } catch (e) {}
-            await renderNotifications();
+            var nextKey = el.dataset.key || ('demo:' + Number(el.dataset.idx || 0));
+            state.activeImKey = nextKey;
+            if (nextKey.indexOf('demo:') === 0) {
+                var nextIdx = Number(nextKey.slice(5) || 0);
+                state.activeNoticeIdx = nextIdx;
+                try {
+                    var readMap = JSON.parse(localStorage.getItem('hq.imRead') || '{}') || {};
+                    readMap[nextIdx] = true;
+                    localStorage.setItem('hq.imRead', JSON.stringify(readMap));
+                } catch (e) {}
+            }
+            await patchImRightPanel(nextKey, { scrollBottom: false });
             return;
         }
         if (act === 'im-phrase-menu') {
@@ -3910,7 +4360,29 @@
             return;
         }
         if (act === 'im-insert-card' || act === 'im-send') {
-            var idx = Number(state.activeNoticeIdx || 0);
+            var curKey = state.activeImKey || ('demo:' + Number(state.activeNoticeIdx || 0));
+            if (curKey === 'notices') { toast('请先在左侧选择要私聊的同学', 'err'); return; }
+            var boxIn = $('#tb-im-input');
+            var txt = act === 'im-insert-card'
+                ? '【校园换物意向】我有意交换这件宝贝，方便约在校内公共地点（北山斋/图书馆大厅）当面验货交接吗？'
+                : (boxIn && boxIn.value || '').trim();
+            if (!txt) { toast('请输入要发送的消息内容', 'err'); return; }
+
+            if (curKey.indexOf('real:') === 0) {
+                var convId = Number(curKey.slice(5));
+                await withBusy(el, async function () {
+                    await api('/conversation/' + convId, { method: 'POST', body: { kind: 'text', content: txt } });
+                    if (boxIn && act === 'im-send') {
+                        boxIn.value = '';
+                        var cCount = $('#tb-char-count');
+                        if (cCount) cCount.textContent = '0 / 500';
+                    }
+                    await patchImRightPanel(curKey, { scrollBottom: true, previewText: txt });
+                });
+                return;
+            }
+
+            var idx = Number(curKey.indexOf('demo:') === 0 ? curKey.slice(5) : (state.activeNoticeIdx || 0));
             var imMap = {};
             try { imMap = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { imMap = {}; }
             if (!Array.isArray(imMap[idx])) imMap[idx] = [];
@@ -3927,15 +4399,15 @@
                     time: tStr
                 });
             } else {
-                var boxIn = $('#tb-im-input');
-                var txt = (boxIn && boxIn.value || '').trim();
-                if (!txt) { toast('请输入要发送的消息内容', 'err'); return; }
                 imMap[idx].push({kind: 'text', text: txt, time: tStr});
+                if (boxIn) {
+                    boxIn.value = '';
+                    var cnt = $('#tb-char-count');
+                    if (cnt) cnt.textContent = '0 / 500';
+                }
             }
             try { localStorage.setItem('hq.imThreads', JSON.stringify(imMap)); } catch (e) {}
-            await renderNotifications();
-            var streamBox = document.querySelector('.tb-chat-stream');
-            if (streamBox) streamBox.scrollTop = streamBox.scrollHeight;
+            await patchImRightPanel('demo:' + idx, { scrollBottom: true, previewText: act === 'im-insert-card' ? '[换物意向卡片]' : txt });
             return;
         }
         if (act === 'im-scroll-bottom') {
@@ -4785,23 +5257,32 @@
         if (ev.target.dataset.act === 'im-image') {
             var imFile = ev.target.files && ev.target.files[0];
             if (!imFile) return;
+            var imgKey = state.activeImKey || ('demo:' + Number(state.activeNoticeIdx || 0));
+            if (imgKey === 'notices') { toast('请先在左侧选择私聊对象', 'err'); ev.target.value = ''; return; }
             try {
-                var imUrl = await readOrUploadLocalImage(imFile);
-                var idx = Number(state.activeNoticeIdx || 0);
-                var imMap = {};
-                try { imMap = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { imMap = {}; }
-                if (!Array.isArray(imMap[idx])) imMap[idx] = [];
-                var nowD = new Date();
-                imMap[idx].push({
-                    kind: 'image',
-                    image: imUrl,
-                    text: '[图片]',
-                    time: String(nowD.getHours()).padStart(2, '0') + ':' + String(nowD.getMinutes()).padStart(2, '0')
-                });
-                try { localStorage.setItem('hq.imThreads', JSON.stringify(imMap)); } catch (e) {}
-                await renderNotifications();
-                var st = document.querySelector('.tb-chat-stream');
-                if (st) st.scrollTop = st.scrollHeight;
+                if (imgKey.indexOf('real:') === 0) {
+                    var convImgId = Number(imgKey.slice(5));
+                    var imgBody = new FormData();
+                    imgBody.append('file', await window.prepareUploadImage(imFile));
+                    var upRes = await api('/upload', { method: 'POST', form: imgBody });
+                    await api('/conversation/' + convImgId, { method: 'POST', body: { kind: 'image', image: upRes.url } });
+                    await patchImRightPanel(imgKey, { scrollBottom: true, previewText: '[图片]' });
+                } else {
+                    var imUrl = await readOrUploadLocalImage(imFile);
+                    var idx = Number(imgKey.indexOf('demo:') === 0 ? imgKey.slice(5) : (state.activeNoticeIdx || 0));
+                    var imMap = {};
+                    try { imMap = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { imMap = {}; }
+                    if (!Array.isArray(imMap[idx])) imMap[idx] = [];
+                    var nowD = new Date();
+                    imMap[idx].push({
+                        kind: 'image',
+                        image: imUrl,
+                        text: '[图片]',
+                        time: String(nowD.getHours()).padStart(2, '0') + ':' + String(nowD.getMinutes()).padStart(2, '0')
+                    });
+                    try { localStorage.setItem('hq.imThreads', JSON.stringify(imMap)); } catch (e) {}
+                    await patchImRightPanel('demo:' + idx, { scrollBottom: true, previewText: '[图片]' });
+                }
             } catch (err) { toast(err.message || '图片发送失败', 'err'); }
             finally { ev.target.value = ''; }
             return;
@@ -4971,8 +5452,15 @@
     });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { var drawer = $('#landing-menu'); if (drawer && !drawer.hidden) { drawer.hidden = true; $('.land-scrim').hidden = true; $('.land-menu-toggle').setAttribute('aria-expanded', 'false'); $('.land-menu-toggle').focus(); } } });
     window.addEventListener('hashchange', function () {
-        if(location.hash==='#/notifications') { noticeTracker.pending=0;closeNoticePopup(); }
-        window.scrollTo(0, 0);
+        if (location.hash === '#/notifications') { noticeTracker.pending = 0; closeNoticePopup(); }
+        var prevViewName = currentView ? currentView.name : '';
+        var nextView = parseRoute();
+        var meGroup = ['me', 'meSub', 'offers', 'exchange', 'shelf'];
+        var imGroup = ['notifications', 'chat', 'chats'];
+        var staySameSection = (meGroup.indexOf(prevViewName) >= 0 && meGroup.indexOf(nextView.name) >= 0)
+            || (imGroup.indexOf(prevViewName) >= 0 && imGroup.indexOf(nextView.name) >= 0)
+            || (prevViewName === nextView.name && nextView.name !== 'item' && nextView.name !== 'user' && nextView.name !== 'exchangeDetail');
+        if (!staySameSection) window.scrollTo(0, 0);
         render();
     });
 
