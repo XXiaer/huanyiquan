@@ -6,3 +6,4 @@ uploads/
 semantic/.venv/
 semantic/_probe/uploads/
 __pycache__/
+!java/
