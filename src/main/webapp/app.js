@@ -54,6 +54,11 @@
     };
     var CAT_ICON = {教材:navIcon('book'),数码:navIcon('device'),运动:navIcon('sports'),
         生活:navIcon('life'),衣物:navIcon('clothes'),绿植:navIcon('plant'),其他:navIcon('box')};
+    var CLAY_ICONS = ['ai', 'auction', 'chat', 'fire', 'game', 'order', 'pin', 'settings', 'star', 'swap', 'user', 'wallet'];
+    function clayIcon(name, alt, cls) {
+        var key = CLAY_ICONS.indexOf(name) >= 0 ? name : 'star';
+        return '<img class="clay-ico' + (cls ? ' ' + cls : '') + '" src="/assets/icons/' + key + '.jpg" alt="' + esc(alt || '') + '" loading="lazy" decoding="async">';
+    }
 
     var OFFER_STATUS = {
         0: ['待响应', 'accent'],
@@ -67,10 +72,24 @@
     var state = {
         me: null,
         token: '',
-        home: {category: '', condition: '', keyword: '', page: 1, items: [], total: 0, hasMore: false},
+        home: {category: '', condition: '', minCredit: 0, keyword: '', page: 1, items: [], total: 0, hasMore: false},
         publishImages: [],
         offersTab: 'received',
+        offersQuery: '',
+        offersAdvOpen: false,
+        offersStatusFilter: 'all',
+        hiddenDemoOrders: [],
         meFilter: 'all',
+        relayCat: '全部',
+        auctionCat: '全部',
+        auctionState: '全部',
+        auctionSort: 'default',
+        wishCat: '全部',
+        activeNoticeIdx: 0,
+        commRoom: 'hall',
+        commTab: 'posts',
+        tiebaPostImg: '',
+        tiebaOpenComments: {},
         adminTab: 'dashboard', adminUserQuery: '', adminReportStatus: 0
     };
 
@@ -209,7 +228,7 @@
             + '</header>'
             + '<div class="jd-fp-date-bar">'
             + '<div class="jd-fp-date-left"><b>' + (key === 'favorites' ? '我的收藏' : '浏览足迹') + '</b><span>' + displayList.length + ' 件</span></div>'
-            + '<button type="button" class="jd-fp-clear-btn" data-act="shelf-clear" data-key="' + key + '">🗑 全部清空</button>'
+            + '<button type="button" class="jd-fp-clear-btn" data-act="shelf-clear" data-key="' + key + '">' + clayIcon('order', '清空', 'is-sm') + ' 全部清空</button>'
             + '</div>'
             + '<div class="jd-history-grid">' + cards + '</div>'
             + '<p class="jd-fp-end"><img src="/assets/brand/mascot-wave-320.webp" alt=""> 没有更多' + (key === 'favorites' ? '收藏商品' : '浏览记录') + '啦~</p>'
@@ -714,8 +733,14 @@
 
     function renderHome() {
         var h=state.home;
-        var idle=location.hash==='#/idle';
-        var isSearch=location.hash==='#/search';
+        var baseHash=(location.hash||'#/home').split('?')[0];
+        var idle=baseHash==='#/idle';
+        var isSearch=baseHash==='#/search';
+        var minCredit=Number(h.minCredit||0);
+        var visibleItems=minCredit>0 ? h.items.filter(function(it){
+            var c = it.ownerCredit===undefined||it.ownerCredit===null ? 80 : Number(it.ownerCredit);
+            return c >= minCredit;
+        }) : h.items;
         var me=state.me;
         var categories=[
             ['','全部好物','全站热换'],
@@ -733,13 +758,14 @@
             return '<button class="desk-category amz-check-row '+(checked?'on':'')+'" data-act="f-cond" data-v="'+esc(c[0])+'"><span class="amz-radio-dot '+(checked?'on':'')+'"></span><span>'+esc(c[1])+'</span></button>';
         }).join('')+'</div>';
         var creditSidebar='<div class="amz-side-group"><h3>物主信用</h3>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★★</span><span>90分以上</span></button>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★★☆</span><span>80分以上</span></button>'
-            +'<button class="desk-category amz-star-filter" data-act="f-cond" data-v=""><span class="amz-stars">★★★☆☆</span><span>60分以上</span></button>'
+            +[[90,'★★★★★','90分以上'],[80,'★★★★☆','80分以上'],[60,'★★★☆☆','60分以上']].map(function(row){
+                var on = minCredit === row[0];
+                return '<button type="button" class="desk-category amz-star-filter '+(on?'on':'')+'" data-act="f-credit" data-v="'+row[0]+'"><span class="amz-stars">'+row[1]+'</span><span class="amz-credit-val">'+row[2]+'</span></button>';
+            }).join('')
             +'</div>';
         var spotSidebar='<div class="amz-side-group"><h3>热门校内面交点</h3><div class="amz-side-tags">'
             +['北山斋宿舍','南山书院','图书馆正门','第一食堂','菜鸟驿站','双栀书院'].map(function(s){
-                return '<button type="button" class="amz-side-tag" data-act="campus-search" data-v="'+s+'">📍 '+s+'</button>';
+                return '<button type="button" class="amz-side-tag" data-act="campus-search" data-v="'+s+'">'+clayIcon('pin','定位','is-sm')+' '+s+'</button>';
             }).join('')+'</div></div>';
         var mobileCats=categories.map(function(c){return '<button class="mobile-category '+(h.category===c[0]?'on':'')+'" data-act="f-cat" data-v="'+esc(c[0])+'"><b>'+esc(c[1])+'</b></button>';}).join('');
         var mobileSearch='<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">'+navIcon('search')+'</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="'+esc(h.keyword)+'"><button type="submit">搜索</button></form>';
@@ -821,18 +847,19 @@
             +'</aside>';
 
         var mobile='<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/market" data-act="home-feed">集市</a><a href="#/community">社区</a><a href="#/auctions">拍卖</a></nav>'+mobileSearch+campusServices()+'<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">'+mascotImage+'</figure></section><div class="mobile-categories">'+mobileCats+'</div><div class="mobile-tools"><button data-act="go" data-to="#/auctions"><span>'+navIcon('auction')+'</span><b>校园拍卖</b></button><button data-act="go" data-to="#/wishes"><span>'+navIcon('wish')+'</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>'+navIcon('community')+'</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>'+navIcon('trade')+'</span><b>我的交易</b></button></div></section>';
-        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐')+'</h2></div><div class="feed-actions"><span class="feed-count">'+(isSearch?'共 '+h.total+' 件':'共 '+h.items.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
-            +((h.category||h.condition)?'<div class="active-filter'+(h.condition?'':' category-only')+'" aria-label="已选筛选">'
+        var results='<section class="market-feed"><div class="feed-heading"><div><h2>'+(isSearch?'搜索结果':idle?'校园闲置':'为你推荐')+'</h2></div><div class="feed-actions"><span class="feed-count">'+(isSearch&&!minCredit?'共 '+h.total+' 件':'共 '+visibleItems.length+' 件')+'</span><button class="feed-filter" data-act="open-filter">'+navIcon('filter')+' 筛选</button><button class="feed-publish" data-act="go" data-to="#/publish">'+navIcon('add')+' 发布</button></div></div>'
+            +((h.category||h.condition||minCredit)?'<div class="active-filter'+(h.condition||minCredit?'':' category-only')+'" aria-label="已选筛选">'
                 +(h.category?'<button class="chip on desktop-filter-category" data-act="f-cat" data-v="" aria-label="清除类别筛选">类别：'+esc(h.category)+' ×</button>':'')
-                +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')+'</div>':'')
-            +(h.items.length?'<div class="pgrid">'+h.items.map(pCard).join('')+'</div>':emptyState(isSearch?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物',isSearch && h.searchConditions?.length ? '没有商品同时满足这些条件，可修改搜索词放宽条件。':'换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
+                +(h.condition?'<button class="chip on" data-act="f-cond" data-v="" aria-label="清除成色筛选">成色：'+esc(h.condition)+' ×</button>':'')
+                +(minCredit?'<button class="chip on" data-act="f-credit" data-v="0" aria-label="清除信用筛选">信用：≥'+minCredit+'分 ×</button>':'')+'</div>':'')
+            +(visibleItems.length?'<div class="pgrid">'+visibleItems.map(pCard).join('')+'</div>':emptyState(isSearch?'<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">':navIcon('search'),'暂时没有找到好物',isSearch && h.searchConditions?.length ? '没有商品同时满足这些条件，可修改搜索词放宽条件。':'换个搜索词或筛选条件试试','<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             +(h.hasMore?'<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>':'')+'</section>';
         if(isSearch){
             var conditions=(h.searchConditions||[]).map(function(label){return '<span class="chip on">'+esc(label)+'</span>';}).join('');
             renderSearchPage('<div class="market-home amz-browse-layout">'+desktopSidebar+'<div class="amz-browse-main">'+(conditions ? '<div class="active-filter" aria-label="已识别搜索条件">'+conditions+'</div>' : '')+results+'</div></div>');
             return;
         }
-        if(idle || h.category || h.condition){
+        if(idle || h.category || h.condition || minCredit){
             $('#app').innerHTML=shell(idle?'idle':'market','<div class="market-home amz-browse-layout">'+desktopSidebar+mobile+'<div class="amz-browse-main">'+results+'</div></div>');
             return;
         }
@@ -872,14 +899,15 @@
         var params = '?page=' + h.page + '&size=20';
         if (h.category) params += '&category=' + encodeURIComponent(h.category);
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
-        if (location.hash !== '#/search') {
+        var baseLoadHash = (location.hash || '#/home').split('?')[0];
+        if (baseLoadHash !== '#/search') {
             try {
-                var targetMode = location.hash === '#/idle' ? 1 : 2;
+                var targetMode = baseLoadHash === '#/idle' ? 1 : 2;
                 var batch = await window.campusExchange.browse(
                     function (page) { return api('/item/list' + params.replace(/page=\d+/, 'page=' + page), options); },
                     targetMode, h.page);
                 if (token !== homeLoadToken || currentView.name !== 'home') return false;
-                if (location.hash === '#/idle' && h.page === 1 && (!batch.rows || !batch.rows.length)) {
+                if (baseLoadHash === '#/idle' && h.page === 1 && (!batch.rows || !batch.rows.length)) {
                     var fallback = await api('/item/list' + params, options);
                     if (token !== homeLoadToken || currentView.name !== 'home') return false;
                     batch = { page: 1, rows: fallback.list || [], hasMore: !!fallback.hasMore };
@@ -1171,35 +1199,35 @@
 
     function jdSideNav(activeKey) {
         return '<aside class="jd-side-nav" aria-label="个人与订单导航">'
-            + '<div class="jd-nav-group"><h4>👤 我的换一圈</h4>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('user', '我的', 'is-sm') + ' 我的换一圈</h4>'
             + '<a href="#/me" class="' + (activeKey === 'me' ? 'on' : '') + '">个人中心主页</a>'
             + '</div>'
-            + '<div class="jd-nav-group"><h4>🧾 订单中心</h4>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('order', '订单', 'is-sm') + ' 订单中心</h4>'
             + '<a href="#/offers" class="' + (activeKey === 'offers' ? 'on' : '') + '">我的订单</a>'
             + '<a href="#/exchange" class="' + (activeKey === 'exchange' ? 'on' : '') + '">我的交换单</a>'
-            + '<a href="#/auction/mine">我的竞拍活动</a>'
-            + '<a href="#/me">评价晒单</a>'
+            + '<a href="#/me/auctions" class="' + (activeKey === 'auctions' ? 'on' : '') + '">我的竞拍活动</a>'
+            + '<a href="#/me/reviews" class="' + (activeKey === 'reviews' ? 'on' : '') + '">评价晒单</a>'
             + '</div>'
-            + '<div class="jd-nav-group"><h4>☆ 足迹收藏</h4>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('star', '收藏', 'is-sm') + ' 足迹收藏</h4>'
             + '<a href="#/history" class="' + (activeKey === 'history' ? 'on' : '') + '">我的足迹</a>'
             + '<a href="#/favorites" class="' + (activeKey === 'favorites' ? 'on' : '') + '">商品收藏 <em class="jd-nav-badge">有降价</em></a>'
-            + '<a href="#/wishes">求换心愿单</a>'
-            + '<a href="#/community">关注的频道</a>'
+            + '<a href="#/me/wishes" class="' + (activeKey === 'wishes' ? 'on' : '') + '">求换心愿单</a>'
+            + '<a href="#/me/channels" class="' + (activeKey === 'channels' ? 'on' : '') + '">关注的频道</a>'
             + '</div>'
-            + '<div class="jd-nav-group"><h4>💳 资产中心</h4>'
-            + '<a href="#/appraise" class="' + (activeKey === 'appraise' ? 'on' : '') + '">AI 好物估价</a>'
-            + '<a href="#/relay">三方换物凭证</a>'
-            + '<a href="#/publish">闲置上架额度</a>'
-            + '<a href="#/me">校园信用分</a>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('wallet', '资产', 'is-sm') + ' 资产中心</h4>'
+            + '<a href="#/me/appraise" class="' + (activeKey === 'appraise' ? 'on' : '') + '">AI 好物估价</a>'
+            + '<a href="#/me/vouchers" class="' + (activeKey === 'vouchers' ? 'on' : '') + '">三方换物凭证</a>'
+            + '<a href="#/me/quota" class="' + (activeKey === 'quota' ? 'on' : '') + '">闲置上架额度</a>'
+            + '<a href="#/me/credit" class="' + (activeKey === 'credit' ? 'on' : '') + '">校园信用分</a>'
             + '</div>'
-            + '<div class="jd-nav-group"><h4>🚀 特色业务</h4>'
-            + '<a href="#/auctions">司法级校园拍卖</a>'
-            + '<a href="#/relay">换物接力大厅</a>'
-            + '<a href="#/community/game">Scrap Arena 街机</a>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('fire', '业务', 'is-sm') + ' 特色业务</h4>'
+            + '<a href="#/me/campus-auctions" class="' + (activeKey === 'campus-auctions' ? 'on' : '') + '">校园拍卖</a>'
+            + '<a href="#/me/relay" class="' + (activeKey === 'relay' ? 'on' : '') + '">换物接力大厅</a>'
+            + '<a href="#/me/arcade" class="' + (activeKey === 'arcade' ? 'on' : '') + '">Scrap Arena 街机</a>'
             + '</div>'
-            + '<div class="jd-nav-group"><h4>⚙ 账户设置</h4>'
-            + '<a href="#/settings">个人信息与安全</a>'
-            + '<a href="#/notifications">消息通知中心</a>'
+            + '<div class="jd-nav-group"><h4>' + clayIcon('settings', '设置', 'is-sm') + ' 账户设置</h4>'
+            + '<a href="#/me/security" class="' + (activeKey === 'security' ? 'on' : '') + '">个人信息与安全</a>'
+            + '<a href="#/me/notices" class="' + (activeKey === 'notices' ? 'on' : '') + '">消息通知中心</a>'
             + '</div>'
             + '</aside>';
     }
@@ -1246,13 +1274,19 @@
                 to: '#/idle?cat=生活'
             }
         ];
-        return demoOrders.map(function (d) {
+        var q = String(state.offersQuery || '').trim().toLowerCase();
+        var filtered = demoOrders.filter(function (d) {
+            if (state.hiddenDemoOrders.indexOf(d.no) >= 0) return false;
+            if (!q) return true;
+            return (d.title + ' ' + d.no + ' ' + d.shop + ' ' + d.status).toLowerCase().indexOf(q) >= 0;
+        });
+        return filtered.map(function (d) {
             return '<article class="jd-order-item">'
                 + '<header class="jd-item-head">'
                 + '<span class="jd-item-time">' + d.time + '</span>'
                 + '<span class="jd-item-no">订单号：<b>' + d.no + '</b></span>'
-                + '<span class="jd-item-shop">' + d.shop + ' <i class="jd-chat-dot" title="联系同学">💬</i></span>'
-                + '<button type="button" class="jd-item-trash" data-act="go" data-to="' + d.to + '" title="查看同类">🗑</button>'
+                + '<a href="#/notifications" class="jd-item-shop">' + d.shop + ' <i class="jd-chat-dot" title="联系同学">' + clayIcon('chat', '联系同学', 'is-sm') + '</i></a>'
+                + '<button type="button" class="jd-item-trash" data-act="demo-order-hide" data-no="' + d.no + '" title="移出此示例订单">' + clayIcon('order', '移出', 'is-sm') + '</button>'
                 + '</header>'
                 + '<div class="jd-item-row">'
                 + '<div class="jd-col-goods">'
@@ -1264,11 +1298,11 @@
                 + '<span class="jd-goods-qty">x' + d.qty + '</span>'
                 + '<div class="jd-goods-repair"><a href="#/appraise">AI复估</a><a href="#/community">晒单圈子</a></div>'
                 + '</div>'
-                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(d.user) + ' <i>👤</i></span></div>'
+                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(d.user) + ' <i>' + clayIcon('user', '同学', 'is-sm') + '</i></span></div>'
                 + '<div class="jd-col-amount"><b>' + d.price + '</b><small>' + d.payType + '</small></div>'
                 + '<div class="jd-col-status"><span class="jd-st-done">' + d.status + '</span><a href="' + d.to + '">订单详情</a></div>'
                 + '<div class="jd-col-ops">'
-                + '<a class="jd-op-link" href="#/me">评价 | 晒单</a>'
+                + '<a class="jd-op-link" href="#/me/reviews">评价 | 晒单</a>'
                 + '<button type="button" class="jd-btn-rebuy" data-act="go" data-to="' + d.to + '">再次换购</button>'
                 + '</div>'
                 + '</div></article>';
@@ -1279,7 +1313,15 @@
         $('#app').innerHTML = shell('offers', loading());
         var tab = state.offersTab;
         var list = await api(tab === 'received' ? '/offer/received' : '/offer/sent');
-        var rows = (list || []).map(function (o) {
+        var q = String(state.offersQuery || '').trim().toLowerCase();
+        var stFilter = state.offersStatusFilter || 'all';
+        var filtered = (list || []).filter(function (o) {
+            if (stFilter !== 'all' && String(o.status) !== String(stFilter)) return false;
+            if (!q) return true;
+            var txt = [o.id, o.myTitle, o.targetTitle, o.fromNickname, o.toNickname, o.message].join(' ').toLowerCase();
+            return txt.indexOf(q) >= 0;
+        });
+        var rows = filtered.map(function (o) {
             var st = OFFER_STATUS[o.status] || ['未知', ''];
             var isReceived = tab === 'received';
             var other = isReceived ? (o.fromNickname || '校内同学') : (o.toNickname || '校内同学');
@@ -1299,7 +1341,7 @@
                 + '<header class="jd-item-head">'
                 + '<span class="jd-item-time">' + fmtRel(o.createTime) + '</span>'
                 + '<span class="jd-item-no">报价单号：<b>#OF' + (100000 + Number(o.id || 0)) + '</b></span>'
-                + '<span class="jd-item-shop">校内当面换物 <i class="jd-chat-dot">💬</i></span>'
+                + '<a href="#/notifications" class="jd-item-shop">校内当面换物 <i class="jd-chat-dot">' + clayIcon('chat', '联系同学', 'is-sm') + '</i></a>'
                 + '<span class="jd-item-credit">对方信用：' + (o.fromCredit === undefined ? '80' : o.fromCredit) + ' 分</span>'
                 + '</header>'
                 + '<div class="jd-item-row">'
@@ -1312,44 +1354,54 @@
                 + '<span class="jd-goods-qty">x1</span>'
                 + '<div class="jd-goods-repair"><a href="#/appraise">AI估价</a></div>'
                 + '</div>'
-                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(other) + ' <i>👤</i></span></div>'
+                + '<div class="jd-col-buyer"><span class="jd-buyer-name">' + esc(other) + ' <i>' + clayIcon('user', '同学', 'is-sm') + '</i></span></div>'
                 + '<div class="jd-col-amount"><b>等价互换</b><small>免服务费</small></div>'
                 + '<div class="jd-col-status"><span class="tag ' + st[1] + '">' + st[0] + '</span><small style="display:block;margin-top:4px;color:#888">' + (o.status === 0 ? '24h内有效' : fmtRel(o.handleTime)) + '</small></div>'
                 + '<div class="jd-col-ops">' + actions + '</div>'
                 + '</div></article>';
         }).join('');
 
+        var advBar = state.offersAdvOpen
+            ? '<div class="jd-adv-filter-bar"><span>状态筛选：</span>'
+              + [['all', '全部'], ['0', '待响应'], ['1', '已接受'], ['5', '已还价'], ['2', '已拒绝']].map(function (st) {
+                  return '<button type="button" class="chip ' + (String(stFilter) === st[0] ? 'on' : '') + '" data-act="offers-status" data-v="' + st[0] + '">' + st[1] + '</button>';
+              }).join('')
+              + (q || state.hiddenDemoOrders.length ? '<button type="button" class="chip" data-act="orders-reset">重置筛选与示例</button>' : '')
+              + '</div>'
+            : '';
+
         var content = '<div class="jd-center-wrap">'
             + jdSideNav('offers')
             + '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的订单</h2></div>'
+            + '<div class="jd-order-title-bar"><h2>我的订单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
             + '<button type="button" class="' + (tab === 'received' ? 'on' : '') + '" data-act="offers-tab" data-v="received">全部订单 / 收到的报价</button>'
             + '<button type="button" class="' + (tab === 'sent' ? 'on' : '') + '" data-act="offers-tab" data-v="sent">我发出的报价</button>'
             + '<a href="#/exchange">待面交交换单</a>'
-            + '<a href="#/me">待评价</a>'
+            + '<a href="#/me/reviews">待评价</a>'
             + '<a href="#/favorites" class="jd-tab-emph">我的常换商品</a>'
-            + '<a href="#/auction/mine" class="jd-tab-emph">我的竞拍单</a>'
+            + '<a href="#/me/auctions" class="jd-tab-emph">我的竞拍单</a>'
             + '</div>'
-            + '<div class="jd-order-search">'
-            + '<input type="search" placeholder="商品名称/商品编号/订单号" aria-label="订单搜索">'
-            + '<button type="button" data-act="go" data-to="#/idle">搜索</button>'
-            + '<button type="button" class="jd-btn-adv" data-act="go" data-to="#/exchange">高级 ▾</button>'
+            + '<form class="jd-order-search" data-form="orders-search">'
+            + '<input name="q" type="search" value="' + esc(state.offersQuery || '') + '" placeholder="商品名称/商品编号/订单号" aria-label="订单搜索">'
+            + '<button type="submit">搜索</button>'
+            + '<button type="button" class="jd-btn-adv" data-act="orders-adv">高级 ▾</button>'
+            + '</form>'
             + '</div>'
-            + '</div>'
+            + advBar
             + (rows ? '<div class="jd-order-list">' + rows + '</div>'
                 : '<div class="jd-empty-order-box">'
                     + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
                     + '<div class="jd-empty-order-copy">'
-                    + '<p>' + (tab === 'received' ? '暂无收到的换物报价' : '暂无发出的换物报价') + '</p>'
+                    + '<p>' + (q ? '没有匹配“' + esc(q) + '”的报价单' : (tab === 'received' ? '暂无收到的换物报价' : '暂无发出的换物报价')) + '</p>'
                     + '<div class="jd-empty-btns">'
                     + '<button type="button" class="jd-btn-red" data-act="go" data-to="#/exchange">查看交换单</button>'
                     + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页</button>'
                     + '</div></div></div>')
             + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
-            + '<div class="jd-order-list">' + jdShowcaseOrderRows() + '</div>'
+            + '<div class="jd-order-list">' + (jdShowcaseOrderRows() || '<p class="hint" style="padding:12px">暂无匹配订单示例 <button type="button" class="link-btn" data-act="orders-reset">恢复全部</button></p>') + '</div>'
             + '</div></div></div>';
 
         $('#app').innerHTML = shell('trade', content);
@@ -1358,16 +1410,16 @@
     // ------------------------------------------------------------------ 三方环
 
     var DEMO_RELAYS = [
-        {id: 801, isDemo: true, state: 'active', title: '【三方闭环】出罗技 GPW 二代无线鼠标 → 求换 iPad 二代电容笔 → 闭环贴补 ¥0', campus: '北山→南山→松格', stage: 'A→B→C 接力', value: 260, want: '数码外设', seller: '北山电竞阿泽', ringCount: 4, views: 1620, image: '/assets/amz/quad-relay.jpg'},
-        {id: 802, isDemo: true, state: 'active', title: '【跨书院成环】出2026张宇考研数学全套 → 求换漫步者头戴耳机 → 图书馆同场交接', campus: '南山→竹逸→图书馆', stage: '差1人闭环', value: 110, want: '耳机/数码', seller: '南山学姐小林', ringCount: 3, views: 1280, image: '/assets/amz/quad-books.jpg'},
-        {id: 803, isDemo: true, state: 'active', title: '【摄影接力环】出富士 mini11 拍立得相机 → 求换 Switch 卡带2张 → 已匹配2组环', campus: '菊轩→北山→梅若', stage: '高匹配度', value: 310, want: '游戏/潮玩', seller: '菊轩摄影糖糖', ringCount: 5, views: 2190, image: '/assets/amz/quad-auction.jpg'},
-        {id: 804, isDemo: true, state: 'active', title: '【宿舍神器环】出米家长臂护眼台灯 1S → 求换尤尼克斯羽毛球拍 → 顺路寝室互送', campus: '松格→爱莲→北山', stage: 'A→B→C 接力', value: 85, want: '球拍/运动', seller: '松格机电老王', ringCount: 2, views: 940, image: '/assets/amz/quad-dorm.jpg'},
-        {id: 805, isDemo: true, state: 'active', title: '【运动外设环】出斯伯丁7号吸湿篮球+球包 → 求换68键机械键盘 → 风雨球场验货', campus: '北山→南山→竹逸', stage: '随时成环', value: 135, want: '键盘/数码', seller: '球场科比阿杰', ringCount: 4, views: 1430, image: '/assets/amz/quad-sports.jpg'},
-        {id: 806, isDemo: true, state: 'active', title: '【工科教材环】出卡西欧 fx-991CN X 计算器 → 求换大物实验报告指导书+尺规', campus: '南山→松格→北山', stage: '同院系接力', value: 65, want: '教材/工具', seller: '智能工程学长', ringCount: 6, views: 1750, image: '/assets/amz/quad-grad.jpg'},
-        {id: 807, isDemo: true, state: 'active', title: '【音频数码环】出漫步者 W820NB 降噪耳机 → 求换小米手环8 Pro → 等价零差价', campus: '图书馆→菊轩→南山', stage: 'A→B→C 接力', value: 150, want: '智能穿戴', seller: '图书馆常驻生', ringCount: 3, views: 1560, image: '/assets/amz/quad-appraise.jpg'},
-        {id: 808, isDemo: true, state: 'active', title: '【手作周边环】出复古火漆印章礼盒全套 → 求换泡泡玛特盲盒或桌面绿植盆栽', campus: '爱莲→梅若→菊轩', stage: '女生书院环', value: 55, want: '绿植/潮玩', seller: '爱莲手作小鹿', ringCount: 2, views: 890, image: '/assets/amz/quad-wishes.jpg'},
-        {id: 809, isDemo: true, state: 'settled', title: '【已成环示范】Keychron K2 机械键盘 → 富士相纸礼盒 → 考研英语黄皮书三方交接', campus: '图书馆一楼大厅', stage: '已闭环交接', value: 180, want: '三方各得所需', seller: '大数据极客阿伟', ringCount: 1, views: 2310, image: '/assets/amz/quad-swap.jpg'},
-        {id: 810, isDemo: true, state: 'active', title: '【毕业收纳环】出宜家感牛津布收纳箱×2+书立 → 求换滑板或哑铃一对', campus: '北山→松格→南山', stage: 'A→B→C 接力', value: 49, want: '运动器材', seller: '北山收纳达人', ringCount: 3, views: 1020, image: '/assets/amz/quad-delivery.jpg'}
+        {id: 801, cat: '数码', isDemo: true, state: 'active', title: '【三方闭环】出罗技 GPW 二代无线鼠标 → 求换 iPad 二代电容笔 → 闭环贴补 ¥0', campus: '北山→南山→松格', stage: 'A→B→C 接力', value: 260, want: '数码外设', seller: '北山电竞阿泽', ringCount: 4, views: 1620, image: '/assets/amz/quad-relay.jpg'},
+        {id: 802, cat: '教材', isDemo: true, state: 'active', title: '【跨书院成环】出2026张宇考研数学全套 → 求换漫步者头戴耳机 → 图书馆同场交接', campus: '南山→竹逸→图书馆', stage: '差1人闭环', value: 110, want: '耳机/数码', seller: '南山学姐小林', ringCount: 3, views: 1280, image: '/assets/amz/quad-books.jpg'},
+        {id: 803, cat: '数码', isDemo: true, state: 'active', title: '【摄影接力环】出富士 mini11 拍立得相机 → 求换 Switch 卡带2张 → 已匹配2组环', campus: '菊轩→北山→梅若', stage: '高匹配度', value: 310, want: '游戏/潮玩', seller: '菊轩摄影糖糖', ringCount: 5, views: 2190, image: '/assets/amz/quad-auction.jpg'},
+        {id: 804, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器环】出米家长臂护眼台灯 1S → 求换尤尼克斯羽毛球拍 → 顺路寝室互送', campus: '松格→爱莲→北山', stage: 'A→B→C 接力', value: 85, want: '球拍/运动', seller: '松格机电老王', ringCount: 2, views: 940, image: '/assets/amz/quad-dorm.jpg'},
+        {id: 805, cat: '运动', isDemo: true, state: 'active', title: '【运动外设环】出斯伯丁7号吸湿篮球+球包 → 求换68键机械键盘 → 风雨球场验货', campus: '北山→南山→竹逸', stage: '随时成环', value: 135, want: '键盘/数码', seller: '球场科比阿杰', ringCount: 4, views: 1430, image: '/assets/amz/quad-sports.jpg'},
+        {id: 806, cat: '教材', isDemo: true, state: 'active', title: '【工科教材环】出卡西欧 fx-991CN X 计算器 → 求换大物实验报告指导书+尺规', campus: '南山→松格→北山', stage: '同院系接力', value: 65, want: '教材/工具', seller: '智能工程学长', ringCount: 6, views: 1750, image: '/assets/amz/quad-grad.jpg'},
+        {id: 807, cat: '数码', isDemo: true, state: 'active', title: '【音频数码环】出漫步者 W820NB 降噪耳机 → 求换小米手环8 Pro → 等价零差价', campus: '图书馆→菊轩→南山', stage: 'A→B→C 接力', value: 150, want: '智能穿戴', seller: '图书馆常驻生', ringCount: 3, views: 1560, image: '/assets/amz/quad-appraise.jpg'},
+        {id: 808, cat: '生活', isDemo: true, state: 'active', title: '【手作周边环】出复古火漆印章礼盒全套 → 求换泡泡玛特盲盒或桌面绿植盆栽', campus: '爱莲→梅若→菊轩', stage: '女生书院环', value: 55, want: '绿植/潮玩', seller: '爱莲手作小鹿', ringCount: 2, views: 890, image: '/assets/amz/quad-wishes.jpg'},
+        {id: 809, cat: '数码', isDemo: true, state: 'settled', title: '【已成环示范】Keychron K2 机械键盘 → 富士相纸礼盒 → 考研英语黄皮书三方交接', campus: '图书馆一楼大厅', stage: '已闭环交接', value: 180, want: '三方各得所需', seller: '大数据极客阿伟', ringCount: 1, views: 2310, image: '/assets/amz/quad-swap.jpg'},
+        {id: 810, cat: '生活', isDemo: true, state: 'active', title: '【毕业收纳环】出宜家感牛津布收纳箱×2+书立 → 求换滑板或哑铃一对', campus: '北山→松格→南山', stage: 'A→B→C 接力', value: 49, want: '运动器材', seller: '北山收纳达人', ringCount: 3, views: 1020, image: '/assets/amz/quad-delivery.jpg'}
     ];
 
     function relayCard(r) {
@@ -1400,9 +1452,10 @@
         }
         if (currentView.name !== 'relay') return;
 
-        var myRelayCards = items.map(function (it, idx) {
+        var myRelayCards = items.map(function (it) {
             return {
                 id: Number(it.id),
+                cat: it.category || '其他',
                 isDemo: false,
                 state: 'active',
                 title: it.title,
@@ -1410,11 +1463,15 @@
                 image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'
             };
         });
-        var displayList = myRelayCards.concat(DEMO_RELAYS);
+        var fullList = myRelayCards.concat(DEMO_RELAYS);
+        var activeCat = state.relayCat || '全部';
+        var displayList = activeCat === '全部' ? fullList : fullList.filter(function (r) {
+            return r.cat === activeCat || String(r.title + ' ' + r.want).indexOf(activeCat) >= 0;
+        });
         var myQuickLinks = items.length
             ? '<div class="relay-my-strip"><b>我的接力物品：</b>'
               + items.map(function (item) {
-                  return '<a class="relay-pill-link" href="#/cycle/' + Number(item.id) + '">🔄 ' + esc(item.title) + ' ›</a>';
+                  return '<a class="relay-pill-link" href="#/cycle/' + Number(item.id) + '">' + clayIcon('swap', '接力', 'is-sm') + ' ' + esc(item.title) + ' ›</a>';
               }).join('') + '</div>'
             : '<div class="relay-my-strip"><span>' + (authHint || '发布支持接力的闲置即可参与三方成环') + '</span><a class="relay-pill-link" href="#/publish">+ 发布接力闲置 ›</a></div>';
 
@@ -1424,7 +1481,7 @@
             + '<span class="relay-hero-badge">三方接力匹配</span>'
             + '<h1>换物接力广场</h1>'
             + '<div class="relay-nav-tabs">'
-            + '<a href="#/relay" class="on">接力池 (' + displayList.length + ')</a>'
+            + '<a href="#/relay" class="on">接力池 (' + fullList.length + ')</a>'
             + '<a href="#/wishes">求换专区</a>'
             + '<a href="#/auctions">校园拍卖</a>'
             + '<a href="#/exchange">我的交换单</a>'
@@ -1448,17 +1505,15 @@
 
             + '<div class="relay-filter-bar">'
             + '<div class="relay-cat-pills">'
-            + '<button type="button" class="on">全部标的 (' + displayList.length + ')</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=数码">数码外设</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研教材</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">运动户外</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍生活</button>'
+            + [['全部', '全部标的 (' + fullList.length + ')'], ['数码', '数码外设'], ['教材', '考研教材'], ['运动', '运动户外'], ['生活', '宿舍生活']].map(function (c) {
+                return '<button type="button" class="' + (activeCat === c[0] ? 'on' : '') + '" data-act="relay-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
+            }).join('')
             + '</div>'
             + '<a class="relay-ai-link" href="#/appraise">拿不准估值？找小唤算算 ›</a>'
             + '</div>'
 
             + '<div class="relay-eco-grid">'
-            + displayList.map(relayCard).join('')
+            + (displayList.length ? displayList.map(relayCard).join('') : '<div class="card card-pad" style="grid-column:1/-1;text-align:center">当前分类暂无接力标的 <button type="button" class="btn btn-sm btn-primary" data-act="relay-cat" data-v="全部">查看全部</button></div>')
             + '</div>'
             + '</div>';
 
@@ -1484,7 +1539,7 @@
         if (!rings || rings.length === 0) {
             $('#app').innerHTML = shell('home', '<div class="page-head"><h1>暂时凑不成环</h1>'
                 + '<p>三个人的意向必须首尾相接。差一环的时候，缺的往往是别人的一件物品。</p></div>'
-                + emptyState('♻', '没有找到闭合的换法', '可以再发一件物品，或者等别人补上新意向',
+                + emptyState(clayIcon('swap', '换物环', 'is-lg'), '没有找到闭合的换法', '可以再发一件物品，或者等别人补上新意向',
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">再发一件</button>'));
             return;
         }
@@ -1545,13 +1600,18 @@
     async function renderExchanges() {
         $('#app').innerHTML = shell('exchange', loading());
         var list = await api('/exchange/mine');
-        var rows = (list || []).map(function (e) {
+        var q = String(state.offersQuery || '').trim().toLowerCase();
+        var filtered = (list || []).filter(function (e) {
+            if (!q) return true;
+            return [e.id, e.place, e.statusText].join(' ').toLowerCase().indexOf(q) >= 0;
+        });
+        var rows = filtered.map(function (e) {
             var st = e.status === 3 ? 'success' : (e.status >= 4 ? 'ghost' : (e.status === 2 ? 'accent' : 'brand'));
             return '<article class="jd-order-item">'
                 + '<header class="jd-item-head">'
                 + '<span class="jd-item-time">校内实名担保交易</span>'
                 + '<span class="jd-item-no">交换单号：<b>#EX' + (200000 + Number(e.id || 0)) + '</b></span>'
-                + '<span class="jd-item-shop">' + (e.type === 3 ? '三方换物接力成环' : '一对一当面交换') + ' <i class="jd-chat-dot">💬</i></span>'
+                + '<a href="#/notifications" class="jd-item-shop">' + (e.type === 3 ? '三方换物接力成环' : '一对一当面交换') + ' <i class="jd-chat-dot">' + clayIcon('chat', '联系同学', 'is-sm') + '</i></a>'
                 + '<span class="jd-item-credit">面交点位：' + esc(e.place || '待双方约定') + '</span>'
                 + '</header>'
                 + '<div class="jd-item-row">'
@@ -1565,7 +1625,7 @@
                 + '<span class="jd-goods-qty">x1</span>'
                 + '<div class="jd-goods-repair"><a href="#/exchange/' + e.id + '">进度追踪</a></div>'
                 + '</div>'
-                + '<div class="jd-col-buyer"><span class="jd-buyer-name">校内同学 <i>👤</i></span></div>'
+                + '<div class="jd-col-buyer"><span class="jd-buyer-name">校内同学 <i>' + clayIcon('user', '同学', 'is-sm') + '</i></span></div>'
                 + '<div class="jd-col-amount"><b>当面交接</b><small>' + (e.type === 3 ? '三方接力' : '双人互换') + '</small></div>'
                 + '<div class="jd-col-status"><span class="tag ' + st + '">' + esc(e.statusText) + '</span><a href="#/exchange/' + e.id + '">订单详情</a></div>'
                 + '<div class="jd-col-ops"><button class="jd-btn-rebuy" data-act="go" data-to="#/exchange/' + e.id + '">查看详情与操作</button></div>'
@@ -1575,19 +1635,19 @@
         var content = '<div class="jd-center-wrap">'
             + jdSideNav('exchange')
             + '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的交换单</h2></div>'
+            + '<div class="jd-order-title-bar"><h2>我的交换单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
             + '<a href="#/offers">收到的报价</a>'
             + '<a href="#/exchange" class="on">我的交换单</a>'
             + '<a href="#/relay">三方换物接力</a>'
-            + '<a href="#/me">待评价</a>'
+            + '<a href="#/me/reviews">待评价</a>'
             + '</div>'
-            + '<div class="jd-order-search">'
-            + '<input type="search" placeholder="商品名称/交换单号/面交点位" aria-label="交换单搜索">'
-            + '<button type="button" data-act="go" data-to="#/idle">搜索</button>'
-            + '</div>'
+            + '<form class="jd-order-search" data-form="orders-search">'
+            + '<input name="q" type="search" value="' + esc(state.offersQuery || '') + '" placeholder="商品名称/交换单号/面交点位" aria-label="交换单搜索">'
+            + '<button type="submit">搜索</button>'
+            + '</form>'
             + '</div>'
             + '<div class="jd-table-head">'
             + '<span class="col-goods">交换单详情</span>'
@@ -1600,13 +1660,13 @@
                 : '<div class="jd-empty-order-box">'
                     + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
                     + '<div class="jd-empty-order-copy">'
-                    + '<p>暂无进行中的交换单</p>'
+                    + '<p>' + (q ? '未找到匹配“' + esc(q) + '”的交换单' : '暂无进行中的交换单') + '</p>'
                     + '<div class="jd-empty-btns">'
                     + '<button type="button" class="jd-btn-red" data-act="go" data-to="#/offers">查看报价</button>'
                     + '<button type="button" class="jd-btn-outline" data-act="go" data-to="#/home">去首页</button>'
                     + '</div></div></div>')
             + '<div class="jd-demo-divider"><span>近期订单示例</span><a href="#/idle">去集市 ›</a></div>'
-            + '<div class="jd-order-list">' + jdShowcaseOrderRows() + '</div>'
+            + '<div class="jd-order-list">' + (jdShowcaseOrderRows() || '<p class="hint" style="padding:12px">暂无匹配订单示例 <button type="button" class="link-btn" data-act="orders-reset">恢复全部</button></p>') + '</div>'
             + '</div></div></div>';
 
         $('#app').innerHTML = shell('trade', content);
@@ -1868,11 +1928,11 @@
             + '<div class="jd-me-card jd-me-orders-card">'
             + '<header class="jd-card-head"><h3>我的订单</h3><a href="#/offers">全部订单 ›</a></header>'
             + '<div class="jd-order-quick-icons">'
-            + '<a href="#/offers"><i>📥</i><span>收到报价</span></a>'
-            + '<a href="#/exchange"><i>🤝</i><span>待面交</span></a>'
-            + '<a href="#/me"><i>💬</i><span>待评价' + (pending.length ? ' (' + pending.length + ')' : '') + '</span></a>'
-            + '<a href="#/relay"><i>🔄</i><span>换物接力</span></a>'
-            + '<a href="#/auction/mine"><i>🔨</i><span>我的竞拍</span></a>'
+            + '<a href="#/offers"><i>' + clayIcon('order', '收到报价', 'is-lg') + '</i><span>收到报价</span></a>'
+            + '<a href="#/exchange"><i>' + clayIcon('swap', '待面交', 'is-lg') + '</i><span>待面交</span></a>'
+            + '<a href="#/me/reviews"><i>' + clayIcon('chat', '待评价', 'is-lg') + '</i><span>待评价' + (pending.length ? ' (' + pending.length + ')' : '') + '</span></a>'
+            + '<a href="#/relay"><i>' + clayIcon('fire', '换物接力', 'is-lg') + '</i><span>换物接力</span></a>'
+            + '<a href="#/me/auctions"><i>' + clayIcon('auction', '我的竞拍', 'is-lg') + '</i><span>我的竞拍</span></a>'
             + '</div>'
             + '<div class="jd-order-mini-preview">'
             + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
@@ -1959,24 +2019,299 @@
                     '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">去发布</button>'))
             + '<div class="section-title" style="margin-top:22px"><h2>收到的同学评价</h2></div>'
             + (reviewRows ? '<div class="desk-grid-2">' + reviewRows + '</div>'
-                : emptyState('⭐', '还没有评价', ''))
+                : emptyState(clayIcon('star', '评价', 'is-lg'), '还没有评价', ''))
             + '</section>'
             + '</div></div>';
 
         $('#app').innerHTML = shell('me', content);
     }
 
+    async function renderMeSub(tab) {
+        var me = state.me || {};
+        $('#app').innerHTML = shell('me', loading());
+        var panelTitle = '个人中心', panelSub = '', panelActions = '', bodyHtml = '';
+
+        function wrapPanel() {
+            return '<div class="jd-center-wrap">'
+                + jdSideNav(tab)
+                + '<div class="jd-order-main jd-me-subpanel">'
+                + '<div class="jd-order-title-bar"><h2>' + esc(panelTitle) + '</h2>'
+                + (panelSub ? '<span>' + esc(panelSub) + '</span>' : '')
+                + (panelActions ? '<div class="jd-subbar-right">' + panelActions + '</div>' : '')
+                + '</div>'
+                + '<div class="jd-order-panel">' + bodyHtml + '</div>'
+                + '</div></div>';
+        }
+
+        if (tab === 'auctions') {
+            panelTitle = '我的竞拍活动';
+            panelSub = '发布与参与的校园拍卖实时进度';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起拍卖</a><a class="btn btn-ghost btn-sm" href="#/auctions">全部拍卖 ›</a>';
+            var myAuctions = await api('/auction/mine').catch(function () { return []; });
+            bodyHtml = (myAuctions && myAuctions.length)
+                ? '<div class="ali-auction-grid jd-sub-grid">' + myAuctions.map(function (a) { return auctionCard(a, 'mine'); }).join('') + '</div>'
+                : '<div class="jd-empty-order-box"><img src="/assets/brand/mascot-box.png" alt="小唤"><div class="jd-empty-order-copy"><p>暂未发布过个人拍卖</p><div class="jd-empty-btns"><a class="jd-btn-red" href="#/auction/new">立即发起拍卖</a><a class="jd-btn-outline" href="#/auctions">去竞拍大厅捡漏</a></div></div></div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'reviews') {
+            panelTitle = '评价晒单';
+            panelSub = '管理待评价交换单与同学对你的口碑';
+            panelActions = '<a class="btn btn-ghost btn-sm" href="#/exchange">我的交换单 ›</a>';
+            var revRes = await Promise.all([
+                api('/review/pending').catch(function () { return []; }),
+                api('/review/user/' + Number(me.id || 0)).catch(function () { return []; })
+            ]);
+            var pendingList = revRes[0] || [], recReviews = revRes[1] || [];
+            var pendingHtml = pendingList.length
+                ? '<div class="jd-sub-block"><h3>' + clayIcon('chat', '待评价', 'is-sm') + ' 待评价交易 (' + pendingList.length + ')</h3><div class="jd-sub-cards">'
+                  + pendingList.map(function (p) {
+                      return '<div class="jd-sub-item-card"><div><b>与 ' + esc(p.nickname || '校内同学') + ' 的交换</b><small>交换单 #' + Number(p.exchangeId) + ' | 完成后可互相加信用分</small></div>'
+                          + '<button type="button" class="btn btn-primary btn-sm" data-act="user-review" data-exchange="' + p.exchangeId + '" data-id="' + p.userId + '" data-nick="' + esc(p.nickname) + '">立即评价</button></div>';
+                  }).join('') + '</div></div>'
+                : '<div class="jd-sub-banner-tip">' + clayIcon('star', '评价', 'is-sm') + '<span>暂无待评价交换单，完成一次校园换物即可解锁评价奖励信用分。</span><a href="#/exchange" class="btn btn-sm btn-ghost">查看交换单</a></div>';
+            var recHtml = recReviews.length
+                ? '<div class="jd-sub-block"><h3>收到的同学评价 (' + recReviews.length + ')</h3><div class="desk-grid-2">'
+                  + recReviews.map(function (r) {
+                      return '<div class="list-row" style="cursor:default"><div class="avatar" style="width:32px;height:32px;border-radius:8px;font-size:12px">' + esc((r.fromNickname || '同').slice(0, 1)) + '</div>'
+                          + '<div class="row-main"><p class="row-title"><button class="name-link" data-act="go" data-to="#/user/' + r.fromUser + '">' + esc(r.fromNickname || '同学') + '</button> '
+                          + '<span class="amz-stars">' + '★'.repeat(Math.max(1, Number(r.score || 5))) + '</span></p><p class="row-sub">' + esc(r.content || '交易顺利，物超所值！') + '</p></div>'
+                          + '<span class="hint">' + fmtDate(r.createTime) + '</span></div>';
+                  }).join('') + '</div></div>'
+                : '<div class="jd-sub-block"><h3>历史晒单示范</h3><div class="jd-sub-cards"><div class="jd-sub-item-card"><div><b>罗技 GPW 二代无线鼠标互换成功</b><span class="amz-stars">★★★★★</span><small>北山书院当面验货，成色和描述一模一样！</small></div><span class="tag success">+2 信用分</span></div></div></div>';
+            bodyHtml = pendingHtml + recHtml;
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'wishes') {
+            panelTitle = '求换心愿单';
+            panelSub = '我发布的求换需求与高匹配校园心愿';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/wishes">前往求换大厅 ›</a>';
+            var allWishes = await api('/wish', {optionalAuth: true}).catch(function () { return []; });
+            var myWishes = (allWishes || []).filter(function (w) { return me.id && w.userId === me.id; });
+            var wishQuickForm = '<form class="jd-sub-inline-form" data-form="wish-new">'
+                + '<input class="input" name="title" maxlength="80" placeholder="输入想换的宝贝，如：高数笔记本 / 机械键盘" required>'
+                + '<select class="select" name="category"><option value="">选择分类</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>'
+                + '<input class="input" name="content" maxlength="200" placeholder="可用来交换的物品/面交书院">'
+                + '<button type="submit" class="btn btn-primary btn-sm">发布心愿</button>'
+                + '</form>';
+            var myWishHtml = myWishes.length
+                ? myWishes.map(function (w) {
+                    return '<div class="jd-sub-item-card"><div><b>' + esc(w.title) + '</b><small>' + esc(w.category || '全品类') + ' | ' + esc(w.content || '校内当面互换') + '</small></div>'
+                        + '<button type="button" class="btn btn-sm btn-ghost" data-act="wish-close" data-id="' + w.id + '">关闭心愿</button></div>';
+                }).join('')
+                : '<p class="hint">你还没有发布求换心愿，可在上方直接提交，或浏览下方热门心愿快速响应。</p>';
+            bodyHtml = '<div class="jd-sub-block"><h3>' + clayIcon('star', '心愿', 'is-sm') + ' 快速新增求换心愿</h3>' + wishQuickForm + '</div>'
+                + '<div class="jd-sub-block"><h3>我的求换列表 (' + myWishes.length + ')</h3><div class="jd-sub-cards">' + myWishHtml + '</div></div>'
+                + '<div class="jd-sub-block"><h3>校园热门求换推荐</h3><div class="wish-bounty-grid jd-sub-4col">' + DEMO_WISHES.slice(0, 4).map(wishAuctionCard).join('') + '</div></div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'channels') {
+            panelTitle = '关注的频道';
+            panelSub = '我订阅的校园贴吧与实时聊天室';
+            panelActions = '<button type="button" class="btn btn-primary btn-sm" data-act="open-create-room">+ 创建聊天室</button><a class="btn btn-ghost btn-sm" href="#/community">进入社区 ›</a>';
+            var rooms = getAllRooms();
+            var follows = getRoomFollows();
+            bodyHtml = '<div class="jd-sub-cards jd-channel-cards">' + rooms.map(function (r) {
+                var isFollowed = follows.indexOf(r.id) >= 0;
+                return '<div class="jd-sub-item-card">'
+                    + '<div class="jd-sub-ico-row">' + clayIcon(r.icon || 'fire', r.name, 'is-lg')
+                    + '<div><b>' + esc(r.name) + '</b><small>' + esc(r.desc || '校园主题交流与闲置晒单贴吧') + ' | ' + (r.members || 320) + ' 人关注</small></div></div>'
+                    + '<div class="jd-sub-btn-row">'
+                    + '<button type="button" class="btn btn-sm ' + (isFollowed ? 'btn-ghost' : 'btn-primary') + '" data-act="toggle-follow-room" data-room="' + esc(r.id) + '">' + (isFollowed ? '已关注' : '+ 关注') + '</button>'
+                    + '<button type="button" class="btn btn-sm btn-primary" data-act="open-room" data-room="' + esc(r.id) + '">进入贴吧</button>'
+                    + '</div></div>';
+            }).join('') + '</div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'appraise') {
+            panelTitle = '小唤 AI 好物估价';
+            panelSub = '结合移通校园历史成交价，智能测算闲置参考区间';
+            panelActions = '<a class="btn btn-ghost btn-sm" href="#/appraise">全屏估价台 ›</a>';
+            bodyHtml = '<div class="jd-sub-ai-wrap">'
+                + '<form class="estimate-form ai-form-body" data-form="estimate">'
+                + '<div class="ai-input-row">'
+                + '<div class="ai-field"><label class="label" for="estimate-title">物品名称</label><input class="input" id="estimate-title" name="title" placeholder="例如 罗技 GPW 二代 / 同济高数第七版"></div>'
+                + '<div class="ai-field"><label class="label" for="estimate-price">入手原价（元）*</label><input class="input" id="estimate-price" name="price" type="number" min="1" max="100000" placeholder="¥ 请输入入手价，如 299" required></div>'
+                + '</div>'
+                + '<input type="hidden" id="ai-cat-input" name="category" value="数码">'
+                + '<input type="hidden" id="estimate-condition" name="condition" value="light">'
+                + '<div class="ai-chip-section"><span class="ai-sec-label">所属分类</span><div class="ai-chip-grid">'
+                + CATS.map(function (c, i) { return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'ai-cat-input\').value=\'' + esc(c) + '\'">' + esc(c) + '</button>'; }).join('')
+                + '</div></div>'
+                + '<div class="ai-chip-section"><span class="ai-sec-label">新旧成色</span><div class="ai-chip-grid cond-grid">'
+                + [['new', '全新', '90%~95%'], ['light', '九成新', '65%~80%'], ['seven', '七成新', '45%~65%'], ['used', '有使用痕迹', '25%~45%']].map(function (c, i) {
+                    return '<button type="button" class="ai-chip ' + (i === 1 ? 'on' : '') + '" onclick="this.parentElement.querySelectorAll(\'.ai-chip\').forEach(function(b){b.classList.remove(\'on\')});this.classList.add(\'on\');document.getElementById(\'estimate-condition\').value=\'' + c[0] + '\'"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>';
+                }).join('')
+                + '</div></div>'
+                + '<div class="ai-submit-row"><button class="btn btn-primary ai-submit-btn" type="submit">' + clayIcon('ai', 'AI', 'is-sm') + ' 立即开始 AI 智能估价</button></div>'
+                + '<div id="ai-mascot-Evaluating" class="ai-evaluating-box" hidden><img src="/assets/brand/mascot-search.png" alt="小唤正在估价中" class="ai-eval-mascot"><div><b>小唤正在为您估价…</b></div></div>'
+                + '<div id="estimate-result" class="ai-result-panel" role="status"><div class="ai-result-placeholder"><img src="/assets/brand/mascot-wave-320.webp" alt="小唤"><div><b>输入入手原价后点击上方按钮，“小唤”立即给出参考价</b></div></div></div>'
+                + '</form>'
+                + '</div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'vouchers') {
+            panelTitle = '三方换物凭证';
+            panelSub = '校内面交核验码与多方闭环交易电子存证';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/relay">发起新接力 ›</a>';
+            var exList = await api('/exchange/mine').catch(function () { return []; });
+            var realVouchers = (exList || []).map(function (e) {
+                return '<div class="jd-voucher-card"><div class="jd-v-head"><b>存证编号 #HQ-EX-' + (200000 + Number(e.id || 0)) + '</b><span class="tag success">' + esc(e.statusText || '担保生效中') + '</span></div>'
+                    + '<p>' + (e.type === 3 ? '三方闭环接力换物凭证' : '一对一校园面交凭证') + ' | 约定点位：' + esc(e.place || '北山书院一楼大厅') + '</p>'
+                    + '<div class="jd-v-foot"><span>核验码：<b>YT-' + String(1000 + Number(e.id || 77) * 13).slice(-4) + '</b></span><a href="#/exchange/' + Number(e.id) + '" class="btn btn-sm btn-ghost">查看履约详情 ›</a></div></div>';
+            }).join('');
+            var demoVoucher = '<div class="jd-voucher-card is-demo"><div class="jd-v-head"><b>三方闭环示范凭证 #HQ-RING-809</b><span class="tag brand">已完成交接</span></div>'
+                + '<p>罗技 GPW 二代无线鼠标 ➔ 张宇考研高数笔记 ➔ 拍立得相机礼盒（A→B→C 同城三方免差价闭环）</p>'
+                + '<div class="jd-v-foot"><span>核验书院：图书馆一楼大厅</span><a href="#/relay" class="btn btn-sm btn-primary">去参与三方接力</a></div></div>';
+            bodyHtml = '<div class="jd-sub-cards">' + (realVouchers || '') + demoVoucher + '</div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'quota') {
+            panelTitle = '闲置上架额度';
+            panelSub = '校园信用分越高，可同时在架展示的闲置席位越多';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布新闲置</a>';
+            var myItems = await api('/item/mine').catch(function () { return []; });
+            var activeCount = (myItems || []).filter(function (i) { return i.status === 1; }).length;
+            var maxSlots = (me.credit || 80) >= 90 ? 15 : (me.credit || 80) >= 80 ? 10 : 6;
+            var pct = Math.min(100, Math.round((activeCount / maxSlots) * 100));
+            bodyHtml = '<div class="jd-quota-hero">'
+                + '<div><b>当前已使用在架额度：<em>' + activeCount + '</em> / ' + maxSlots + ' 件</b><p>当前信用等级：' + esc(creditLevelOf(me.credit).text) + '（' + (me.credit || 80) + '分），完成面交与评价可解锁至最高 15 件席位</p></div>'
+                + '<div class="jd-quota-bar"><i style="width:' + pct + '%"></i></div>'
+                + '</div>'
+                + '<div class="jd-sub-block"><h3>我的上架记录 (' + (myItems || []).length + ')</h3><div class="desk-grid-2">'
+                + ((myItems || []).length ? myItems.map(function (it) {
+                    return '<div class="card card-pad" style="display:flex;gap:12px;align-items:center">' + thumb(it)
+                        + '<div style="flex:1;min-width:0"><p class="item-title">' + esc(it.title) + '</p><div class="item-foot"><span class="tag ghost">' + esc(it.statusText) + '</span></div></div>'
+                        + (it.status === 1 ? '<button class="btn btn-sm btn-ghost" data-act="toggle-item" data-id="' + it.id + '" data-status="4">下架</button>'
+                            : '<button class="btn btn-sm btn-primary" data-act="go" data-to="#/item/' + it.id + '">查看</button>')
+                        + '</div>';
+                }).join('') : '<p class="hint">暂无上架商品，点击右上角发布第一件闲置好物吧。</p>')
+                + '</div></div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'credit') {
+            panelTitle = '校园信用分';
+            panelSub = '重庆移通学院校内真实履约信用档案';
+            panelActions = '<a class="btn btn-ghost btn-sm" href="#/me/quota">查看额度权益 ›</a>';
+            var score = Number(me.credit || 80);
+            var lvl = creditLevelOf(score);
+            bodyHtml = '<div class="jd-credit-hero">'
+                + '<div class="jd-credit-dial"><img src="/assets/amz/mascot-credit-card.png" alt="小唤"><div><strong>' + score + '</strong><span>信用等级：' + esc(lvl.text) + '</span></div></div>'
+                + '<div class="jd-credit-perks">'
+                + '<div>' + clayIcon('swap', '免押') + '<b>校内免押面交</b><small>双方实名学号信用担保</small></div>'
+                + '<div>' + clayIcon('auction', '拍卖') + '<b>1元拍卖免门槛</b><small>信誉良好直接参与出价</small></div>'
+                + '<div>' + clayIcon('wallet', '额度') + '<b>最高 ' + (score >= 90 ? 15 : 10) + ' 件上架席位</b><small>优质物主优先曝光推荐</small></div>'
+                + '</div></div>'
+                + '<div class="jd-sub-block"><h3>信用分加减明细规则</h3><div class="jd-credit-rules-grid">'
+                + '<div class="jd-rule-box"><b>完成 1 次校内换物面交</b><span>+3 分</span></div>'
+                + '<div class="jd-rule-box"><b>获得同学 5 星好评晒单</b><span>+2 分</span></div>'
+                + '<div class="jd-rule-box"><b>完成学校官方邮箱认证</b><span>+5 分</span></div>'
+                + '<div class="jd-rule-box is-warn"><b>爽约未面交或恶意出价</b><span>-10 分</span></div>'
+                + '</div></div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'campus-auctions') {
+            panelTitle = '校园拍卖';
+            panelSub = '热门校园1元起拍与毕业清仓专场（在个人中心内快速出价）';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/auction/new">+ 发起拍卖</a><a class="btn btn-ghost btn-sm" href="#/auctions">全屏拍卖大厅 ›</a>';
+            var aucRes = await api('/auction', {optionalAuth: true}).catch(function () { return []; });
+            var aList = (Array.isArray(aucRes) ? aucRes : (aucRes && aucRes.list) || []).concat(DEMO_AUCTIONS);
+            bodyHtml = '<div class="ali-auction-grid jd-sub-grid">' + aList.slice(0, 8).map(function (a) { return auctionCard(a, 'public'); }).join('') + '</div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'relay') {
+            panelTitle = '换物接力大厅';
+            panelSub = '三方 A→B→C 智能匹配成环，换出你真正想要的好物';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布接力闲置</a><a class="btn btn-ghost btn-sm" href="#/relay">全屏接力广场 ›</a>';
+            var relayMine = (await api('/item/mine?status=1').catch(function () { return []; })).filter(function (i) { return i.allowCycle; });
+            var rHtml = relayMine.map(function (it) {
+                return relayCard({id: it.id, isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'});
+            }).concat(DEMO_RELAYS.slice(0, 8).map(relayCard)).join('');
+            bodyHtml = '<div class="relay-eco-grid jd-sub-4col">' + rHtml + '</div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'arcade') {
+            panelTitle = 'Scrap Arena 街机';
+            panelSub = '移通同学双人同屏格斗休闲区 | 换物间隙松一口气';
+            panelActions = '<a class="btn btn-primary btn-sm" href="/scrap-arena/index.html" target="_blank" rel="noopener">新窗口全屏</a><a class="btn btn-ghost btn-sm" href="#/community/game">全屏街机房 ›</a>';
+            bodyHtml = '<div class="game-frame-wrap jd-arcade-embed"><iframe class="game-frame" src="/scrap-arena/index.html" title="Scrap Arena 游戏" allow="fullscreen; autoplay"></iframe></div>'
+                + '<p class="game-note" style="margin-top:10px">操作提示：点击画面开始，P1：W/A/S/D + J/K/L；P2：方向键 + 1/2/3；按 Enter 开战。</p>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        if (tab === 'security') {
+            panelTitle = '个人信息与安全';
+            panelSub = '学号实名档案、校园邮箱绑定与个性化主题配置';
+            panelActions = '<a class="btn btn-ghost btn-sm" href="#/settings">更多偏好设置 ›</a>';
+            var emailData = await api('/user/email').catch(function () { return {}; });
+            bodyHtml = '<div class="jd-security-grid">'
+                + '<form class="card card-pad" data-form="profile"><h3>基本资料</h3>'
+                + '<div class="field"><label class="label">昵称</label><input class="input" name="nickname" maxlength="20" value="' + esc(me.nickname || '') + '" required></div>'
+                + '<div class="field"><label class="label">学院</label><input class="input" name="college" maxlength="40" value="' + esc(me.college || '') + '" placeholder="如 大数据与软件学院"></div>'
+                + '<div class="field"><label class="label">常驻书院/宿舍</label><input class="input" name="building" maxlength="30" value="' + esc(me.building || '') + '" placeholder="如 北山书院 / 松格"></div>'
+                + '<button type="submit" class="btn btn-primary btn-sm">保存资料</button></form>'
+                + '<div class="card card-pad"><h3>账号安全与邮箱认证</h3>'
+                + '<p class="hint">登录学号：<b>' + esc(me.studentNo || '已认证同学') + '</b> | 邮箱状态：' + (emailData.email ? '<span class="tag success">已认证：' + esc(emailData.email) + '</span>' : '<span class="tag accent">待认证</span>') + '</p>'
+                + (emailData.available
+                    ? '<form data-form="email-send" style="margin-bottom:10px"><div class="field"><label class="label">绑定邮箱</label><input class="input" name="email" type="email" placeholder="name@example.com" required></div><button class="btn btn-sm btn-ghost" type="submit">发送验证码</button></form>'
+                      + '<form data-form="email-verify"><div class="field"><label class="label">6位验证码</label><input class="input" name="code" maxlength="6" placeholder="输入邮件中的6位数字" required></div><button class="btn btn-sm btn-primary" type="submit">完成认证</button></form>'
+                    : '<p class="hint">校内邮箱验证通道由管理员统一配置，当前学号登录已受本地加密凭证保护。</p>')
+                + '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #EEE;display:flex;gap:10px"><a href="#/settings" class="btn btn-sm btn-ghost">切换主题色</a><button type="button" class="btn btn-sm btn-ghost" data-act="logout">退出当前账号</button></div>'
+                + '</div></div>';
+            $('#app').innerHTML = shell('me', wrapPanel());
+            return;
+        }
+
+        // default / notices
+        panelTitle = '消息通知中心';
+        panelSub = '报价提醒、面交变动与私聊会话同步预览';
+        panelActions = '<button type="button" class="btn btn-ghost btn-sm" data-act="notice-read">全部标为已读</button><a class="btn btn-primary btn-sm" href="#/notifications">打开聊天窗口 ›</a>';
+        var nRes = await Promise.all([
+            api('/notification').catch(function () { return []; }),
+            api('/conversation').catch(function () { return []; })
+        ]);
+        var noticeList = nRes[0] || [], convList = nRes[1] || [];
+        bodyHtml = '<div class="jd-sub-block"><h3>系统与交易通知 (' + noticeList.length + ')</h3><div class="notice-list">'
+            + (noticeList.length ? noticeList.map(function (n) {
+                var target = n.target || '#/notifications';
+                return '<a class="notice-row ' + (n.read ? '' : 'is-unread') + '" href="' + esc(target) + '" data-act="notice-open" data-id="' + n.id + '" data-to="' + esc(target) + '"><span class="notice-dot"></span><div class="notice-body"><b>' + esc(n.title) + '</b><span>' + esc(n.content) + '</span></div><time>' + esc(String(n.createdAt || '').slice(0, 16)) + '</time></a>';
+            }).join('') : '<p class="hint">暂无未读系统通知，可在上方打开聊天窗口查看同学留言。</p>')
+            + '</div></div>'
+            + '<div class="jd-sub-block"><h3>最近私聊会话 (' + convList.length + ')</h3><div class="conversation-list">' + conversationRows(convList) + '</div></div>';
+        $('#app').innerHTML = shell('me', wrapPanel());
+    }
+
     var DEMO_AUCTIONS = [
-        {id: 901, isDemo: true, state: 'active', title: '【北山斋当面验货】罗技 G Pro X Superlight 无线鼠标 白色95新 盒说配件全', description: '大三换新鼠标出手，微动清脆无双击，续航两周以上，北山书院一楼大厅随时面交。', currentPrice: 265, marketPrice: 499, endsAt: '2026-11-18 21:00', seller: '北山电竞阿泽', bidCount: 18, views: 1840, bidder: '松格小陈', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-digital.jpg'},
-        {id: 902, isDemo: true, state: 'active', title: '【考研上岸出】2026考研数学张宇1000题+同济高数第七版上下册+全套手写笔记', description: '成功上岸重庆理工，书本干净字迹工整，附赠英一真题黄皮书。', currentPrice: 38, marketPrice: 128, endsAt: '2026-11-17 19:30', seller: '南山学姐小林', bidCount: 11, views: 1320, bidder: '竹逸阿杰', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-books.jpg'},
-        {id: 903, isDemo: true, state: 'active', title: '【毕业急出】富士 Instax mini11 拍立得相机 冰晶白 含半盒相纸与透明保护壳', description: '社团活动抽奖所得，仅拍过两盒相纸，镜头无划痕，支持校内试拍验机。', currentPrice: 290, marketPrice: 520, endsAt: '2026-11-19 20:00', seller: '菊轩摄影社糖糖', bidCount: 24, views: 2690, bidder: '梅若小鹿', campus: '菊轩书院', stage: '变卖', image: '/assets/amz/quad-auction.jpg'},
-        {id: 904, isDemo: true, state: 'active', title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App调光 宿舍不断电可用', description: '灯光柔和不刺眼，底座稳固，送Type-C转接线，松格书院楼下自提。', currentPrice: 52, marketPrice: 149, endsAt: '2026-11-16 22:00', seller: '松格机电老王', bidCount: 9, views: 980, bidder: '爱莲小周', campus: '松格书院', stage: '一拍', image: '/assets/amz/quad-dorm.jpg'},
-        {id: 905, isDemo: true, state: 'active', title: '【球场实战】斯伯丁 Spalding 7号PU吸湿防滑篮球 + 尤尼克斯羽毛球拍双拍包', description: '大四实习没空打球，球胆不漏气，球拍已拉24磅BG65线，送两筒耐打王。', currentPrice: 88, marketPrice: 230, endsAt: '2026-11-18 18:00', seller: '风雨球场科比', bidCount: 15, views: 1510, bidder: '北山体育生', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-sports.jpg'},
-        {id: 906, isDemo: true, state: 'active', title: '【学长毕业礼包】九成新卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规全套', description: '工科期末考试必备神器，考场合规型号，太阳能+电池双供电，字迹清晰。', currentPrice: 46, marketPrice: 135, endsAt: '2026-11-20 12:00', seller: '智能工程学院学长', bidCount: 13, views: 1190, bidder: '大一萌新', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-grad.jpg'},
-        {id: 907, isDemo: true, state: 'active', title: '【满电秒发】漫步者 W820NB 双金标主动降噪头戴式蓝牙耳机 云岩白 图书馆神器', description: '耳罩柔软不夹头，开启深度降噪在图书馆背书超安静，充一次电用一周。', currentPrice: 135, marketPrice: 299, endsAt: '2026-11-19 21:30', seller: '图书馆常驻选手', bidCount: 21, views: 2150, bidder: '竹逸小吴', campus: '图书馆大厅', stage: '二拍', image: '/assets/amz/quad-appraise.jpg'},
-        {id: 908, isDemo: true, state: 'active', title: '【支持换物抵扣】复古火漆印章礼盒 + 手账胶带钢笔套装 生日伴手礼盒全新未拆', description: '多买了一套送室友，包装丝带完好，可直接竞拍也可拿课外小说等价抵扣。', currentPrice: 29, marketPrice: 89, endsAt: '2026-11-17 20:00', seller: '爱莲手作铺', bidCount: 7, views: 760, bidder: '菊轩小晴', campus: '爱莲书院', stage: '一拍', image: '/assets/amz/quad-wishes.jpg'},
-        {id: 909, isDemo: true, state: 'settled', selectedAmount: 160, winner: '南山书院阿伟', title: '【已成交示范】Keychron K2 无线蓝牙双模机械键盘 茶轴RGB背光 Mac/Win双系统键帽', description: '茶轴手感柔和不吵室友，支持三台设备一键切换，已完成图书馆一楼当面交接。', currentPrice: 160, marketPrice: 368, endsAt: '2026-11-14 20:00', seller: '大数据学院极客', bidCount: 19, views: 2430, bidder: '南山书院阿伟', campus: '图书馆大厅', stage: '一拍', image: '/assets/amz/quad-swap.jpg'},
-        {id: 910, isDemo: true, state: 'active', title: '【宿舍收纳整箱】宜家感牛津布衣物收纳箱×2 + 桌面书立架 + 寝室门后挂钩套装', description: '换宿舍整理出的全新闲置，打包1元起拍，支持北山斋至南山书院顺路送达。', currentPrice: 19, marketPrice: 75, endsAt: '2026-11-18 22:30', seller: '北山收纳达人', bidCount: 14, views: 1080, bidder: '梅若小张', campus: '北山书院', stage: '变卖', image: '/assets/amz/quad-delivery.jpg'}
+        {id: 901, cat: '数码', isDemo: true, state: 'active', title: '【北山斋当面验货】罗技 G Pro X Superlight 无线鼠标 白色95新 盒说配件全', description: '大三换新鼠标出手，微动清脆无双击，续航两周以上，北山书院一楼大厅随时面交。', currentPrice: 265, marketPrice: 499, endsAt: '2026-11-18 21:00', seller: '北山电竞阿泽', bidCount: 18, views: 1840, bidder: '松格小陈', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-digital.jpg'},
+        {id: 902, cat: '教材', isDemo: true, state: 'active', title: '【考研上岸出】2026考研数学张宇1000题+同济高数第七版上下册+全套手写笔记', description: '成功上岸重庆理工，书本干净字迹工整，附赠英一真题黄皮书。', currentPrice: 38, marketPrice: 128, endsAt: '2026-11-17 19:30', seller: '南山学姐小林', bidCount: 11, views: 1320, bidder: '竹逸阿杰', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-books.jpg'},
+        {id: 903, cat: '数码', isDemo: true, state: 'active', title: '【毕业急出】富士 Instax mini11 拍立得相机 冰晶白 含半盒相纸与透明保护壳', description: '社团活动抽奖所得，仅拍过两盒相纸，镜头无划痕，支持校内试拍验机。', currentPrice: 290, marketPrice: 520, endsAt: '2026-11-19 20:00', seller: '菊轩摄影社糖糖', bidCount: 24, views: 2690, bidder: '梅若小鹿', campus: '菊轩书院', stage: '变卖', image: '/assets/amz/quad-auction.jpg'},
+        {id: 904, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App调光 宿舍不断电可用', description: '灯光柔和不刺眼，底座稳固，送Type-C转接线，松格书院楼下自提。', currentPrice: 52, marketPrice: 149, endsAt: '2026-11-16 22:00', seller: '松格机电老王', bidCount: 9, views: 980, bidder: '爱莲小周', campus: '松格书院', stage: '一拍', image: '/assets/amz/quad-dorm.jpg'},
+        {id: 905, cat: '运动', isDemo: true, state: 'active', title: '【球场实战】斯伯丁 Spalding 7号PU吸湿防滑篮球 + 尤尼克斯羽毛球拍双拍包', description: '大四实习没空打球，球胆不漏气，球拍已拉24磅BG65线，送两筒耐打王。', currentPrice: 88, marketPrice: 230, endsAt: '2026-11-18 18:00', seller: '风雨球场科比', bidCount: 15, views: 1510, bidder: '北山体育生', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-sports.jpg'},
+        {id: 906, cat: '教材', isDemo: true, state: 'active', title: '【学长毕业礼包】九成新卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规全套', description: '工科期末考试必备神器，考场合规型号，太阳能+电池双供电，字迹清晰。', currentPrice: 46, marketPrice: 135, endsAt: '2026-11-20 12:00', seller: '智能工程学院学长', bidCount: 13, views: 1190, bidder: '大一萌新', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-grad.jpg'},
+        {id: 907, cat: '数码', isDemo: true, state: 'active', title: '【满电秒发】漫步者 W820NB 双金标主动降噪头戴式蓝牙耳机 云岩白 图书馆神器', description: '耳罩柔软不夹头，开启深度降噪在图书馆背书超安静，充一次电用一周。', currentPrice: 135, marketPrice: 299, endsAt: '2026-11-19 21:30', seller: '图书馆常驻选手', bidCount: 21, views: 2150, bidder: '竹逸小吴', campus: '图书馆大厅', stage: '二拍', image: '/assets/amz/quad-appraise.jpg'},
+        {id: 908, cat: '其他', isDemo: true, state: 'active', title: '【支持换物抵扣】复古火漆印章礼盒 + 手账胶带钢笔套装 生日伴手礼盒全新未拆', description: '多买了一套送室友，包装丝带完好，可直接竞拍也可拿课外小说等价抵扣。', currentPrice: 29, marketPrice: 89, endsAt: '2026-11-17 20:00', seller: '爱莲手作铺', bidCount: 7, views: 760, bidder: '菊轩小晴', campus: '爱莲书院', stage: '一拍', image: '/assets/amz/quad-wishes.jpg'},
+        {id: 909, cat: '数码', isDemo: true, state: 'settled', selectedAmount: 160, winner: '南山书院阿伟', title: '【已成交示范】Keychron K2 无线蓝牙双模机械键盘 茶轴RGB背光 Mac/Win双系统键帽', description: '茶轴手感柔和不吵室友，支持三台设备一键切换，已完成图书馆一楼当面交接。', currentPrice: 160, marketPrice: 368, endsAt: '2026-11-14 20:00', seller: '大数据学院极客', bidCount: 19, views: 2430, bidder: '南山书院阿伟', campus: '图书馆大厅', stage: '一拍', image: '/assets/amz/quad-swap.jpg'},
+        {id: 910, cat: '生活', isDemo: true, state: 'active', title: '【宿舍收纳整箱】宜家感牛津布衣物收纳箱×2 + 桌面书立架 + 寝室门后挂钩套装', description: '换宿舍整理出的全新闲置，打包1元起拍，支持北山斋至南山书院顺路送达。', currentPrice: 19, marketPrice: 75, endsAt: '2026-11-18 22:30', seller: '北山收纳达人', bidCount: 14, views: 1080, bidder: '梅若小张', campus: '北山书院', stage: '变卖', image: '/assets/amz/quad-delivery.jpg'}
     ];
 
     function auctionCard(a, mode) {
@@ -2026,7 +2361,24 @@
             }
             loadError=(e && e.message) || '';
         }
-        var displayList = mine ? auctions : auctions.concat(DEMO_AUCTIONS);
+        var rawList = mine ? auctions : auctions.concat(DEMO_AUCTIONS);
+        var aCat = state.auctionCat || '全部';
+        var aSt = state.auctionState || '全部';
+        var aSort = state.auctionSort || 'default';
+        var displayList = rawList.filter(function (a) {
+            if (aCat !== '全部') {
+                var hitCat = a.cat === aCat || String(a.title + ' ' + (a.description || '')).indexOf(aCat) >= 0;
+                if (!hitCat) return false;
+            }
+            if (aSt === '正在进行' && a.state !== 'active') return false;
+            if (aSt === '一拍专场' && a.stage !== '一拍') return false;
+            if (aSt === '毕业变卖' && a.stage !== '变卖' && String(a.title).indexOf('毕业') < 0) return false;
+            return true;
+        }).slice();
+        if (aSort === 'price-asc') displayList.sort(function (a, b) { return Number(a.currentPrice || 0) - Number(b.currentPrice || 0); });
+        else if (aSort === 'price-desc') displayList.sort(function (a, b) { return Number(b.currentPrice || 0) - Number(a.currentPrice || 0); });
+        else if (aSort === 'bids') displayList.sort(function (a, b) { return Number(b.bidCount || 0) - Number(a.bidCount || 0); });
+
         var content = '<div class="ali-auction-page">'
             + '<header class="ali-sub-header">'
             + '<div class="ali-sub-brand">'
@@ -2034,8 +2386,8 @@
             + '</div>'
             + '<nav class="ali-sub-nav" aria-label="拍卖导航">'
             + '<a href="#/auctions" class="' + (!mine ? 'on' : '') + '">全部拍品</a>'
-            + '<a href="#/idle?cat=数码">数码外设</a>'
-            + '<a href="#/idle?cat=教材">考研教材</a>'
+            + '<button type="button" data-act="auction-cat" data-v="数码" class="' + (aCat === '数码' ? 'on' : '') + '">数码外设</button>'
+            + '<button type="button" data-act="auction-cat" data-v="教材" class="' + (aCat === '教材' ? 'on' : '') + '">考研教材</button>'
             + '<a href="#/auction/mine" class="' + (mine ? 'on' : '') + '">我的拍卖</a>'
             + '</nav>'
             + '<div class="ali-sub-actions">'
@@ -2046,34 +2398,31 @@
 
             + '<section class="ali-filter-box" aria-label="拍品筛选">'
             + '<div class="ali-filter-row"><span class="ali-filter-k">分类：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on" data-act="go" data-to="#/auctions">全部</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=数码">电脑数码</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=教材">考研教材</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=生活">宿舍生活</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=运动">运动户外</button>'
-            + '<button type="button" data-act="go" data-to="#/idle?cat=其他">手办周边</button>'
+            + [['全部', '全部'], ['数码', '电脑数码'], ['教材', '考研教材'], ['生活', '宿舍生活'], ['运动', '运动户外'], ['其他', '手办周边']].map(function (c) {
+                return '<button type="button" class="' + (aCat === c[0] ? 'on' : '') + '" data-act="auction-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
+            }).join('')
             + '</div></div>'
             + '<div class="ali-filter-row"><span class="ali-filter-k">状态：</span><div class="ali-filter-v">'
-            + '<button type="button" class="on">全部 (' + displayList.length + ')</button>'
-            + '<button type="button">正在进行</button>'
-            + '<button type="button">一拍专场</button>'
-            + '<button type="button">毕业变卖</button>'
+            + [['全部', '全部 (' + rawList.length + ')'], ['正在进行', '正在进行'], ['一拍专场', '一拍专场'], ['毕业变卖', '毕业变卖']].map(function (s) {
+                return '<button type="button" class="' + (aSt === s[0] ? 'on' : '') + '" data-act="auction-state" data-v="' + s[0] + '">' + s[1] + '</button>';
+            }).join('')
             + '</div></div>'
             + '</section>'
 
             + '<div class="ali-sort-toolbar">'
             + '<div class="ali-sort-links">'
-            + '<span class="on">默认排序</span>'
-            + '<span>当前价 ▾</span>'
-            + '<span>出价次数 ▾</span>'
+            + '<button type="button" class="' + (aSort === 'default' ? 'on' : '') + '" data-act="auction-sort" data-v="default">默认排序</button>'
+            + '<button type="button" class="' + (aSort === 'price-asc' || aSort === 'price-desc' ? 'on' : '') + '" data-act="auction-sort" data-v="' + (aSort === 'price-desc' ? 'price-asc' : 'price-desc') + '">当前价 ' + (aSort === 'price-asc' ? '▴' : '▾') + '</button>'
+            + '<button type="button" class="' + (aSort === 'bids' ? 'on' : '') + '" data-act="auction-sort" data-v="bids">出价次数 ▾</button>'
             + '<img src="/assets/brand/mascot-success.png" alt="小唤" class="ali-toolbar-mascot">'
             + '</div>'
+            + '<span class="hint">当前展示 ' + displayList.length + ' 件拍品</span>'
             + '</div>'
 
             + (loadError && mine ? '<div class="card card-pad"><p>' + esc(loadError) + '</p></div>' : '')
             + (displayList.length
                 ? '<div class="ali-auction-grid">' + displayList.map(function (a) { return auctionCard(a, mine ? 'mine' : 'public'); }).join('') + '</div>'
-                : '<div class="card card-pad"><p>暂无拍卖拍品，点击右上角「+ 发起拍卖」上架。</p></div>')
+                : '<div class="card card-pad"><p>暂无符合筛选条件的拍品 <button type="button" class="btn btn-sm btn-primary" data-act="auction-reset">重置筛选</button></p></div>')
             + '</div>';
         $('#app').innerHTML=shell('auctions',content);
     }
@@ -2162,33 +2511,102 @@
                 + '</a>';
         }).join('');
 
-        var demoContacts = [
-            {ava: '宏', tone: 'tone-blue', name: '北山羽毛球穿线社', date: '2026/11/15', msg: '亲，您有一笔换物报价待确认哦', unread: 1, active: true, to: '#/offers'},
-            {ava: '诺', tone: 'tone-navy', name: '一诺体育器材流转', date: '2026/11/14', msg: '请确认北山书院一楼大厅面交点位', unread: 1, active: false, to: '#/exchange'},
-            {ava: '烁', tone: 'tone-teal', name: '烁羽球拍与外设铺', date: '2026/11/13', msg: '罗技 GPW 二代已充好电随时可试', unread: 0, active: false, to: '#/idle?cat=数码'},
-            {ava: '琪', tone: 'tone-orange', name: '琪琪电竞外设学长', date: '2026/11/12', msg: '快领取，您的专属同院系换物礼券', unread: 1, active: false, to: '#/auctions'},
-            {ava: '青', tone: 'tone-green', name: '青禾考研资料漂流', date: '2026/11/10', msg: '——免费附送同济高数期末真题笔记——', unread: 0, active: false, to: '#/idle?cat=教材'},
-            {ava: '纯', tone: 'tone-pink', name: '小纯桌搭与拍立得', date: '2026/11/09', msg: '下课10分钟左右到图书馆一楼大厅交接', unread: 0, active: false, to: '#/wishes'},
-            {ava: '浩', tone: 'tone-red', name: '浩迪数卡与计算器', date: '2026/11/08', msg: '卡西欧 fx-991CN X 中文版考场可用', unread: 1, active: false, to: '#/appraise'},
-            {ava: '国', tone: 'tone-brown', name: '移通严选宿舍好物', date: '2026/11/06', msg: '米家护眼灯支持三方换物接力成环', unread: 1, active: false, to: '#/relay'}
-        ].map(function (c) {
-            return '<a class="conversation-row tb-contact-item ' + (c.active ? 'on' : '') + '" href="' + c.to + '">'
+        var IM_SEED_THREADS = [
+            {
+                ava: '宏', tone: 'tone-blue', name: '北山羽毛球穿线社', date: '2026/11/15', msg: '亲，您有一笔换物报价待确认哦', unread: 1, to: '#/offers',
+                credit: '96 极好', campus: '北山书院', shopImg: '/assets/amz/quad-sports.jpg', shopLink: '#/idle?cat=运动',
+                card: {title: '亲，您有一笔校园换物单待确认哦', img: '/assets/amz/quad-sports.jpg', goods: '正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅', sub: '支持以物换物 / 书院当面验拍', price: '¥102.0', qty: '共1件', btn: '去确认报价', to: '#/offers'},
+                msgs: [
+                    '亲，您有一笔换物订单待确认面交点位，如您换的羽毛球拍已拉好24磅BG65线，北山书院一楼大厅可当场试挥验货，满意再点确认收货哦~'
+                ]
+            },
+            {
+                ava: '诺', tone: 'tone-navy', name: '一诺体育器材流转', date: '2026/11/14', msg: '请确认北山书院一楼大厅面交点位', unread: 1, to: '#/exchange',
+                credit: '94 优秀', campus: '松格书院', shopImg: '/assets/amz/quad-relay.jpg', shopLink: '#/relay',
+                card: {title: '亲，您有一笔三方接力环待锁定哦', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记', sub: 'A→B→C 三方闭环匹配成功', price: '等价换', qty: '共1组', btn: '去查看接力环', to: '#/relay'},
+                msgs: ['下午 16:30 图书馆东门可以吗？我把球包也一起带来给你看成色。']
+            },
+            {
+                ava: '烁', tone: 'tone-teal', name: '烁羽球拍与外设铺', date: '2026/11/13', msg: '罗技 GPW 二代已充好电随时可试', unread: 0, to: '#/idle?cat=数码',
+                credit: '92 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-digital.jpg', shopLink: '#/idle?cat=数码',
+                card: {title: '数码外设当面验机单', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代 白色 95新 盒说全', sub: '微动清脆无双击，支持以物换物', price: '¥265.0', qty: '共1件', btn: '查看数码专区', to: '#/idle?cat=数码'},
+                msgs: ['鼠标盒说接收器都在，如果你那把机械键盘也是茶轴，咱们可以直接平换！']
+            },
+            {
+                ava: '琪', tone: 'tone-orange', name: '琪琪电竞外设学长', date: '2026/11/12', msg: '富士拍立得还能参与今晚拍卖吗', unread: 1, to: '#/auctions',
+                credit: '90 优秀', campus: '菊轩书院', shopImg: '/assets/amz/quad-auction.jpg', shopLink: '#/auctions',
+                card: null,
+                msgs: ['今晚 20:00 拍立得专场快截拍了，我准备再加 10 元冲一下~']
+            },
+            {
+                ava: '青', tone: 'tone-green', name: '青禾考研资料漂流', date: '2026/11/10', msg: '——免费附送同济高数期末真题笔记——', unread: 0, to: '#/idle?cat=教材',
+                credit: '95 极好', campus: '南山书院', shopImg: '/assets/amz/quad-books.jpg', shopLink: '#/idle?cat=教材',
+                card: null,
+                msgs: ['同济高数上下册我做了一整套错题本索引，一起打包换你的小台灯行吗？']
+            },
+            {
+                ava: '纯', tone: 'tone-pink', name: '小纯桌搭与拍立得', date: '2026/11/09', msg: '下课10分钟左右到图书馆一楼大厅交接', unread: 0, to: '#/wishes',
+                credit: '89 良好', campus: '竹逸书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/wishes',
+                card: null,
+                msgs: ['刚下课正在赶去图书馆一楼大厅，穿白色卫衣那个就是我~']
+            },
+            {
+                ava: '浩', tone: 'tone-red', name: '浩迪数卡与计算器', date: '2026/11/08', msg: '卡西欧 fx-991CN X 中文版考场可用', unread: 1, to: '#/appraise',
+                credit: '91 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-grad.jpg', shopLink: '#/idle?cat=教材',
+                card: null,
+                msgs: ['我用小唤 AI 估价测了下，计算器+工程制图套装大概值 50~65 元，你看看想换啥？']
+            },
+            {
+                ava: '国', tone: 'tone-brown', name: '移通严选宿舍好物', date: '2026/11/06', msg: '米家护眼灯支持三方换物接力成环', unread: 1, to: '#/relay',
+                credit: '93 优秀', campus: '爱莲书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/relay',
+                card: null,
+                msgs: ['系统刚刚推了一条三方接力匹配给我们，点进去就能直接锁环！']
+            }
+        ];
+        var customIm = {};
+        try { customIm = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { customIm = {}; }
+        var readIm = {};
+        try { readIm = JSON.parse(localStorage.getItem('hq.imRead') || '{}') || {}; } catch (e) { readIm = {}; }
+        var activeIdx = Math.max(0, Math.min(IM_SEED_THREADS.length - 1, Number(state.activeNoticeIdx || 0)));
+        var activePeer = IM_SEED_THREADS[activeIdx];
+        var extraMsgs = Array.isArray(customIm[activeIdx]) ? customIm[activeIdx] : [];
+
+        var demoContacts = IM_SEED_THREADS.map(function (c, idx) {
+            var isAct = idx === activeIdx;
+            var unreadCount = (isAct || readIm[idx]) ? 0 : c.unread;
+            var lastCustom = Array.isArray(customIm[idx]) && customIm[idx].length ? customIm[idx][customIm[idx].length - 1].text : c.msg;
+            return '<button type="button" class="conversation-row tb-contact-item ' + (isAct ? 'on' : '') + '" data-act="im-select" data-idx="' + idx + '">'
                 + '<span class="tb-contact-ava ' + c.tone + '">' + c.ava + '</span>'
                 + '<div class="tb-contact-meta">'
                 + '<div class="tb-contact-top"><b>' + esc(c.name) + '</b><time>' + c.date + '</time></div>'
-                + '<div class="tb-contact-sub"><p>' + esc(c.msg) + '</p>' + (c.unread ? '<em class="tb-unread-dot">' + c.unread + '</em>' : '') + '</div>'
-                + '</div></a>';
+                + '<div class="tb-contact-sub"><p>' + esc(lastCustom) + '</p>' + (unreadCount ? '<em class="tb-unread-dot">' + unreadCount + '</em>' : '') + '</div>'
+                + '</div></button>';
         }).join('');
+
+        var streamItemsHtml = ''
+            + (activePeer.card ? '<div class="tb-msg-group"><div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>' + esc(activePeer.name) + '</span><time>' + activePeer.date + ' 15:16</time></div><div class="tb-order-card"><h4>' + esc(activePeer.card.title) + '</h4><div class="tb-order-item-box"><img src="' + activePeer.card.img + '" alt=""><div class="tb-order-item-info"><p>' + esc(activePeer.card.goods) + '</p><small>' + esc(activePeer.card.sub) + '</small></div><div class="tb-order-item-price"><b>' + esc(activePeer.card.price) + '</b><span>' + esc(activePeer.card.qty) + '</span></div></div><a href="' + activePeer.card.to + '" class="tb-order-orange-btn">' + esc(activePeer.card.btn) + '</a></div></div>' : '')
+            + activePeer.msgs.map(function (mTxt, mIdx) {
+                return '<div class="tb-msg-group"><div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>' + esc(activePeer.name) + '</span><time>' + activePeer.date + ' 15:' + (20 + mIdx) + '</time></div><div class="tb-text-bubble">' + esc(mTxt) + '</div></div>';
+            }).join('')
+            + extraMsgs.map(function (m) {
+                if (m.kind === 'image') {
+                    return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我（' + esc((state.me && state.me.nickname) || '移通同学') + '）</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-text-bubble is-mine"><img class="tb-chat-img" src="' + esc(m.image) + '" alt="聊天图片"></div></div>';
+                }
+                if (m.kind === 'card') {
+                    return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-order-card"><h4>' + esc(m.title) + '</h4><div class="tb-order-item-box"><img src="' + esc(m.img || '/assets/amz/quad-swap.jpg') + '" alt=""><div class="tb-order-item-info"><p>' + esc(m.text) + '</p><small>' + esc(m.sub || '点击查看详情') + '</small></div></div><a href="' + esc(m.to || '#/offers') + '" class="tb-order-orange-btn">立即查看</a></div></div>';
+                }
+                return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我（' + esc((state.me && state.me.nickname) || '移通同学') + '）</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-text-bubble is-mine">' + esc(m.text) + '</div></div>';
+            }).join('');
 
         var content = '<section class="messages-page tb-im-backdrop" aria-label="消息与聊天窗口">'
             + '<div class="tb-im-window">'
             + '<aside class="tb-im-left">'
             + '<div class="tb-left-head">'
-            + '<span class="tb-left-title">💬 聊天列表</span>'
+            + '<span class="tb-left-title">' + clayIcon('chat', '聊天', 'is-sm') + ' 聊天列表</span>'
             + '<button type="button" class="tb-read-btn" data-act="notice-read">全部已读</button>'
             + '</div>'
             + '<div class="tb-left-search">'
-            + '<input type="search" id="message-filter" placeholder="🔍 搜索最近联系人" aria-label="搜索消息联系人">'
+            + '<input type="search" id="message-filter" placeholder="搜索最近联系人" aria-label="搜索消息联系人">'
             + '</div>'
             + '<div class="tb-contact-list conversation-list">'
             + realConvRows
@@ -2198,7 +2616,7 @@
 
             + '<div class="tb-im-center">'
             + '<header class="tb-chat-header">'
-            + '<div class="tb-chat-peer"><b>宏羽运动体育</b><span class="tb-online-tag">● 在线</span></div>'
+            + '<div class="tb-chat-peer"><b>' + esc(activePeer.name) + '</b><span class="tb-online-tag">● 在线</span></div>'
             + '<div class="tb-chat-top-btns">'
             + '<a href="#/followers" class="tb-top-chip">谁关注了我</a>'
             + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
@@ -2206,57 +2624,30 @@
             + '</div>'
             + '</header>'
 
-            + '<div class="tb-chat-stream">'
-            + (realNoticeRows ? '<div class="tb-real-notices"><div class="tb-stream-divider"><span>🔔 最新系统与交易通知（点击直达）</span></div>' + realNoticeRows + '</div>' : '')
-
-            + '<div class="tb-msg-group">'
-            + '<div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>cghcous:小绿花</span><time>2026-11-15 15:16:40</time></div>'
-            + '<div class="tb-order-card">'
-            + '<h4>亲，您有一笔校园换物单待确认哦</h4>'
-            + '<div class="tb-order-item-box">'
-            + '<img src="/assets/amz/quad-sports.jpg" alt="">'
-            + '<div class="tb-order-item-info"><p>正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅</p><small>支持以物换物 / 书院当面验拍</small></div>'
-            + '<div class="tb-order-item-price"><b>¥102.0</b><span>共1件</span></div>'
-            + '</div>'
-            + '<a href="#/offers" class="tb-order-orange-btn">去确认报价</a>'
-            + '</div>'
-            + '</div>'
-
-            + '<div class="tb-msg-group">'
-            + '<div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>cghcous:小绿花</span><time>2026-11-15 15:20:16</time></div>'
-            + '<div class="tb-text-bubble">'
-            + '亲，您有一笔换物订单待确认面交点位，如您换的羽毛球拍已拉好24磅BG65线，北山书院一楼大厅可当场试挥验货，满意再点确认收货哦~'
-            + '</div>'
-            + '</div>'
-
-            + '<div class="tb-msg-group">'
-            + '<div class="tb-msg-sender"><img src="/assets/brand/mascot-wave-320.webp" alt=""><span>cghcous:小绿花</span><time>2026-11-15 15:22:05</time></div>'
-            + '<div class="tb-order-card">'
-            + '<h4>亲，您有一笔三方接力环待锁定哦</h4>'
-            + '<div class="tb-order-item-box">'
-            + '<img src="/assets/amz/quad-digital.jpg" alt="">'
-            + '<div class="tb-order-item-info"><p>罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记</p><small>A→B→C 三方闭环匹配成功</small></div>'
-            + '<div class="tb-order-item-price"><b>等价换</b><span>共1组</span></div>'
-            + '</div>'
-            + '<a href="#/relay" class="tb-order-orange-btn">去查看接力环</a>'
-            + '</div>'
-            + '<a href="#/offers" class="tb-bottom-pill">回到底部 ∨</a>'
-            + '</div>'
+            + '<div class="tb-chat-stream" id="tb-chat-stream">'
+            + (realNoticeRows ? '<div class="tb-real-notices"><div class="tb-stream-divider"><span>' + clayIcon('chat', '通知', 'is-sm') + ' 最新系统与交易通知（点击直达）</span></div>' + realNoticeRows + '</div>' : '')
+            + streamItemsHtml
+            + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom">回到底部 ∨</button>'
             + '</div>'
 
             + '<div class="tb-chat-compose">'
+            + '<div class="tb-phrase-bar" id="tb-phrase-bar" hidden>'
+            + ['方便在北山斋面交吗？', '可以看看成色细节图吗？', '我出一件数码外设互换如何？', '没问题，就约明天下午！'].map(function (ph) {
+                return '<button type="button" data-act="im-phrase-pick" data-v="' + esc(ph) + '">' + esc(ph) + '</button>';
+            }).join('')
+            + '</div>'
             + '<div class="tb-compose-toolbar">'
             + '<div class="tb-tool-icons">'
-            + '<button type="button" title="表情" onclick="var t=document.getElementById(\'tb-im-input\');if(t)t.value+=\'😊 \'">😊</button>'
-            + '<button type="button" title="发送图片" data-act="go" data-to="#/community">🖼</button>'
-            + '<button type="button" title="核对订单" data-act="go" data-to="#/offers">📦</button>'
-            + '<button type="button" title="AI估价" data-act="go" data-to="#/appraise">✂</button>'
+            + '<button type="button" title="快捷常用语" data-act="im-phrase-menu">' + clayIcon('user', '常用语') + '</button>'
+            + '<label class="tb-tool-lbl" title="发送图片">' + clayIcon('star', '发图片') + '<input type="file" accept="image/png,image/jpeg,image/webp" data-act="im-image" hidden></label>'
+            + '<button type="button" title="发送交换卡片" data-act="im-insert-card">' + clayIcon('order', '订单卡片') + '</button>'
+            + '<button type="button" title="插入AI估价建议" data-act="im-insert-ai">' + clayIcon('ai', 'AI估价') + '</button>'
             + '</div>'
-            + '<span class="tb-char-count">0 / 500</span>'
+            + '<span class="tb-char-count" id="tb-char-count">0 / 500</span>'
             + '</div>'
-            + '<textarea id="tb-im-input" rows="3" placeholder="请输入消息，按 Enter 键 或 点击发送按钮发送"></textarea>'
+            + '<textarea id="tb-im-input" maxlength="500" rows="3" placeholder="请输入消息给 ' + esc(activePeer.name) + '，按 Enter 键 或 点击发送"></textarea>'
             + '<div class="tb-compose-foot">'
-            + '<button type="button" class="tb-send-btn" onclick="var t=document.getElementById(\'tb-im-input\');if(t&&t.value.trim()){t.value=\'\';this.innerHTML=\'已发送 ✓\';}">发送 <span>| ▾</span></button>'
+            + '<button type="button" class="tb-send-btn" data-act="im-send">发送 <span>| ▾</span></button>'
             + '</div>'
             + '</div>'
             + '</div>'
@@ -2264,30 +2655,32 @@
             + '<aside class="tb-im-right">'
             + '<div class="tb-shop-card">'
             + '<div class="tb-shop-top">'
-            + '<img src="/assets/amz/quad-sports.jpg" alt="">'
-            + '<div><b>宏羽运动体育</b><a href="#/idle?cat=运动" class="tb-enter-shop">进入主页</a></div>'
+            + '<img src="' + esc(activePeer.shopImg) + '" alt="">'
+            + '<div><b>' + esc(activePeer.name) + '</b><a href="' + esc(activePeer.shopLink) + '" class="tb-enter-shop">进入主页</a></div>'
             + '</div>'
             + '<div class="tb-shop-stats">'
-            + '<div><span>校园信用</span><b>96 极好</b></div>'
+            + '<div><span>校园信用</span><b>' + esc(activePeer.credit) + '</b></div>'
             + '<div><span>平均响应</span><b>3 分钟</b></div>'
-            + '<div><span>常驻书院</span><b>北山书院</b></div>'
+            + '<div><span>常驻书院</span><b>' + esc(activePeer.campus) + '</b></div>'
             + '</div>'
             + '</div>'
             + '<div class="tb-mascot-helper">'
             + '<img src="/assets/amz/mascot-credit-card.png" alt="小唤">'
             + '<h5>小唤提示</h5>'
-            + '<a href="#/appraise" class="tb-helper-link">🤖 让小唤帮你 AI 估价 ›</a>'
+            + '<a href="#/appraise" class="tb-helper-link">' + clayIcon('ai', '小唤AI', 'is-sm') + ' 让小唤帮你 AI 估价 ›</a>'
             + '</div>'
             + '</aside>'
             + '</div>'
 
             + '<div class="tb-float-dock">'
-            + '<a href="#/settings">⚙<span>消息设置</span></a>'
-            + '<a href="#/community">📝<span>反馈</span></a>'
+            + '<a href="#/me/security">' + clayIcon('settings', '设置', 'is-sm') + '<span>消息设置</span></a>'
+            + '<a href="#/community">' + clayIcon('chat', '反馈', 'is-sm') + '<span>反馈</span></a>'
             + '</div>'
             + '</section>';
 
         $('#app').innerHTML = shell('notifications', content);
+        var stream = document.getElementById('tb-chat-stream');
+        if (stream) stream.scrollTop = stream.scrollHeight;
         refreshNoticeCount();
     }
 
@@ -2381,11 +2774,9 @@
             + '<div><h1>求换心愿专区</h1></div>'
             + '</div>'
             + '<nav class="wish-banner-cats" aria-label="求换分类">'
-            + '<a href="#/wishes" class="on">全部 (' + displayList.length + ')</a>'
-            + '<a href="#/idle?cat=数码">数码外设</a>'
-            + '<a href="#/idle?cat=教材">考研教材</a>'
-            + '<a href="#/idle?cat=运动">运动户外</a>'
-            + '<a href="#/idle?cat=生活">宿舍生活</a>'
+            + [['全部', '全部 (' + displayList.length + ')'], ['数码', '数码外设'], ['教材', '考研教材'], ['运动', '运动户外'], ['生活', '宿舍生活']].map(function (c) {
+                return '<button type="button" class="' + ((state.wishCat || '全部') === c[0] ? 'on' : '') + '" data-act="wish-cat" data-v="' + c[0] + '">' + c[1] + '</button>';
+            }).join('')
             + '<a href="#/relay">换物接力</a>'
             + '<a href="#/auctions">校园拍卖</a>'
             + '</nav>'
@@ -2405,7 +2796,13 @@
 
             + '<main class="wish-main">'
             + '<div class="wish-bounty-grid">'
-            + displayList.map(wishAuctionCard).join('')
+            + (function () {
+                var wCat = state.wishCat || '全部';
+                var wShown = wCat === '全部' ? displayList : displayList.filter(function (w) {
+                    return w.category === wCat || String(w.title + ' ' + (w.offerText || '')).indexOf(wCat) >= 0;
+                });
+                return wShown.length ? wShown.map(wishAuctionCard).join('') : '<div class="card card-pad" style="grid-column:1/-1;text-align:center">当前分类暂无求换心愿 <button type="button" class="btn btn-sm btn-primary" data-act="wish-cat" data-v="全部">查看全部</button></div>';
+            })()
             + '</div>'
             + '</main>'
             + '</div>'
@@ -2424,99 +2821,360 @@
         return '<article class="chat-message '+(state.me && state.me.id===m.userId?'is-mine':'')+'"><div class="chat-avatar">'+esc((m.nickname || '?').slice(0,1))+'</div><div class="chat-message-body"><div class="chat-meta"><b>'+esc(m.nickname)+'</b><time>'+esc(time)+'</time></div><div class="chat-bubble">'+body+'</div></div></article>';
     }
     async function refreshCommunity(force) {
-        if (communityLoading || currentView.name!=='community') return;
+        var box=$('#chat-messages');
+        if (communityLoading || currentView.name!=='community' || !box) return;
         communityLoading=true;
-        try { var messages=await api('/community'); var box=$('#chat-messages'); if(!box || currentView.name!=='community') return;
+        try {
+            var messages=await api('/community', {optionalAuth:true});
+            box=$('#chat-messages'); if(!box || currentView.name!=='community') return;
             var signature=messages.map(function(m){return [m.id,m.itemAvailable,m.itemTitle].join(':');}).join('|');
             if(box.dataset.signature!==signature) {var near=box.scrollHeight-box.scrollTop-box.clientHeight<100;box.innerHTML=messages.length?messages.map(communityMessage).join(''):'<div class="chat-empty">还没有消息，来打个招呼吧。</div>';box.dataset.signature=signature;if(near||force)box.scrollTop=box.scrollHeight;}
-        } catch(e){ if(force) toast(e.message || '消息加载失败','err'); } finally { communityLoading=false; }
+        } catch(e){
+            if (e && e.code === 401 && $('#chat-messages')) {
+                $('#chat-messages').innerHTML='<div class="chat-empty">登录后即可参与全校实时聊天互动 <a href="#/login" class="btn btn-primary btn-sm" style="margin-left:8px">去登录</a></div>';
+            } else if(force) toast(e.message || '消息加载失败','err');
+        } finally { communityLoading=false; }
     }
+    var TIEBA_ROOMS = [
+        {id: 'hall', name: '综合闲置吹水吧', icon: 'fire', cat: '综合', desc: '全校闲置晒单、每日捡漏情报与校园日常讨论', members: 1286, img: '/assets/amz/quad-community.jpg', badge: 'LIVE'},
+        {id: 'digital', name: '北山数码外设吧', icon: 'ai', cat: '数码', desc: '键鼠耳机显示器验机评测、平价数码互换专场', members: 842, img: '/assets/amz/quad-digital.jpg', badge: '99+'},
+        {id: 'books', name: '南山考研教材吧', icon: 'order', cat: '教材', desc: '高数真题笔记漂流、各院系专业课二手教材互换', members: 965, img: '/assets/amz/quad-books.jpg', badge: '64'},
+        {id: 'dorm', name: '松格宿舍好物吧', icon: 'star', cat: '生活', desc: '护眼台灯收纳箱桌搭安利，寝室生活实用好物分享', members: 614, img: '/assets/amz/quad-dorm.jpg', badge: '42'},
+        {id: 'sports', name: '风雨球场运动吧', icon: 'swap', cat: '运动', desc: '羽毛球拍篮球骑行装备约战，当面试拍换器材', members: 538, img: '/assets/amz/quad-sports.jpg', badge: '约球'},
+        {id: 'photo', name: '拍立得与潮玩吧', icon: 'auction', cat: '其他', desc: '相机拍立得相纸流转、盲盒手办端盒拆封互换', members: 472, img: '/assets/amz/quad-auction.jpg', badge: '热'},
+        {id: 'lost', name: '失物招领互助吧', icon: 'pin', cat: '互助', desc: '校园卡雨伞耳机寻主，各书院爱心接力归还', members: 719, img: '/assets/amz/quad-delivery.jpg', badge: '置顶'},
+        {id: 'game', name: 'ScrapArena街机吧', icon: 'game', cat: '娱乐', desc: '双人同屏格斗约战大厅、战绩晒图与校园排行榜', members: 390, img: '/assets/brand/mascot-box.png', badge: 'PK'}
+    ];
+    function getAllRooms() {
+        var custom = [];
+        try { custom = JSON.parse(localStorage.getItem('hq.customRooms') || '[]'); } catch (e) { custom = []; }
+        return TIEBA_ROOMS.concat(Array.isArray(custom) ? custom : []);
+    }
+    function getRoomFollows() {
+        try {
+            var arr = JSON.parse(localStorage.getItem('hq.followedRooms') || 'null');
+            if (Array.isArray(arr)) return arr;
+        } catch (e) {}
+        return ['hall', 'digital', 'books'];
+    }
+    function setRoomFollows(arr) {
+        try { localStorage.setItem('hq.followedRooms', JSON.stringify(arr)); } catch (e) {}
+    }
+    function openCreateRoomSheet() {
+        var iconOpts = [['fire','热门'],['chat','交流'],['ai','智能'],['order','教材'],['swap','互换'],['auction','潮玩'],['pin','校内'],['game','街机'],['star','种草'],['user','社团']];
+        openSheet('<h3>创建我的校园贴吧 / 聊天室</h3>'
+            + '<p class="sub">输入吧名与主题后即刻生成专属聊天室，支持同学们发帖晒单与实时聊天。</p>'
+            + '<form data-form="create-room" class="tieba-create-form">'
+            + '<div class="field"><label class="label">聊天室名称 *</label><input class="input" name="name" maxlength="20" placeholder="如：北山考研资料吧 / 宿舍羽毛球群" required></div>'
+            + '<div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+            + '<div><label class="label">所属分类</label><select class="select" name="cat"><option value="综合">综合闲置</option><option value="数码">数码外设</option><option value="教材">考研教材</option><option value="生活">宿舍生活</option><option value="运动">运动户外</option><option value="互助">校园互助</option><option value="娱乐">兴趣街机</option></select></div>'
+            + '<div><label class="label">角标徽章（选填）</label><input class="input" name="badge" maxlength="6" placeholder="如：新建 / 热门"></div>'
+            + '</div>'
+            + '<div class="field"><label class="label">选择小唤图标</label><div class="tieba-icon-picker">'
+            + iconOpts.map(function (o, i) {
+                return '<label class="tieba-ico-opt"><input type="radio" name="icon" value="' + o[0] + '"' + (i === 0 ? ' checked' : '') + '>' + clayIcon(o[0], o[1]) + '<span>' + o[1] + '</span></label>';
+            }).join('')
+            + '</div></div>'
+            + '<div class="field"><label class="label">吧规与简介</label><textarea class="input" name="desc" rows="2" maxlength="80" placeholder="一句话介绍本聊天室的交流话题或换物规则…"></textarea></div>'
+            + '<button type="submit" class="btn btn-primary btn-block">立即创建并进入聊天室</button>'
+            + '</form>');
+    }
+    var SEEDED_TIEBA_POSTS = [
+        {
+            id: 1001, roomId: 'hall', tag: '置顶精华', author: '北山书院 电竞阿泽', ava: '北', time: '15 分钟前',
+            title: '【晒单互换】大三升级桌面，出九五新罗技 GPW 二代 + 68键机械键盘，或者换 iPad 电容笔',
+            body: '成色自己看图，微动清脆盒子和原装伞绳线都在，北山书院一楼大厅可当场连接笔记本试手感，支持三方接力环补差价。',
+            imgs: ['/assets/amz/quad-digital.jpg', '/assets/amz/quad-swap.jpg', '/assets/amz/quad-appraise.jpg'],
+            likes: 128, cat: '数码',
+            comments: [
+                {author: '松格小陈', time: '12 分钟前', text: 'GPW 二代白色超耐看！我有一支全新未拆二代电容笔，方便去私聊看看吗？'},
+                {author: '南山阿杰', time: '8 分钟前', text: '帮顶好贴，键盘是什么轴体的呀？'}
+            ]
+        },
+        {
+            id: 1002, roomId: 'books', tag: '精华资料', author: '南山书院 上岸学姐小林', ava: '南', time: '42 分钟前',
+            title: '【考研飘流】整理全套同济高数+张宇1000题手写笔记，欢迎拿宿舍好物或文具来换',
+            body: '成功上岸来还愿啦！笔记分章标注了高频考题型，无乱涂乱画，附送整本英语六级高频词册，图书馆一楼随时交接。',
+            imgs: ['/assets/amz/quad-books.jpg', '/assets/amz/quad-grad.jpg'],
+            likes: 94, cat: '教材',
+            comments: [
+                {author: '大二考研党', time: '30 分钟前', text: '沾沾学姐上岸喜气！我有一个米家便携榨汁杯和全新荧光笔套装能换吗？'}
+            ]
+        },
+        {
+            id: 1003, roomId: 'digital', tag: '验机评测', author: '菊轩极客老林', ava: '菊', time: '1 小时前',
+            title: '【避坑经验】校内面交二手耳机/键盘必看的 4 个检查步骤（实测有效）',
+            body: '1. 先让小唤 AI 估价测个基准区间；2. 耳机当场试降噪和左右耳电量均衡；3. 键盘打开在线轴体测试网页全键按一遍；4. 走换一圈平台记录保信用担保！',
+            imgs: ['/assets/amz/quad-appraise.jpg'],
+            likes: 76, cat: '数码',
+            comments: [
+                {author: '北山萌新', time: '48 分钟前', text: '收藏了！昨晚刚用这招顺利换到漫步者降噪耳机，超稳。'}
+            ]
+        },
+        {
+            id: 1004, roomId: 'dorm', tag: '晒单安利', author: '松格桌搭糖糖', ava: '松', time: '2 小时前',
+            title: '【宿舍改造】花零元靠以物换物凑齐了护眼台灯+桌面绿植+牛津布收纳箱',
+            body: '拿自己闲置的两本专业课书+复古火漆印章礼盒在换一圈换了三件宿舍神器，同寝室友已经全被我安利入坑了。',
+            imgs: ['/assets/amz/quad-dorm.jpg', '/assets/amz/quad-wishes.jpg'],
+            likes: 65, cat: '生活',
+            comments: []
+        },
+        {
+            id: 1005, roomId: 'sports', tag: '约战换拍', author: '风雨球场科比', ava: '风', time: '3 小时前',
+            title: '【今晚7点半】风雨球场3号场约双打，顺便试打这把24磅胜利大鬼斩球拍看谁想换',
+            body: '最近换了新拍子，旧的这把手感依然弹，刚换了新吸汗带还送两筒耐打王。球场上边打边试，中意直接发起换物报价！',
+            imgs: ['/assets/amz/quad-sports.jpg'],
+            likes: 58, cat: '运动',
+            comments: [
+                {author: '竹逸羽球社', time: '2 小时前', text: '算我一个！我带斯伯丁篮球下来，咱们当场交流~'}
+            ]
+        },
+        {
+            id: 1006, roomId: 'photo', tag: '同好互换', author: '爱莲摄影小鹿', ava: '爱', time: '昨天',
+            title: '富士 Instax mini11 拍立得换漫步者头戴耳机，额外再塞半盒全新相纸',
+            body: '机身完全无划痕，欢迎周末一起在学校樱花大道试拍几张直接成环！',
+            imgs: ['/assets/amz/quad-auction.jpg'],
+            likes: 49, cat: '其他',
+            comments: []
+        },
+        {
+            id: 1007, roomId: 'lost', tag: '失物招领', author: '图书馆值班同学', ava: '图', time: '今天 11:20',
+            title: '【招领】一楼自习区靠窗桌面捡到一把黑色全自动晴雨伞 + 绿色校园卡套',
+            body: '已经放在图书馆一楼服务台旁边的蓝框里，失主同学可以直接在本贴留言确认特征来认领~',
+            imgs: ['/assets/amz/quad-delivery.jpg'],
+            likes: 112, cat: '生活',
+            comments: []
+        },
+        {
+            id: 1008, roomId: 'game', tag: '约战PK', author: 'Scrap街机冠军', ava: '游', time: '4 小时前',
+            title: '【街机约战】来试试新上线的 Scrap Arena 双人同屏格斗！顺便赌一瓶冰可乐换贴纸',
+            body: 'P1 用 WASD+JKL，P2 用方向键+123，点右侧“开始对战”就能直接双人同屏切磋，看谁连招最强！',
+            imgs: ['/assets/brand/mascot-box.png'],
+            likes: 63, cat: '其他',
+            comments: []
+        }
+    ];
+    function getTiebaPosts() {
+        var custom = [];
+        try { custom = JSON.parse(localStorage.getItem('hq.tiebaPosts') || '[]'); } catch (e) { custom = []; }
+        var repliesMap = {};
+        try { repliesMap = JSON.parse(localStorage.getItem('hq.tiebaReplies') || '{}') || {}; } catch (e) { repliesMap = {}; }
+        var likesMap = {};
+        try { likesMap = JSON.parse(localStorage.getItem('hq.tiebaLikes') || '{}') || {}; } catch (e) { likesMap = {}; }
+        return (Array.isArray(custom) ? custom : []).concat(SEEDED_TIEBA_POSTS).map(function (p) {
+            var extraReplies = Array.isArray(repliesMap[p.id]) ? repliesMap[p.id] : [];
+            var liked = !!likesMap['u_' + p.id];
+            return Object.assign({}, p, {
+                liked: liked,
+                likesCount: Number(p.likes || 0) + (liked ? 1 : 0),
+                allComments: (p.comments || []).concat(extraReplies)
+            });
+        });
+    }
+    var SEEDED_ROOM_CHATS = {
+        digital: [
+            {nick: '北山电竞阿泽', time: '14:22', text: '今天有人出 68 键三模机械键盘吗？想拿罗技鼠标补一点换'},
+            {nick: '菊轩极客老林', time: '14:25', text: '我刚在南山书院那看到同学挂了个 Keychron K2，成色贼新'}
+        ],
+        books: [
+            {nick: '南山学姐小林', time: '10:15', text: '同济高数第七版上下册+张宇1000题还剩最后一套，需要的同学可直接发帖留言'},
+            {nick: '智能工程大二生', time: '10:18', text: '求一套卡西欧 fx-991 计算器，下午在北山食堂交接！'}
+        ],
+        dorm: [
+            {nick: '松格桌搭糖糖', time: '19:02', text: '米家护眼台灯 1S 夜间开暖光超舒服，熄灯后充着电也能用好久'}
+        ],
+        sports: [
+            {nick: '风雨球场科比', time: '17:30', text: '7点半风雨球场有人一起试拍吗？顺便切磋两局~'}
+        ],
+        photo: [
+            {nick: '爱莲摄影小鹿', time: '13:10', text: '手上有两盒未拆富士 mini 白边相纸，想换泡泡玛特盲盒或桌面手办'}
+        ],
+        lost: [
+            {nick: '北山热心学长', time: '11:40', text: '在北山三食堂门口捡到一副白色蓝牙耳机盒，请在失物吧联系我核对型号'}
+        ],
+        game: [
+            {nick: 'Scrap街机冠军', time: '20:10', text: '刚刚拿机器人打了 15 连击，谁来 Scrap Arena 挑战一下？'}
+        ]
+    };
+    function getRoomChats(roomId) {
+        var stored = {};
+        try { stored = JSON.parse(localStorage.getItem('hq.roomChats') || '{}') || {}; } catch (e) { stored = {}; }
+        var extra = Array.isArray(stored[roomId]) ? stored[roomId] : [];
+        return (SEEDED_ROOM_CHATS[roomId] || [{nick: '小唤助手', time: '置顶', text: '欢迎来到本主题聊天室！可以直接发文字、图片或晒出在架闲置。'}]).concat(extra);
+    }
+
     async function renderCommunity() {
-        $('#app').innerHTML=shell('community',
+        var rooms = getAllRooms();
+        var activeRoomId = state.commRoom || 'hall';
+        var activeRoom = rooms.find(function (r) { return r.id === activeRoomId; }) || rooms[0];
+        activeRoomId = activeRoom.id;
+        state.commRoom = activeRoomId;
+        var follows = getRoomFollows();
+        var isFollowed = follows.indexOf(activeRoomId) >= 0;
+        var activeTab = state.commTab || 'posts';
+
+        var allPosts = getTiebaPosts();
+        var roomPosts = activeRoomId === 'hall' ? allPosts : allPosts.filter(function (p) { return p.roomId === activeRoomId; });
+        var myShelfItems = state.me ? await api('/item/mine?status=1', {optionalAuth: true}).catch(function () { return []; }) : [];
+
+        var roomNavHtml = rooms.map(function (r) {
+            var on = r.id === activeRoomId;
+            return '<div class="qq-chan-row">'
+                + '<button type="button" class="qq-chan-item sub ' + (on ? 'on' : '') + '" data-act="comm-room" data-room="' + esc(r.id) + '">'
+                + clayIcon(r.icon || 'fire', r.name, 'is-sm')
+                + '<span>' + esc(r.name) + '</span>'
+                + (r.badge ? '<small>' + esc(r.badge) + '</small>' : '')
+                + '</button>'
+                + (r.custom ? '<button type="button" class="qq-room-del" data-act="delete-custom-room" data-room="' + esc(r.id) + '" title="删除自建聊天室">×</button>' : '')
+                + '</div>';
+        }).join('');
+
+        var composerBar = activeTab === 'posts'
+            ? '<form class="qq-compose-box tieba-composer" data-form="tieba-post">'
+              + '<div class="tieba-comp-head">'
+              + '<b>' + clayIcon('order', '发帖', 'is-sm') + ' 在「' + esc(activeRoom.name) + '」发表新帖</b>'
+              + '<select name="tag" aria-label="帖子标签" class="tieba-tag-select">'
+              + '<option value="晒单安利">晒单安利</option><option value="求物互换">求物互换</option><option value="经验分享">经验分享</option><option value="失物招领">失物招领</option><option value="避坑指南">避坑指南</option>'
+              + '</select>'
+              + '</div>'
+              + '<input class="tieba-title-input" name="title" maxlength="90" placeholder="填写帖子标题（例如：出95新机械键盘，或求换同济高数教材）" required>'
+              + '<textarea name="body" maxlength="800" rows="3" placeholder="说说成色、期望交换的物品、方便面交的书院地点…" aria-label="帖子正文" required></textarea>'
+              + (state.tiebaPostImg ? '<div class="tieba-img-preview"><img src="' + esc(state.tiebaPostImg) + '" alt="配图"><button type="button" data-act="tieba-clear-img">移除配图</button></div>' : '')
+              + '<div class="chat-tools qq-compose-bar">'
+              + '<div class="qq-tool-btns">'
+              + '<label class="chat-tool">' + clayIcon('star', '配图', 'is-sm') + ' 添加配图<input type="file" accept="image/png,image/jpeg,image/webp" data-act="tieba-post-image" hidden></label>'
+              + (myShelfItems && myShelfItems.length
+                  ? '<select name="itemId" class="tieba-item-select" aria-label="关联我的闲置"><option value="">关联在架闲置（选填）</option>'
+                    + myShelfItems.map(function (it) { return '<option value="' + Number(it.id) + '">' + esc(it.title) + '</option>'; }).join('') + '</select>'
+                  : '<button type="button" class="chat-tool" data-act="go" data-to="#/publish">' + clayIcon('order', '发布', 'is-sm') + ' 先去发布闲置</button>')
+              + '</div>'
+              + '<button type="submit" class="btn btn-primary btn-sm">发表到贴吧</button>'
+              + '</div></form>'
+            : '';
+
+        var postsFeedHtml = roomPosts.length ? roomPosts.map(function (p) {
+            var commentsOpen = !!state.tiebaOpenComments[p.id];
+            var floorListHtml = p.allComments.map(function (c, cIdx) {
+                return '<div class="tieba-floor">'
+                    + '<span class="tieba-floor-no">' + (cIdx + 1) + '楼</span>'
+                    + '<b>' + esc(c.author || '移通同学') + '</b>'
+                    + '<p>' + esc(c.text) + '</p>'
+                    + '<time>' + esc(c.time || '刚刚') + '</time>'
+                    + '</div>';
+            }).join('');
+            return '<article class="qq-post-card tieba-post-card">'
+                + '<header class="qq-post-head">'
+                + '<span class="qq-post-avatar">' + esc(p.ava || (p.author || '友').slice(0, 1)) + '</span>'
+                + '<div><b>' + esc(p.author) + '</b><span>' + esc(p.time) + ' | ' + esc((rooms.find(function (r) { return r.id === p.roomId; }) || activeRoom).name) + '</span></div>'
+                + '<span class="qq-post-tag">' + esc(p.tag || '讨论') + '</span>'
+                + (p.isUserPost ? '<button type="button" class="tieba-del-btn" data-act="tieba-delete-post" data-id="' + esc(p.id) + '">删帖</button>' : '')
+                + '</header>'
+                + '<h3>' + esc(p.title) + '</h3>'
+                + (p.body ? '<p class="tieba-post-body">' + esc(p.body) + '</p>' : '')
+                + (p.imgs && p.imgs.length ? '<div class="qq-post-imgs">' + p.imgs.map(function (src) { return '<img src="' + esc(src) + '" alt="帖子配图" loading="lazy">'; }).join('') + '</div>' : '')
+                + (p.itemId ? '<div class="tieba-linked-item"><a href="#/item/' + Number(p.itemId) + '" class="btn btn-sm btn-ghost">' + clayIcon('swap', '关联', 'is-sm') + ' 查看帖子关联闲置：' + esc(p.itemTitle || ('好物 #' + p.itemId)) + ' ›</a></div>' : '')
+                + '<footer class="qq-post-foot">'
+                + '<button type="button" class="tieba-act-btn ' + (p.liked ? 'on' : '') + '" data-act="tieba-like" data-id="' + esc(p.id) + '">' + clayIcon('fire', '点赞', 'is-sm') + ' <b>' + p.likesCount + '</b></button>'
+                + '<button type="button" class="tieba-act-btn ' + (commentsOpen ? 'on' : '') + '" data-act="tieba-toggle-comments" data-id="' + esc(p.id) + '">' + clayIcon('chat', '评论', 'is-sm') + ' <b>' + p.allComments.length + ' 条回复</b></button>'
+                + '<a href="#/idle' + (p.cat ? '?cat=' + encodeURIComponent(p.cat) : '') + '">逛同类闲置 ›</a>'
+                + '</footer>'
+                + '<div class="tieba-comments" ' + (commentsOpen ? '' : 'hidden') + '>'
+                + (floorListHtml || '<p class="hint" style="margin:0 0 8px">还没有同学抢沙发，快来抢 1 楼吧~</p>')
+                + '<form class="tieba-reply-form" data-form="tieba-reply" data-post-id="' + esc(p.id) + '">'
+                + '<input name="reply" maxlength="300" placeholder="写下你的看法或换物意向，回帖占楼…" required>'
+                + '<button type="submit" class="btn btn-primary btn-sm">回帖</button>'
+                + '</form>'
+                + '</div>'
+                + '</article>';
+        }).join('') : '<div class="card card-pad" style="text-align:center"><p>「' + esc(activeRoom.name) + '」还没有帖子，快在上方发第一帖抢占热帖吧！</p></div>';
+
+        var roomChatHtml = '';
+        if (activeTab === 'chat') {
+            if (activeRoomId === 'hall') {
+                roomChatHtml = '<form class="qq-compose-box chat-compose" data-form="community-text">'
+                    + '<div class="qq-compose-top">'
+                    + '<img class="qq-compose-avatar" src="/assets/brand/mascot-wave-320.webp" alt="">'
+                    + '<textarea name="content" maxlength="500" rows="2" placeholder="在 #' + esc(activeRoom.name) + ' 实时冒泡、求物或分享宝贝…" aria-label="消息内容" required></textarea>'
+                    + '</div>'
+                    + '<div class="chat-tools qq-compose-bar">'
+                    + '<div class="qq-tool-btns">'
+                    + '<label class="chat-tool">' + clayIcon('star', '发图', 'is-sm') + ' 发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label>'
+                    + '<button type="button" class="chat-tool" data-act="community-share">' + clayIcon('order', '晒单', 'is-sm') + ' 晒出我的在架闲置</button>'
+                    + '<button type="button" class="chat-tool" data-act="go" data-to="#/wishes">' + clayIcon('ai', '心愿', 'is-sm') + ' 发起求换心愿</button>'
+                    + '</div>'
+                    + '<button type="submit" class="btn btn-primary btn-sm">发送到聊天室</button>'
+                    + '</div></form>'
+                    + '<section class="qq-realtime-card"><div class="qq-realtime-head"><b>' + clayIcon('chat', '聊天', 'is-sm') + ' #' + esc(activeRoom.name) + ' 实时聊天室</b><span>全校同步广播</span></div><div class="chat-messages" id="chat-messages" aria-live="polite"></div></section>';
+            } else {
+                var rChats = getRoomChats(activeRoomId);
+                roomChatHtml = '<form class="qq-compose-box chat-compose" data-form="room-chat-msg" data-room="' + esc(activeRoomId) + '">'
+                    + '<div class="qq-compose-top">'
+                    + '<img class="qq-compose-avatar" src="/assets/brand/mascot-wave-320.webp" alt="">'
+                    + '<textarea name="content" maxlength="400" rows="2" placeholder="在 #' + esc(activeRoom.name) + ' 聊天室发言…" aria-label="聊天内容" required></textarea>'
+                    + '</div>'
+                    + '<div class="chat-tools qq-compose-bar">'
+                    + '<div class="qq-tool-btns">'
+                    + '<label class="chat-tool">' + clayIcon('star', '图片', 'is-sm') + ' 发送图片<input type="file" accept="image/png,image/jpeg,image/webp" data-act="room-chat-image" data-room="' + esc(activeRoomId) + '" hidden></label>'
+                    + '<button type="button" class="chat-tool" data-act="comm-tab" data-v="posts">' + clayIcon('order', '发帖', 'is-sm') + ' 去贴吧发长帖</button>'
+                    + '</div>'
+                    + '<button type="submit" class="btn btn-primary btn-sm">发送消息</button>'
+                    + '</div></form>'
+                    + '<section class="qq-realtime-card"><div class="qq-realtime-head"><b>' + clayIcon(activeRoom.icon || 'chat', '聊天', 'is-sm') + ' #' + esc(activeRoom.name) + ' 房间聊天室</b><span>' + rChats.length + ' 条活跃发言</span></div>'
+                    + '<div class="chat-messages">' + rChats.map(function (m) {
+                        var isMine = state.me && m.nick === state.me.nickname;
+                        var bodyHtml = m.image ? '<img class="chat-image" src="' + esc(m.image) + '" alt="聊天图片">' : '';
+                        if (m.text) bodyHtml += '<p class="chat-text">' + esc(m.text) + '</p>';
+                        return '<article class="chat-message ' + (isMine ? 'is-mine' : '') + '"><div class="chat-avatar">' + esc((m.nick || '友').slice(0, 1)) + '</div><div class="chat-message-body"><div class="chat-meta"><b>' + esc(m.nick) + '</b><time>' + esc(m.time || '刚刚') + '</time></div><div class="chat-bubble">' + bodyHtml + '</div></div></article>';
+                    }).join('') + '</div></section>';
+            }
+        }
+
+        $('#app').innerHTML = shell('community',
             '<div class="qq-channel-shell">'
-            + '<aside class="qq-chan-left" aria-label="社区频道列表">'
+            + '<aside class="qq-chan-left" aria-label="校园贴吧与聊天室列表">'
             + '<div class="qq-guild-head">'
-            + '<img src="/assets/brand/mascot-wave-320.webp" alt="">'
-            + '<div><b>换一圈校园频道</b><span>● 1,286 位同学在线</span></div>'
+            + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '<div><b>换一圈校园贴吧</b><span>' + rooms.length + ' 个活跃聊天室</span></div>'
             + '</div>'
-            + '<div class="qq-chan-group">'
-            + '<a href="#/community" class="qq-chan-item on"><i>🔥</i><span>发现热门动态</span><em class="qq-badge-hot">热</em></a>'
-            + '<a href="#/wishes" class="qq-chan-item"><i>📢</i><span>全校求换心愿榜</span></a>'
-            + '<a href="#/appraise" class="qq-chan-item"><i>🤖</i><span>AI 估价讨论室</span></a>'
+            + '<button type="button" class="btn btn-primary btn-sm btn-block tieba-create-btn" data-act="open-create-room">+ 创建我的聊天室</button>'
+            + '<div class="qq-chan-group" style="margin-top:10px">'
+            + '<button type="button" class="qq-chan-item ' + (activeRoomId === 'hall' ? 'on' : '') + '" data-act="comm-room" data-room="hall">' + clayIcon('fire', '热门', 'is-sm') + '<span>全校热帖广场</span><em class="qq-badge-hot">热</em></button>'
+            + '<a href="#/wishes" class="qq-chan-item">' + clayIcon('swap', '心愿', 'is-sm') + '<span>全校求换心愿榜</span></a>'
+            + '<a href="#/appraise" class="qq-chan-item">' + clayIcon('ai', 'AI', 'is-sm') + '<span>AI 估价讨论室</span></a>'
             + '</div>'
-            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 闲置与换物子频道</div>'
-            + '<a href="#/community" class="qq-chan-item sub on"><i>#</i><span>综合闲置吹水池</span><small>LIVE</small></a>'
-            + '<a href="#/idle?cat=数码" class="qq-chan-item sub"><i>#</i><span>数码外设发烧友</span><small>99+</small></a>'
-            + '<a href="#/idle?cat=教材" class="qq-chan-item sub"><i>#</i><span>考研教材漂流站</span><small>64</small></a>'
-            + '<a href="#/idle?cat=生活" class="qq-chan-item sub"><i>#</i><span>宿舍好物安利墙</span><small>42</small></a>'
-            + '<a href="#/auctions" class="qq-chan-item sub"><i>#</i><span>校园1元起拍情报</span><small>热</small></a>'
-            + '</div>'
-            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 书院与同城玩乐</div>'
-            + '<a href="#/relay" class="qq-chan-item sub"><i>🔄</i><span>三方换物接力大厅</span></a>'
-            + '<a href="#/community/game" class="qq-chan-item sub"><i>🎮</i><span>Scrap Arena 约战房</span></a>'
-            + '<a href="#/idle?cat=运动" class="qq-chan-item sub"><i>🏀</i><span>风雨球场约球换拍</span></a>'
+            + '<div class="qq-chan-group"><div class="qq-group-title">▾ 贴吧与专题聊天室</div>'
+            + roomNavHtml
             + '</div>'
             + '<div class="qq-left-promo">'
             + '<img src="/assets/brand/mascot-box.png" alt="小唤">'
-            + '<div><b>移通频道</b></div>'
+            + '<div><b>移通贴吧联盟</b></div>'
             + '</div>'
             + '</aside>'
 
             + '<main class="qq-chan-center">'
-            + '<div class="qq-hero-banner">'
-            + '<div class="qq-hero-copy">'
-            + '<div class="qq-hero-title-row">'
-            + '<span class="qq-official-tag">官方频道</span>'
-            + '<h1>校园生活与闲置频道</h1>'
+            + '<header class="tieba-bar-header">'
+            + '<div class="tieba-bar-cover"><img src="' + esc(activeRoom.img || '/assets/amz/quad-community.jpg') + '" alt=""></div>'
+            + '<div class="tieba-bar-meta">'
+            + '<div class="tieba-bar-title-row">'
+            + '<span class="qq-official-tag">' + (activeRoom.custom ? '同学自建吧' : '校园主题吧') + '</span>'
+            + '<h1>' + esc(activeRoom.name) + '</h1>'
+            + '<button type="button" class="btn btn-sm ' + (isFollowed ? 'btn-ghost' : 'btn-primary') + '" data-act="toggle-follow-room" data-room="' + esc(activeRoomId) + '">' + (isFollowed ? '已关注' : '+ 关注本吧') + '</button>'
             + '</div>'
-            + '<div class="qq-hero-stats"><span>今日发帖 <b>286</b></span><span>在架好物 <b>1,420</b></span></div>'
+            + '<p class="tieba-bar-desc">' + esc(activeRoom.desc || '移通同学自由交流与闲置互换专属空间') + '</p>'
+            + '<div class="qq-hero-stats"><span>关注人数 <b>' + (Number(activeRoom.members || 100) + (isFollowed ? 1 : 0)) + '</b></span><span>贴子总数 <b>' + roomPosts.length + '</b></span></div>'
             + '</div>'
-            + '<img class="qq-hero-mascot" src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
+            + '</header>'
+
+            + '<div class="qq-feed-tabs tieba-mode-tabs">'
+            + '<button type="button" class="' + (activeTab === 'posts' ? 'on' : '') + '" data-act="comm-tab" data-v="posts">' + clayIcon('order', '看帖', 'is-sm') + ' 看帖与发帖 (' + roomPosts.length + ')</button>'
+            + '<button type="button" class="' + (activeTab === 'chat' ? 'on' : '') + '" data-act="comm-tab" data-v="chat">' + clayIcon('chat', '聊天', 'is-sm') + ' 本吧实时聊天室</button>'
+            + '<button type="button" class="tieba-tab-cta" data-act="open-create-room">+ 创建聊天室</button>'
+            + '<span class="qq-live-pill">● 实时同步中</span>'
             + '</div>'
 
-            + '<form class="qq-compose-box chat-compose" data-form="community-text">'
-            + '<div class="qq-compose-top">'
-            + '<img class="qq-compose-avatar" src="/assets/brand/mascot-wave-320.webp" alt="">'
-            + '<textarea name="content" maxlength="500" rows="2" placeholder="在 #综合闲置吹水池 分享今天的新鲜事、求购或晒出你的好物…" aria-label="消息内容" required></textarea>'
-            + '</div>'
-            + '<div class="chat-tools qq-compose-bar">'
-            + '<div class="qq-tool-btns">'
-            + '<label class="chat-tool">🖼 发送图片<input type="file" accept="image/png,image/jpeg" data-act="community-image" hidden></label>'
-            + '<button type="button" class="chat-tool" data-act="community-share">📦 晒出我的在架闲置</button>'
-            + '<button type="button" class="chat-tool" data-act="go" data-to="#/wishes">✨ 发起求换心愿</button>'
-            + '</div>'
-            + '<button type="submit" class="btn btn-primary btn-sm">发布到频道</button>'
-            + '</div>'
-            + '</form>'
-
-            + '<div class="qq-feed-tabs">'
-            + '<span class="on">全部动态</span>'
-            + '<span>实时聊天室</span>'
-            + '<a href="#/idle">好物晒单</a>'
-            + '<a href="#/wishes">求换悬赏</a>'
-            + '<a href="#/auctions">拍卖播报</a>'
-            + '<span class="qq-live-pill">● 频道实时同步中</span>'
-            + '</div>'
-
-            + '<section class="qq-realtime-card">'
-            + '<div class="qq-realtime-head"><b>💬 频道实时聊天</b></div>'
-            + '<div class="chat-messages" id="chat-messages" aria-live="polite"></div>'
-            + '</section>'
-
-            + '<div class="qq-featured-feed">'
-            + '<article class="qq-post-card">'
-            + '<header class="qq-post-head"><span class="qq-post-avatar">北</span><div><b>北山书院 电竞阿泽</b><span>15 分钟前 #数码外设</span></div><a class="qq-post-tag" href="#/idle?cat=数码">#数码外设</a></header>'
-            + '<h3>大三升级桌面，出九五新罗技 GPW 二代 + 68键机械键盘，或者换个 iPad 电容笔</h3>'
-            + '<div class="qq-post-imgs"><img src="/assets/amz/quad-digital.jpg" alt=""><img src="/assets/amz/quad-swap.jpg" alt=""><img src="/assets/amz/quad-appraise.jpg" alt=""></div>'
-            + '<footer class="qq-post-foot"><span>🔥 128</span><span>👍 36</span><a href="#/idle?cat=数码">看同款 ›</a></footer>'
-            + '</article>'
-            + '<article class="qq-post-card">'
-            + '<header class="qq-post-head"><span class="qq-post-avatar">南</span><div><b>南山书院 上岸学姐小林</b><span>42 分钟前 #考研教材</span></div><a class="qq-post-tag" href="#/idle?cat=教材">#考研资料</a></header>'
-            + '<h3>整理全套同济高数+张宇1000题手写笔记，欢迎换购</h3>'
-            + '<div class="qq-post-imgs"><img src="/assets/amz/quad-books.jpg" alt=""><img src="/assets/amz/quad-grad.jpg" alt=""></div>'
-            + '<footer class="qq-post-foot"><span>🔥 94</span><span>👍 52</span><a href="#/idle?cat=教材">去换书 ›</a></footer>'
-            + '</article>'
-            + '</div>'
+            + (activeTab === 'posts'
+                ? composerBar + '<div class="qq-featured-feed">' + postsFeedHtml + '</div>'
+                : roomChatHtml)
             + '</main>'
 
             + '<aside class="qq-chan-right" aria-label="频道侧栏">'
@@ -2524,10 +3182,17 @@
             + '<span class="tag">ARCADE</span>'
             + '<h3>Scrap Arena 街机</h3>'
             + '<img src="/assets/brand/mascot-wave-320.webp" alt="小唤">'
-            + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">开始对战 ' + navIcon('external') + '</button>'
+            + '<button class="btn btn-primary" data-act="go" data-to="#/community/game">' + clayIcon('game', '街机', 'is-sm') + ' 开始对战</button>'
             + '</div>'
             + '<div class="qq-side-card">'
-            + '<h4>🏆 本周换物活跃书院榜</h4>'
+            + '<h4>' + clayIcon('chat', '自建吧', 'is-sm') + ' 快速切换聊天室</h4>'
+            + '<div class="tieba-side-pills">' + rooms.slice(0, 6).map(function (r) {
+                return '<button type="button" class="chip ' + (r.id === activeRoomId ? 'on' : '') + '" data-act="comm-room" data-room="' + esc(r.id) + '">' + esc(r.name) + '</button>';
+            }).join('') + '</div>'
+            + '<button type="button" class="btn btn-ghost btn-sm btn-block" style="margin-top:10px" data-act="open-create-room">+ 新建专属聊天室</button>'
+            + '</div>'
+            + '<div class="qq-side-card">'
+            + '<h4>' + clayIcon('fire', '排行榜', 'is-sm') + ' 本周换物活跃书院榜</h4>'
             + '<ul class="qq-rank-list">'
             + '<li><b>1</b><span>北山书院</span><em>428 单</em></li>'
             + '<li><b>2</b><span>南山书院</span><em>365 单</em></li>'
@@ -2539,17 +3204,21 @@
             + '</aside>'
             + '</div>'
         );
-        var communityDraft=sessionStorage.getItem('hq.communityDraft');
-        if(communityDraft){
+
+        var communityDraft = sessionStorage.getItem('hq.communityDraft');
+        if (communityDraft) {
             sessionStorage.removeItem('hq.communityDraft');
-            var compose=$('[data-form="community-text"] textarea');
-            if(compose){
-                compose.insertAdjacentHTML('beforebegin','<p class="community-draft-note">失物招领草稿。补充物品、地点和时间后，可发到校园公共聊天室。</p>');
-                compose.value=communityDraft;
+            var compose = $('[data-form="tieba-post"] textarea, [data-form="community-text"] textarea');
+            if (compose) {
+                compose.insertAdjacentHTML('beforebegin', '<p class="community-draft-note">失物招领草稿。补充物品、地点和时间后即可发帖。</p>');
+                compose.value = communityDraft;
                 compose.focus();
             }
         }
-        await refreshCommunity(true); if(currentView.name==='community') communityTimer=setInterval(function(){refreshCommunity(false);},5000);
+        if (activeTab === 'chat' && activeRoomId === 'hall') {
+            await refreshCommunity(true);
+            if (currentView.name === 'community') communityTimer = setInterval(function () { refreshCommunity(false); }, 5000);
+        }
     }
     function renderCommunityGame() {
         $('#app').innerHTML=shell('community','<div class="game-page-head"><div><span class="tag">COMMUNITY ARCADE</span><h1>Scrap Arena</h1><p>同一台设备，双人键盘对战。</p></div><div class="btn-row"><button class="btn" data-act="go" data-to="#/community">返回社区</button><a class="btn btn-primary" href="/scrap-arena/index.html" target="_blank" rel="noopener">新窗口打开</a></div></div><div class="game-frame-wrap"><iframe class="game-frame" src="/scrap-arena/index.html" title="Scrap Arena 游戏" allow="fullscreen; autoplay"></iframe></div><p class="game-note">点击游戏画面后开始操作。游戏需要键盘；首次加载资源可能需要几秒。P1：W / A / S / D + J / K / L；P2：方向键 + 1 / 2 / 3。按 Enter 开始。</p>');
@@ -2902,7 +3571,7 @@
             + '</div>'
 
             + '<div class="ai-submit-row">'
-            + '<button class="btn btn-primary ai-submit-btn" type="submit">✨ 立即开始 AI 智能估价</button>'
+            + '<button class="btn btn-primary ai-submit-btn" type="submit">' + clayIcon('ai', 'AI', 'is-sm') + ' 立即开始 AI 智能估价</button>'
             + '</div>'
 
             + '<div id="ai-mascot-Evaluating" class="ai-evaluating-box" hidden>'
@@ -2942,17 +3611,17 @@
     // ------------------------------------------------------------------ 路由
 
     var routes = [
-        [/^#\/appraise$/, function () { return 'appraise'; }],
+        [/^#\/appraise(?:\?.*)?$/, function () { return 'appraise'; }],
         [/^#\/followers$/, function () { return 'followers'; }],
-        [/^#\/home$/, function () { return 'home'; }],
-        [/^#\/(?:market|idle|search)$/, function () { return 'home'; }],
-        [/^#\/auctions$/, function () { return 'auctions'; }],
-        [/^#\/community$/, function () { return 'community'; }],
-        [/^#\/notifications$/, function () { return 'notifications'; }],
+        [/^#\/home(?:\?.*)?$/, function () { return 'home'; }],
+        [/^#\/(?:market|idle|search)(?:\?.*)?$/, function () { return 'home'; }],
+        [/^#\/auctions(?:\?.*)?$/, function () { return 'auctions'; }],
+        [/^#\/community(?:\?.*)?$/, function () { return 'community'; }],
+        [/^#\/notifications(?:\?.*)?$/, function () { return 'notifications'; }],
         [/^#\/chats$/, function () { return 'chats'; }],
         [/^#\/chat\/(\d+)$/, function () { return 'chat'; }],
         [/^#\/ring\/(\d+)$/, function () { return 'ringChat'; }],
-        [/^#\/wishes(?:\/(\d+))?$/, function () { return 'wishes'; }],
+        [/^#\/wishes(?:\/(\d+))?(?:\?.*)?$/, function () { return 'wishes'; }],
         [/^#\/community\/game$/, function () { return 'communityGame'; }],
         [/^#\/auction\/new$/, function () { return 'auctionNew'; }],
         [/^#\/auction\/mine$/, function () { return 'auctionMine'; }],
@@ -2963,11 +3632,12 @@
         [/^#\/publish\/edit$/, function () { return 'publish'; }],
         [/^#\/offers$/, function () { return 'offers'; }],
         [/^#\/trade$/, function () { return 'offers'; }],
-        [/^#\/relay$/, function () { return 'relay'; }],
+        [/^#\/relay(?:\?.*)?$/, function () { return 'relay'; }],
         [/^#\/cycle\/(\d+)$/, function (m) { return 'cycle'; }],
         [/^#\/exchange$/, function () { return 'exchange'; }],
         [/^#\/exchange\/(\d+)$/, function (m) { return 'exchangeDetail'; }],
         [/^#\/user\/(\d+)$/, function () { return 'user'; }],
+        [/^#\/me\/([a-z-]+)$/, function () { return 'meSub'; }],
         [/^#\/me$/, function () { return 'me'; }],
         [/^#\/(?:favorites|history)$/, function () { return 'shelf'; }],
         [/^#\/email$/, function () { return 'email'; }],
@@ -2980,9 +3650,29 @@
 
     function parseRoute() {
         var hash = location.hash || '#/home';
+        var qIdx = hash.indexOf('?');
+        var base = qIdx >= 0 ? hash.slice(0, qIdx) : hash;
+        var prevHash = state._lastHash || '';
+        if (hash !== prevHash) {
+            state._lastHash = hash;
+            var qs = qIdx >= 0 ? new URLSearchParams(hash.slice(qIdx + 1)) : null;
+            if (qs && qs.has('cat')) {
+                state.home.category = qs.get('cat') || '';
+                state.home.minCredit = 0;
+            } else if (base === '#/idle' && prevHash.indexOf('cat=') >= 0) {
+                state.home.category = '';
+            }
+            if (qs && qs.has('room')) {
+                state.commRoom = qs.get('room') || 'hall';
+            }
+        }
         for (var i = 0; i < routes.length; i++) {
             var m = hash.match(routes[i][0]);
-            if (m) return {name: routes[i][1](m), arg: m[1] ? Number(m[1]) : null};
+            if (m) {
+                var vName = routes[i][1](m);
+                var arg = vName === 'meSub' ? (m[1] || 'notices') : (m[1] ? Number(m[1]) : null);
+                return {name: vName, arg: arg};
+            }
         }
         return {name: 'home', arg: null};
     }
@@ -3001,7 +3691,7 @@
             renderLogin(state.loginMode || 'login');
             return;
         }
-        if (!state.me && view.name !== 'home' && view.name !== 'relay' && view.name !== 'settings' && view.name !== 'auctions' && view.name !== 'item' && view.name !== 'user') {
+        if (!state.me && view.name !== 'home' && view.name !== 'relay' && view.name !== 'settings' && view.name !== 'auctions' && view.name !== 'item' && view.name !== 'user' && view.name !== 'community' && view.name !== 'wishes') {
             try {
                 state.me = await api('/user/me');
             } catch (e) {
@@ -3013,13 +3703,15 @@
                 }
                 return;
             }
+        } else if (!state.me && readToken()) {
+            try { state.me = await api('/user/me', {optionalAuth: true}); } catch (e) {}
         }
 
         try {
             if (view.name === 'email') { await renderEmail(); } else if (view.name === 'settings') {
                 renderSettings();
             } else if (view.name === 'home') {
-                if(location.hash==='#/search'&&!state.home.keyword){renderSearchPage('');}
+                if((location.hash || '').split('?')[0]==='#/search'&&!state.home.keyword){renderSearchPage('');}
                 else if(await loadHome(true))renderHome();
             } else if (view.name === 'auctions') {
                 await renderAuctions();
@@ -3061,6 +3753,8 @@
                 await renderExchangeDetail(view.arg);
             } else if (view.name === 'user') {
                 await renderUser(view.arg);
+            } else if (view.name === 'meSub') {
+                await renderMeSub(view.arg);
             } else if (view.name === 'me') {
                 await renderMe();
             } else if (view.name === 'admin') {
@@ -3088,6 +3782,236 @@
 
         if (act === 'scroll-top') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        if (act === 'f-credit') {
+            var nextCredit = Number(el.dataset.v || 0);
+            state.home.minCredit = state.home.minCredit === nextCredit ? 0 : nextCredit;
+            if (state.home.items && state.home.items.length) {
+                renderHome();
+            } else if (await loadHome(true)) {
+                renderHome();
+            }
+            return;
+        }
+        if (act === 'relay-cat') {
+            state.relayCat = el.dataset.v || '全部';
+            await renderRelay();
+            return;
+        }
+        if (act === 'auction-cat') {
+            state.auctionCat = state.auctionCat === el.dataset.v ? '全部' : (el.dataset.v || '全部');
+            await renderAuctions(currentView.name === 'auctionMine');
+            return;
+        }
+        if (act === 'auction-state') {
+            state.auctionState = el.dataset.v || 'all';
+            await renderAuctions(currentView.name === 'auctionMine');
+            return;
+        }
+        if (act === 'auction-sort') {
+            state.auctionSort = el.dataset.v || 'default';
+            await renderAuctions(currentView.name === 'auctionMine');
+            return;
+        }
+        if (act === 'auction-reset') {
+            state.auctionCat = '全部';
+            state.auctionState = 'all';
+            state.auctionSort = 'default';
+            await renderAuctions(currentView.name === 'auctionMine');
+            return;
+        }
+        if (act === 'wish-cat') {
+            state.wishCat = el.dataset.v || '全部';
+            await renderWishes();
+            return;
+        }
+        if (act === 'orders-adv') {
+            state.offersAdvOpen = !state.offersAdvOpen;
+            if (currentView.name === 'exchange') await renderExchanges();
+            else await renderOffers();
+            return;
+        }
+        if (act === 'offers-status') {
+            state.offersStatusFilter = el.dataset.v || 'all';
+            await renderOffers();
+            return;
+        }
+        if (act === 'orders-reset') {
+            state.offersQuery = '';
+            state.offersStatusFilter = 'all';
+            state.hiddenDemoOrders = [];
+            if (currentView.name === 'exchange') await renderExchanges();
+            else await renderOffers();
+            return;
+        }
+        if (act === 'demo-order-hide') {
+            var orderNo = el.dataset.no;
+            if (orderNo && state.hiddenDemoOrders.indexOf(orderNo) < 0) state.hiddenDemoOrders.push(orderNo);
+            toast('已移出此示例订单');
+            if (currentView.name === 'exchange') await renderExchanges();
+            else await renderOffers();
+            return;
+        }
+        if (act === 'im-select') {
+            var nextIdx = Number(el.dataset.idx || 0);
+            state.activeNoticeIdx = nextIdx;
+            try {
+                var readMap = JSON.parse(localStorage.getItem('hq.imRead') || '{}') || {};
+                readMap[nextIdx] = true;
+                localStorage.setItem('hq.imRead', JSON.stringify(readMap));
+            } catch (e) {}
+            await renderNotifications();
+            return;
+        }
+        if (act === 'im-phrase-menu') {
+            var phraseBar = $('#tb-phrase-bar');
+            if (phraseBar) phraseBar.hidden = !phraseBar.hidden;
+            return;
+        }
+        if (act === 'im-phrase-pick') {
+            var imIn = $('#tb-im-input');
+            var pBar = $('#tb-phrase-bar');
+            if (imIn) {
+                imIn.value = el.dataset.v || '';
+                var cEl = $('#tb-char-count');
+                if (cEl) cEl.textContent = imIn.value.length + ' / 500';
+                imIn.focus();
+            }
+            if (pBar) pBar.hidden = true;
+            return;
+        }
+        if (act === 'im-insert-ai') {
+            var aiIn = $('#tb-im-input');
+            if (aiIn) {
+                var tip = '【小唤AI估价建议】该类好物近期成交区间约 ¥120-165，支持等价互换或小额补差面交。';
+                aiIn.value = aiIn.value ? (aiIn.value + ' ' + tip) : tip;
+                var cntEl = $('#tb-char-count');
+                if (cntEl) cntEl.textContent = aiIn.value.length + ' / 500';
+                aiIn.focus();
+            }
+            return;
+        }
+        if (act === 'im-insert-card' || act === 'im-send') {
+            var idx = Number(state.activeNoticeIdx || 0);
+            var imMap = {};
+            try { imMap = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { imMap = {}; }
+            if (!Array.isArray(imMap[idx])) imMap[idx] = [];
+            var nowD = new Date();
+            var tStr = String(nowD.getHours()).padStart(2, '0') + ':' + String(nowD.getMinutes()).padStart(2, '0');
+            if (act === 'im-insert-card') {
+                imMap[idx].push({
+                    kind: 'card',
+                    title: '发起了校园闲置互换意向卡片',
+                    text: '罗技 GPW 二代无线鼠标（95新）换物申请',
+                    sub: '预约北山书院面交，点此查看报价',
+                    img: '/assets/amz/quad-digital.jpg',
+                    to: '#/offers',
+                    time: tStr
+                });
+            } else {
+                var boxIn = $('#tb-im-input');
+                var txt = (boxIn && boxIn.value || '').trim();
+                if (!txt) { toast('请输入要发送的消息内容', 'err'); return; }
+                imMap[idx].push({kind: 'text', text: txt, time: tStr});
+            }
+            try { localStorage.setItem('hq.imThreads', JSON.stringify(imMap)); } catch (e) {}
+            await renderNotifications();
+            var streamBox = document.querySelector('.tb-chat-stream');
+            if (streamBox) streamBox.scrollTop = streamBox.scrollHeight;
+            return;
+        }
+        if (act === 'im-scroll-bottom') {
+            var stEl = document.querySelector('.tb-chat-stream');
+            if (stEl) stEl.scrollTo({ top: stEl.scrollHeight, behavior: 'smooth' });
+            return;
+        }
+        if (act === 'comm-room') {
+            state.commRoom = el.dataset.room || 'hall';
+            await renderCommunity();
+            return;
+        }
+        if (act === 'comm-tab') {
+            state.commTab = el.dataset.v || 'posts';
+            await renderCommunity();
+            return;
+        }
+        if (act === 'open-room') {
+            state.commRoom = el.dataset.room || 'hall';
+            state.commTab = 'posts';
+            go('#/community');
+            return;
+        }
+        if (act === 'toggle-follow-room') {
+            var rId = el.dataset.room;
+            if (!rId) return;
+            var fl = getRoomFollows().slice();
+            var pos = fl.indexOf(rId);
+            if (pos >= 0) { fl.splice(pos, 1); toast('已取消关注该贴吧'); }
+            else { fl.push(rId); toast('已关注该贴吧'); }
+            setRoomFollows(fl);
+            if (currentView.name === 'meSub') await renderMeSub('channels');
+            else await renderCommunity();
+            return;
+        }
+        if (act === 'open-create-room') {
+            openCreateRoomSheet();
+            return;
+        }
+        if (act === 'delete-custom-room') {
+            var delId = el.dataset.room;
+            if (!delId || !confirm('确定删除这个自建聊天室吗？')) return;
+            var curCustom = [];
+            try { curCustom = JSON.parse(localStorage.getItem('hq.customRooms') || '[]'); } catch (e) { curCustom = []; }
+            curCustom = (Array.isArray(curCustom) ? curCustom : []).filter(function (r) { return r.id !== delId; });
+            try { localStorage.setItem('hq.customRooms', JSON.stringify(curCustom)); } catch (e) {}
+            if (state.commRoom === delId) state.commRoom = 'hall';
+            toast('已删除自建聊天室');
+            await renderCommunity();
+            return;
+        }
+        if (act === 'tieba-like') {
+            var postId = el.dataset.id;
+            if (!postId) return;
+            var likesMap = {};
+            try { likesMap = JSON.parse(localStorage.getItem('hq.tiebaLikes') || '{}') || {}; } catch (e) { likesMap = {}; }
+            var lkKey = 'u_' + postId;
+            likesMap[lkKey] = !likesMap[lkKey];
+            try { localStorage.setItem('hq.tiebaLikes', JSON.stringify(likesMap)); } catch (e) {}
+            await renderCommunity();
+            return;
+        }
+        if (act === 'tieba-toggle-comments') {
+            var cPid = el.dataset.id;
+            if (!cPid) return;
+            var opened = !state.tiebaOpenComments[cPid];
+            state.tiebaOpenComments[cPid] = opened;
+            el.classList.toggle('on', opened);
+            var cardEl = el.closest('.tieba-post-card');
+            var cBox = cardEl && cardEl.querySelector('.tieba-comments');
+            if (cBox) cBox.hidden = !opened;
+            return;
+        }
+        if (act === 'tieba-delete-post') {
+            var dpId = el.dataset.id;
+            if (!dpId || !confirm('确定删除这条帖子？')) return;
+            var postsArr = [];
+            try { postsArr = JSON.parse(localStorage.getItem('hq.tiebaPosts') || '[]'); } catch (e) { postsArr = []; }
+            postsArr = (Array.isArray(postsArr) ? postsArr : []).filter(function (p) { return p.id !== dpId; });
+            try { localStorage.setItem('hq.tiebaPosts', JSON.stringify(postsArr)); } catch (e) {}
+            toast('帖子已删除');
+            await renderCommunity();
+            return;
+        }
+        if (act === 'tieba-clear-img') {
+            var tDraft = document.querySelector('[data-form="tieba-post"] input[name="title"]')?.value || '';
+            var bDraft = document.querySelector('[data-form="tieba-post"] textarea[name="body"]')?.value || '';
+            state.tiebaPostImg = '';
+            await renderCommunity();
+            var tIn = document.querySelector('[data-form="tieba-post"] input[name="title"]');
+            var bIn = document.querySelector('[data-form="tieba-post"] textarea[name="body"]');
+            if (tIn && tDraft) tIn.value = tDraft;
+            if (bIn && bDraft) bIn.value = bDraft;
             return;
         }
         if (act === 'amz-thumb') {
@@ -3505,6 +4429,114 @@
         if(publishError){publishError.hidden=true;publishError.textContent='';}
 
         var run = async function () {
+            if (kind === 'orders-search') {
+                state.offersQuery = (fd.get('q') || '').trim();
+                if (currentView.name === 'exchange') await renderExchanges();
+                else await renderOffers();
+                return;
+            }
+            if (kind === 'tieba-post') {
+                var pTitle = (fd.get('title') || '').trim();
+                var pBody = (fd.get('body') || '').trim();
+                if (!pTitle || !pBody) throw new ApiError('请填写帖子标题和正文');
+                var roomsNow = getAllRooms();
+                var activeR = roomsNow.find(function (r) { return r.id === state.commRoom; }) || roomsNow[0];
+                var selItemId = Number(fd.get('itemId') || 0) || null;
+                var selEl = form.querySelector('select[name="itemId"]');
+                var selItemTitle = selItemId && selEl && selEl.selectedIndex >= 0 ? selEl.options[selEl.selectedIndex].text : '';
+                var nick = (state.me && state.me.nickname) || '移通同学';
+                var posts = [];
+                try { posts = JSON.parse(localStorage.getItem('hq.tiebaPosts') || '[]'); } catch (e) { posts = []; }
+                if (!Array.isArray(posts)) posts = [];
+                posts.unshift({
+                    id: 'u_' + Date.now(),
+                    isUserPost: true,
+                    roomId: activeR.id,
+                    cat: activeR.cat === '综合' ? '' : activeR.cat,
+                    author: nick,
+                    ava: nick.slice(0, 1),
+                    time: '刚刚',
+                    tag: fd.get('tag') || '讨论',
+                    title: pTitle,
+                    body: pBody,
+                    imgs: state.tiebaPostImg ? [state.tiebaPostImg] : [],
+                    itemId: selItemId,
+                    itemTitle: selItemTitle,
+                    likes: 0,
+                    comments: []
+                });
+                try { localStorage.setItem('hq.tiebaPosts', JSON.stringify(posts)); } catch (e) {}
+                state.tiebaPostImg = '';
+                toast('发表成功，帖子已置顶展示在当前贴吧', 'ok');
+                await renderCommunity();
+                return;
+            }
+            if (kind === 'tieba-reply') {
+                var rpId = form.dataset.postId;
+                var rpText = (fd.get('reply') || '').trim();
+                if (!rpId || !rpText) return;
+                var rMap = {};
+                try { rMap = JSON.parse(localStorage.getItem('hq.tiebaReplies') || '{}') || {}; } catch (e) { rMap = {}; }
+                if (!Array.isArray(rMap[rpId])) rMap[rpId] = [];
+                rMap[rpId].push({
+                    author: (state.me && state.me.nickname) || '移通同学',
+                    time: '刚刚',
+                    text: rpText
+                });
+                try { localStorage.setItem('hq.tiebaReplies', JSON.stringify(rMap)); } catch (e) {}
+                state.tiebaOpenComments[rpId] = true;
+                toast('回帖成功', 'ok');
+                await renderCommunity();
+                return;
+            }
+            if (kind === 'create-room') {
+                var rmName = (fd.get('name') || '').trim();
+                if (!rmName) throw new ApiError('请填写聊天室名称');
+                var rmId = 'custom_' + Date.now();
+                var customArr = [];
+                try { customArr = JSON.parse(localStorage.getItem('hq.customRooms') || '[]'); } catch (e) { customArr = []; }
+                if (!Array.isArray(customArr)) customArr = [];
+                customArr.push({
+                    id: rmId,
+                    name: rmName,
+                    icon: fd.get('icon') || 'fire',
+                    cat: fd.get('cat') || '综合',
+                    badge: (fd.get('badge') || '').trim() || '新建',
+                    desc: (fd.get('desc') || '').trim() || '同学们自主发起的校园兴趣贴吧与闲置交流室',
+                    members: 1,
+                    img: '/assets/amz/quad-community.jpg',
+                    custom: true
+                });
+                try { localStorage.setItem('hq.customRooms', JSON.stringify(customArr)); } catch (e) {}
+                var fArr = getRoomFollows().slice();
+                if (fArr.indexOf(rmId) < 0) fArr.push(rmId);
+                setRoomFollows(fArr);
+                state.commRoom = rmId;
+                state.commTab = 'posts';
+                closeSheet();
+                toast('聊天室创建成功', 'ok');
+                if (currentView.name === 'community') await renderCommunity();
+                else go('#/community');
+                return;
+            }
+            if (kind === 'room-chat-msg') {
+                var rmKey = form.dataset.room || state.commRoom || 'hall';
+                var rmTxt = (fd.get('content') || '').trim();
+                if (!rmTxt) return;
+                var nowC = new Date();
+                var tClock = String(nowC.getHours()).padStart(2, '0') + ':' + String(nowC.getMinutes()).padStart(2, '0');
+                var cMap = {};
+                try { cMap = JSON.parse(localStorage.getItem('hq.roomChats') || '{}') || {}; } catch (e) { cMap = {}; }
+                if (!Array.isArray(cMap[rmKey])) cMap[rmKey] = [];
+                cMap[rmKey].push({
+                    nick: (state.me && state.me.nickname) || '移通同学',
+                    time: tClock,
+                    text: rmTxt
+                });
+                try { localStorage.setItem('hq.roomChats', JSON.stringify(cMap)); } catch (e) {}
+                await renderCommunity();
+                return;
+            }
             if (kind === 'room-text') {var roomId=currentView.arg,ringRoom=currentView.name==='ringChat';await api('/conversation/'+(ringRoom?'ring/':'')+roomId,{method:'POST',body:{kind:'text',content:fd.get('content')}});form.reset();await refreshRoom(true);return;}
             if (kind === 'wish-new') {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});toast('求换已发布');await renderWishes();return;}
             if (kind === 'community-text') { await api('/community',{method:'POST',body:{kind:'text',content:fd.get('content')}}); form.reset(); form.querySelector('.community-draft-note')?.remove(); await refreshCommunity(true); return; }
@@ -3687,7 +4719,97 @@
         }
     });
 
+    async function readOrUploadLocalImage(file) {
+        if (state.me || readToken()) {
+            try {
+                var fd = new FormData();
+                fd.append('file', window.prepareUploadImage ? await window.prepareUploadImage(file) : file);
+                var res = await api('/upload', {method: 'POST', form: fd, optionalAuth: true});
+                if (res && res.url) return res.url;
+            } catch (e) {}
+        }
+        return await new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var img = new Image();
+                img.onload = function () {
+                    var max = 720, scale = Math.min(1, max / Math.max(img.width || 1, img.height || 1));
+                    var canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(img.width * scale));
+                    canvas.height = Math.max(1, Math.round(img.height * scale));
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.74));
+                };
+                img.onerror = function () { reject(new Error('图片读取失败')); };
+                img.src = reader.result;
+            };
+            reader.onerror = function () { reject(new Error('图片读取失败')); };
+            reader.readAsDataURL(file);
+        });
+    }
+
     document.addEventListener('change', async function (ev) {
+        if (ev.target.dataset.act === 'im-image') {
+            var imFile = ev.target.files && ev.target.files[0];
+            if (!imFile) return;
+            try {
+                var imUrl = await readOrUploadLocalImage(imFile);
+                var idx = Number(state.activeNoticeIdx || 0);
+                var imMap = {};
+                try { imMap = JSON.parse(localStorage.getItem('hq.imThreads') || '{}') || {}; } catch (e) { imMap = {}; }
+                if (!Array.isArray(imMap[idx])) imMap[idx] = [];
+                var nowD = new Date();
+                imMap[idx].push({
+                    kind: 'image',
+                    image: imUrl,
+                    text: '[图片]',
+                    time: String(nowD.getHours()).padStart(2, '0') + ':' + String(nowD.getMinutes()).padStart(2, '0')
+                });
+                try { localStorage.setItem('hq.imThreads', JSON.stringify(imMap)); } catch (e) {}
+                await renderNotifications();
+                var st = document.querySelector('.tb-chat-stream');
+                if (st) st.scrollTop = st.scrollHeight;
+            } catch (err) { toast(err.message || '图片发送失败', 'err'); }
+            finally { ev.target.value = ''; }
+            return;
+        }
+        if (ev.target.dataset.act === 'tieba-post-image') {
+            var tbFile = ev.target.files && ev.target.files[0];
+            if (!tbFile) return;
+            try {
+                var tDraft = document.querySelector('[data-form="tieba-post"] input[name="title"]')?.value || '';
+                var bDraft = document.querySelector('[data-form="tieba-post"] textarea[name="body"]')?.value || '';
+                state.tiebaPostImg = await readOrUploadLocalImage(tbFile);
+                await renderCommunity();
+                var tIn = document.querySelector('[data-form="tieba-post"] input[name="title"]');
+                var bIn = document.querySelector('[data-form="tieba-post"] textarea[name="body"]');
+                if (tIn && tDraft) tIn.value = tDraft;
+                if (bIn && bDraft) bIn.value = bDraft;
+            } catch (err) { toast(err.message || '配图加载失败', 'err'); }
+            finally { ev.target.value = ''; }
+            return;
+        }
+        if (ev.target.dataset.act === 'room-chat-image') {
+            var rcFile = ev.target.files && ev.target.files[0];
+            if (!rcFile) return;
+            var rmKey = ev.target.dataset.room || state.commRoom || 'hall';
+            try {
+                var rcUrl = await readOrUploadLocalImage(rcFile);
+                var cMap = {};
+                try { cMap = JSON.parse(localStorage.getItem('hq.roomChats') || '{}') || {}; } catch (e) { cMap = {}; }
+                if (!Array.isArray(cMap[rmKey])) cMap[rmKey] = [];
+                var nowR = new Date();
+                cMap[rmKey].push({
+                    nick: (state.me && state.me.nickname) || '移通同学',
+                    time: String(nowR.getHours()).padStart(2, '0') + ':' + String(nowR.getMinutes()).padStart(2, '0'),
+                    image: rcUrl
+                });
+                try { localStorage.setItem('hq.roomChats', JSON.stringify(cMap)); } catch (e) {}
+                await renderCommunity();
+            } catch (err) { toast(err.message || '图片发送失败', 'err'); }
+            finally { ev.target.value = ''; }
+            return;
+        }
         if (ev.target.dataset.act === 'room-image') {
             var input = ev.target, file = input.files && input.files[0], conversationId = currentView.arg;
             if (!file) return;
@@ -3767,7 +4889,19 @@
             document.querySelectorAll('.messages-page .conversation-row').forEach(function(row){row.hidden=!row.textContent.toLowerCase().includes(query);});
         }
     });
-    document.addEventListener('input', function (ev) { if (ev.target.id === 'theme-color') applyTheme(ev.target.value, true); });
+    document.addEventListener('input', function (ev) {
+        if (ev.target.id === 'theme-color') applyTheme(ev.target.value, true);
+        if (ev.target.id === 'tb-im-input') {
+            var cnt = $('#tb-char-count');
+            if (cnt) cnt.textContent = String(ev.target.value.length) + ' / 500';
+        }
+    });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.target && ev.target.id === 'tb-im-input' && ev.key === 'Enter' && !ev.shiftKey) {
+            ev.preventDefault();
+            document.querySelector('[data-act="im-send"]')?.click();
+        }
+    });
 
     // ------------------------------------------------------------------ 启动
 
