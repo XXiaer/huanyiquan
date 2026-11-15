@@ -646,7 +646,7 @@
             + '<div><h3>交易保障</h3><a href="#/offers">我的报价</a><a href="#/exchange">我的交换单</a><a href="#/favorites">收藏与历史</a></div>'
             + '<div><h3>账户与帮助</h3><a href="#/me">个人中心</a><a href="#/settings">账号设置</a><a href="#/notifications">消息通知</a></div>'
             + '</div></div>'
-            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈 v2.0</span></div><p>重庆移通学院 校园闲置流转平台</p></div>'
+            + '<div class="amz-footer-base"><div class="amz-footer-brand">' + logoMarkup() + '<span>换一圈</span></div><p>重庆移通学院 校园闲置流转平台</p></div>'
             + '</footer>';
     }
     function shell(active,content) {
