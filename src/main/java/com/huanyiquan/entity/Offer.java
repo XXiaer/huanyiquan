@@ -16,6 +16,13 @@ public class Offer {
     /** 0 待响应 / 1 已接受 / 2 已拒绝 / 3 已失效 / 4 已撤回 / 5 已还价 */
     public Integer status;
     public Long parentId;
+    public Long rootOfferId;
+    public String targetTitleSnap;
+    public String targetThumbSnap;
+    public String targetCondSnap;
+    public String myTitleSnap;
+    public String myThumbSnap;
+    public String myCondSnap;
     public LocalDateTime expireTime;
     public LocalDateTime createTime;
     public LocalDateTime handleTime;

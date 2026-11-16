@@ -15,9 +15,11 @@ import com.huanyiquan.entity.Offer;
 
 import java.sql.Connection;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 交换单：生成、三方确认、约定面交、双向确认收货、超时关闭。
@@ -98,22 +100,134 @@ public final class ExchangeService {
         return data;
     }
 
-    /** 约定面交点与时间段 */
-    public static void place(long userId, long exchangeId, String place, String dealTime) {
-        Exchange e = mustFind(exchangeId);
-        if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
-            throw BizException.forbidden("你不在这个交换单里");
-        }
-        if (e.status != Const.EX_WAIT_CONFIRM && e.status != Const.EX_WAIT_DELIVER) {
-            throw new BizException(400, "交换单当前状态不能改面交点");
-        }
+    /** 兼容旧入口：所有面交地点/时间修改统一走版本化提议流程，需对方/全员同意才生效 */
+    public static Map<String, Object> place(long userId, long exchangeId, String place, String dealTime) {
+        return proposeArrangement(userId, exchangeId, place, dealTime, null, null);
+    }
+
+    /** 提出或改期面交安排：生成待确认新版本并通知其余参与者，在全员确认前保留原已确认安排 */
+    public static Map<String, Object> proposeArrangement(long userId, long exchangeId, String place,
+                                                         String startTime, String endTime, String note) {
         if (Str.isBlank(place)) {
-            throw new BizException(400, "面交点不能为空");
+            throw new BizException(400, "面交地点不能为空");
         }
-        ExchangeDao.updatePlace(exchangeId, Str.cut(place, 100), Str.cut(dealTime, 50));
-        NotificationService.exchange(exchangeId,userId,"面交安排已更新","交换伙伴更新了面交安排。");
-        BizLogDao.log(userId, "EXCHANGE", exchangeId, e.status, e.status,
-                "面交改为：" + place + " " + (dealTime == null ? "" : dealTime));
+        String cleanPlace = Str.cut(place.trim(), 120);
+        String cleanStart = Str.cut(startTime, 40);
+        String cleanEnd = Str.cut(endTime, 40);
+        String cleanNote = Str.cut(note, 200);
+
+        return DBUtil.tx(c -> {
+            Integer exStatus = DBUtil.queryOne(c, "SELECT status FROM `exchange` WHERE id=? FOR UPDATE",
+                    rs -> rs.getInt(1), exchangeId);
+            if (exStatus == null) {
+                throw BizException.notFound("交换单不存在");
+            }
+            if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
+                throw BizException.forbidden("你不在这个交换单里");
+            }
+            if (exStatus != Const.EX_WAIT_CONFIRM && exStatus != Const.EX_WAIT_DELIVER) {
+                throw new BizException(400, "交换单当前状态不能修改面交安排");
+            }
+
+            Integer maxVer = DBUtil.queryOne(c,
+                    "SELECT COALESCE(MAX(version), 0) FROM exchange_arrangement WHERE exchange_id=?",
+                    rs -> rs.getInt(1), exchangeId);
+            int nextVer = (maxVer == null ? 0 : maxVer) + 1;
+
+            DBUtil.update(c, "UPDATE exchange_arrangement SET status=2 WHERE exchange_id=? AND status=0", exchangeId);
+            long arrId = DBUtil.insert(c,
+                    "INSERT INTO exchange_arrangement(exchange_id,version,proposer_id,place,start_time,end_time,note,status) VALUES(?,?,?,?,?,?,?,0)",
+                    exchangeId, nextVer, userId, cleanPlace, cleanStart, cleanEnd, cleanNote);
+            DBUtil.update(c, "INSERT IGNORE INTO exchange_arrangement_confirmation(arrangement_id,user_id) VALUES(?,?)",
+                    arrId, userId);
+            DBUtil.update(c, "UPDATE `exchange` SET pending_arrangement_id=? WHERE id=?", arrId, exchangeId);
+
+            NotificationService.exchange(c, exchangeId, userId,
+                    "收到面交安排提议",
+                    "对方提议在「" + cleanPlace + "」面交" + (Str.hasText(cleanStart) ? "（" + cleanStart + "）" : "") + "，请确认。");
+            BizLogDao.log(c, userId, "EXCHANGE", exchangeId, exStatus, exStatus,
+                    "提议面交安排 v" + nextVer + "：" + cleanPlace);
+
+            return loadArrangement(c, arrId, userId, (int) ExchangeDetailDao.countRows(exchangeId));
+        });
+    }
+
+    /** 同意某一版本的面交安排；全员确认后正式生效 */
+    public static Map<String, Object> confirmArrangement(long userId, long exchangeId, int version) {
+        return DBUtil.tx(c -> {
+            Map<String, Object> exRow = DBUtil.queryOne(c,
+                    "SELECT status, pending_arrangement_id, confirmed_arrangement_id FROM `exchange` WHERE id=? FOR UPDATE",
+                    rs -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("status", rs.getInt(1));
+                        m.put("pendingId", rs.getObject(2));
+                        m.put("confirmedId", rs.getObject(3));
+                        return m;
+                    }, exchangeId);
+            if (exRow == null) {
+                throw BizException.notFound("交换单不存在");
+            }
+            if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
+                throw BizException.forbidden("你不在这个交换单里");
+            }
+            int exStatus = ((Number) exRow.get("status")).intValue();
+            if (exStatus != Const.EX_WAIT_CONFIRM && exStatus != Const.EX_WAIT_DELIVER) {
+                throw new BizException(400, "交换单当前状态不能确认面交安排");
+            }
+
+            Map<String, Object> arr = DBUtil.queryOne(c,
+                    "SELECT id, status, place, start_time, end_time FROM exchange_arrangement WHERE exchange_id=? AND version=? FOR UPDATE",
+                    rs -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("id", rs.getLong(1));
+                        m.put("status", rs.getInt(2));
+                        m.put("place", rs.getString(3));
+                        m.put("startTime", rs.getString(4));
+                        m.put("endTime", rs.getString(5));
+                        return m;
+                    }, exchangeId, version);
+            if (arr == null) {
+                throw new BizException(400, "安排已更新，请核对最新版");
+            }
+            long arrId = ((Number) arr.get("id")).longValue();
+            Number pendingIdObj = (Number) exRow.get("pendingId");
+            if (((Number) arr.get("status")).intValue() != 0 || pendingIdObj == null || pendingIdObj.longValue() != arrId) {
+                throw new BizException(400, "安排已更新，请核对最新版");
+            }
+
+            Long already = DBUtil.queryOne(c,
+                    "SELECT COUNT(*) FROM exchange_arrangement_confirmation WHERE arrangement_id=? AND user_id=?",
+                    rs -> rs.getLong(1), arrId, userId);
+            if (already != null && already > 0) {
+                throw new BizException(400, "你已经同意过这版安排，等待其他同学确认");
+            }
+            DBUtil.update(c, "INSERT INTO exchange_arrangement_confirmation(arrangement_id,user_id) VALUES(?,?)", arrId, userId);
+
+            long confirmedCount = DBUtil.count(c, "SELECT COUNT(*) FROM exchange_arrangement_confirmation WHERE arrangement_id=?", arrId);
+            int needCount = (int) ExchangeDetailDao.countRows(exchangeId);
+            boolean allConfirmed = confirmedCount >= needCount;
+
+            if (allConfirmed) {
+                DBUtil.update(c, "UPDATE exchange_arrangement SET status=2 WHERE exchange_id=? AND status=1", exchangeId);
+                DBUtil.update(c, "UPDATE exchange_arrangement SET status=1 WHERE id=?", arrId);
+                String p = (String) arr.get("place");
+                String st = (String) arr.get("startTime");
+                String et = (String) arr.get("endTime");
+                String combinedTime = Str.hasText(st) ? (Str.hasText(et) ? st + " - " + et : st) : "";
+                DBUtil.update(c, "UPDATE `exchange` SET confirmed_arrangement_id=?, pending_arrangement_id=NULL, place=?, deal_time=? WHERE id=?",
+                        arrId, Str.cut(p, 100), Str.cut(combinedTime, 50), exchangeId);
+                NotificationService.exchange(c, exchangeId, 0,
+                        "面交安排已正式生效",
+                        "全员已确认面交安排：「" + p + "」" + (Str.hasText(combinedTime) ? "（" + combinedTime + "）" : "") + "。");
+            } else {
+                NotificationService.exchange(c, exchangeId, userId,
+                        "面交安排确认进展",
+                        "已有 " + confirmedCount + "/" + needCount + " 人同意最新面交安排，请及时核对。");
+            }
+            BizLogDao.log(c, userId, "EXCHANGE", exchangeId, exStatus, exStatus,
+                    "同意面交安排 v" + version + "（" + confirmedCount + "/" + needCount + "）");
+            return loadArrangement(c, arrId, userId, needCount);
+        });
     }
 
     /** 各自点「已交换」。全部点完才算完成，才结算信用分。 */
@@ -208,7 +322,45 @@ public final class ExchangeService {
                 e.mine = d;
             }
         }
+        try (Connection c = DBUtil.getConnection()) {
+            if (e.confirmedArrangementId != null) {
+                e.confirmedArrangement = loadArrangement(c, e.confirmedArrangementId, userId, details.size());
+            }
+            if (e.pendingArrangementId != null) {
+                e.pendingArrangement = loadArrangement(c, e.pendingArrangementId, userId, details.size());
+            }
+        } catch (Exception ignore) {
+        }
         return e;
+    }
+
+    private static Map<String, Object> loadArrangement(Connection c, long arrId, long viewerId, int needCount) {
+        Map<String, Object> arr = DBUtil.queryOne(c,
+                "SELECT a.*, u.nickname AS proposer_name FROM exchange_arrangement a JOIN `user` u ON u.id=a.proposer_id WHERE a.id=?",
+                rs -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", rs.getLong("id"));
+                    m.put("exchangeId", rs.getLong("exchange_id"));
+                    m.put("version", rs.getInt("version"));
+                    m.put("proposerId", rs.getLong("proposer_id"));
+                    m.put("proposerName", rs.getString("proposer_name"));
+                    m.put("place", rs.getString("place"));
+                    m.put("startTime", rs.getString("start_time"));
+                    m.put("endTime", rs.getString("end_time"));
+                    m.put("note", rs.getString("note"));
+                    m.put("status", rs.getInt("status"));
+                    m.put("createdAt", Objects.toString(rs.getObject("created_at"), null));
+                    return m;
+                }, arrId);
+        if (arr == null) return null;
+        List<Long> confirmedIds = DBUtil.query(c,
+                "SELECT user_id FROM exchange_arrangement_confirmation WHERE arrangement_id=?",
+                rs -> rs.getLong(1), arrId);
+        arr.put("confirmedUserIds", confirmedIds);
+        arr.put("confirmedCount", confirmedIds.size());
+        arr.put("needCount", needCount);
+        arr.put("confirmedByMe", confirmedIds.contains(viewerId));
+        return arr;
     }
 
     public static List<Exchange> mine(long userId) {

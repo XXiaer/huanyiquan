@@ -71,7 +71,10 @@ public final class AdminService {
                 BizLogDao.log(c, adminId, "ITEM", r.targetId, it.status, Const.ITEM_OFF, "管理员下架");
                 if (it.ownerId != null) {
                     UserDao.addCredit(c, it.ownerId, -5);
-                    BizLogDao.log(c, adminId, "USER", it.ownerId, null, null, "物品被认定违规，信用分 -5");
+                    BizLogDao.log(c, adminId, "USER", it.ownerId, null, null, "受到举报投诉认定违规（物品下架），信用分 -5");
+                    NotificationService.send(c, it.ownerId, "举报投诉处理结果",
+                            "你的物品「" + Str.cut(it.title, 20) + "」被举报投诉认定违规已下架，信用分扣除 5 分。",
+                            "#/credit/" + it.ownerId);
                 }
                 data.put("msg", "已下架物品，物主信用分 -5");
             } else {
@@ -79,9 +82,14 @@ public final class AdminService {
                 if (target == null || target.role == null || target.role != 0) {
                     throw BizException.badRequest("无法通过举报停用管理员账号");
                 }
+                UserDao.addCredit(c, r.targetId, -5);
                 UserDao.updateStatus(c, r.targetId, 0);
+                BizLogDao.log(c, adminId, "USER", r.targetId, null, null, "受到举报投诉认定违规，信用分 -5");
                 BizLogDao.log(c, adminId, "USER", r.targetId, 1, 0, "管理员封禁");
-                data.put("msg", "已封禁该用户");
+                NotificationService.send(c, r.targetId, "举报投诉处理结果",
+                        "你的账号被举报投诉且认定违规，信用分扣除 5 分。",
+                        "#/credit/" + r.targetId);
+                data.put("msg", "已封禁该用户并扣除信用分 5 分");
             }
             ReportDao.handle(c, reportId, Const.REPORT_DONE, cutNote);
             BizLogDao.log(c, adminId, "REPORT", reportId, Const.REPORT_PENDING, Const.REPORT_DONE, "管理员认定违规");

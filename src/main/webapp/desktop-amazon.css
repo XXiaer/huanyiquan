@@ -275,14 +275,27 @@
     .amz-nav-item b { font-size: 13px; color: #ffffff; font-weight: 700; }
     .amz-nav-item .notice-count {
         position: absolute;
-        top: 2px;
-        right: 4px;
-        background: var(--amz-orange);
-        color: #06302a;
+        top: 1px;
+        right: 2px;
+        min-width: 17px;
+        height: 17px;
+        line-height: 17px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ff4d4f !important;
+        color: #ffffff !important;
         font-weight: 800;
         border-radius: 999px;
         padding: 0 5px;
-        font-size: 11px;
+        font-size: 10.5px;
+        box-shadow: 0 0 0 1.5px #131921;
+    }
+    .amz-nav-item .notice-count[hidden] {
+        display: none !important;
+    }
+    .notice-popup {
+        z-index: 2500 !important;
     }
     .header-actions .settings-link,
     .header-actions .settings-link .nav-icon {
@@ -3754,7 +3767,7 @@
     /* ==========================================================================
        16. 像素级细节精修补丁 (顶栏右侧净化、悬停菜单黄钮与双列、5列海报条横排、按钮防折行)
        ========================================================================== */
-    .header-actions .notice-link,
+    .header-actions .notice-link:not(.amz-nav-item),
     .header-actions .settings-link:not(.amz-cart),
     .header-actions > .avatar,
     .header-actions > .header-account {

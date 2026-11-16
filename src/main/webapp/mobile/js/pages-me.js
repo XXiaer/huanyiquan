@@ -59,7 +59,7 @@
   function topbar(title, opts) {
     const o = opts || {};
     return `<div class="topbar${o.white ? ' topbar--white' : ''}">
-      <button class="topbar__back" onclick="${o.onBack || 'history.back()'}">${icon('back', 22)}</button>
+      <button class="topbar__back" onclick="${o.onBack || `smartBack('${o.parent || '#/me'}')`}">${icon('back', 22)}</button>
       <div class="topbar__spacer"></div>
       <div class="topbar__title">${esc(title)}</div>
       <div class="topbar__spacer"></div>
@@ -285,8 +285,7 @@
   };
 
   window.returnToSettings = function () {
-    if (history.state?.settingsParent) history.back();
-    else location.replace('#/settings');
+    location.replace('#/settings');
   };
 
   function subHead(title) {

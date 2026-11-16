@@ -46,6 +46,17 @@ public class ExchangeServlet extends BaseServlet {
             ok(resp, "已取消，物品解锁回到在架", null);
             return;
         }
+        if ("arrangements".equals(action)) {
+            if (segs.size() >= 4 && "confirm".equals(segs.get(3))) {
+                int ver = (int) segLong(segs, 2);
+                ok(resp, "已确认面交安排", ExchangeService.confirmArrangement(uid(req), exchangeId, ver));
+                return;
+            }
+            ok(resp, "已提交面交提议，等待对方确认",
+                    ExchangeService.proposeArrangement(uid(req), exchangeId, p.str("place"),
+                            p.str("startTime", p.str("dealTime")), p.str("endTime"), p.str("note")));
+            return;
+        }
         throw notFound();
     }
 
@@ -56,7 +67,7 @@ public class ExchangeServlet extends BaseServlet {
             throw notFound();
         }
         Params p = Params.of(req);
-        ExchangeService.place(uid(req), segLong(segs, 0), p.str("place"), p.str("dealTime"));
-        ok(resp, "面交点已更新", null);
+        ok(resp, "已提交面交提议，等待对方确认",
+                ExchangeService.place(uid(req), segLong(segs, 0), p.str("place"), p.str("dealTime")));
     }
 }

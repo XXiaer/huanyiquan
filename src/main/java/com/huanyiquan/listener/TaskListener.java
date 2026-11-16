@@ -57,10 +57,10 @@ public class TaskListener implements ServletContextListener {
             }
         }, 2, 10, TimeUnit.MINUTES);
 
-        // 待审核超过五分钟，图片仍有效且未被人工处理时自动通过。
+        // 待审核超过 1 分钟，图片仍有效且未被人工处理时自动通过（较原 5 分钟提速 80%）。
         pool.scheduleWithFixedDelay(() -> {
             try { AutoReviewService.run(); } catch (Exception e) { System.err.println("[自动审核] " + e.getMessage()); }
-        }, 5, 10, TimeUnit.SECONDS);
+        }, 3, 3, TimeUnit.SECONDS);
 
         pool.scheduleWithFixedDelay(() -> { try { PassiveMatchService.run(); } catch (Exception e) { System.err.println("[被动匹配] " + e.getMessage()); } }, 15, 60, TimeUnit.SECONDS);
 

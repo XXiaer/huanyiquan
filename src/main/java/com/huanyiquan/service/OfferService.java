@@ -14,9 +14,11 @@ import com.huanyiquan.entity.Offer;
 import com.huanyiquan.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /** 报价：发起、接受、拒绝、还价、撤回、超时失效。 */
 public final class OfferService {
@@ -69,8 +71,15 @@ public final class OfferService {
             o.toUser = target.ownerId;
             o.message = msg;
             o.status = Const.OFFER_PENDING;
+            o.targetTitleSnap = Str.cut(target.title, 100);
+            o.targetThumbSnap = Str.cut(firstThumb(target.images), 255);
+            o.targetCondSnap = Str.cut(target.conditionLevel, 30);
+            o.myTitleSnap = Str.cut(mine.title, 100);
+            o.myThumbSnap = Str.cut(firstThumb(mine.images), 255);
+            o.myCondSnap = Str.cut(mine.conditionLevel, 30);
             o.expireTime = LocalDateTime.now().plusHours(Const.OFFER_EXPIRE_HOURS);
             long id = OfferDao.insert(c, o);
+            OfferDao.setRootOfferId(c, id, id);
             ItemDao.incrOfferCount(c, itemId);
             NotificationService.send(c,target.ownerId,"收到新报价","有人想交换你的「"+target.title+"」。","#/offers");
             BizLogDao.log(c, userId, "OFFER", id, null, Const.OFFER_PENDING,
@@ -133,6 +142,7 @@ public final class OfferService {
                 for(long id:itemIds) { Integer status=DBUtil.queryOne(c,"SELECT status FROM item WHERE id=? AND deleted=0 AND is_demo=0 FOR UPDATE",rs->rs.getInt(1),id); if(status==null||status!=Const.ITEM_ON)throw new BizException(400,"物品状态已变化，请重新查看"); }
                 Integer offerStatus=DBUtil.queryOne(c,"SELECT status FROM offers WHERE id=? FOR UPDATE",rs->rs.getInt(1),offerId);
                 if(offerStatus==null||offerStatus!=Const.OFFER_PENDING)throw new BizException(400,"报价已处理");
+                assertLatestInThread(c, o);
                 OfferDao.updateStatus(c, offerId, Const.OFFER_ACCEPTED);
                 long eid = ExchangeService.createOneToOne(c, o);
                 NotificationService.send(c,o.fromUser,"报价已接受","对方接受了你的报价，请查看交换单。","#/exchange/"+eid);
@@ -153,6 +163,7 @@ public final class OfferService {
                 if (offerStatus == null || offerStatus != Const.OFFER_PENDING) {
                     throw new BizException(400, "报价已处理，请刷新查看");
                 }
+                assertLatestInThread(c, o);
                 OfferDao.updateStatus(c, offerId, Const.OFFER_REJECTED);
                 BizLogDao.log(c, userId, "OFFER", offerId, Const.OFFER_PENDING, Const.OFFER_REJECTED, "拒绝报价");
                 NotificationService.send(c, o.fromUser, "报价未被接受", "对方暂未接受你的报价。", "#/offers");
@@ -184,12 +195,18 @@ public final class OfferService {
                 if (offerStatus == null || offerStatus != Const.OFFER_PENDING) {
                     throw new BizException(400, "报价已处理，请刷新查看");
                 }
+                assertLatestInThread(c, o);
                 Item counterItem = ItemDao.findById(c, newMyItemId);
                 if (counterItem == null) {
                     throw BizException.notFound("你选的物品不存在");
                 }
                 if (!counterItem.ownerId.equals(userId)) {
                     throw BizException.forbidden("还价只能用你自己的物品");
+                }
+                Item prevTarget = ItemDao.findById(c, o.myItemId);
+                long rootId = o.rootOfferId != null ? o.rootOfferId : offerId;
+                if (o.rootOfferId == null) {
+                    OfferDao.setRootOfferId(c, offerId, rootId);
                 }
                 OfferDao.updateStatus(c, offerId, Const.OFFER_COUNTERED);
                 Offer counter = new Offer();
@@ -200,6 +217,13 @@ public final class OfferService {
                 counter.message = "还价：用「" + counterItem.title + "」换你的「" + o.myTitle + "」";
                 counter.status = Const.OFFER_PENDING;
                 counter.parentId = offerId;
+                counter.rootOfferId = rootId;
+                counter.targetTitleSnap = Str.cut(prevTarget != null ? prevTarget.title : o.myTitle, 100);
+                counter.targetThumbSnap = Str.cut(prevTarget != null ? firstThumb(prevTarget.images) : o.myThumbSnap, 255);
+                counter.targetCondSnap = Str.cut(prevTarget != null ? prevTarget.conditionLevel : o.myCondSnap, 30);
+                counter.myTitleSnap = Str.cut(counterItem.title, 100);
+                counter.myThumbSnap = Str.cut(firstThumb(counterItem.images), 255);
+                counter.myCondSnap = Str.cut(counterItem.conditionLevel, 30);
                 counter.expireTime = LocalDateTime.now().plusHours(Const.OFFER_EXPIRE_HOURS);
                 long id = OfferDao.insert(c, counter);
                 ItemDao.incrOfferCount(c, counter.itemId);
@@ -219,6 +243,7 @@ public final class OfferService {
             if (offerStatus == null || offerStatus != Const.OFFER_PENDING) {
                 throw new BizException(400, "报价已处理，无法撤回");
             }
+            assertLatestInThread(c, o);
             OfferDao.updateStatus(c, offerId, Const.OFFER_CANCELED);
             BizLogDao.log(c, userId, "OFFER", offerId, Const.OFFER_PENDING, Const.OFFER_CANCELED, "撤回报价");
             NotificationService.send(c, o.toUser, "报价已撤回", "对方撤回了一条报价。", "#/offers");
@@ -226,6 +251,91 @@ public final class OfferService {
         });
         data.put("msg", "已撤回");
         return data;
+    }
+
+    /** 查询提案链完整历史，仅参与者可见 */
+    public static List<Map<String, Object>> history(long userId, long offerId) {
+        Offer anchor = OfferDao.findById(offerId);
+        if (anchor == null) {
+            throw BizException.notFound("提案不存在");
+        }
+        long rootId = anchor.rootOfferId != null ? anchor.rootOfferId : resolveRootId(anchor);
+        List<Offer> chain = OfferDao.listThread(rootId);
+        boolean isParticipant = false;
+        for (Offer row : chain) {
+            if (Objects.equals(row.fromUser, userId) || Objects.equals(row.toUser, userId)) {
+                isParticipant = true;
+                break;
+            }
+        }
+        if (!isParticipant) {
+            throw BizException.forbidden("无权查看该提案历史");
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        Offer prev = null;
+        for (int i = 0; i < chain.size(); i++) {
+            Offer cur = chain.get(i);
+            String curMy = Str.hasText(cur.myTitleSnap) ? cur.myTitleSnap : cur.myTitle;
+            String curTarget = Str.hasText(cur.targetTitleSnap) ? cur.targetTitleSnap : cur.targetTitle;
+            String diff = null;
+            if (prev != null) {
+                String prevTarget = Str.hasText(prev.targetTitleSnap) ? prev.targetTitleSnap : prev.targetTitle;
+                if (!Objects.equals(cur.myItemId, prev.itemId)) {
+                    diff = cur.fromNickname + " 把「" + prevTarget + "」换成了「" + curMy + "」";
+                }
+            }
+            Map<String, Object> node = new LinkedHashMap<>();
+            node.put("id", cur.id);
+            node.put("round", i);
+            node.put("label", i == 0 ? "初始提案" : "第 " + i + " 次反提案");
+            node.put("fromUser", cur.fromUser);
+            node.put("toUser", cur.toUser);
+            node.put("fromNickname", cur.fromNickname);
+            node.put("toNickname", cur.toNickname);
+            node.put("itemId", cur.itemId);
+            node.put("myItemId", cur.myItemId);
+            node.put("targetTitle", curTarget);
+            node.put("targetThumb", cur.targetThumbSnap);
+            node.put("targetCond", cur.targetCondSnap);
+            node.put("myTitle", curMy);
+            node.put("myThumb", cur.myThumbSnap);
+            node.put("myCond", cur.myCondSnap);
+            node.put("message", cur.message);
+            node.put("status", cur.status);
+            node.put("statusText", cur.statusText);
+            node.put("diffSummary", diff);
+            node.put("isLatest", i == chain.size() - 1);
+            node.put("createTime", cur.createTime != null ? cur.createTime.toString() : null);
+            node.put("expireTime", cur.expireTime != null ? cur.expireTime.toString() : null);
+            out.add(node);
+            prev = cur;
+        }
+        return out;
+    }
+
+    private static void assertLatestInThread(java.sql.Connection c, Offer o) {
+        if (o.rootOfferId == null) return;
+        Long latest = OfferDao.latestIdInThread(c, o.rootOfferId);
+        if (latest != null && !latest.equals(o.id)) {
+            throw new BizException(400, "提案已更新，请核对最新版本");
+        }
+    }
+
+    private static long resolveRootId(Offer start) {
+        Offer cur = start;
+        int guard = 0;
+        while (cur.parentId != null && guard++ < 30) {
+            Offer parent = OfferDao.findById(cur.parentId);
+            if (parent == null) break;
+            cur = parent;
+        }
+        return cur.id;
+    }
+
+    private static String firstThumb(String images) {
+        if (Str.isBlank(images)) return "";
+        String[] parts = images.split(",");
+        return parts.length > 0 ? parts[0].trim() : "";
     }
 
     /** 定时任务：超时 24 小时的报价自动失效 */

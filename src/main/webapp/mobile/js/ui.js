@@ -136,7 +136,24 @@
   };
   window.displayCredit = function (u) {
     if (!u) return 0;
-    return u.displayCredit || (600 + (Number(u.credit) || 0));
+    return Number(u.credit) || 0;
+  };
+  window.smartBack = function (parentHash) {
+    location.replace(parentHash || '#/home');
+  };
+  window.startLivePoll = function (fn, intervalMs) {
+    const prev = window.__cleanup;
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+      if (document.querySelector('#sheetHost .sheet-mask')) return;
+      const ae = document.activeElement;
+      if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+      fn();
+    }, intervalMs || 5000);
+    window.__cleanup = () => {
+      clearInterval(timer);
+      if (typeof prev === 'function') prev();
+    };
   };
 
   /* ------------------------------------------------------------- 热度 */
@@ -303,7 +320,7 @@
   /* ------------------------------------------------------------- 底部导航 */
   const NAV = [
     { key: 'home', label: '首页', icon: 'home', iconOn: 'homeFill', href: '#/home' },
-    { key: 'auction', label: '拍卖', icon: 'auction', href: '#/auction' },
+    { key: 'community', label: '集市', icon: 'market', iconOn: 'marketFill', href: '#/community' },
     { key: 'publish', label: '发布', icon: 'publish', href: '#/publish', center: true },
     { key: 'message', label: '消息', icon: 'message', iconOn: 'messageFill', href: '#/messages', badge: true },
     { key: 'me', label: '我的', icon: 'me', iconOn: 'meFill', href: '#/me' },

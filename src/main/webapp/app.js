@@ -655,7 +655,10 @@
             + '</footer>';
     }
     function shell(active,content) {
-        setTimeout(refreshNoticeCount,0);
+        setTimeout(function(){
+            if (noticeTracker && noticeTracker.initialized) applyNoticeCountDom(noticeTracker.count);
+            refreshNoticeCount();
+        },0);
         var me=state.me;
         var account=me?'<button class="avatar" data-act="go" data-to="#/me" title="'+esc(me.nickname)+'">'+esc(me.nickname.slice(0,1))+'</button>':(readToken()?'<a class="header-account" href="#/me">个人中心</a>':'<a class="header-account" href="#/login">登录 / 注册</a>');
         var popCta = me
@@ -666,7 +669,7 @@
             +'<div class="amz-acct-dropdown" role="menu"><span class="amz-pop-arrow"></span>'+popCta
             +'<div class="amz-pop-cols">'
             +'<div><h4>我的列表</h4><a href="#/favorites">我的收藏夹</a><a href="#/history">浏览足迹</a><a href="#/wishes">求换心愿单</a><a href="#/relay">三方换物接力</a><button type="button" class="amz-pop-link" data-act="estimate">AI 好物估价</button></div>'
-            +'<div><h4>我的账户</h4><a href="#/me">我的主页</a><a href="#/exchange">我的交换单</a><a href="#/offers">收发报价记录</a><a href="#/auction/mine">我的校园拍卖</a><a href="#/notifications">消息通知中心</a><a href="#/settings">账号与偏好设置</a></div>'
+            +'<div><h4>我的账户</h4><a href="#/me">我的主页</a><a href="#/me/items">我发布的闲置</a><a href="#/exchange">我的交换单</a><a href="#/offers">收发报价记录</a><a href="#/auction/mine">我的校园拍卖</a><a href="#/notifications">消息通知中心</a><a href="#/settings">账号与偏好设置</a></div>'
             +'</div></div></div>';
         var catOpts='<option value="">全部</option>'+CATS.map(function(c){return '<option value="'+esc(c)+'"'+(state.home.category===c?' selected':'')+'>'+esc(c)+'</option>';}).join('');
         var search='<form class="header-search amz-search" data-form="search"><select class="amz-search-cat" name="category" aria-label="选择分类">'+catOpts+'</select><input name="keyword" aria-label="搜索闲置" placeholder="搜索换一圈校园好物..." value="'+esc(state.home.keyword)+'"><button type="submit" aria-label="搜索">'+navIcon('search')+'<span>搜索</span></button></form>';
@@ -1570,7 +1573,7 @@
         } else if (it.status === 1) {
             var buyBtn = '<button class="btn ' + (supportsSwap ? 'btn-ghost' : 'btn-primary') + ' btn-block" data-act="chat-start" data-id="' + it.id + '">'
                 + (supportsPrice ? '私聊面交买 · ¥' + (Number(it.price) / 100).toFixed(0) : '私聊发布者') + '</button>';
-            var swapBtn = supportsSwap ? '<button class="btn btn-primary btn-block" data-act="open-offer" data-id="' + it.id + '">用我的物品换</button>' : '';
+            var swapBtn = supportsSwap ? '<button class="btn btn-primary btn-block" data-act="open-offer" data-id="' + it.id + '">提案交换</button>' : '';
             actions = swapBtn + buyBtn;
             reportBtn = '<button class="amz-report-link" data-act="open-report" data-type="1" data-id="' + it.id + '">' + navIcon('flag') + ' 举报该商品信息</button>';
         } else {
@@ -1685,7 +1688,7 @@
 
         var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/publish">发布中心</a><span>›</span><b>发布闲置物品</b></nav>'
             + '<section class="redesign-page publish-editor amz-form-layout"><div class="page-head"><h1>发布闲置物品</h1>'
-            + '<p>上传图片并提交审核，5 分钟未处理将自动通过。</p></div>'
+            + '<p>上传图片并提交审核，约 1 分钟未处理将自动极速通过。</p></div>'
             + '<div class="amz-form-grid"><form id="publish-form" data-form="publish" class="card card-pad"><p class="publish-error" role="alert" tabindex="-1" hidden></p>'
             + '<div class="field"><label class="label">图片 <span class="opt">最多 3 张，每张 ≤2MB</span></label>'
             + '<div class="chips" id="img-preview" style="margin-top:8px"></div><p class="hint">第一张会用作商品封面。</p></div>'
@@ -1864,6 +1867,7 @@
         return '<aside class="jd-side-nav" aria-label="个人与订单导航">'
             + '<div class="jd-nav-group"><h4>' + clayIcon('user', '我的', 'is-sm') + ' 我的换一圈</h4>'
             + '<a href="#/me" class="' + (activeKey === 'me' ? 'on' : '') + '">个人中心主页</a>'
+            + '<a href="#/me/items" class="' + (activeKey === 'items' ? 'on' : '') + '">我发布的闲置</a>'
             + '</div>'
             + '<div class="jd-nav-group"><h4>' + clayIcon('order', '订单', 'is-sm') + ' 订单中心</h4>'
             + '<a href="#/offers" class="' + (activeKey === 'offers' ? 'on' : '') + '">我的订单</a>'
@@ -2371,18 +2375,35 @@
                 + '</div></div>';
         }).join('');
 
+        var confArr = e.confirmedArrangement || null;
+        var pendArr = e.pendingArrangement || null;
         var actions = '';
         if (summary.canConfirm) {
             actions = '<button class="btn btn-primary" data-act="ex-confirm" data-id="' + e.id + '">确认参与</button>';
         } else if (summary.canReceive) {
             actions = '<button class="btn btn-primary" data-act="ex-done" data-id="' + e.id + '">确认收货</button>';
         } else if (e.status === 3) {
-            actions = '<button class="btn btn-primary" data-act="open-review" data-id="' + e.id + '">评价参与者</button>';
+            actions = '<button class="btn btn-primary" data-act="open-review" data-id="' + e.id + '">评价参与者</button>'
+                + '<a class="btn btn-ghost" href="#/market">返回主页面</a>';
+        } else if (e.status === 4) {
+            actions = '<a class="btn btn-ghost" href="#/market">返回主页面</a>';
         }
         if (summary.active) {
-            actions += '<button class="btn btn-ghost" data-act="open-place" data-id="' + e.id + '">约面交</button>'
+            if (pendArr && !pendArr.confirmedByMe) {
+                actions += '<button class="btn btn-primary" data-act="arr-confirm" data-id="' + e.id + '" data-ver="' + Number(pendArr.version) + '">同意安排</button>';
+            }
+            actions += '<button class="btn btn-ghost" data-act="open-place" data-id="' + e.id + '">' + (pendArr || confArr ? '修改提议' : '提议时间和地点') + '</button>'
                 + '<button class="btn btn-ghost exchange-cancel" data-act="ex-cancel" data-id="' + e.id + '">取消交换</button>';
         }
+
+        var meetPlace = confArr ? confArr.place : (e.place || '待约定');
+        var meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
+        var meetBadge = confArr ? '<span class="tag brand">已约好</span>' : (pendArr ? '<span class="tag">' + (pendArr.confirmedByMe ? '等对方确认' : '待你确认') + '（' + pendArr.confirmedCount + '/' + pendArr.needCount + '）</span>' : '<span class="tag">待约面交</span>');
+        var pendingHtml = pendArr ? ('<div class="exchange-pending-box" style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#f4faf8;border:1px solid #cce7e0;font-size:13px">'
+            + '<b>' + (confArr ? '改期提议 v' : '待确认提议 v') + Number(pendArr.version) + '</b>（由 ' + esc(pendArr.proposerName || '同学') + ' 提出 · ' + pendArr.confirmedCount + '/' + pendArr.needCount + ' 已确认）'
+            + '<div style="margin-top:4px">地点：' + esc(pendArr.place) + (pendArr.startTime ? ' ｜ 时间：' + esc([pendArr.startTime, pendArr.endTime].filter(Boolean).join(' - ')) : '') + '</div>'
+            + (pendArr.note ? '<div style="margin-top:2px;color:#475569">备注：' + esc(pendArr.note) + '</div>' : '')
+            + '</div>') : '';
 
         var handoff = mine ? '<section class="exchange-handoff" aria-label="我的物品交接">'
             + '<div><span>我给出</span><strong>' + esc(mine.giveTitle || '物品') + '</strong>'
@@ -2401,9 +2422,11 @@
             + handoff
             + '<div class="exchange-detail-grid"><section class="exchange-people"><h2>参与者</h2>' + rows
             + (e.type === 3 ? '<a class="btn btn-ghost" href="#/ring/' + e.id + '">进入三方协商房间</a>' : '') + '</section>'
-            + '<section class="exchange-meet"><h2>面交安排</h2>'
-            + '<div class="kv"><span class="k">地点</span><span class="v">' + esc(e.place || '待约定') + '</span></div>'
-            + '<div class="kv"><span class="k">时间</span><span class="v">' + esc(e.dealTime || '待约定') + '</span></div>'
+            + '<section class="exchange-meet"><h2>面交安排 ' + meetBadge + '</h2>'
+            + '<div class="kv"><span class="k">' + (confArr ? '已定地点' : '地点') + '</span><span class="v">' + esc(meetPlace) + '</span></div>'
+            + '<div class="kv"><span class="k">' + (confArr ? '已定时间' : '时间') + '</span><span class="v">' + esc(meetTime || '待约定') + '</span></div>'
+            + (confArr && confArr.note ? '<div class="kv"><span class="k">备注</span><span class="v">' + esc(confArr.note) + '</span></div>' : '')
+            + pendingHtml
             + (actions ? '<div class="exchange-actions">' + actions + '</div>' : '') + '</section></div></article>';
 
         $('#app').innerHTML = shell('trade', content);
@@ -2570,7 +2593,7 @@
             + '</div></div></div></div>'
             + '<div class="jd-me-assets-grid">'
             + '<div class="jd-asset-col"><b>' + me.credit + '</b><span>校园信用分</span><button type="button" class="jd-asset-act" data-act="credit-rule">信用规则</button></div>'
-            + '<div class="jd-asset-col"><b>' + onShelf.length + '</b><span>在架闲置</span><a class="jd-asset-act" href="#/publish">去发布</a></div>'
+            + '<div class="jd-asset-col"><b>' + onShelf.length + '</b><span>在架闲置</span><a class="jd-asset-act" href="#/me/items">查看管理</a></div>'
             + '<div class="jd-asset-col"><b>' + (me.dealCount || 0) + '</b><span>累计成交</span><a class="jd-asset-act" href="#/exchange">查看履约</a></div>'
             + '<div class="jd-asset-col"><b>' + (me.reviewCount || 0) + '</b><span>收到评价</span><a class="jd-asset-act" href="#/user/' + Number(me.id) + '">个人主页</a></div>'
             + '<div class="jd-asset-col"><b>' + (me.avgScore ? me.avgScore : '5.0') + '</b><span>好评分</span>'
@@ -2603,7 +2626,7 @@
             + '<div class="jd-fav-stats">'
             + '<a href="#/favorites"><b>' + shelfRead('favorites').length + '</b><span>我的收藏</span></a>'
             + '<a href="#/history"><b>' + shelfRead('history').length + '</b><span>浏览足迹</span></a>'
-            + '<a href="#/wishes"><b>' + (items || []).length + '</b><span>发布记录</span></a>'
+            + '<a href="#/me/items"><b>' + (items || []).length + '</b><span>发布记录</span></a>'
             + '</div>'
             + '<a class="jd-fav-banner" href="#/auctions">'
             + '<div><b>校园限时拍卖</b><span>1元起拍</span></div>'
@@ -2700,6 +2723,45 @@
                 + '</div>'
                 + '<div class="jd-order-panel">' + bodyHtml + '</div>'
                 + '</div>';
+        }
+
+        if (tab === 'items') {
+            panelTitle = '我发布的闲置';
+            panelSub = '统一查看管理我发布的全部在架、待审核、已下架与已换出物品';
+            panelActions = '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布新闲置</a><a class="btn btn-ghost btn-sm" href="#/me">返回个人中心 ›</a>';
+            var myAllItems = await api('/item/mine').catch(function () { return []; });
+            var curFilter = String(state.meFilter || 'all');
+            var filteredItems = (myAllItems || []).filter(function (it) {
+                return curFilter === 'all' || String(it.status) === curFilter;
+            });
+            var filterTabs = [['all', '全部 (' + (myAllItems || []).length + ')'], ['1', '在架'], ['2', '待审核'], ['4', '已下架'], ['3', '已换出']].map(function (t) {
+                return '<button type="button" class="' + (curFilter === t[0] ? 'on' : '') + '" data-act="me-filter" data-v="' + t[0] + '">' + t[1] + '</button>';
+            }).join('');
+            var listHtml = filteredItems.length ? '<div class="desk-grid-2">' + filteredItems.map(function (it) {
+                var st = it.status === 1 ? 'success' : (it.status === 2 ? 'accent' : 'ghost');
+                var priceLabel = it.tradeMode === 2 ? '仅以物换物' : (it.price ? '¥' + (Number(it.price) / 100).toFixed(2) : '面议');
+                var modeLabel = it.matchMode === 'one' ? '仅一对一' : (it.matchMode === 'active' ? '闭环·主动找环' : '闭环·自动匹配');
+                return '<div class="card card-pad" style="display:flex;gap:12px;align-items:center">'
+                    + '<a href="#/item/' + Number(it.id) + '" style="flex:none">' + thumb(it) + '</a>'
+                    + '<div style="flex:1;min-width:0">'
+                    + '<p class="item-title"><a href="#/item/' + Number(it.id) + '">' + esc(it.title) + '</a></p>'
+                    + '<div class="item-foot" style="margin-top:6px"><span class="amz-status-txt ' + st + '">' + esc(it.statusText || '在架') + '</span><span> · ' + esc(priceLabel) + ' · ' + esc(modeLabel) + ' · ' + (it.offerCount > 0 ? it.offerCount + ' 报价' : '暂无报价') + '</span></div>'
+                    + '</div>'
+                    + '<div style="display:flex;flex-direction:column;gap:6px;flex:none">'
+                    + '<a class="btn btn-sm btn-ghost" href="#/item/' + Number(it.id) + '">详情</a>'
+                    + ((it.status === 1 || it.status === 4 || it.status === 5 || it.status === 6) ? '<button class="btn btn-sm btn-ghost" data-act="go" data-to="#/item/' + it.id + '/edit">编辑</button>' : '')
+                    + (it.status === 1
+                        ? '<button class="btn btn-sm btn-ghost" data-act="toggle-item" data-id="' + it.id + '" data-status="4">下架</button>'
+                        : ((it.status === 4 || it.status === 6)
+                            ? '<button class="btn btn-sm btn-ghost" data-act="toggle-item" data-id="' + it.id + '" data-status="1">上架</button>'
+                            : ''))
+                    + (it.status === 1 && it.allowCycle ? '<button class="btn btn-sm btn-primary" data-act="cycle" data-id="' + it.id + '">找环</button>' : '')
+                    + '</div></div>';
+            }).join('') + '</div>'
+                : '<div class="jd-empty-order-box"><img src="/assets/brand/mascot-box.png" alt="小唤"><div class="jd-empty-order-copy"><p>' + (curFilter === 'all' ? '还没有发布过任何闲置物品' : '当前筛选状态下暂无物品') + '</p><div class="jd-empty-btns"><a class="jd-btn-red" href="#/publish">立即发布闲置</a></div></div></div>';
+            bodyHtml = '<div class="desk-me-bar" style="margin-bottom:16px"><div class="segmented">' + filterTabs + '</div></div>' + listHtml;
+            renderJdWorkspace('me', tab, wrapPanel(), true);
+            return;
         }
 
         if (tab === 'auctions') {
@@ -3119,7 +3181,7 @@
     }
     function renderAuctionNew() {
         state.publishImages=[];
-        $('#app').innerHTML=shell('auctions','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/auctions">校园拍卖</a><span>›</span><b>发起拍卖</b></nav><div class="auction-form amz-form-layout"><div class="page-head"><h1>发起校园拍卖</h1><p>提交后由管理员审核，5 分钟未处理将自动通过，通过后开始计时。</p></div><div class="amz-form-grid"><form class="card card-pad" data-form="auction-new"><div class="field"><label class="label">拍品名称</label><input class="input" name="title" maxlength="80" placeholder="例如 九成新机械键盘 / 拍立得相机" required></div><div class="field"><label class="label">拍品描述</label><textarea class="textarea" name="description" maxlength="500" placeholder="说明成色、配件、校内面交地点等"></textarea></div><div class="field"><label class="label">图片（必填，最多 3 张）</label><div class="chips" id="img-preview"></div></div><div class="field"><label class="label">起拍价（元）</label><input class="input" name="amount" type="number" min="0.01" max="1000000" step="0.01" required></div><div class="field"><label class="label">拍卖时长（小时，1–168）</label><input class="input" name="hours" type="number" value="24" min="1" max="168" required></div><button class="btn btn-primary btn-block" type="submit">提交审核并上架</button></form><aside class="card card-pad amz-form-aside"><img src="/assets/brand/mascot-box.png" width="76" height="76" alt=""><h3>拍卖上架须知</h3><ul><li>首张图片将作为拍卖专场封面展示。</li><li>提交后 5 分钟内未审核将自动通过上架。</li><li>竞拍结束后请在「我的拍卖」中确认结算。</li></ul></aside></div></div>');
+        $('#app').innerHTML=shell('auctions','<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/auctions">校园拍卖</a><span>›</span><b>发起拍卖</b></nav><div class="auction-form amz-form-layout"><div class="page-head"><h1>发起校园拍卖</h1><p>提交后由管理员审核，约 1 分钟未处理将自动极速通过，通过后开始计时。</p></div><div class="amz-form-grid"><form class="card card-pad" data-form="auction-new"><div class="field"><label class="label">拍品名称</label><input class="input" name="title" maxlength="80" placeholder="例如 九成新机械键盘 / 拍立得相机" required></div><div class="field"><label class="label">拍品描述</label><textarea class="textarea" name="description" maxlength="500" placeholder="说明成色、配件、校内面交地点等"></textarea></div><div class="field"><label class="label">图片（必填，最多 3 张）</label><div class="chips" id="img-preview"></div></div><div class="field"><label class="label">起拍价（元）</label><input class="input" name="amount" type="number" min="0.01" max="1000000" step="0.01" required></div><div class="field"><label class="label">拍卖时长（小时，1–168）</label><input class="input" name="hours" type="number" value="24" min="1" max="168" required></div><button class="btn btn-primary btn-block" type="submit">提交审核并上架</button></form><aside class="card card-pad amz-form-aside"><img src="/assets/brand/mascot-box.png" width="76" height="76" alt=""><h3>拍卖上架须知</h3><ul><li>首张图片将作为拍卖专场封面展示。</li><li>提交后 1 分钟内未审核将自动通过上架。</li><li>竞拍结束后请在「我的拍卖」中确认结算。</li></ul></aside></div></div>');
         renderImagePreview();
     }
 
@@ -3128,11 +3190,29 @@
         if (noticeTracker.timer) clearTimeout(noticeTracker.timer);
         noticeTracker.timer=null; var popup=document.getElementById('notice-popup'); if(popup)popup.remove();
     }
+    function applyNoticeCountDom(n) {
+        n = Math.max(0, Number(n) || 0);
+        document.querySelectorAll('.notice-count').forEach(function(el){
+            el.textContent=n>99?'99+':String(n);
+            el.hidden=n===0;
+            el.setAttribute('aria-label',n+' 条未读消息');
+        });
+        document.title=(n?'('+n+') ':'')+'换一圈 | 重庆移通学院校园换物';
+    }
     function positionNoticePopup() {
         var popup=document.getElementById('notice-popup'), anchor=document.querySelector('.appbar .notice-link');
         if(!popup)return;
         if(window.innerWidth < 900) { popup.style.removeProperty('right');popup.style.removeProperty('top');return; }
-        if(anchor) { var r=anchor.getBoundingClientRect(); popup.style.right=Math.max(12,window.innerWidth-r.right-12)+'px'; popup.style.top=Math.max(12,r.bottom+14)+'px'; }
+        if(anchor) {
+            var r=anchor.getBoundingClientRect();
+            if(r.width > 0 && r.height > 0) {
+                popup.style.right=Math.max(12,window.innerWidth-r.right-12)+'px';
+                popup.style.top=Math.max(12,r.bottom+14)+'px';
+                return;
+            }
+        }
+        popup.style.right='24px';
+        popup.style.top='72px';
     }
     function showNoticePopup(count, notice) {
         if(!count || location.hash==='#/notifications')return;
@@ -3165,7 +3245,7 @@
             var payload=await response.json();if(payload.code!==0)return;var n=Math.max(0,Number(payload.data.count)||0),latest=0,latestNotice=null;
             if(n){try{var listResponse=await fetch(BASE+'/api/notification',{credentials:'include',headers:{'X-Token':token}});if(listResponse.ok){var listPayload=await listResponse.json();if(listPayload.code===0&&Array.isArray(listPayload.data)){listPayload.data.forEach(function(item){if(!item.read && Number(item.id)>latest){latest=Number(item.id);latestNotice=item;}});}}}catch(ignore){}}
             if(request!==noticeTracker.request || readToken()!==token)return;
-            document.querySelectorAll('.notice-count').forEach(function(el){el.textContent=n>99?'99+':String(n);el.hidden=n===0;el.setAttribute('aria-label',n+' 条未读消息');});document.title=(n?'('+n+') ':'')+'换一圈 | 重庆移通学院校园换物';
+            applyNoticeCountDom(n);
             var isNew=n>0&&(!noticeTracker.initialized||(latest>noticeTracker.latest)||(latest===0&&n>noticeTracker.count));
             noticeTracker.initialized=true;noticeTracker.count=n;noticeTracker.latest=Math.max(noticeTracker.latest,latest);
             if(!n){noticeTracker.pending=0;closeNoticePopup();}else if(isNew || noticeTracker.pending)showNoticePopup(n,latestNotice || noticeTracker.pendingNotice);
@@ -3350,6 +3430,35 @@
             var creditText = creditScore + ' ' + creditLevelOf(creditScore).text;
             var campusText = (peerProfile && (peerProfile.building || peerProfile.college)) ? (peerProfile.building || peerProfile.college) : '移通学院';
 
+            var proposalHtml = '';
+            if (state.me && peerId && thread.itemId) {
+                var lists = await Promise.all(['/offer/sent','/offer/received'].map(function(path){
+                    return api(path,{noCache:true,optionalAuth:true}).catch(function(){return [];});
+                }));
+                var pair = lists.flat().filter(function(o){
+                    return [Number(o.fromUser),Number(o.toUser)].includes(Number(state.me.id))
+                        && [Number(o.fromUser),Number(o.toUser)].includes(Number(peerId));
+                });
+                var related = new Set(pair.filter(function(o){
+                    return [Number(o.itemId),Number(o.myItemId)].includes(Number(thread.itemId));
+                }).map(function(o){return Number(o.id);}));
+                for(var size=-1;size!==related.size;){
+                    size=related.size;
+                    pair.forEach(function(o){if(related.has(Number(o.parentId)))related.add(Number(o.id));});
+                }
+                var proposal = pair.filter(function(o){return related.has(Number(o.id));}).sort(function(a,b){return b.id-a.id;})[0];
+                if(proposal){
+                    var incoming=Number(proposal.toUser)===Number(state.me.id);
+                    var pending=Number(proposal.status)===0 && (!proposal.expireTime || new Date(proposal.expireTime).getTime()>Date.now());
+                    var label=pending?(incoming?'等你回应':'等对方回应'):(Number(proposal.status)===0?'已过期':proposal.statusText||'已处理');
+                    var controls=pending?(incoming?[['reject','拒绝'],['counter','修改提案'],['accept','接受']]:[['cancel','撤回']]):[];
+                    proposalHtml='<div class="tb-order-card"><h4>'+(proposal.parentId?'反提案':'交换提案')+' <small>'+esc(label)+'</small></h4>'
+                        +'<p>你给：'+esc(incoming?proposal.targetTitle:proposal.myTitle)+'</p><p>你收：'+esc(incoming?proposal.myTitle:proposal.targetTitle)+'</p>'
+                        +(proposal.message?'<p>'+esc(proposal.message)+'</p>':'')
+                        +'<div class="tb-chat-top-btns">'+controls.map(function(action){return '<button type="button" class="tb-top-chip" data-act="offer-act" data-id="'+Number(proposal.id)+'" data-do="'+action[0]+'">'+action[1]+'</button>';}).join('')+'<button type="button" class="tb-top-chip" data-act="offer-history" data-id="'+Number(proposal.id)+'">查看历史</button></div></div>';
+                }
+            }
+
             var itemCardHtml = '<div class="tb-msg-group">'
                 + '<div class="tb-order-card tb-real-item-card">'
                 + '<h4>面交请选校内公共地点，确认物品状态后再交付</h4>'
@@ -3372,7 +3481,7 @@
                     + '<a href="#/offers" class="tb-top-chip">报价单中心</a>'
                     + '<button type="button" class="tb-top-chip primary" data-act="notice-read">全部标为已读</button>'
                     + '</div>',
-                streamHtml: itemCardHtml + msgsHtml + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
+                streamHtml: itemCardHtml + proposalHtml + msgsHtml + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
                 shopCardHtml: '<div class="tb-shop-top">'
                     + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap-compact.webp\'" alt="">'
                     + '<div><b>' + esc(peerName) + '</b><a href="#/user/' + Number(peerId) + '" class="tb-enter-shop">进入主页</a></div>'
@@ -3673,7 +3782,7 @@
         if(currentView.arg!==id||currentView.name!==(ring?'ringChat':'chat'))return;
         var tools=ring?'':'<details class="room-attachments"><summary aria-label="打开附件面板">'+navIcon('add')+'</summary><div><label class="chat-tool">相册<input type="file" accept="image/png,image/jpeg" data-act="room-image"></label><label class="chat-tool">拍摄<input type="file" accept="image/*" capture="environment" data-act="room-image"></label><a class="chat-tool" href="#/item/'+Number(thread.itemId)+'">查看物品</a></div></details>';
         var name=ring?esc(title):'<a href="#/user/'+Number(peer)+'">'+esc(title)+'</a>';
-        $('#app').innerHTML=shell('notifications','<section class="redesign-page room-redesign"><header class="redesign-heading"><a class="icon-action" href="'+esc(back)+'" aria-label="返回">'+navIcon('back')+'</a><h1>'+name+'</h1></header>'+product+'<p class="room-safety">'+(ring?'仅本次闭环的三位参与者可见。':'面交时请选校内公共地点，确认物品状态后再交付。')+'</p><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><div class="room-input"><textarea name="content" maxlength="500" rows="2" placeholder="想跟 TA 说点什么" aria-label="消息内容" required></textarea><button type="submit" class="btn btn-primary btn-sm">发送</button></div>'+tools+'</form></section></section>');
+        $('#app').innerHTML=shell('notifications','<section class="redesign-page room-redesign"><header class="redesign-heading"><button type="button" class="icon-action" onclick="if(history.length>1)history.back();else location.replace(\''+esc(back)+'\');" aria-label="返回">'+navIcon('back')+'</button><h1>'+name+'</h1></header>'+product+'<p class="room-safety">'+(ring?'仅本次闭环的三位参与者可见。':'面交时请选校内公共地点，确认物品状态后再交付。')+'</p><section class="chat-panel room-panel"><div class="chat-messages" id="room-messages" aria-live="polite"></div><form class="chat-compose" data-form="room-text"><div class="room-input"><textarea name="content" maxlength="500" rows="2" placeholder="想跟 TA 说点什么" aria-label="消息内容" required></textarea><button type="submit" class="btn btn-primary btn-sm">发送</button></div>'+tools+'</form></section></section>');
         await refreshRoom(true);
         if(currentView.arg===id&&['chat','ringChat'].includes(currentView.name))roomTimer=setInterval(function(){refreshRoom(false);},5000);
     }
@@ -4375,6 +4484,7 @@
 
     async function openOfferSheet(itemId) {
         state._pickedOfferItemId = 0;
+        var target = (await api('/item/' + Number(itemId))).item;
         var mine = await api('/item/mine?status=1');
         if (!mine || mine.length === 0) {
             openSheet('<h3>先发布一件物品</h3><p class="sub">报价要用你的在架物品去换，你还没有在架的物品。</p>'
@@ -4387,7 +4497,7 @@
                 + '<div class="item-foot"><span class="tag brand">' + esc(it.category) + '</span>'
                 + '<span class="tag">' + esc(it.conditionLevel) + '</span></div></div></button>';
         }).join('');
-        openSheet('<h3>用哪件去换</h3><p class="sub">先点选一件在架物品，填写留言后再点下方「确认发起报价」。</p>'
+        openSheet('<h3>提案交换</h3><p class="sub">我想收到：'+esc(target.title)+'</p><h4>我愿意给</h4>'
             + '<div class="offer-pick-list">' + options + '</div>'
             + '<div class="field" style="margin-top:12px"><label class="label">留言 <span class="opt">选填，≤50 字</span></label>'
             + '<input class="input" id="offer-msg" maxlength="50" placeholder="例如 我在北山书院，今天下午就能面交"></div>'
@@ -4396,15 +4506,17 @@
     }
 
     async function openPlaceSheet(exchangeId) {
-        openSheet('<h3>约个面交点</h3><p class="sub">优先选择移通校内公共点位，参与者都能看到。</p>'
+        openSheet('<h3>提议面交安排</h3><p class="sub">提交后将通知交换伙伴，需对方同意后才正式生效。</p>'
             + '<form data-form="place"><input type="hidden" name="exchangeId" value="' + exchangeId + '">'
-            + '<div class="field"><label class="label">地点</label>'
+            + '<div class="field"><label class="label">面交地点</label>'
             + '<select class="select" name="place" required><option value="">请选择校内公共点位</option>'
             + CAMPUS_SPOTS.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('')
             + '<option>校园服务中心</option></select></div>'
-            + '<div class="field"><label class="label">时间 <span class="opt">选填</span></label>'
-            + '<input class="input" name="dealTime" placeholder="例如 今日 18:00-19:00"></div>'
-            + '<button class="btn btn-primary btn-block" type="submit">确定</button></form>');
+            + '<div class="field"><label class="label">约定时间</label>'
+            + '<input class="input" name="startTime" placeholder="例如 明天 14:30 - 15:30" required></div>'
+            + '<div class="field"><label class="label">补充备注 <span class="opt">选填</span></label>'
+            + '<input class="input" name="note" maxlength="100" placeholder="例如 穿深色外套，正门台阶旁见"></div>'
+            + '<button class="btn btn-primary btn-block" type="submit">提交并通知对方确认</button></form>');
     }
 
     function openPendingSheet() {
@@ -4624,7 +4736,7 @@
             + '</div>'
             + '</div>';
 
-        $('#app').innerHTML = shell('market', content);
+        $('#app').innerHTML = shell('appraise', content);
     }
 
     // ------------------------------------------------------------------ 路由
@@ -4822,6 +4934,24 @@
                 + esc(e.message || '未知错误') + '</p></div>'
                 + '<button class="btn btn-ghost" data-act="go" data-to="#/home">回集市</button>');
         }
+        setupDesktopLivePoll(view);
+    }
+
+    var desktopLiveTimer = null;
+    function setupDesktopLivePoll(view) {
+        if (desktopLiveTimer) { clearInterval(desktopLiveTimer); desktopLiveTimer = null; }
+        var liveNames = ['exchangeDetail', 'exchange', 'offers', 'notifications', 'meSub', 'admin', 'me'];
+        if (!view || liveNames.indexOf(view.name) < 0) return;
+        desktopLiveTimer = setInterval(function () {
+            if (document.hidden) return;
+            var modal = document.getElementById('modal');
+            if (modal && modal.innerHTML.trim()) return;
+            var ae = document.activeElement;
+            if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+            if (currentView && currentView.name === view.name && currentView.arg === view.arg) {
+                render();
+            }
+        }, 6000);
     }
 
     // ------------------------------------------------------------------ 交互绑定
@@ -5678,7 +5808,7 @@
             if (todo === 'counter') {
                 var mine = await api('/item/mine?status=1');
                 var opts = (mine || []).map(function (it) {
-                    return '<button class="item-card" style="margin-bottom:8px" data-act="do-counter" data-offer="' + offerId
+                    return '<button class="item-card" style="margin-bottom:8px" data-act="preview-counter" data-title="' + esc(it.title) + '" data-offer="' + offerId
                         + '" data-id="' + it.id + '">' + thumb(it)
                         + '<div class="item-main"><h3 class="item-title">' + esc(it.title) + '</h3>'
                         + '<div class="item-foot"><span class="tag brand">' + esc(it.category) + '</span></div></div></button>';
@@ -5690,11 +5820,19 @@
                 openSheet('<h3>用你的哪件还价</h3><p class="sub">原来那条报价会关闭，生成一条反方向的新报价。</p>' + opts);
                 return;
             }
+            if(todo==='accept' && !confirm('接受后双方物品将锁定。确认接受这版提案？'))return;
             await withBusy(el, async function () {
-                await api('/offer/handle', {method: 'POST', body: {offerId: offerId, action: todo}});
+                var result=await api('/offer/handle', {method: 'POST', body: {offerId: offerId, action: todo}});
+                if(todo==='accept' && result?.exchangeId){ go('#/exchange/'+Number(result.exchangeId)); return; }
                 toast(todo === 'accept' ? '已接受，物品锁定' : (todo === 'reject' ? '已拒绝' : '已撤回'), 'ok');
-                await renderOffers();
+                if(currentView.name==='chat'||currentView.name==='notifications') await patchImRightPanel(state.activeImKey,{scrollBottom:false});
+                else await renderOffers();
             });
+            return;
+        }
+        if (act === 'preview-counter') {
+            openSheet('<h3>确认反提案</h3><p>我愿意给：'+esc(el.dataset.title)+'</p>'
+                + '<p class="sub">发出后，本轮原提案将被替代。</p><button class="btn btn-primary btn-block" data-act="do-counter" data-offer="'+Number(el.dataset.offer)+'" data-id="'+Number(el.dataset.id)+'">发送反提案</button>');
             return;
         }
         if (act === 'do-counter') {
@@ -5703,8 +5841,9 @@
             closeSheet();
             await withBusy(null, async function () {
                 await api('/offer/handle', {method: 'POST', body: {offerId: oid, action: 'counter', myItemId: iid}});
-                toast('已还价', 'ok');
-                await renderOffers();
+                toast('反提案已发出', 'ok');
+                if(currentView.name==='chat'||currentView.name==='notifications') await patchImRightPanel(state.activeImKey,{scrollBottom:false});
+                else await renderOffers();
             });
             return;
         }
@@ -5749,6 +5888,32 @@
             await withBusy(el, async function () {
                 await api('/exchange/' + el.dataset.id + '/cancel', {method: 'POST', body: {reason: '当事人取消'}});
                 toast('已取消', 'ok');
+                await render();
+            });
+            return;
+        }
+        if (act === 'offer-history') {
+            var hid = Number(el.dataset.id);
+            await withBusy(el, async function () {
+                var chain = await api('/offer/' + hid + '/history');
+                var timelineHtml = (chain || []).map(function (n) {
+                    return '<div style="padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;background:' + (n.isLatest ? '#f4faf8' : '#fff') + '">'
+                        + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#475569"><b>' + esc(n.label) + '（' + esc(n.fromNickname || '同学') + ' → ' + esc(n.toNickname || '同学') + '）</b><span>' + esc(n.statusText || '') + '</span></div>'
+                        + (n.diffSummary ? '<div style="margin-top:4px;font-size:12px;color:#0c7263;font-weight:600">' + esc(n.diffSummary) + '</div>' : '')
+                        + '<div style="margin-top:6px;font-size:13px">用「<b>' + esc(n.myTitle || '物品') + '</b>」换「<b>' + esc(n.targetTitle || '物品') + '</b>」</div>'
+                        + (n.message ? '<div style="margin-top:3px;font-size:12px;color:#64748b">' + esc(n.message) + '</div>' : '')
+                        + '</div>';
+                }).join('') || '<p class="sub">暂无历史记录</p>';
+                openSheet('<h3>提案协商历史</h3><div style="max-height:56vh;overflow:auto;margin-top:10px">' + timelineHtml + '</div>');
+            });
+            return;
+        }
+        if (act === 'arr-confirm') {
+            var exId = Number(el.dataset.id);
+            var ver = Number(el.dataset.ver);
+            await withBusy(el, async function () {
+                await api('/exchange/' + exId + '/arrangements/' + ver + '/confirm', { method: 'POST' });
+                toast('已同意面交安排', 'ok');
                 await render();
             });
             return;
@@ -6085,7 +6250,7 @@
                     price: priceCents,
                     originalPrice: origCents,
                     place: fd.get('place') || '',
-                    allowBargain: !!fd.get('allowBargain'),
+                    allowBargain: fd.get('allowBargain') ? 1 : 0,
                     description: fd.get('description'),
                     wantCategory: state.publish.wantCategory,
                     wantText: fd.get('expectDesc') || '',
@@ -6105,11 +6270,11 @@
                 toast('已提交审核', 'ok');
                 go(editing?'#/item/'+editing:'#/publish/success/'+r.itemId);
             } else if (kind === 'place') {
-                await api('/exchange/' + fd.get('exchangeId') + '/place', {method: 'PUT', body: {
-                    place: fd.get('place'), dealTime: fd.get('dealTime')
+                await api('/exchange/' + fd.get('exchangeId') + '/arrangements', {method: 'POST', body: {
+                    place: fd.get('place'), startTime: fd.get('startTime'), note: fd.get('note')
                 }});
                 closeSheet();
-                toast('面交点已更新', 'ok');
+                toast('已提议面交安排，等待对方确认', 'ok');
                 await render();
             } else if (kind === 'review') {
                 await api('/review', {method: 'POST', body: {

@@ -5,7 +5,7 @@
   function topbar(title, opts) {
     const o = opts || {};
     return `<div class="topbar${o.white ? ' topbar--white' : ''}">
-      <button class="topbar__back" onclick="${o.onBack || 'history.back()'}">${icon('back', 22)}</button>
+      <button class="topbar__back" onclick="${o.onBack || `smartBack('${o.parent || '#/me'}')`}">${icon('back', 22)}</button>
       <div class="topbar__spacer"></div>
       <div class="topbar__title">${esc(title)}</div>
       <div class="topbar__spacer"></div>
@@ -24,7 +24,7 @@
       const mineOnly = window.__wishMine !== false;
       const shown = mineOnly && me ? list.filter((w) => Number(w.userId) === Number(me.id)) : list;
       view.innerHTML = `
-      ${topbar('我的心愿', { right: `<a href="#/publish/edit/wish" style="font-size:13px;font-weight:600;color:var(--green-700)">＋ 发心愿</a>` })}
+      ${topbar('我的心愿', { parent: '#/home', right: `<a href="#/publish/edit/wish" style="font-size:13px;font-weight:600;color:var(--green-700)">＋ 发心愿</a>` })}
       <div style="padding:2px 13px 20px">
         <div class="r-chips" style="padding:0 0 12px">
           <span class="chip${mineOnly ? ' on' : ''}" data-wish="mine">我的心愿</span>
@@ -71,7 +71,7 @@
       if (location.hash !== route) return;
       if (cat) list = list.filter((n) => (n.category || 'notice') === cat);
       view.innerHTML = `
-      ${topbar(cat ? CAT_NAME[cat] || '通知' : '通知消息', { white: true, right: `<button id="readAll" style="font-size:13px;color:var(--green-700)">全部已读</button>` })}
+      ${topbar(cat ? CAT_NAME[cat] || '通知' : '通知消息', { parent: '#/messages', white: true, right: `<button id="readAll" style="font-size:13px;color:var(--green-700)">全部已读</button>` })}
       ${cat ? '' : `<div class="r-chips" style="background:#fff">${['', 'trade', 'notice', 'follow'].map((c) =>
         `<a class="chip${!c ? ' on' : ''}" href="#/notifications${c ? '/' + c : ''}">${c ? CAT_NAME[c] : '全部'}</a>`).join('')}</div>`}
       <div style="padding:2px 13px 20px">
@@ -95,6 +95,7 @@
         if (t && t !== location.hash) location.hash = t;
         else renderRoute();
       }));
+      startLivePoll(() => renderRoute(), 6000);
     },
   };
 
@@ -103,7 +104,7 @@
     noTab: true,
     async render(view) {
       view.innerHTML = `
-      ${topbar('AI 好物估价')}
+      ${topbar('AI 好物估价', { parent: '#/home' })}
       <div class="ap-page">
         <label class="ap-hero-upload" id="apPhotoBox">
           <input id="apFile" type="file" accept="image/*" capture="environment" hidden>
@@ -392,12 +393,35 @@
         view.querySelectorAll('[data-offer-id]').forEach(b => b.addEventListener('click', async () => {
           if (b.dataset.action === 'counter') {
             let items = []; try { items = await api.get('/api/item/mine') || []; } catch (e) { toast(e.message); return; }
-            items = items.filter(i => i.status === 1);
-            openSheet('选择还价物品', items.length ? items.map(i => `<div class="set-row" data-counter="${i.id}">${esc(i.title)}<span class="set-row__arrow">${icon('right',16)}</span></div>`).join('') : '<div class="empty">请先发布一件在架物品</div>', { onMount(sheet, close) {
-              sheet.querySelectorAll('[data-counter]').forEach(row => row.addEventListener('click', async () => { try { await api.post('/api/offer/handle', {offerId:Number(b.dataset.offerId),action:'counter',myItemId:Number(row.dataset.counter)}); close(); toast('已发出还价'); renderRoute(); } catch(e) { toast(e.message); } }));
-            }}); return;
+            items = items.filter(i => i.status === 1 && !i.isDemo);
+            const original = rows.find(row => Number(row.id) === Number(b.dataset.offerId));
+            if (!original) return;
+            if (!items.length) { toast('请先发布一件在架物品'); return; }
+            window.openTradeProposal({title:'修改提案', receive:{title:original.myTitle || '对方的物品'},
+              items, sendLabel:'发送反提案',
+              async onSend(myItemId) {
+                await api.post('/api/offer/handle', {offerId:Number(original.id), action:'counter', myItemId});
+                toast('反提案已发出');
+                window.__offersMode = 'sent';
+                renderRoute();
+              }});
+            return;
           }
-          try { await api.post('/api/offer/handle', { offerId: Number(b.dataset.offerId), action: b.dataset.action }); toast('操作成功'); renderRoute(); } catch (e) { toast(e.message); }
+          const submit = async () => {
+            if (b.disabled) return;
+            b.disabled = true;
+            try {
+              const result = await api.post('/api/offer/handle', {offerId:Number(b.dataset.offerId),action:b.dataset.action});
+              if (b.dataset.action === 'accept' && result?.exchangeId) location.hash = '#/exchange/' + Number(result.exchangeId);
+              else { toast('操作成功'); renderRoute(); }
+            } catch (error) { toast(error.message); }
+            finally { b.disabled = false; }
+          };
+          if (b.dataset.action === 'accept') {
+            const offer = rows.find(row => Number(row.id) === Number(b.dataset.offerId));
+            if (!offer) return;
+            confirmSheet('接受这版提案','确认用「'+offer.targetTitle+'」换「'+offer.myTitle+'」？接受后物品将锁定。','接受并查看交换单',submit);
+          } else await submit();
         }));
         return;
       }
@@ -731,7 +755,7 @@
       try { list = await api.get('/api/social/users', { q: kw }) || []; } catch (e) { /* 忽略 */ }
       view.innerHTML = `
         <div class="search-head">
-          <span class="back" onclick="history.back()">${icon('back', 22)}</span>
+          <span class="back" onclick="smartBack('#/community')">${icon('back', 22)}</span>
           <div class="search-box"><input class="txt" id="uInput" value="${esc(kw)}" placeholder="搜同学昵称、学院、宿舍楼"></div>
           <button class="search-go" id="uGo">搜索</button>
         </div>
@@ -769,8 +793,16 @@
       const { mine, people, recipient, sender } = summary;
       const reviewTargets = people.filter((person) => !summary.isMe(person) && (!me || person.userId !== me.id));
       const steps = ['待确认', '待交付', '已完成'];
+      const confArr = e.confirmedArrangement || null;
+      const pendArr = e.pendingArrangement || null;
+      const meetPlace = confArr ? confArr.place : (e.place || '待约定');
+      const meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
+      const meetHint = confArr ? '已约好'
+        : pendArr ? `${pendArr.confirmedByMe ? '等对方确认' : '待你确认'} · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认`
+        : '待约面交';
+
       view.innerHTML = `
-        ${topbar('交换单 #' + e.id)}
+        ${topbar('交换单 #' + e.id, { parent: '#/me/exchanges' })}
         <main class="exchange-mobile">
           <header class="exchange-mobile__status">
             <p class="exchange-mobile__type">${e.type === 3 ? '三方成环' : '一对一交换'}</p>
@@ -790,14 +822,26 @@
           </section>` : ''}
 
           <section class="exchange-mobile__meet">
-            <h2>面交安排</h2>
-            <dl><div><dt>地点</dt><dd>${esc(e.place || '待约定')}</dd></div>
-              <div><dt>时间</dt><dd>${esc(e.dealTime || '待约定')}</dd></div></dl>
+            <h2>面交安排 <small style="font-weight:600;color:#0c7263">${esc(meetHint)}</small></h2>
+            <p class="exchange-next-step">${summary.canConfirm ? '先确认参与，等所有参与者同意后再交接。'
+              : summary.canReceive ? '在校内公共地点核对物品，实际收到后再确认收货。'
+              : e.status === 2 && mine?.delivered ? '你已确认收到，等待其他参与者确认。'
+              : e.status === 3 ? '本次交换已完成。' : ''}</p>
+            <dl><div><dt>${confArr ? '已定地点' : '地点'}</dt><dd>${esc(meetPlace)}</dd></div>
+              <div><dt>${confArr ? '已定时间' : '时间'}</dt><dd>${esc(meetTime || '待约定')}</dd></div>
+              ${confArr?.note ? `<div><dt>备注</dt><dd>${esc(confArr.note)}</dd></div>` : ''}</dl>
+            ${pendArr ? `<div style="margin:10px 0 12px;padding:10px 12px;border-radius:10px;background:#f0faf8;border:1px solid #cce7e0;font-size:13px;line-height:1.55">
+              <b>${confArr ? '改期提议 v' : '待确认提议 v'}${Number(pendArr.version)}</b>（${esc(pendArr.proposerName || '同学')} 提出 · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认）<br>
+              地点：${esc(pendArr.place)}${pendArr.startTime ? ` ｜ 时间：${esc([pendArr.startTime, pendArr.endTime].filter(Boolean).join(' - '))}` : ''}
+              ${pendArr.note ? `<br><span style="color:#475569">备注：${esc(pendArr.note)}</span>` : ''}
+            </div>` : ''}
             <div class="exchange-mobile__actions">
               ${summary.canConfirm ? '<button class="btn" id="exConfirm">确认参与</button>' : ''}
               ${summary.canReceive ? '<button class="btn" id="exDone">确认收货</button>' : ''}
               ${e.status === 3 && reviewTargets.length ? '<button class="btn" id="exReview">去评价</button>' : ''}
-              ${summary.active ? '<button class="btn btn--ghost" id="exPlace">约面交</button><button class="exchange-mobile__cancel" id="exCancel">取消交换</button>' : ''}
+              ${(e.status === 3 || e.status === 4) ? '<a class="btn btn--ghost" href="#/home">返回主页面</a>' : ''}
+              ${summary.active && pendArr && !pendArr.confirmedByMe ? `<button class="btn" id="exArrConfirm" data-ver="${Number(pendArr.version)}">同意安排</button>` : ''}
+              ${summary.active ? `<button class="btn btn--ghost" id="exPlace">${pendArr || confArr ? '改个时间或地点' : '提议时间和地点'}</button><button class="exchange-mobile__cancel" id="exCancel">取消交换</button>` : ''}
             </div>
           </section>
 
@@ -866,25 +910,45 @@
           try { await api.post('/api/exchange/' + e.id + '/cancel', { reason: '双方协商取消' }); toast('已取消'); refresh(); } catch (err) { toast(err.message); }
         });
       });
+      const arrConfirmBtn = document.getElementById('exArrConfirm');
+      if (arrConfirmBtn) arrConfirmBtn.addEventListener('click', async () => {
+        arrConfirmBtn.disabled = true;
+        try {
+          await api.post('/api/exchange/' + e.id + '/arrangements/' + Number(arrConfirmBtn.dataset.ver) + '/confirm', {});
+          toast('已同意面交安排');
+          await refresh();
+        } catch (err) { toast(err.message); await refresh(); }
+        finally { arrConfirmBtn.disabled = false; }
+      });
+
       document.getElementById('exPlace')?.addEventListener('click', () => {
-        openSheet('修改面交安排', `
-          <div class="label">面交点</div>
+        openSheet('提议时间和地点', `
+          <div class="label">校内公共点位</div>
           <div class="pe-chips" id="exPlaces">${['图书馆门口', '缤果大街', '紫荆 3 号楼', '紫荆 5 号楼', '体育馆'].map((p, i) => `<span class="chip${i === 0 ? ' on' : ''}" data-v="${p}">${p}</span>`).join('')}</div>
           <div class="label" style="margin-top:16px">时间</div>
           <div class="pe-chips" id="exTimes">${['今天 18:30', '明天 12:30', '明天 18:30', '周末 10:00'].map((p, i) => `<span class="chip${i === 1 ? ' on' : ''}" data-v="${p}">${p}</span>`).join('')}</div>
-          <button class="btn btn--block" style="margin-top:20px" id="exPlaceGo">保存</button>`, {
+          <div class="label" style="margin-top:16px">备注（选填）</div>
+          <input id="exArrNote" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--line);border-radius:10px;box-sizing:border-box" maxlength="100" placeholder="例如 在北门台阶旁见">
+          <button class="btn btn--block" style="margin-top:18px" id="exPlaceGo">提交并通知对方确认</button>`, {
           onMount(sheet, close) {
             ['exPlaces', 'exTimes'].forEach((id) => sheet.querySelectorAll('#' + id + ' .chip').forEach((c) => c.addEventListener('click', () => {
               sheet.querySelectorAll('#' + id + ' .chip').forEach((x) => x.classList.remove('on')); c.classList.add('on');
             })));
             sheet.querySelector('#exPlaceGo').addEventListener('click', async () => {
               const place = sheet.querySelector('#exPlaces .chip.on').dataset.v;
-              const dealTime = sheet.querySelector('#exTimes .chip.on').dataset.v;
-              try { await api.put('/api/exchange/' + e.id + '/place', { place, dealTime }); close(); toast('面交安排已更新'); refresh(); } catch (err) { toast(err.message); }
+              const startTime = sheet.querySelector('#exTimes .chip.on').dataset.v;
+              const note = (sheet.querySelector('#exArrNote')?.value || '').trim();
+              try {
+                await api.post('/api/exchange/' + e.id + '/arrangements', { place, startTime, note });
+                close();
+                toast('已提交提议，等待对方确认');
+                refresh();
+              } catch (err) { toast(err.message); }
             });
           },
         });
       });
+      startLivePoll(refresh, 5000);
     },
   };
 

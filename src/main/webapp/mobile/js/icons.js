@@ -7,6 +7,8 @@
     /* ---------------- 导航与通用 ---------------- */
     home: P('M4 10.3 12 4l8 6.3V19a1.5 1.5 0 0 1-1.5 1.5h-4.1v-5.4H9.6v5.4H5.5A1.5 1.5 0 0 1 4 19z'),
     homeFill: `<path d="M4 10.3 12 4l8 6.3V19a1.5 1.5 0 0 1-1.5 1.5h-4.1v-5.4H9.6v5.4H5.5A1.5 1.5 0 0 1 4 19z" fill="currentColor"/><path d="M9.6 14.4h4.8v6h-4.8z" fill="#fff"/>`,
+    market: P('M3.8 9.2 5.2 4.6h13.6l1.4 4.6a2.6 2.6 0 0 1-5 1 2.6 2.6 0 0 1-5.2 0 2.6 2.6 0 0 1-5-1Z') + P('M5.4 11.4V19a1.4 1.4 0 0 0 1.4 1.4h10.4a1.4 1.4 0 0 0 1.4-1.4v-7.6') + P('M9.8 20.4v-5.2h4.4v5.2'),
+    marketFill: `<path d="M3.8 9.2 5.2 4.6h13.6l1.4 4.6a2.6 2.6 0 0 1-5 1 2.6 2.6 0 0 1-5.2 0 2.6 2.6 0 0 1-5-1Z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M5.2 12v7.2A1.4 1.4 0 0 0 6.6 20.6h10.8a1.4 1.4 0 0 0 1.4-1.4V12H5.2Z" fill="currentColor"/><path d="M9.8 20.6v-5.1h4.4v5.1z" fill="#fff"/>`,
     community: `<circle cx="12" cy="12" r="8.4" ${S}/>${P('M8.2 12.4c1 1.6 2.3 2.4 3.8 2.4s2.8-.8 3.8-2.4')}`,
     communityFill: `<circle cx="12" cy="12" r="8.4" fill="currentColor"/><path d="M8.2 12.2c1 1.5 2.3 2.3 3.8 2.3s2.8-.8 3.8-2.3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.1" cy="9.8" r="1" fill="#fff"/><circle cx="14.9" cy="9.8" r="1" fill="#fff"/>`,
     publish: `<rect x="3.2" y="7" width="17.6" height="13.2" rx="3.4" ${S}/><circle cx="12" cy="13.6" r="3.5" ${S}/>${P('M8.5 7l1.2-2.4h4.6L15.5 7')}${P('M18.4 3v3.2M16.8 4.6h3.2')}`,

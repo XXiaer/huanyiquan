@@ -64,7 +64,7 @@
       const heroHtml = `
       <div class="pf-hero">
         <div class="pf-hero__nav">
-          <span class="ico" onclick="history.back()">${icon('back', 22)}</span>
+          <span class="ico" onclick="smartBack('#/messages')">${icon('back', 22)}</span>
           <span class="spacer"></span>
           ${isMe ? `<span class="pf-pill" id="pfEdit">${icon('edit', 13)}编辑资料</span>` : ''}
           <button type="button" class="ico" data-share-profile aria-label="分享主页">${icon('share', 21)}</button>
@@ -95,7 +95,7 @@
 
       const compactHtml = `
       <div class="pf-compact">
-        <button class="topbar__back" onclick="history.back()">${icon('back', 22)}</button>
+        <button class="topbar__back" onclick="smartBack('#/me')">${icon('back', 22)}</button>
         ${avatar({ nickname: u.nickname, id: u.id, avatar: u.avatar }, 30)}
         <span class="pf-compact__name">${esc(u.nickname)}</span>
         <span style="flex:1"></span>
@@ -106,7 +106,7 @@
       ${isItems ? heroHtml : compactHtml}
 
       ${isItems ? `<div class="pf-mini" id="pfMini">
-        <button class="topbar__back" onclick="history.back()">${icon('back', 22)}</button>
+        <button class="topbar__back" onclick="smartBack('#/me')">${icon('back', 22)}</button>
         ${avatar({ nickname: u.nickname, id: u.id, avatar: u.avatar }, 30)}
         <span class="pf-mini__name">${esc(u.nickname)}</span>
         <span class="spacer" style="flex:1"></span>

@@ -30,6 +30,10 @@ public final class ExchangeDao {
         e.dealTime = rs.getString("deal_time");
         long offerId = rs.getLong("offer_id");
         e.offerId = rs.wasNull() ? null : offerId;
+        long confArr = rs.getLong("confirmed_arrangement_id");
+        e.confirmedArrangementId = rs.wasNull() ? null : confArr;
+        long pendArr = rs.getLong("pending_arrangement_id");
+        e.pendingArrangementId = rs.wasNull() ? null : pendArr;
         e.createTime = rs.getObject("create_time", LocalDateTime.class);
         e.finishTime = rs.getObject("finish_time", LocalDateTime.class);
         e.statusText = Const.exchangeStatusText(e.status == null ? 0 : e.status);

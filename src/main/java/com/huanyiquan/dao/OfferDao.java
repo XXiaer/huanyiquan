@@ -47,6 +47,14 @@ public final class OfferDao {
         o.status = rs.getInt("status");
         long parentId = rs.getLong("parent_id");
         o.parentId = rs.wasNull() ? null : parentId;
+        long rootId = rs.getLong("root_offer_id");
+        o.rootOfferId = rs.wasNull() ? null : rootId;
+        o.targetTitleSnap = rs.getString("target_title_snap");
+        o.targetThumbSnap = rs.getString("target_thumb_snap");
+        o.targetCondSnap = rs.getString("target_cond_snap");
+        o.myTitleSnap = rs.getString("my_title_snap");
+        o.myThumbSnap = rs.getString("my_thumb_snap");
+        o.myCondSnap = rs.getString("my_cond_snap");
         o.expireTime = rs.getObject("expire_time", LocalDateTime.class);
         o.createTime = rs.getObject("create_time", LocalDateTime.class);
         o.handleTime = rs.getObject("handle_time", LocalDateTime.class);
@@ -56,10 +64,31 @@ public final class OfferDao {
 
     public static long insert(Connection c, Offer o) {
         return DBUtil.insert(c,
-                "INSERT INTO `offers`(item_id,my_item_id,from_user,to_user,message,status,parent_id,"
-                        + "expire_time,create_time) VALUES(?,?,?,?,?,?,?,?,?)",
-                o.itemId, o.myItemId, o.fromUser, o.toUser, o.message, o.status, o.parentId,
+                "INSERT INTO `offers`(item_id,my_item_id,from_user,to_user,message,status,parent_id,root_offer_id,"
+                        + "target_title_snap,target_thumb_snap,target_cond_snap,my_title_snap,my_thumb_snap,my_cond_snap,"
+                        + "expire_time,create_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                o.itemId, o.myItemId, o.fromUser, o.toUser, o.message, o.status, o.parentId, o.rootOfferId,
+                o.targetTitleSnap, o.targetThumbSnap, o.targetCondSnap, o.myTitleSnap, o.myThumbSnap, o.myCondSnap,
                 o.expireTime, LocalDateTime.now());
+    }
+
+    public static void setRootOfferId(Connection c, long id, long rootOfferId) {
+        DBUtil.update(c, "UPDATE `offers` SET root_offer_id=? WHERE id=?", rootOfferId, id);
+    }
+
+    public static List<Offer> listThread(long rootOfferId) {
+        return DBUtil.query(JOIN_SELECT + " WHERE (o.root_offer_id=? OR o.id=?) ORDER BY o.id ASC",
+                LIST_MAP, rootOfferId, rootOfferId);
+    }
+
+    public static Long latestIdInThread(Connection c, long rootOfferId) {
+        return DBUtil.queryOne(c,
+                "SELECT MAX(id) FROM `offers` WHERE root_offer_id=? OR id=?",
+                rs -> {
+                    long v = rs.getLong(1);
+                    return rs.wasNull() ? null : v;
+                },
+                rootOfferId, rootOfferId);
     }
 
     public static Offer findById(long id) {

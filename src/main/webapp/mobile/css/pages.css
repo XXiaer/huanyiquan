@@ -1943,3 +1943,17 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
   background: #fff;
 }
 .pe-fixed-action .pe-submit { display: block; width: 100%; min-height: 46px; }
+.proposal-form { display:grid; gap:12px; }
+.proposal-form fieldset { display:grid; gap:6px; max-height:200px; overflow:auto; padding:4px; border:0; }
+.proposal-form legend { font-weight:700; }
+.proposal-item { display:flex; align-items:center; gap:10px; min-height:52px; padding:4px 8px; border-radius:8px; background:#f4f8f6; }
+.proposal-item img { flex:none; border-radius:6px; object-fit:cover; }
+.proposal-item:has(input:checked) { outline:2px solid #147160; outline-offset:-2px; }
+.proposal-form textarea { display:block; width:100%; margin-top:4px; padding:8px; border:1px solid var(--line); border-radius:8px; }
+.proposal-status { color:var(--ink-700); font-size:13px; }
+.chat-proposal { margin: 8px 12px; padding: 12px; border: 1px solid #d9e7df; border-radius: 12px; background: #fff; font-size: 13px; }
+.chat-proposal[hidden] { display:none; }
+.chat-proposal header { display:flex; justify-content:space-between; gap:8px; }
+.chat-proposal p { margin:4px 0; overflow-wrap:anywhere; }
+.chat-proposal button,.chat-proposal a { display:inline-flex; align-items:center; min-height:40px; padding:0 8px; color:#0a5c51; }
+.chat-proposal [data-proposal-action="accept"] { font-weight:800; }

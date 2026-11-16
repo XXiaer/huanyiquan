@@ -41,7 +41,7 @@
 
   function topbar(title, onBack) {
     return `<div class="topbar">
-      <button class="topbar__back" type="button" onclick="${onBack || 'history.back()'}">${icon('back', 22)}</button>
+      <button class="topbar__back" type="button" onclick="${onBack || "smartBack('#/me')"}">${icon('back', 22)}</button>
       <div class="topbar__spacer"></div>
       <div class="topbar__title">${esc(title)}</div>
       <div class="topbar__spacer"></div>

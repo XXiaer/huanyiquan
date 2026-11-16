@@ -53,6 +53,10 @@ public class OfferServlet extends BaseServlet {
             ok(resp, OfferService.sent(uid(req)));
             return;
         }
+        if (segs.size() >= 2 && "history".equals(segs.get(1))) {
+            ok(resp, OfferService.history(uid(req), segLong(segs, 0)));
+            return;
+        }
         throw notFound();
     }
 }

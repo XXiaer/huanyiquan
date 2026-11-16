@@ -46,7 +46,7 @@
         </div>
 
         <div class="pub-close">
-          <button onclick="history.length > 1 ? history.back() : (location.hash='#/home')">${icon('close', 26)}</button>
+          <button onclick="smartBack('#/home')">${icon('close', 26)}</button>
         </div>
       </div>`;
     },
@@ -85,12 +85,20 @@
           price: String((item.price || 0) / 100), originalPrice: item.originalPrice ? String(item.originalPrice / 100) : '',
           cond: item.conditionLevel, place: item.place, delivery: item.delivery,
           tradeMode: item.tradeMode, wantText: item.wantText, wantCategory: item.wantCategory,
+          matchMode: item.matchMode || 'passive',
           allowBargain: item.allowBargain !== false && item.allowBargain !== 0,
           ...draft,
         };
       }
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
       const myPlaces = JSON.parse(localStorage.getItem('meetPlaces') || '[]');
+      const MATCH_MODES = [
+        { v: 'passive', label: '参与闭环 | 等待自动匹配提醒' },
+        { v: 'active', label: '参与闭环 | 仅主动找环' },
+        { v: 'one', label: '仅一对一交换' },
+      ];
+      const matchLabel = (v) => (MATCH_MODES.find((m) => m.v === v) || MATCH_MODES[0]).label;
+      const parseWantCats = (raw) => String(raw || '').split(',').map((s) => s.trim()).filter(Boolean);
 
       const state = {
         pics: draft.pics || [],
@@ -98,15 +106,17 @@
         price: draft.price || '',
         originalPrice: draft.originalPrice || '',
         allowBargain: draft.allowBargain !== false,
-        tradeMode: draft.tradeMode || kind.mode,
+        tradeMode: Number(draft.tradeMode || (kind.mode === 1 ? 4 : kind.mode)),
         cond: draft.cond || '九成新',
         place: draft.place || settings.meet || myPlaces[0] || '图书馆门口',
         delivery: draft.delivery || settings.delivery || '仅面交',
+        wantCategories: parseWantCats(draft.wantCategory),
+        matchMode: draft.matchMode || 'passive',
         auctionHours: draft.auctionHours || 24,
         auctionStart: draft.auctionStart || '',
       };
 
-      const tradeName = (m) => (m === 2 ? '以物换物' : m === 3 ? '拍卖' : '出售');
+      const tradeName = (m) => (m === 4 ? '可买可换（双轨）' : m === 2 ? '仅以物换物' : m === 3 ? '拍卖' : '仅明码标价');
 
       const relayItems = kind.mode === 2
         ? (await api.get('/api/item/mine', {status: 1}).catch(() => [])).filter(item => item.allowCycle && !item.isDemo)
@@ -143,11 +153,11 @@
             <span class="pe-row__v ${state.category ? 'on' : 'err'}" id="cateVal">${esc(state.category || '请选择')}${icon('right', 16)}</span>
           </div>
           ${kind.mode !== 2 ? `
-          <div class="pe-row" id="pePrice">
+          <div class="pe-row" id="pePrice" style="display:${state.tradeMode === 2 ? 'none' : 'flex'}">
             <span>价格${kind.mode === 3 ? '（起拍价）' : ''}</span>
             <span class="pe-row__v ${state.price ? 'on' : ''}" id="priceVal" style="color:var(--red-500)">${state.price ? '¥' + state.price : '¥0.00'}${icon('right', 16)}</span>
           </div>
-          <div class="pe-row" id="peOrig">
+          <div class="pe-row" id="peOrig" style="display:${state.tradeMode === 2 ? 'none' : 'flex'}">
             <span>原价</span>
             <span class="pe-row__v ${state.originalPrice ? 'on' : ''}" id="origVal">${state.originalPrice ? '¥' + state.originalPrice : '选填'}${icon('right', 16)}</span>
           </div>` : ''}
@@ -156,13 +166,18 @@
             <span>交易方式</span>
             <span class="pe-row__v on" id="tradeVal">${tradeName(state.tradeMode)}${icon('right', 16)}</span>
           </div>
-          <div class="pe-row" id="peWantRow" style="display:${state.tradeMode === 2 ? 'flex' : 'none'}">
-            <span>想换什么</span>
-            <input id="wantText" maxlength="60" placeholder="比如：篮球、台灯" value="${esc(draft.wantText || '')}"
+          <div class="pe-row" id="peWantCategoryRow" style="display:${state.tradeMode === 1 ? 'none' : 'flex'}">
+            <span>想换类别</span>
+            <span class="pe-row__v ${state.wantCategories.length ? 'on' : ''}" id="wantCatVal">${state.wantCategories.length ? esc(state.wantCategories.join('、')) : '可多选（选填）'}${icon('right', 16)}</span>
+          </div>
+          <div class="pe-row" id="peWantRow" style="display:${state.tradeMode === 1 ? 'none' : 'flex'}">
+            <span>期望说明</span>
+            <input id="wantText" maxlength="100" placeholder="比如：想换羽毛球拍、台灯" value="${esc(draft.wantText || '')}"
               style="margin-left:auto;border:0;outline:none;text-align:right;font-size:15px;max-width:62%;color:var(--ink-900)">
           </div>
-          <div class="pe-row" id="peWantCategoryRow" style="display:${state.tradeMode === 2 ? 'flex' : 'none'}">
-            <span>期望物品分类</span><select id="wantCategory" style="margin-left:auto;border:0;background:transparent;color:var(--ink-700);font:inherit"><option value="">请选择</option>${CATEGORIES.map(c => `<option value="${c}"${draft.wantCategory === c ? ' selected' : ''}>${c}</option>`).join('')}</select>
+          <div class="pe-row" id="peMatchMode">
+            <span>交换模式</span>
+            <span class="pe-row__v on" id="matchModeVal">${esc(matchLabel(state.matchMode))}${icon('right', 16)}</span>
           </div>` : ''}
           ${kind.mode === 3 ? `
           <div class="pe-row" id="peHours">
@@ -183,7 +198,7 @@
             <span>送达方式</span>
             <span class="pe-row__v on" id="deliverVal">${esc(state.delivery)}${icon('right', 16)}</span>
           </div>
-          ${kind.mode !== 2 ? `<div class="pe-switch-row"><span>可小刀</span><span class="switch${state.allowBargain ? ' on' : ''}" id="bargainSw"></span></div>` : ''}
+          ${kind.mode !== 2 ? `<div class="pe-switch-row" id="peBargainRow" style="display:${state.tradeMode === 2 ? 'none' : 'flex'}"><span>可小刀</span><span class="switch${state.allowBargain ? ' on' : ''}" id="bargainSw"></span></div>` : ''}
         </div>
         <div class="pe-hint">发布后先过审核与违禁词校验，通过即上架。草稿会自动保存，下次回来可以继续。</div>
         <footer class="pe-fixed-action">
@@ -194,7 +209,7 @@
       window.closeEditor = () => {
         saveDraft();
         confirmSheet('退出编辑', '草稿已经保存，下次从「我的发布」可以继续编辑。', '退出', () => {
-          history.length > 1 ? history.back() : (location.hash = '#/home');
+          smartBack('#/publish');
         });
       };
 
@@ -207,7 +222,8 @@
           tradeMode: state.tradeMode, cond: state.cond, place: state.place,
           delivery: state.delivery, auctionHours: state.auctionHours,
           wantText: (document.getElementById('wantText') || {}).value || '',
-          wantCategory: (document.getElementById('wantCategory') || {}).value || '',
+          wantCategory: state.wantCategories.join(','),
+          matchMode: state.matchMode,
         }));
       };
       const showError = (msg) => {
@@ -327,20 +343,80 @@
       if (document.getElementById('pePrice')) document.getElementById('pePrice').addEventListener('click', () => setPrice('priceVal', 'price'));
       if (document.getElementById('peOrig')) document.getElementById('peOrig').addEventListener('click', () => setPrice('origVal', 'originalPrice'));
 
+      const syncMobileTradeRows = () => {
+        const isSwapOnly = state.tradeMode === 2;
+        const isSellOnly = state.tradeMode === 1;
+        const pRow = document.getElementById('pePrice');
+        const oRow = document.getElementById('peOrig');
+        const bRow = document.getElementById('peBargainRow');
+        const wcRow = document.getElementById('peWantCategoryRow');
+        const wRow = document.getElementById('peWantRow');
+        if (pRow) pRow.style.display = isSwapOnly ? 'none' : 'flex';
+        if (oRow) oRow.style.display = isSwapOnly ? 'none' : 'flex';
+        if (bRow) bRow.style.display = isSwapOnly ? 'none' : 'flex';
+        if (wcRow) wcRow.style.display = isSellOnly ? 'none' : 'flex';
+        if (wRow) wRow.style.display = isSellOnly ? 'none' : 'flex';
+      };
+
       const tradeRow = document.getElementById('peTrade');
       if (tradeRow) tradeRow.addEventListener('click', () => {
         openSheet('交易方式', `<div class="set-card">
-          <div class="set-row" data-m="1">出售<span class="set-row__arrow">${icon('right', 16)}</span></div>
-          <div class="set-row" data-m="2">以物换物<span class="set-row__arrow">${icon('right', 16)}</span></div>
+          <div class="set-row" data-m="4">可买可换（双轨）<span class="set-row__arrow">${icon('right', 16)}</span></div>
+          <div class="set-row" data-m="1">仅明码标价<span class="set-row__arrow">${icon('right', 16)}</span></div>
+          <div class="set-row" data-m="2">仅以物换物<span class="set-row__arrow">${icon('right', 16)}</span></div>
           <div class="set-row" data-m="3">拍卖<span class="set-row__arrow">${icon('right', 16)}</span></div>
         </div>`, {
           onMount(sheet, close) {
             sheet.querySelectorAll('[data-m]').forEach((row) => row.addEventListener('click', () => {
               state.tradeMode = Number(row.dataset.m);
               document.getElementById('tradeVal').childNodes[0].nodeValue = tradeName(state.tradeMode);
-              document.getElementById('peWantCategoryRow').style.display = state.tradeMode === 2 ? 'flex' : 'none';
-          document.getElementById('peWantRow').style.display = state.tradeMode === 2 ? 'flex' : 'none';
+              syncMobileTradeRows();
               close(); saveDraft();
+            }));
+          },
+        });
+      });
+
+      const wantCatRow = document.getElementById('peWantCategoryRow');
+      if (wantCatRow) wantCatRow.addEventListener('click', () => {
+        const picked = new Set(state.wantCategories);
+        openSheet('想换类别（可多选）', `<div class="pe-chips" id="wantCatChips">${CATEGORIES.map((c) =>
+          `<span class="chip${picked.has(c) ? ' on' : ''}" data-v="${esc(c)}">${esc(c)}</span>`).join('')}</div>
+          <button class="btn btn--block" style="margin-top:18px" id="wantCatDone">确定</button>`, {
+          onMount(sheet, close) {
+            sheet.querySelectorAll('#wantCatChips .chip').forEach((ch) => ch.addEventListener('click', () => {
+              const v = ch.dataset.v;
+              if (picked.has(v)) picked.delete(v);
+              else picked.add(v);
+              ch.classList.toggle('on', picked.has(v));
+            }));
+            sheet.querySelector('#wantCatDone').addEventListener('click', () => {
+              state.wantCategories = [...picked];
+              const el = document.getElementById('wantCatVal');
+              if (el) {
+                el.textContent = state.wantCategories.length ? state.wantCategories.join('、') : '可多选（选填）';
+                el.insertAdjacentHTML('beforeend', icon('right', 16));
+                el.classList.toggle('on', state.wantCategories.length > 0);
+              }
+              saveDraft(); close();
+            });
+          },
+        });
+      });
+
+      const matchRow = document.getElementById('peMatchMode');
+      if (matchRow) matchRow.addEventListener('click', () => {
+        openSheet('交换模式', `<div class="set-card">${MATCH_MODES.map((m) =>
+          `<div class="set-row" data-mm="${m.v}"><span>${esc(m.label)}</span><span class="set-row__arrow">${state.matchMode === m.v ? '✓ ' : ''}${icon('right', 16)}</span></div>`).join('')}</div>`, {
+          onMount(sheet, close) {
+            sheet.querySelectorAll('[data-mm]').forEach((row) => row.addEventListener('click', () => {
+              state.matchMode = row.dataset.mm;
+              const el = document.getElementById('matchModeVal');
+              if (el) {
+                el.textContent = matchLabel(state.matchMode);
+                el.insertAdjacentHTML('beforeend', icon('right', 16));
+              }
+              saveDraft(); close();
             }));
           },
         });
@@ -400,7 +476,7 @@
           cateEl.classList.add('err');
           errs.push('请选择分类');
         }
-        if (kind.mode !== 2 && !state.price) errs.push('请填写价格');
+        if (kind.mode !== 2 && state.tradeMode !== 2 && !state.price) errs.push('请填写价格');
         if (errs.length) { showError(errs.join('；')); return; }
         const btn = document.getElementById('peSubmit');
         btn.disabled = true;
@@ -409,8 +485,10 @@
             const offeredItemId = Number(document.getElementById('wishOffer').value) || null;
             await api.post('/api/wish', { title, content: desc, category: state.category, offeredItemId });
           } else {
-            const priceCents = Math.round(Number(state.price) * 100);
-            const origCents = state.originalPrice ? Math.round(Number(state.originalPrice) * 100) : null;
+            const priceCents = state.tradeMode === 2 ? 0 : Math.round(Number(state.price) * 100);
+            const origCents = (state.tradeMode !== 2 && state.originalPrice) ? Math.round(Number(state.originalPrice) * 100) : null;
+            const wantTextVal = (document.getElementById('wantText') || {}).value || '';
+            const wantCatStr = state.wantCategories.join(',');
             const body = {
               title,
               category: state.category,
@@ -418,16 +496,16 @@
               brand: item?.brand || '',
               description: desc,
               images: state.pics.join(','),
-              expectDesc: state.tradeMode === 2 ? ((document.getElementById('wantText') || {}).value || '想换同类好物') : '',
-              wantText: state.tradeMode === 2 ? ((document.getElementById('wantText') || {}).value || '') : '',
+              expectDesc: state.tradeMode !== 1 ? wantTextVal : '',
+              wantText: state.tradeMode !== 1 ? wantTextVal : '',
               price: priceCents,
               originalPrice: origCents,
               tradeMode: state.tradeMode,
               place: state.place,
               delivery: state.delivery,
               allowBargain: state.allowBargain ? 1 : 0,
-              wantCategory: state.tradeMode === 2 ? ((document.getElementById('wantCategory') || {}).value || state.category) : state.category,
-              matchMode: item?.matchMode || 'passive',
+              wantCategory: state.tradeMode !== 1 ? (wantCatStr || state.category) : '',
+              matchMode: state.matchMode || 'passive',
             };
             if (itemId) {
               await api.put('/api/item/' + itemId, body);
@@ -449,6 +527,13 @@
             }
           }
           localStorage.removeItem(draftKey);
+          const proposalReturn = sessionStorage.getItem('hq.proposalReturn');
+          if (params.kind === 'idle' && /^#\/item\/\d+$/.test(proposalReturn || '')) {
+            sessionStorage.removeItem('hq.proposalReturn');
+            toast('已提交审核，通过后可以用它发提案');
+            location.replace(proposalReturn);
+            return;
+          }
           view.innerHTML = `
             <div class="pe-success">
               <img src="assets/brand/mascot-check.png" alt="换一圈吉祥物">
@@ -473,7 +558,7 @@
     view.innerHTML = `
       <div class="pe-page">
         <div class="pe-head">
-          <button class="x" onclick="history.back()">${icon('close', 24)}</button>
+          <button class="x" onclick="smartBack('#/publish')">${icon('close', 24)}</button>
           <h1>发心愿</h1>
           <button class="pe-submit" id="wishSubmit">发布</button>
         </div>
