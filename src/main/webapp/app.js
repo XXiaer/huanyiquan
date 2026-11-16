@@ -243,10 +243,10 @@
         return shelfWrite(key,[{id:Number(it.id),title:it.title,category:it.category,images:it.images}].concat(shelfRead(key).filter(function(x){return x.id!==Number(it.id);})));
     }
     var DEMO_SHELF_ITEMS = [
-        {id: 101, isDemo: true, title: '【校内自营】罗技 GPW 二代无线游戏鼠标 白色95新 传感器无暇 盒说配件全', category: '数码', price: '269.00', origPrice: '499.00', subsidy: '校园换物补贴立省15%', stockTag: '', images: '/assets/amz/quad-digital.jpg'},
-        {id: 102, isDemo: true, title: '【考研上岸】2026同济高数第七版上下册 + 张宇1000题 + 六级真题全套笔记', category: '教材', price: '39.90', origPrice: '128.00', subsidy: '学长学姐直降补贴', stockTag: '', images: '/assets/amz/quad-books.jpg'},
-        {id: 103, isDemo: true, title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App无极调光 宿舍不断电', category: '生活', price: '58.00', origPrice: '149.00', subsidy: '支持以物换物抵扣', stockTag: '', images: '/assets/amz/quad-dorm.jpg'},
-        {id: 104, isDemo: true, title: '【球场实战】尤尼克斯 YONEX 超轻碳素羽毛球拍 已拉24磅BG65线 赠手胶球包', category: '运动', price: '115.60', origPrice: '260.00', subsidy: '北山书院当面验拍', stockTag: '', images: '/assets/amz/quad-sports.jpg'}
+        {id: 101, isDemo: true, title: '【校内自营】罗技 GPW 二代无线游戏鼠标 白色95新 传感器无暇 盒说配件全', category: '数码', price: '269.00', origPrice: '499.00', subsidy: '校园换物补贴立省15%', stockTag: '', images: '/assets/amz/quad-digital-compact.webp'},
+        {id: 102, isDemo: true, title: '【考研上岸】2026同济高数第七版上下册 + 张宇1000题 + 六级真题全套笔记', category: '教材', price: '39.90', origPrice: '128.00', subsidy: '学长学姐直降补贴', stockTag: '', images: '/assets/amz/quad-books-compact.webp'},
+        {id: 103, isDemo: true, title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App无极调光 宿舍不断电', category: '生活', price: '58.00', origPrice: '149.00', subsidy: '支持以物换物抵扣', stockTag: '', images: '/assets/amz/quad-dorm-compact.webp'},
+        {id: 104, isDemo: true, title: '【球场实战】尤尼克斯 YONEX 超轻碳素羽毛球拍 已拉24磅BG65线 赠手胶球包', category: '运动', price: '115.60', origPrice: '260.00', subsidy: '北山书院当面验拍', stockTag: '', images: '/assets/amz/quad-sports-compact.webp'}
     ];
 
     function renderShelf() {
@@ -274,7 +274,7 @@
             return '<article class="jd-history-card">'
                 + '<div class="jd-h-media">'
                 + '<a href="' + href + '" class="jd-h-img-link">'
-                + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital.jpg\'" alt="' + esc(it.title) + '" loading="lazy">'
+                + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy">'
                 + '</a>'
                 + (it.isSaved ? '<button type="button" class="jd-h-del" data-act="shelf-remove" data-key="' + key + '" data-id="' + Number(it.id) + '" title="移出记录">✕</button>' : '')
                 + '</div>'
@@ -469,6 +469,13 @@
             state.me = null;
             writeToken('');
             if (opt.optionalAuth) throw new ApiError((data && data.msg) || '请先登录', 401);
+            if (window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
+                if (location.hash && location.hash !== '#/login' && location.hash !== '#/register') {
+                    sessionStorage.setItem('hq.returnTo', location.hash);
+                }
+                openAuthPopup('login');
+                throw new ApiError((data && data.msg) || '请先登录', 401);
+            }
             // 记下当前页面，重新登录后跳回来
             if (location.hash && location.hash !== '#/login') {
                 sessionStorage.setItem('hq.returnTo', location.hash);
@@ -559,9 +566,7 @@
         if(active==='offers'||active==='exchange')active='trade';
         var items=[
             ['#/market','market','首页'],
-            ['#/idle','idle','校园闲置'],
-            ['#/idle?tab=auctions','auctions','校园拍卖'],
-            ['#/idle?tab=relay','relay','换物接力'],
+
             ['#/idle?tab=wishes','wishes','求换专区'],
             ['#/appraise','appraise','AI 估价'],
             ['#/community','community','校园社区'],
@@ -715,9 +720,9 @@
         return Number(item && item.price) > 0 ? '¥' + (Number(item.price) / 100).toFixed(2) : '';
     }
 
-    function pCard(it) {
+    function pCard(it, index) {
         var locked = it.status && it.status !== 1, img = firstImage(it.images);
-        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="lazy" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
+        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="' + (index === 0 ? 'eager' : 'lazy') + '" fetchpriority="' + (index === 0 ? 'high' : 'auto') + '" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
         var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
         var hasSwap = window.campusExchange.supports(it, 2);
@@ -772,7 +777,7 @@
     }
 
     function amzGoldAuctionCard(a) {
-        var fallbackImgs = ['/assets/amz/quad-auction.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
+        var fallbackImgs = ['/assets/amz/quad-auction-compact.webp', '/assets/amz/quad-digital-compact.webp', '/assets/amz/quad-books-compact.webp', '/assets/amz/quad-dorm-compact.webp', '/assets/amz/quad-sports-compact.webp'];
         var img = firstImage(a.image) || fallbackImgs[Math.abs(Number(a.id || 0)) % fallbackImgs.length];
         var dState = a.isDemo && state._demoAuctionBids ? state._demoAuctionBids[a.id] : null;
         var priceVal = Number(dState ? dState.currentPrice : (a.state === 'settled' && (a.selectedAmount || a.currentPrice) ? (a.selectedAmount || a.currentPrice) : (a.currentPrice || 1)));
@@ -784,7 +789,7 @@
         var disc = marketPrice > priceVal ? Math.max(1, Math.round((priceVal / marketPrice) * 10)) + '折起拍' : (labels[a.state] || '拍卖中');
         return '<article class="amz-gb-card">'
             + '<div class="amz-gb-img">'
-            + '<button type="button" class="amz-gb-img-link" data-act="auction-detail" data-id="' + Number(a.id) + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="' + esc(a.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-img-link" data-act="auction-detail" data-id="' + Number(a.id) + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction-compact.webp\'" alt="' + esc(a.title) + '" loading="lazy"></button>'
             + '<button type="button" class="amz-gb-plus" data-act="auction-detail" data-id="' + Number(a.id) + '" title="' + (activeAuc ? '立即出价' : '查看拍品') + '">+</button>'
             + '</div>'
             + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (!activeAuc ? ' is-muted' : '') + '">' + esc(disc) + '</span><span class="amz-gb-red-txt">' + (activeAuc ? (bids + ' 次出价') : esc(labels[a.state] || '已结束')) + '</span></div>'
@@ -802,7 +807,7 @@
         var parts = val.toFixed(2).split('.');
         return '<article class="amz-gb-card">'
             + '<div class="amz-gb-img">'
-            + '<button type="button" class="amz-gb-img-link" ' + actAttr + '><img src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-img-link" ' + actAttr + '><img src="' + esc(r.image || '/assets/amz/quad-relay-compact.webp') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay-compact.webp\'" alt="' + esc(r.title) + '" loading="lazy"></button>'
             + '<button type="button" class="amz-gb-plus" ' + actAttr + ' title="加入换物接力">+</button>'
             + '</div>'
             + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (isSettled ? ' is-muted' : '') + '">' + (isSettled ? '已闭环' : '三方接力') + '</span><span class="amz-gb-red-txt">' + esc(r.stage || '可成环') + '</span></div>'
@@ -816,7 +821,7 @@
     function amzGoldWishCard(w) {
         var isSettled = w.state === 'settled';
         var isMine = state.me && w.userId === state.me.id;
-        var fallbackImgs = ['/assets/amz/quad-wishes.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
+        var fallbackImgs = ['/assets/amz/quad-wishes-compact.webp', '/assets/amz/quad-books-compact.webp', '/assets/amz/quad-digital-compact.webp', '/assets/amz/quad-dorm-compact.webp', '/assets/amz/quad-sports-compact.webp'];
         var img = w.image || fallbackImgs[Math.abs(Number(w.id || 0)) % fallbackImgs.length];
         var budget = Number(w.budget || 60);
         var parts = budget.toFixed(2).split('.');
@@ -825,7 +830,7 @@
             : '<button type="button" class="amz-gb-link" data-act="wish-respond" data-id="' + w.id + '">' + (isSettled ? '查看详情' : '去响应求换') + '</button>';
         return '<article class="amz-gb-card">'
             + '<div class="amz-gb-img">'
-            + '<button type="button" class="amz-gb-img-link" data-act="wish-respond" data-id="' + w.id + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy"></button>'
+            + '<button type="button" class="amz-gb-img-link" data-act="wish-respond" data-id="' + w.id + '"><img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes-compact.webp\'" alt="' + esc(w.title) + '" loading="lazy"></button>'
             + '<button type="button" class="amz-gb-plus" data-act="wish-respond" data-id="' + w.id + '" title="响应求换心愿">+</button>'
             + '</div>'
             + '<div class="amz-gb-badge-row"><span class="amz-gb-red-pill' + (isSettled ? ' is-muted' : '') + '">' + (isSettled ? '已达成' : esc(w.stage || '求换心愿')) + '</span><span class="amz-gb-red-txt">' + Number(w.replyCount || 3) + ' 人响应</span></div>'
@@ -1079,10 +1084,42 @@
         }
     }
 
+    function openAuthPopup(mode, returnTo) {
+        if (returnTo) sessionStorage.setItem('hq.returnTo', returnTo);
+        if (typeof window.openDesktopAuthModal === 'function' && window.innerWidth >= 768) {
+            window.openDesktopAuthModal({
+                mode: mode === 'register' ? 'register' : 'login',
+                onSuccess: async function (user) {
+                    if (user && user.token) writeToken(user.token);
+                    state.me = user || null;
+                    try {
+                        var fresh = await api('/user/me', { optionalAuth: true });
+                        if (fresh) state.me = fresh;
+                    } catch (ignore) {}
+                    toast('欢迎回来，' + (state.me && state.me.nickname ? state.me.nickname : '同学'), 'ok');
+                    var back = sessionStorage.getItem('hq.returnTo');
+                    sessionStorage.removeItem('hq.returnTo');
+                    if (back && back !== '#/login' && back !== '#/register' && back !== location.hash) {
+                        go(back);
+                    } else if (location.hash === '#/login' || location.hash === '#/register') {
+                        history.replaceState(null, '', '#/home');
+                        await render();
+                    } else {
+                        await render();
+                    }
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
     function openWishCreateSheet() {
         if (!readToken() && !state.me) {
-            sessionStorage.setItem('hq.returnTo', '#/idle?tab=wishes');
-            go('#/login');
+            if (!openAuthPopup('login', '#/idle?tab=wishes')) {
+                sessionStorage.setItem('hq.returnTo', '#/idle?tab=wishes');
+                go('#/login');
+            }
             return;
         }
         var myItems = (state.idleCache.myShelf || []);
@@ -1144,27 +1181,27 @@
             + '<button type="button" class="amz-poster-arrow is-prev" data-act="poster-scroll" data-dir="-1" aria-label="向左滑动">‹</button>'
             + '<div class="amz-poster-track" id="amz-poster-track">'
             + '<a class="amz-poster-card is-light-text" href="#/idle?tab=auctions">'
-            +   '<img src="/assets/amz/poster-auction.jpg" alt="校园拍卖" loading="eager">'
+            +   '<img src="/assets/amz/poster-auction-compact.webp" alt="校园拍卖" loading="lazy" decoding="async">'
             +   '<div class="amz-poster-overlay"><h3>校园拍卖<br>限时捡漏专场</h3><span>1元起拍 · 每日好物竞价</span></div>'
             + '</a>'
-            + '<button type="button" class="amz-poster-card" data-act="estimate">'
-            +   '<img src="/assets/amz/poster-appraise.jpg" alt="AI好物估价" loading="eager">'
-            +   '<div class="amz-poster-overlay"><h3>AI 好物估价</h3></div>'
-            + '</button>'
-            + '<a class="amz-poster-card" href="#/idle?tab=relay">'
-            +   '<img src="/assets/amz/poster-relay.jpg" alt="换物接力" loading="eager">'
-            +   '<div class="amz-poster-overlay"><h3>多方换物<br>接力成环</h3></div>'
+            + '<a class="amz-poster-card amz-feature-poster" href="#/market" data-act="home-feed">'
+            +   '<img src="/assets/amz/feature-swap-mascot.webp" alt="" loading="eager" fetchpriority="high" decoding="async">'
+            +   '<div class="amz-poster-overlay"><h3>换物</h3></div>'
             + '</a>'
-            + '<a class="amz-poster-card" href="#/idle">'
-            +   '<img src="/assets/amz/poster-grad.jpg" alt="毕业好物" loading="eager">'
-            +   '<div class="amz-poster-overlay"><h3>毕业季好物<br>低价带走</h3></div>'
+            + '<a class="amz-poster-card amz-feature-poster" href="#/auctions">'
+            +   '<img src="/assets/amz/feature-auction-mascot.webp" alt="" loading="eager" decoding="async">'
+            +   '<div class="amz-poster-overlay"><h3>拍卖</h3></div>'
+            + '</a>'
+            + '<a class="amz-poster-card amz-feature-poster" href="#/relay">'
+            +   '<img src="/assets/amz/feature-relay-mascot.webp" alt="" loading="eager" decoding="async">'
+            +   '<div class="amz-poster-overlay"><h3>换物接力</h3></div>'
             + '</a>'
             + '<a class="amz-poster-card" href="#/community">'
-            +   '<img src="/assets/amz/poster-community.jpg" alt="校园社区" loading="eager">'
+            +   '<img src="/assets/amz/poster-community-compact.webp" alt="校园社区" loading="lazy" decoding="async">'
             +   '<div class="amz-poster-overlay"><h3>校园社区贴吧</h3></div>'
             + '</a>'
             + '<a class="amz-poster-card" href="#/idle?tab=wishes">'
-            +   '<img src="/assets/amz/poster-wishes.jpg" alt="求换专区" loading="lazy">'
+            +   '<img src="/assets/amz/poster-wishes-compact.webp" alt="求换专区" loading="lazy">'
             +   '<div class="amz-poster-overlay"><h3>求换专区</h3></div>'
             + '</a>'
             + '</div>'
@@ -1175,43 +1212,23 @@
         var amzHomeTop = '<section class="desktop-market amz-home-stage">'
             + posterStrip
             + '<div class="amz-quad-grid">'
-            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/idle"><h2>热门校园分类</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
-            + '<button data-act="f-cat" data-v="教材"><span class="amz-q-photo"><img src="/assets/amz/quad-books.jpg" alt="图书教材" loading="lazy"></span><b>图书教材</b></button>'
-            + '<button data-act="f-cat" data-v="数码"><span class="amz-q-photo"><img src="/assets/amz/quad-digital.jpg" alt="数码设备" loading="lazy"></span><b>数码设备</b></button>'
-            + '<button data-act="f-cat" data-v="运动"><span class="amz-q-photo"><img src="/assets/amz/quad-sports.jpg" alt="运动户外" loading="lazy"></span><b>运动户外</b></button>'
-            + '<button data-act="f-cat" data-v="生活"><span class="amz-q-photo"><img src="/assets/amz/quad-dorm.jpg" alt="宿舍生活" loading="lazy"></span><b>宿舍生活</b></button>'
-            + '</div></div>'
-            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/community"><h2>校园服务直通车</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
-            + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-delivery.jpg" alt="校内可送" loading="lazy"></span><b>校内可送</b></a>'
-            + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-swap.jpg" alt="以物换物" loading="lazy"></span><b>以物换物</b></a>'
-            + '<a href="#/appraise"><span class="amz-q-photo"><img src="/assets/amz/quad-appraise.jpg" alt="好物估价" loading="lazy"></span><b>好物估价</b></a>'
-            + '<a href="#/idle"><span class="amz-q-photo"><img src="/assets/amz/quad-grad.jpg" alt="毕业好物" loading="lazy"></span><b>毕业好物</b></a>'
-            + '</div></div>'
-            + '<div class="amz-quad-card"><a class="amz-quad-head" href="#/idle?tab=auctions"><h2>拍卖与换物接力</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
-            + '<a href="#/idle?tab=auctions"><span class="amz-q-photo"><img src="/assets/amz/quad-auction.jpg" alt="校园拍卖" loading="lazy"></span><b>校园拍卖</b></a>'
-            + '<a href="#/idle?tab=wishes"><span class="amz-q-photo"><img src="/assets/amz/quad-wishes.jpg" alt="求换专区" loading="lazy"></span><b>求换专区</b></a>'
-            + '<a href="#/idle?tab=relay"><span class="amz-q-photo"><img src="/assets/amz/quad-relay.jpg" alt="换物接力" loading="lazy"></span><b>换物接力</b></a>'
-            + '<a href="#/community"><span class="amz-q-photo"><img src="/assets/amz/quad-community.jpg" alt="校内圈子" loading="lazy"></span><b>校内圈子</b></a>'
-            + '</div></div>'
-            + '<div class="amz-quad-card amz-quad-account">'
-            + (me ? '<a class="amz-quad-head" href="#/me"><h2>你好，' + esc(me.nickname) + '</h2><span>›</span></a>'
-                  + '<div class="amz-acct-mini amz-credit-mascot-box">'
-                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
-                  + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>信用分 ' + me.credit + '</b><span class="amz-credit-txt">信用极好</span></div>'
-                  + '<div class="amz-credit-quick-links">'
-                  + '<a href="#/me">在架管理</a><a href="#/offers">报价记录</a><a href="#/favorites">收藏足迹</a>'
-                  + '</div></div></div>'
-                  + '<a class="btn amz-btn-orange btn-block" href="#/publish">立即发布闲置</a>'
-                  : '<a class="amz-quad-head" href="#/login"><h2>登录获得完整体验</h2><span>›</span></a>'
-                  + '<div class="amz-acct-mini amz-credit-mascot-box">'
-                  + '<div class="amz-credit-art"><img src="/assets/amz/mascot-credit-card.png" alt="小唤吉祥物"></div>'
-                  + '<div class="amz-credit-info">'
-                  + '<div class="amz-credit-score-row"><b>信用分 80</b><span class="amz-credit-txt">移通认证</span></div>'
-                  + '<div class="amz-credit-quick-links">'
-                  + '<a href="#/login">学号登录</a><a href="#/appraise">AI估价</a><a href="#/idle?tab=auctions">逛拍卖</a>'
-                  + '</div></div></div>'
-                  + '<a class="btn amz-btn-orange btn-block" href="#/login">安全登录</a>')
+            + [
+                { title:'以物换物', href:'#/market', act:'home-feed', links:[
+                    ['#/market','quad-swap','浏览可换好物','home-feed'], ['#/publish','quad-books','发布换物']] },
+                { title:'校园拍卖', href:'#/auctions', links:[
+                    ['#/auctions','quad-auction','进入拍卖大厅'], ['#/auction/new','quad-digital','发起拍卖']] },
+                { title:'换物接力', href:'#/relay', links:[
+                    ['#/relay','quad-relay','查看换物接力'], ['#/wishes','quad-wishes','发布接力心愿']] }
+              ].map(function(panel) {
+                  var action = panel.act ? ' data-act="' + panel.act + '"' : '';
+                  return '<section class="amz-quad-card"><a class="amz-quad-head" href="' + panel.href + '"' + action + '><h2>' + panel.title + '</h2><span>›</span></a><div class="amz-quad-2x2 amz-quad-photos">'
+                      + panel.links.map(function(link) {
+                          return '<a href="' + link[0] + '"' + (link[3] ? ' data-act="' + link[3] + '"' : '') + '><span class="amz-q-photo"><img src="/assets/amz/' + link[1] + '-compact.webp" alt="" loading="lazy" decoding="async"></span><b>' + link[2] + '</b></a>';
+                      }).join('') + '</div></section>';
+              }).join('')
+            + '<div class="amz-quad-card amz-quad-account amz-home-welcome">'
+            + '<a class="amz-quad-head" href="' + (me ? '#/me' : '#/login') + '"><h2>' + (me ? '你好，' + esc(me.nickname) : '欢迎来到换一圈') + '</h2><span>›</span></a>'
+            + '<img class="amz-home-welcome-art" src="/assets/amz/mascot-home-welcome.webp" alt="吉祥物小唤挥手欢迎" width="640" height="320" loading="lazy" decoding="async">'
             + '</div></div>'
             + '</section>';
 
@@ -1224,21 +1241,11 @@
         // ---------------- 校园闲置 / 搜索：1:1 亚马逊今日优惠（Goldbox）集成版 ----------------
         var inIdleBrowse = idle || isSearch || h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit || (maxPrice > 0 && maxPrice < 2000);
         if (inIdleBrowse) {
-            var subNavHtml = '<nav class="amz-gold-subnav" aria-label="校园闲置频道">'
-                + '<button type="button" class="' + (activeTab === 'all' ? 'on' : '') + '" data-act="idle-tab" data-v="all">全部闲置</button>'
-                + '<button type="button" class="' + (activeTab === 'auctions' ? 'on' : '') + '" data-act="idle-tab" data-v="auctions">校园拍卖</button>'
-                + '<button type="button" class="' + (activeTab === 'relay' ? 'on' : '') + '" data-act="idle-tab" data-v="relay">换物接力</button>'
-                + '<button type="button" class="' + (activeTab === 'wishes' ? 'on' : '') + '" data-act="idle-tab" data-v="wishes">求换专区</button>'
-                + '<a href="#/publish">发布闲置</a>'
-                + '<a href="#/auction/new">发起拍卖</a>'
-                + '<a href="#/auction/mine">我的拍卖</a>'
-                + '</nav>';
-
             var promoBannerHtml = '<section class="amz-gold-banner" aria-label="换一圈专场活动">'
                 + '<div class="amz-gold-banner-copy">'
                 + '<h1>' + (isSearch ? '搜索：' + esc(h.keyword || '校园好物') : '换一圈 · 校园闲置好物专场') + '</h1>'
                 + '</div>'
-                + '<img class="amz-gold-banner-art" src="/assets/amz/idle-promo-banner.jpg" alt="换一圈吉祥物小唤风">'
+                + '<img class="amz-gold-banner-art" src="/assets/amz/idle-promo-banner-compact.webp" alt="换一圈吉祥物小唤风">'
                 + '</section>';
 
             // 亚马逊「玩具与游戏」同款胶囊横向滑动栏（集成 拍卖 / 接力 / 求换 + 分类入口）
@@ -1357,7 +1364,7 @@
                     : '<div class="amz-gb-empty">暂无符合条件拍品 <button type="button" class="link-btn" data-act="auction-reset">重置筛选</button></div>';
             } else if (activeTab === 'relay') {
                 var myRelays = (state.idleCache.myRelay || []).map(function (it) {
-                    return { id: Number(it.id), cat: it.category || '其他', isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', value: Math.round(Number(it.price || 10000) / 100), image: firstImage(it.images) || '/assets/amz/quad-relay.jpg' };
+                    return { id: Number(it.id), cat: it.category || '其他', isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', value: Math.round(Number(it.price || 10000) / 100), image: firstImage(it.images) || '/assets/amz/quad-relay-compact.webp' };
                 });
                 var listRelay = myRelays.concat(DEMO_RELAYS).filter(function (r) {
                     if (filterCat && r.cat !== filterCat && String(r.title + ' ' + r.want).indexOf(filterCat) < 0) return false;
@@ -1412,7 +1419,6 @@
                 + '</div>';
 
             var goldShellHtml = '<div class="amz-goldbox-page desktop-market">'
-                + subNavHtml
                 + promoBannerHtml
                 + pillRailHtml
                 + '<div class="amz-gold-body">' + leftSidebarHtml + mainContentHtml + '</div>'
@@ -1895,7 +1901,7 @@
                 time: '2026-11-14 18:22:10',
                 no: '339977041664',
                 shop: '北山书院自营闲置站',
-                img: '/assets/amz/quad-digital.jpg',
+                img: '/assets/amz/quad-digital-compact.webp',
                 title: '罗技 GPW 二代无线游戏鼠标 + 68键热插拔机械键盘套装（九成新 盒说全）',
                 qty: 1,
                 user: (state.me && state.me.nickname) || '肚皮一天都在饿',
@@ -1908,7 +1914,7 @@
                 time: '2026-11-11 14:08:45',
                 no: '339941829015',
                 shop: '南山书院考研教材角',
-                img: '/assets/amz/quad-books.jpg',
+                img: '/assets/amz/quad-books-compact.webp',
                 title: '高等数学同济第七版上下册 + 英语六级真题词汇全套笔记（无缺页）',
                 qty: 2,
                 user: (state.me && state.me.nickname) || '肚皮一天都在饿',
@@ -1921,7 +1927,7 @@
                 time: '2026-11-06 20:15:03',
                 no: '339810294811',
                 shop: '松格书院生活好物馆',
-                img: '/assets/amz/quad-dorm.jpg',
+                img: '/assets/amz/quad-dorm-compact.webp',
                 title: '米家宿舍充电长臂护眼台灯 + 桌面绿植陶瓷杯收纳三件套',
                 qty: 1,
                 user: (state.me && state.me.nickname) || '肚皮一天都在饿',
@@ -2003,7 +2009,7 @@
                 + '</header>'
                 + '<div class="jd-item-row">'
                 + '<div class="jd-col-goods">'
-                + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-swap.jpg" alt=""></div>'
+                + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-swap-compact.webp" alt=""></div>'
                 + '<div class="jd-goods-info">'
                 + '<p class="jd-goods-title"><b>' + esc(isReceived ? other : '我') + '</b> 提议用 「<b>' + esc(o.myTitle || '闲置好物') + '</b>」 交换 「<b>' + esc(o.targetTitle || '目标好物') + '</b>」</p>'
                 + (o.message ? '<p class="jd-goods-note">留言：「' + esc(o.message) + '」</p>' : '<p class="jd-goods-note">支持校内线下验货交接</p>')
@@ -2065,16 +2071,16 @@
     // ------------------------------------------------------------------ 三方环
 
     var DEMO_RELAYS = [
-        {id: 801, cat: '数码', isDemo: true, state: 'active', title: '【三方闭环】出罗技 GPW 二代无线鼠标 → 求换 iPad 二代电容笔 → 闭环贴补 ¥0', campus: '北山→南山→松格', stage: 'A→B→C 接力', value: 260, want: '数码外设', seller: '北山电竞阿泽', ringCount: 4, views: 1620, image: '/assets/amz/quad-relay.jpg'},
-        {id: 802, cat: '教材', isDemo: true, state: 'active', title: '【跨书院成环】出2026张宇考研数学全套 → 求换漫步者头戴耳机 → 图书馆同场交接', campus: '南山→竹逸→图书馆', stage: '差1人闭环', value: 110, want: '耳机/数码', seller: '南山学姐小林', ringCount: 3, views: 1280, image: '/assets/amz/quad-books.jpg'},
-        {id: 803, cat: '数码', isDemo: true, state: 'active', title: '【摄影接力环】出富士 mini11 拍立得相机 → 求换 Switch 卡带2张 → 已匹配2组环', campus: '菊轩→北山→梅若', stage: '高匹配度', value: 310, want: '游戏/潮玩', seller: '菊轩摄影糖糖', ringCount: 5, views: 2190, image: '/assets/amz/quad-auction.jpg'},
-        {id: 804, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器环】出米家长臂护眼台灯 1S → 求换尤尼克斯羽毛球拍 → 顺路寝室互送', campus: '松格→爱莲→北山', stage: 'A→B→C 接力', value: 85, want: '球拍/运动', seller: '松格机电老王', ringCount: 2, views: 940, image: '/assets/amz/quad-dorm.jpg'},
-        {id: 805, cat: '运动', isDemo: true, state: 'active', title: '【运动外设环】出斯伯丁7号吸湿篮球+球包 → 求换68键机械键盘 → 风雨球场验货', campus: '北山→南山→竹逸', stage: '随时成环', value: 135, want: '键盘/数码', seller: '球场科比阿杰', ringCount: 4, views: 1430, image: '/assets/amz/quad-sports.jpg'},
-        {id: 806, cat: '教材', isDemo: true, state: 'active', title: '【工科教材环】出卡西欧 fx-991CN X 计算器 → 求换大物实验报告指导书+尺规', campus: '南山→松格→北山', stage: '同院系接力', value: 65, want: '教材/工具', seller: '智能工程学长', ringCount: 6, views: 1750, image: '/assets/amz/quad-grad.jpg'},
-        {id: 807, cat: '数码', isDemo: true, state: 'active', title: '【音频数码环】出漫步者 W820NB 降噪耳机 → 求换小米手环8 Pro → 等价零差价', campus: '图书馆→菊轩→南山', stage: 'A→B→C 接力', value: 150, want: '智能穿戴', seller: '图书馆常驻生', ringCount: 3, views: 1560, image: '/assets/amz/quad-appraise.jpg'},
-        {id: 808, cat: '生活', isDemo: true, state: 'active', title: '【手作周边环】出复古火漆印章礼盒全套 → 求换泡泡玛特盲盒或桌面绿植盆栽', campus: '爱莲→梅若→菊轩', stage: '女生书院环', value: 55, want: '绿植/潮玩', seller: '爱莲手作小鹿', ringCount: 2, views: 890, image: '/assets/amz/quad-wishes.jpg'},
-        {id: 809, cat: '数码', isDemo: true, state: 'settled', title: '【已成环示范】Keychron K2 机械键盘 → 富士相纸礼盒 → 考研英语黄皮书三方交接', campus: '图书馆一楼大厅', stage: '已闭环交接', value: 180, want: '三方各得所需', seller: '大数据极客阿伟', ringCount: 1, views: 2310, image: '/assets/amz/quad-swap.jpg'},
-        {id: 810, cat: '生活', isDemo: true, state: 'active', title: '【毕业收纳环】出宜家感牛津布收纳箱×2+书立 → 求换滑板或哑铃一对', campus: '北山→松格→南山', stage: 'A→B→C 接力', value: 49, want: '运动器材', seller: '北山收纳达人', ringCount: 3, views: 1020, image: '/assets/amz/quad-delivery.jpg'}
+        {id: 801, cat: '数码', isDemo: true, state: 'active', title: '【三方闭环】出罗技 GPW 二代无线鼠标 → 求换 iPad 二代电容笔 → 闭环贴补 ¥0', campus: '北山→南山→松格', stage: 'A→B→C 接力', value: 260, want: '数码外设', seller: '北山电竞阿泽', ringCount: 4, views: 1620, image: '/assets/amz/quad-relay-compact.webp'},
+        {id: 802, cat: '教材', isDemo: true, state: 'active', title: '【跨书院成环】出2026张宇考研数学全套 → 求换漫步者头戴耳机 → 图书馆同场交接', campus: '南山→竹逸→图书馆', stage: '差1人闭环', value: 110, want: '耳机/数码', seller: '南山学姐小林', ringCount: 3, views: 1280, image: '/assets/amz/quad-books-compact.webp'},
+        {id: 803, cat: '数码', isDemo: true, state: 'active', title: '【摄影接力环】出富士 mini11 拍立得相机 → 求换 Switch 卡带2张 → 已匹配2组环', campus: '菊轩→北山→梅若', stage: '高匹配度', value: 310, want: '游戏/潮玩', seller: '菊轩摄影糖糖', ringCount: 5, views: 2190, image: '/assets/amz/quad-auction-compact.webp'},
+        {id: 804, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器环】出米家长臂护眼台灯 1S → 求换尤尼克斯羽毛球拍 → 顺路寝室互送', campus: '松格→爱莲→北山', stage: 'A→B→C 接力', value: 85, want: '球拍/运动', seller: '松格机电老王', ringCount: 2, views: 940, image: '/assets/amz/quad-dorm-compact.webp'},
+        {id: 805, cat: '运动', isDemo: true, state: 'active', title: '【运动外设环】出斯伯丁7号吸湿篮球+球包 → 求换68键机械键盘 → 风雨球场验货', campus: '北山→南山→竹逸', stage: '随时成环', value: 135, want: '键盘/数码', seller: '球场科比阿杰', ringCount: 4, views: 1430, image: '/assets/amz/quad-sports-compact.webp'},
+        {id: 806, cat: '教材', isDemo: true, state: 'active', title: '【工科教材环】出卡西欧 fx-991CN X 计算器 → 求换大物实验报告指导书+尺规', campus: '南山→松格→北山', stage: '同院系接力', value: 65, want: '教材/工具', seller: '智能工程学长', ringCount: 6, views: 1750, image: '/assets/amz/quad-grad-compact.webp'},
+        {id: 807, cat: '数码', isDemo: true, state: 'active', title: '【音频数码环】出漫步者 W820NB 降噪耳机 → 求换小米手环8 Pro → 等价零差价', campus: '图书馆→菊轩→南山', stage: 'A→B→C 接力', value: 150, want: '智能穿戴', seller: '图书馆常驻生', ringCount: 3, views: 1560, image: '/assets/amz/quad-appraise-compact.webp'},
+        {id: 808, cat: '生活', isDemo: true, state: 'active', title: '【手作周边环】出复古火漆印章礼盒全套 → 求换泡泡玛特盲盒或桌面绿植盆栽', campus: '爱莲→梅若→菊轩', stage: '女生书院环', value: 55, want: '绿植/潮玩', seller: '爱莲手作小鹿', ringCount: 2, views: 890, image: '/assets/amz/quad-wishes-compact.webp'},
+        {id: 809, cat: '数码', isDemo: true, state: 'settled', title: '【已成环示范】Keychron K2 机械键盘 → 富士相纸礼盒 → 考研英语黄皮书三方交接', campus: '图书馆一楼大厅', stage: '已闭环交接', value: 180, want: '三方各得所需', seller: '大数据极客阿伟', ringCount: 1, views: 2310, image: '/assets/amz/quad-swap-compact.webp'},
+        {id: 810, cat: '生活', isDemo: true, state: 'active', title: '【毕业收纳环】出宜家感牛津布收纳箱×2+书立 → 求换滑板或哑铃一对', campus: '北山→松格→南山', stage: 'A→B→C 接力', value: 49, want: '运动器材', seller: '北山收纳达人', ringCount: 3, views: 1020, image: '/assets/amz/quad-delivery-compact.webp'}
     ];
 
     function relayCard(r) {
@@ -2084,7 +2090,7 @@
             : 'data-act="go" data-to="#/cycle/' + Number(r.id) + '"';
         return '<article class="relay-card-clean">'
             + '<div class="clean-card-media" style="cursor:pointer" ' + actAttr + '>'
-            + '<img src="' + esc(r.image || '/assets/amz/quad-relay.jpg') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay.jpg\'" alt="' + esc(r.title) + '" loading="lazy">'
+            + '<img src="' + esc(r.image || '/assets/amz/quad-relay-compact.webp') + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-relay-compact.webp\'" alt="' + esc(r.title) + '" loading="lazy">'
             + (isSettled ? '<span class="clean-state-tag is-done">已闭环</span>' : '')
             + '</div>'
             + '<div class="clean-card-body">'
@@ -2117,7 +2123,7 @@
                 state: 'active',
                 title: it.title,
                 want: it.wantCategory || '任意好物',
-                image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'
+                image: firstImage(it.images) || '/assets/amz/quad-relay-compact.webp'
             };
         });
         var fullList = myRelayCards.concat(DEMO_RELAYS);
@@ -2280,7 +2286,7 @@
                 + '</header>'
                 + '<div class="jd-item-row">'
                 + '<div class="jd-col-goods">'
-                + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-relay.jpg" alt=""></div>'
+                + '<div class="jd-goods-thumb"><img src="/assets/amz/quad-relay-compact.webp" alt=""></div>'
                 + '<div class="jd-goods-info">'
                 + stepsHtml(e)
                 + '<p class="jd-goods-note">' + (window.exchangeNeedsConfirmation(e) ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || 2) + ' ' : '')
@@ -2610,14 +2616,14 @@
             + '<div class="jd-me-card jd-me-follow-card">'
             + '<header class="jd-card-head"><h3>常逛校园专区</h3><a href="#/idle">全部好物 ›</a></header>'
             + '<div class="jd-follow-tags">'
-            + '<a href="#/idle?cat=教材"><img src="/assets/amz/quad-books.jpg" alt="考研与教材" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>考研与教材</span></a>'
-            + '<a href="#/idle?cat=数码"><img src="/assets/amz/quad-digital.jpg" alt="数码与外设" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>数码与外设</span></a>'
-            + '<a href="#/idle?cat=运动"><img src="/assets/amz/quad-sports.jpg" alt="球类与骑行" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>球类与骑行</span></a>'
-            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm.jpg" alt="宿舍生活" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>宿舍生活</span></a>'
+            + '<a href="#/idle?cat=教材"><img src="/assets/amz/quad-books-compact.webp" alt="考研与教材" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>考研与教材</span></a>'
+            + '<a href="#/idle?cat=数码"><img src="/assets/amz/quad-digital-compact.webp" alt="数码与外设" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>数码与外设</span></a>'
+            + '<a href="#/idle?cat=运动"><img src="/assets/amz/quad-sports-compact.webp" alt="球类与骑行" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>球类与骑行</span></a>'
+            + '<a href="#/idle?cat=生活"><img src="/assets/amz/quad-dorm-compact.webp" alt="宿舍生活" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"><span>宿舍生活</span></a>'
             + '</div></div>'
             + '<div class="jd-me-3posters">'
-            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><img src="/assets/amz/quad-community.jpg" alt="逛频道社区" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
-            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><img src="/assets/amz/quad-relay.jpg" alt="换物接力厅" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
+            + '<a class="jd-poster-tile tone-peach" href="#/community"><h4>逛频道社区 ›</h4><img src="/assets/amz/quad-community-compact.webp" alt="逛频道社区" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
+            + '<a class="jd-poster-tile tone-blue" href="#/relay"><h4>换物接力厅 ›</h4><img src="/assets/amz/quad-relay-compact.webp" alt="换物接力厅" loading="eager" onerror="this.onerror=null;this.src=\'/assets/brand/mascot-box.png\'"></a>'
             + '<a class="jd-poster-tile tone-mint" href="#/community/game"><h4 class="amz-nowrap">Scrap Arena ›</h4><img src="/assets/brand/mascot-wave-320.webp" alt="Scrap Arena" loading="eager"></a>'
             + '</div>'
             + '</section>'
@@ -2643,7 +2649,7 @@
                 return '<article class="jd-history-card">'
                     + '<div class="jd-h-media">'
                     + '<a href="' + href + '" class="jd-h-img-link">'
-                    + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital.jpg\'" alt="' + esc(it.title) + '" loading="lazy">'
+                    + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy">'
                     + '</a></div>'
                     + '<div class="jd-h-body">'
                     + '<a href="' + href + '" class="jd-h-title">' + esc(it.title) + '</a>'
@@ -2895,7 +2901,7 @@
             panelActions = '<a class="btn btn-primary btn-sm" href="#/publish">+ 发布接力闲置</a><a class="btn btn-ghost btn-sm" href="#/relay">全屏接力广场 ›</a>';
             var relayMine = (await api('/item/mine?status=1').catch(function () { return []; })).filter(function (i) { return i.allowCycle; });
             var rHtml = relayMine.map(function (it) {
-                return relayCard({id: it.id, isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', image: firstImage(it.images) || '/assets/amz/quad-relay.jpg'});
+                return relayCard({id: it.id, isDemo: false, state: 'active', title: it.title, want: it.wantCategory || '任意好物', image: firstImage(it.images) || '/assets/amz/quad-relay-compact.webp'});
             }).concat(DEMO_RELAYS.slice(0, 8).map(relayCard)).join('');
             bodyHtml = '<div class="relay-eco-grid jd-sub-4col">' + rHtml + '</div>';
             renderJdWorkspace('me', tab, wrapPanel(), true);
@@ -2956,21 +2962,21 @@
     }
 
     var DEMO_AUCTIONS = [
-        {id: 901, cat: '数码', isDemo: true, state: 'active', title: '【北山斋当面验货】罗技 G Pro X Superlight 无线鼠标 白色95新 盒说配件全', description: '大三换新鼠标出手，微动清脆无双击，续航两周以上，北山书院一楼大厅随时面交。', currentPrice: 265, marketPrice: 499, endsAt: '2026-11-18 21:00', seller: '北山电竞阿泽', bidCount: 18, views: 1840, bidder: '松格小陈', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-digital.jpg'},
-        {id: 902, cat: '教材', isDemo: true, state: 'active', title: '【考研上岸出】2026考研数学张宇1000题+同济高数第七版上下册+全套手写笔记', description: '成功上岸重庆理工，书本干净字迹工整，附赠英一真题黄皮书。', currentPrice: 38, marketPrice: 128, endsAt: '2026-11-17 19:30', seller: '南山学姐小林', bidCount: 11, views: 1320, bidder: '竹逸阿杰', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-books.jpg'},
-        {id: 903, cat: '数码', isDemo: true, state: 'active', title: '【毕业急出】富士 Instax mini11 拍立得相机 冰晶白 含半盒相纸与透明保护壳', description: '社团活动抽奖所得，仅拍过两盒相纸，镜头无划痕，支持校内试拍验机。', currentPrice: 290, marketPrice: 520, endsAt: '2026-11-19 20:00', seller: '菊轩摄影社糖糖', bidCount: 24, views: 2690, bidder: '梅若小鹿', campus: '菊轩书院', stage: '变卖', image: '/assets/amz/quad-auction.jpg'},
-        {id: 904, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App调光 宿舍不断电可用', description: '灯光柔和不刺眼，底座稳固，送Type-C转接线，松格书院楼下自提。', currentPrice: 52, marketPrice: 149, endsAt: '2026-11-16 22:00', seller: '松格机电老王', bidCount: 9, views: 980, bidder: '爱莲小周', campus: '松格书院', stage: '一拍', image: '/assets/amz/quad-dorm.jpg'},
-        {id: 905, cat: '运动', isDemo: true, state: 'active', title: '【球场实战】斯伯丁 Spalding 7号PU吸湿防滑篮球 + 尤尼克斯羽毛球拍双拍包', description: '大四实习没空打球，球胆不漏气，球拍已拉24磅BG65线，送两筒耐打王。', currentPrice: 88, marketPrice: 230, endsAt: '2026-11-18 18:00', seller: '风雨球场科比', bidCount: 15, views: 1510, bidder: '北山体育生', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-sports.jpg'},
-        {id: 906, cat: '教材', isDemo: true, state: 'active', title: '【学长毕业礼包】九成新卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规全套', description: '工科期末考试必备神器，考场合规型号，太阳能+电池双供电，字迹清晰。', currentPrice: 46, marketPrice: 135, endsAt: '2026-11-20 12:00', seller: '智能工程学院学长', bidCount: 13, views: 1190, bidder: '大一萌新', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-grad.jpg'},
-        {id: 907, cat: '数码', isDemo: true, state: 'active', title: '【满电秒发】漫步者 W820NB 双金标主动降噪头戴式蓝牙耳机 云岩白 图书馆神器', description: '耳罩柔软不夹头，开启深度降噪在图书馆背书超安静，充一次电用一周。', currentPrice: 135, marketPrice: 299, endsAt: '2026-11-19 21:30', seller: '图书馆常驻选手', bidCount: 21, views: 2150, bidder: '竹逸小吴', campus: '图书馆大厅', stage: '二拍', image: '/assets/amz/quad-appraise.jpg'},
-        {id: 908, cat: '其他', isDemo: true, state: 'active', title: '【支持换物抵扣】复古火漆印章礼盒 + 手账胶带钢笔套装 生日伴手礼盒全新未拆', description: '多买了一套送室友，包装丝带完好，可直接竞拍也可拿课外小说等价抵扣。', currentPrice: 29, marketPrice: 89, endsAt: '2026-11-17 20:00', seller: '爱莲手作铺', bidCount: 7, views: 760, bidder: '菊轩小晴', campus: '爱莲书院', stage: '一拍', image: '/assets/amz/quad-wishes.jpg'},
-        {id: 909, cat: '数码', isDemo: true, state: 'settled', selectedAmount: 160, winner: '南山书院阿伟', title: '【已成交示范】Keychron K2 无线蓝牙双模机械键盘 茶轴RGB背光 Mac/Win双系统键帽', description: '茶轴手感柔和不吵室友，支持三台设备一键切换，已完成图书馆一楼当面交接。', currentPrice: 160, marketPrice: 368, endsAt: '2026-11-14 20:00', seller: '大数据学院极客', bidCount: 19, views: 2430, bidder: '南山书院阿伟', campus: '图书馆大厅', stage: '一拍', image: '/assets/amz/quad-swap.jpg'},
-        {id: 910, cat: '生活', isDemo: true, state: 'active', title: '【宿舍收纳整箱】宜家感牛津布衣物收纳箱×2 + 桌面书立架 + 寝室门后挂钩套装', description: '换宿舍整理出的全新闲置，打包1元起拍，支持北山斋至南山书院顺路送达。', currentPrice: 19, marketPrice: 75, endsAt: '2026-11-18 22:30', seller: '北山收纳达人', bidCount: 14, views: 1080, bidder: '梅若小张', campus: '北山书院', stage: '变卖', image: '/assets/amz/quad-delivery.jpg'}
+        {id: 901, cat: '数码', isDemo: true, state: 'active', title: '【北山斋当面验货】罗技 G Pro X Superlight 无线鼠标 白色95新 盒说配件全', description: '大三换新鼠标出手，微动清脆无双击，续航两周以上，北山书院一楼大厅随时面交。', currentPrice: 265, marketPrice: 499, endsAt: '2026-11-18 21:00', seller: '北山电竞阿泽', bidCount: 18, views: 1840, bidder: '松格小陈', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-digital-compact.webp'},
+        {id: 902, cat: '教材', isDemo: true, state: 'active', title: '【考研上岸出】2026考研数学张宇1000题+同济高数第七版上下册+全套手写笔记', description: '成功上岸重庆理工，书本干净字迹工整，附赠英一真题黄皮书。', currentPrice: 38, marketPrice: 128, endsAt: '2026-11-17 19:30', seller: '南山学姐小林', bidCount: 11, views: 1320, bidder: '竹逸阿杰', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-books-compact.webp'},
+        {id: 903, cat: '数码', isDemo: true, state: 'active', title: '【毕业急出】富士 Instax mini11 拍立得相机 冰晶白 含半盒相纸与透明保护壳', description: '社团活动抽奖所得，仅拍过两盒相纸，镜头无划痕，支持校内试拍验机。', currentPrice: 290, marketPrice: 520, endsAt: '2026-11-19 20:00', seller: '菊轩摄影社糖糖', bidCount: 24, views: 2690, bidder: '梅若小鹿', campus: '菊轩书院', stage: '变卖', image: '/assets/amz/quad-auction-compact.webp'},
+        {id: 904, cat: '生活', isDemo: true, state: 'active', title: '【宿舍神器】米家智能LED长臂护眼台灯 1S 支持米家App调光 宿舍不断电可用', description: '灯光柔和不刺眼，底座稳固，送Type-C转接线，松格书院楼下自提。', currentPrice: 52, marketPrice: 149, endsAt: '2026-11-16 22:00', seller: '松格机电老王', bidCount: 9, views: 980, bidder: '爱莲小周', campus: '松格书院', stage: '一拍', image: '/assets/amz/quad-dorm-compact.webp'},
+        {id: 905, cat: '运动', isDemo: true, state: 'active', title: '【球场实战】斯伯丁 Spalding 7号PU吸湿防滑篮球 + 尤尼克斯羽毛球拍双拍包', description: '大四实习没空打球，球胆不漏气，球拍已拉24磅BG65线，送两筒耐打王。', currentPrice: 88, marketPrice: 230, endsAt: '2026-11-18 18:00', seller: '风雨球场科比', bidCount: 15, views: 1510, bidder: '北山体育生', campus: '北山书院', stage: '一拍', image: '/assets/amz/quad-sports-compact.webp'},
+        {id: 906, cat: '教材', isDemo: true, state: 'active', title: '【学长毕业礼包】九成新卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规全套', description: '工科期末考试必备神器，考场合规型号，太阳能+电池双供电，字迹清晰。', currentPrice: 46, marketPrice: 135, endsAt: '2026-11-20 12:00', seller: '智能工程学院学长', bidCount: 13, views: 1190, bidder: '大一萌新', campus: '南山书院', stage: '一拍', image: '/assets/amz/quad-grad-compact.webp'},
+        {id: 907, cat: '数码', isDemo: true, state: 'active', title: '【满电秒发】漫步者 W820NB 双金标主动降噪头戴式蓝牙耳机 云岩白 图书馆神器', description: '耳罩柔软不夹头，开启深度降噪在图书馆背书超安静，充一次电用一周。', currentPrice: 135, marketPrice: 299, endsAt: '2026-11-19 21:30', seller: '图书馆常驻选手', bidCount: 21, views: 2150, bidder: '竹逸小吴', campus: '图书馆大厅', stage: '二拍', image: '/assets/amz/quad-appraise-compact.webp'},
+        {id: 908, cat: '其他', isDemo: true, state: 'active', title: '【支持换物抵扣】复古火漆印章礼盒 + 手账胶带钢笔套装 生日伴手礼盒全新未拆', description: '多买了一套送室友，包装丝带完好，可直接竞拍也可拿课外小说等价抵扣。', currentPrice: 29, marketPrice: 89, endsAt: '2026-11-17 20:00', seller: '爱莲手作铺', bidCount: 7, views: 760, bidder: '菊轩小晴', campus: '爱莲书院', stage: '一拍', image: '/assets/amz/quad-wishes-compact.webp'},
+        {id: 909, cat: '数码', isDemo: true, state: 'settled', selectedAmount: 160, winner: '南山书院阿伟', title: '【已成交示范】Keychron K2 无线蓝牙双模机械键盘 茶轴RGB背光 Mac/Win双系统键帽', description: '茶轴手感柔和不吵室友，支持三台设备一键切换，已完成图书馆一楼当面交接。', currentPrice: 160, marketPrice: 368, endsAt: '2026-11-14 20:00', seller: '大数据学院极客', bidCount: 19, views: 2430, bidder: '南山书院阿伟', campus: '图书馆大厅', stage: '一拍', image: '/assets/amz/quad-swap-compact.webp'},
+        {id: 910, cat: '生活', isDemo: true, state: 'active', title: '【宿舍收纳整箱】宜家感牛津布衣物收纳箱×2 + 桌面书立架 + 寝室门后挂钩套装', description: '换宿舍整理出的全新闲置，打包1元起拍，支持北山斋至南山书院顺路送达。', currentPrice: 19, marketPrice: 75, endsAt: '2026-11-18 22:30', seller: '北山收纳达人', bidCount: 14, views: 1080, bidder: '梅若小张', campus: '北山书院', stage: '变卖', image: '/assets/amz/quad-delivery-compact.webp'}
     ];
 
     function auctionCard(a, mode) {
         var labels={active:'正在进行',cancelled:'已撤回',pending:'待审核',rejected:'审核未通过',settled:'已成交',ended:a.bidCount ? '待结算' : '已流拍'};
-        var fallbackImgs=['/assets/amz/quad-auction.jpg','/assets/amz/quad-digital.jpg','/assets/amz/quad-books.jpg','/assets/amz/quad-dorm.jpg','/assets/amz/quad-sports.jpg'];
+        var fallbackImgs=['/assets/amz/quad-auction-compact.webp','/assets/amz/quad-digital-compact.webp','/assets/amz/quad-books-compact.webp','/assets/amz/quad-dorm-compact.webp','/assets/amz/quad-sports-compact.webp'];
         var image=firstImage(a.image) || fallbackImgs[Math.abs(Number(a.id || 0)) % fallbackImgs.length];
         var demoState = a.isDemo && state._demoAuctionBids ? state._demoAuctionBids[a.id] : null;
         var priceVal = demoState ? demoState.currentPrice : (a.state==='settled'&&(a.selectedAmount||a.currentPrice)?(a.selectedAmount||a.currentPrice):a.currentPrice);
@@ -2986,7 +2992,7 @@
         }
         return '<article class="ali-auction-card">'
             + '<div class="clean-card-media" style="cursor:pointer" data-act="auction-detail" data-id="'+a.id+'">'
-            + '<img src="'+esc(image)+'" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction.jpg\'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
+            + '<img src="'+esc(image)+'" onerror="this.onerror=null;this.src=\'/assets/amz/quad-auction-compact.webp\'" alt="'+esc(a.title)+'" loading="lazy" decoding="async">'
             + (a.state!=='active'?'<span class="clean-state-tag is-done">'+esc(labels[a.state] || '已结束')+'</span>':'')
             + '</div>'
             + '<div class="clean-card-body">'
@@ -3011,8 +3017,10 @@
             auctions=Array.isArray(res)?res:(res&&Array.isArray(res.list)?res.list:[]);
         } catch (e) {
             if (mine && e && e.code === 401) {
-                sessionStorage.setItem('hq.returnTo', '#/auction/mine');
-                go('#/login');
+                if (!openAuthPopup('login', '#/auction/mine')) {
+                    sessionStorage.setItem('hq.returnTo', '#/auction/mine');
+                    go('#/login');
+                }
                 return;
             }
             loadError=(e && e.message) || '';
@@ -3176,51 +3184,51 @@
     var IM_SEED_THREADS = [
         {
             ava: '宏', tone: 'tone-blue', name: '北山羽毛球穿线社', date: '2026/11/15', msg: '亲，您有一笔换物报价待确认哦', unread: 1, to: '#/offers',
-            credit: '96 极好', campus: '北山书院', shopImg: '/assets/amz/quad-sports.jpg', shopLink: '#/idle?cat=运动',
-            card: {title: '亲，您有一笔校园换物单待确认哦', img: '/assets/amz/quad-sports.jpg', goods: '正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅', sub: '支持以物换物 / 书院当面验拍', price: '¥102.0', qty: '共1件', btn: '去确认报价', to: '#/offers'},
+            credit: '96 极好', campus: '北山书院', shopImg: '/assets/amz/quad-sports-compact.webp', shopLink: '#/idle?cat=运动',
+            card: {title: '亲，您有一笔校园换物单待确认哦', img: '/assets/amz/quad-sports-compact.webp', goods: '正品VICTOR威克多 胜利大鬼斩羽毛球拍 24磅', sub: '支持以物换物 / 书院当面验拍', price: '¥102.0', qty: '共1件', btn: '去确认报价', to: '#/offers'},
             msgs: [
                 '亲，您有一笔换物订单待确认面交点位，如您换的羽毛球拍已拉好24磅BG65线，北山书院一楼大厅可当场试挥验货，满意再点确认收货哦~'
             ]
         },
         {
             ava: '诺', tone: 'tone-navy', name: '一诺体育器材流转', date: '2026/11/14', msg: '请确认北山书院一楼大厅面交点位', unread: 1, to: '#/exchange',
-            credit: '94 优秀', campus: '松格书院', shopImg: '/assets/amz/quad-relay.jpg', shopLink: '#/relay',
-            card: {title: '亲，您有一笔三方接力环待锁定哦', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记', sub: 'A→B→C 三方闭环匹配成功', price: '等价换', qty: '共1组', btn: '去查看接力环', to: '#/relay'},
+            credit: '94 优秀', campus: '松格书院', shopImg: '/assets/amz/quad-relay-compact.webp', shopLink: '#/relay',
+            card: {title: '亲，您有一笔三方接力环待锁定哦', img: '/assets/amz/quad-digital-compact.webp', goods: '罗技 GPW 二代无线鼠标 ⇄ 2026考研高数全套笔记', sub: 'A→B→C 三方闭环匹配成功', price: '等价换', qty: '共1组', btn: '去查看接力环', to: '#/relay'},
             msgs: ['下午 16:30 图书馆东门可以吗？我把球包也一起带来给你看成色。']
         },
         {
             ava: '烁', tone: 'tone-teal', name: '烁羽球拍与外设铺', date: '2026/11/13', msg: '罗技 GPW 二代已充好电随时可试', unread: 0, to: '#/idle?cat=数码',
-            credit: '92 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-digital.jpg', shopLink: '#/idle?cat=数码',
-            card: {title: '数码外设当面验机单', img: '/assets/amz/quad-digital.jpg', goods: '罗技 GPW 二代 白色 95新 盒说全', sub: '微动清脆无双击，支持以物换物', price: '¥265.0', qty: '共1件', btn: '查看数码专区', to: '#/idle?cat=数码'},
+            credit: '92 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-digital-compact.webp', shopLink: '#/idle?cat=数码',
+            card: {title: '数码外设当面验机单', img: '/assets/amz/quad-digital-compact.webp', goods: '罗技 GPW 二代 白色 95新 盒说全', sub: '微动清脆无双击，支持以物换物', price: '¥265.0', qty: '共1件', btn: '查看数码专区', to: '#/idle?cat=数码'},
             msgs: ['鼠标盒说接收器都在，如果你那把机械键盘也是茶轴，咱们可以直接平换！']
         },
         {
             ava: '琪', tone: 'tone-orange', name: '琪琪电竞外设学长', date: '2026/11/12', msg: '富士拍立得还能参与今晚拍卖吗', unread: 1, to: '#/auctions',
-            credit: '90 优秀', campus: '菊轩书院', shopImg: '/assets/amz/quad-auction.jpg', shopLink: '#/auctions',
+            credit: '90 优秀', campus: '菊轩书院', shopImg: '/assets/amz/quad-auction-compact.webp', shopLink: '#/auctions',
             card: null,
             msgs: ['今晚 20:00 拍立得专场快截拍了，我准备再加 10 元冲一下~']
         },
         {
             ava: '青', tone: 'tone-green', name: '青禾考研资料漂流', date: '2026/11/10', msg: '——免费附送同济高数期末真题笔记——', unread: 0, to: '#/idle?cat=教材',
-            credit: '95 极好', campus: '南山书院', shopImg: '/assets/amz/quad-books.jpg', shopLink: '#/idle?cat=教材',
+            credit: '95 极好', campus: '南山书院', shopImg: '/assets/amz/quad-books-compact.webp', shopLink: '#/idle?cat=教材',
             card: null,
             msgs: ['同济高数上下册我做了一整套错题本索引，一起打包换你的小台灯行吗？']
         },
         {
             ava: '纯', tone: 'tone-pink', name: '小纯桌搭与拍立得', date: '2026/11/09', msg: '下课10分钟左右到图书馆一楼大厅交接', unread: 0, to: '#/wishes',
-            credit: '89 良好', campus: '竹逸书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/wishes',
+            credit: '89 良好', campus: '竹逸书院', shopImg: '/assets/amz/quad-dorm-compact.webp', shopLink: '#/wishes',
             card: null,
             msgs: ['刚下课正在赶去图书馆一楼大厅，穿白色卫衣那个就是我~']
         },
         {
             ava: '浩', tone: 'tone-red', name: '浩迪数卡与计算器', date: '2026/11/08', msg: '卡西欧 fx-991CN X 中文版考场可用', unread: 1, to: '#/appraise',
-            credit: '91 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-grad.jpg', shopLink: '#/idle?cat=教材',
+            credit: '91 优秀', campus: '北山书院', shopImg: '/assets/amz/quad-grad-compact.webp', shopLink: '#/idle?cat=教材',
             card: null,
             msgs: ['我用小唤 AI 估价测了下，计算器+工程制图套装大概值 50~65 元，你看看想换啥？']
         },
         {
             ava: '国', tone: 'tone-brown', name: '移通严选宿舍好物', date: '2026/11/06', msg: '米家护眼灯支持三方换物接力成环', unread: 1, to: '#/relay',
-            credit: '93 优秀', campus: '爱莲书院', shopImg: '/assets/amz/quad-dorm.jpg', shopLink: '#/relay',
+            credit: '93 优秀', campus: '爱莲书院', shopImg: '/assets/amz/quad-dorm-compact.webp', shopLink: '#/relay',
             card: null,
             msgs: ['系统刚刚推了一条三方接力匹配给我们，点进去就能直接锁环！']
         }
@@ -3335,7 +3343,7 @@
             var peerId = isSeller ? thread.buyerId : thread.sellerId;
             var peerName = (isSeller ? thread.buyer : thread.seller) || '校内同学';
             var peerProfile = peerId ? await api('/user/' + peerId, { optionalAuth: true }).catch(function () { return null; }) : null;
-            var itemImg = firstImage(thread.images) || '/assets/amz/quad-swap.jpg';
+            var itemImg = firstImage(thread.images) || '/assets/amz/quad-swap-compact.webp';
             var messages = Array.isArray(thread.messages) ? thread.messages : [];
             var msgSig = messages.map(function (m) { return m.id; }).join(',');
             var creditScore = peerProfile && peerProfile.credit != null ? Number(peerProfile.credit) : 80;
@@ -3346,7 +3354,7 @@
                 + '<div class="tb-order-card tb-real-item-card">'
                 + '<h4>面交请选校内公共地点，确认物品状态后再交付</h4>'
                 + '<div class="tb-order-item-box">'
-                + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap.jpg\'" alt="">'
+                + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap-compact.webp\'" alt="">'
                 + '<div class="tb-order-item-info"><p>' + esc(thread.title || '校园闲置好物') + '</p><small>与 ' + esc(peerName) + ' 的专属私聊会话</small></div>'
                 + '</div>'
                 + '<a href="#/item/' + Number(thread.itemId) + '" class="tb-order-orange-btn">查看物品详情</a>'
@@ -3366,7 +3374,7 @@
                     + '</div>',
                 streamHtml: itemCardHtml + msgsHtml + '<button type="button" class="tb-bottom-pill" data-act="im-scroll-bottom" hidden>回到底部 ∨</button>',
                 shopCardHtml: '<div class="tb-shop-top">'
-                    + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap.jpg\'" alt="">'
+                    + '<img src="' + esc(itemImg) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-swap-compact.webp\'" alt="">'
                     + '<div><b>' + esc(peerName) + '</b><a href="#/user/' + Number(peerId) + '" class="tb-enter-shop">进入主页</a></div>'
                     + '</div>'
                     + '<div class="tb-shop-stats">'
@@ -3398,7 +3406,7 @@
                     return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我（' + esc((state.me && state.me.nickname) || '移通同学') + '）</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-text-bubble is-mine"><img class="tb-chat-img" src="' + esc(m.image) + '" alt="聊天图片"></div></div>';
                 }
                 if (m.kind === 'card') {
-                    return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-order-card"><h4>' + esc(m.title) + '</h4><div class="tb-order-item-box"><img src="' + esc(m.img || '/assets/amz/quad-swap.jpg') + '" alt=""><div class="tb-order-item-info"><p>' + esc(m.text) + '</p><small>' + esc(m.sub || '点击查看详情') + '</small></div></div><a href="' + esc(m.to || '#/offers') + '" class="tb-order-orange-btn">立即查看</a></div></div>';
+                    return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-order-card"><h4>' + esc(m.title) + '</h4><div class="tb-order-item-box"><img src="' + esc(m.img || '/assets/amz/quad-swap-compact.webp') + '" alt=""><div class="tb-order-item-info"><p>' + esc(m.text) + '</p><small>' + esc(m.sub || '点击查看详情') + '</small></div></div><a href="' + esc(m.to || '#/offers') + '" class="tb-order-orange-btn">立即查看</a></div></div>';
                 }
                 return '<div class="tb-msg-group is-mine"><div class="tb-msg-sender"><span>我（' + esc((state.me && state.me.nickname) || '移通同学') + '）</span><time>' + esc(m.time || '刚刚') + '</time></div><div class="tb-text-bubble is-mine">' + esc(m.text) + '</div></div>';
             }).join('');
@@ -3670,22 +3678,22 @@
         if(currentView.arg===id&&['chat','ringChat'].includes(currentView.name))roomTimer=setInterval(function(){refreshRoom(false);},5000);
     }
     var DEMO_WISHES = [
-        {id: 701, isDemo: true, state: 'active', category: '数码', title: '【急求】求换一套罗技 GPW 无线鼠标或 68 键茶轴机械键盘，可拿 iPad 电容笔或耳机换', content: '北山书院随时可当面试手感，成色九成新以上即可，差价可协商贴补。', nickname: '北山电竞阿泽', campus: '北山书院', stage: '数码急求', budget: 240, offerText: '提供：电容笔/降噪耳机', views: 1420, replyCount: 9, image: '/assets/amz/quad-digital.jpg'},
-        {id: 702, isDemo: true, state: 'active', category: '教材', title: '【考研刚需】求换 2026 张宇考研数学 1000 题 + 同济高数第七版上下册（带笔记更佳）', content: '南山书院或图书馆一楼交接，手里有全套六级真题、C语言教材或瑞幸咖啡券可换。', nickname: '南山学妹小林', campus: '南山书院', stage: '教材求换', budget: 45, offerText: '提供：六级真题/饮品券', views: 1180, replyCount: 14, image: '/assets/amz/quad-books.jpg'},
-        {id: 703, isDemo: true, state: 'active', category: '运动', title: '【球场约球】求换一把尤尼克斯或胜利羽毛球拍（24磅左右），拿斯伯丁篮球或滑板换', content: '风雨球场当场试拍，拍框无裂痕即可，送两筒全新羽毛球。', nickname: '风雨球场阿杰', campus: '松格书院', stage: '运动互换', budget: 110, offerText: '提供：斯伯丁7号篮球', views: 960, replyCount: 7, image: '/assets/amz/quad-sports.jpg'},
-        {id: 704, isDemo: true, state: 'active', category: '生活', title: '【宿舍改造】求换米家充电长臂护眼台灯 + 寝室床上小桌板，拿复古火漆印章礼盒换', content: '竹逸书院楼下自提，希望台灯续航正常，桌面书立也可一起打包换。', nickname: '竹逸桌搭糖糖', campus: '竹逸书院', stage: '宿舍神器', budget: 55, offerText: '提供：火漆印章全套礼盒', views: 850, replyCount: 6, image: '/assets/amz/quad-dorm.jpg'},
-        {id: 705, isDemo: true, state: 'active', category: '数码', title: '【摄影心愿】求换富士 Instax mini11/mini12 拍立得相机，拿漫步者头戴降噪耳机等价换', content: '社团外拍活动急用，菊轩书院或芳华书院当面验机，相纸可另外折算。', nickname: '菊轩摄影小鹿', campus: '菊轩书院', stage: '等价互换', budget: 290, offerText: '提供：漫步者W820NB耳机', views: 1890, replyCount: 16, image: '/assets/amz/quad-auction.jpg'},
-        {id: 706, isDemo: true, state: 'active', category: '教材', title: '【期末必备】求换卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规套盒', content: '大一工科萌新期末急需，支持北山斋或第一食堂当面交接。', nickname: '智能工程萌新', campus: '北山书院', stage: '期末急求', budget: 50, offerText: '提供：全新移动电源/课外书', views: 1090, replyCount: 11, image: '/assets/amz/quad-grad.jpg'},
-        {id: 707, isDemo: true, state: 'active', category: '其他', title: '【潮玩手办】求换泡泡玛特 SKULLPANDA 温度系列盲盒或动漫桌面手办，可多换一', content: '爱莲书院一楼大厅面交，有拆盒未拆袋重复款可互换补齐图鉴。', nickname: '爱莲盲盒控', campus: '爱莲书院', stage: '同好互换', budget: 69, offerText: '提供：同系列隐藏/热门款', views: 1310, replyCount: 12, image: '/assets/amz/quad-wishes.jpg'},
-        {id: 708, isDemo: true, state: 'active', category: '生活', title: '【毕业收纳】求换大容量牛津布衣物收纳箱×2 或 24 寸拉杆行李箱，拿桌面显示器支架换', content: '下周搬寝室急用，轮子顺滑无破损即可，松格书院可帮忙下楼搬运。', nickname: '松格大四学长', campus: '松格书院', stage: '急求好物', budget: 75, offerText: '提供：铝合金显示器增高架', views: 790, replyCount: 5, image: '/assets/amz/quad-delivery.jpg'},
-        {id: 709, isDemo: true, state: 'settled', category: '数码', title: '【已达成心愿】求换 Keychron K2 无线双模机械键盘，已与大数据学院同学完成互换', content: '图书馆一楼大厅当面试轴交接完毕，换一圈匹配速度超快！', nickname: '南山极客阿伟', campus: '图书馆大厅', stage: '已达成', budget: 165, offerText: '已用：索尼SRS便携音箱交换', views: 2040, replyCount: 19, image: '/assets/amz/quad-swap.jpg'},
-        {id: 710, isDemo: true, state: 'active', category: '绿植', title: '【阳台绿植】求换宿舍好养活的多肉拼盘、龟背竹或郁金香种球，拿手冲咖啡壶套装换', content: '梅若书院向阳阳台养护，希望带陶瓷花盆一起交换。', nickname: '梅若园艺社', campus: '梅若书院', stage: '绿植互换', budget: 35, offerText: '提供：法压壶+咖啡豆礼盒', views: 670, replyCount: 8, image: '/assets/amz/quad-community.jpg'}
+        {id: 701, isDemo: true, state: 'active', category: '数码', title: '【急求】求换一套罗技 GPW 无线鼠标或 68 键茶轴机械键盘，可拿 iPad 电容笔或耳机换', content: '北山书院随时可当面试手感，成色九成新以上即可，差价可协商贴补。', nickname: '北山电竞阿泽', campus: '北山书院', stage: '数码急求', budget: 240, offerText: '提供：电容笔/降噪耳机', views: 1420, replyCount: 9, image: '/assets/amz/quad-digital-compact.webp'},
+        {id: 702, isDemo: true, state: 'active', category: '教材', title: '【考研刚需】求换 2026 张宇考研数学 1000 题 + 同济高数第七版上下册（带笔记更佳）', content: '南山书院或图书馆一楼交接，手里有全套六级真题、C语言教材或瑞幸咖啡券可换。', nickname: '南山学妹小林', campus: '南山书院', stage: '教材求换', budget: 45, offerText: '提供：六级真题/饮品券', views: 1180, replyCount: 14, image: '/assets/amz/quad-books-compact.webp'},
+        {id: 703, isDemo: true, state: 'active', category: '运动', title: '【球场约球】求换一把尤尼克斯或胜利羽毛球拍（24磅左右），拿斯伯丁篮球或滑板换', content: '风雨球场当场试拍，拍框无裂痕即可，送两筒全新羽毛球。', nickname: '风雨球场阿杰', campus: '松格书院', stage: '运动互换', budget: 110, offerText: '提供：斯伯丁7号篮球', views: 960, replyCount: 7, image: '/assets/amz/quad-sports-compact.webp'},
+        {id: 704, isDemo: true, state: 'active', category: '生活', title: '【宿舍改造】求换米家充电长臂护眼台灯 + 寝室床上小桌板，拿复古火漆印章礼盒换', content: '竹逸书院楼下自提，希望台灯续航正常，桌面书立也可一起打包换。', nickname: '竹逸桌搭糖糖', campus: '竹逸书院', stage: '宿舍神器', budget: 55, offerText: '提供：火漆印章全套礼盒', views: 850, replyCount: 6, image: '/assets/amz/quad-dorm-compact.webp'},
+        {id: 705, isDemo: true, state: 'active', category: '数码', title: '【摄影心愿】求换富士 Instax mini11/mini12 拍立得相机，拿漫步者头戴降噪耳机等价换', content: '社团外拍活动急用，菊轩书院或芳华书院当面验机，相纸可另外折算。', nickname: '菊轩摄影小鹿', campus: '菊轩书院', stage: '等价互换', budget: 290, offerText: '提供：漫步者W820NB耳机', views: 1890, replyCount: 16, image: '/assets/amz/quad-auction-compact.webp'},
+        {id: 706, isDemo: true, state: 'active', category: '教材', title: '【期末必备】求换卡西欧 fx-991CN X 中文函数计算器 + 工程制图尺规套盒', content: '大一工科萌新期末急需，支持北山斋或第一食堂当面交接。', nickname: '智能工程萌新', campus: '北山书院', stage: '期末急求', budget: 50, offerText: '提供：全新移动电源/课外书', views: 1090, replyCount: 11, image: '/assets/amz/quad-grad-compact.webp'},
+        {id: 707, isDemo: true, state: 'active', category: '其他', title: '【潮玩手办】求换泡泡玛特 SKULLPANDA 温度系列盲盒或动漫桌面手办，可多换一', content: '爱莲书院一楼大厅面交，有拆盒未拆袋重复款可互换补齐图鉴。', nickname: '爱莲盲盒控', campus: '爱莲书院', stage: '同好互换', budget: 69, offerText: '提供：同系列隐藏/热门款', views: 1310, replyCount: 12, image: '/assets/amz/quad-wishes-compact.webp'},
+        {id: 708, isDemo: true, state: 'active', category: '生活', title: '【毕业收纳】求换大容量牛津布衣物收纳箱×2 或 24 寸拉杆行李箱，拿桌面显示器支架换', content: '下周搬寝室急用，轮子顺滑无破损即可，松格书院可帮忙下楼搬运。', nickname: '松格大四学长', campus: '松格书院', stage: '急求好物', budget: 75, offerText: '提供：铝合金显示器增高架', views: 790, replyCount: 5, image: '/assets/amz/quad-delivery-compact.webp'},
+        {id: 709, isDemo: true, state: 'settled', category: '数码', title: '【已达成心愿】求换 Keychron K2 无线双模机械键盘，已与大数据学院同学完成互换', content: '图书馆一楼大厅当面试轴交接完毕，换一圈匹配速度超快！', nickname: '南山极客阿伟', campus: '图书馆大厅', stage: '已达成', budget: 165, offerText: '已用：索尼SRS便携音箱交换', views: 2040, replyCount: 19, image: '/assets/amz/quad-swap-compact.webp'},
+        {id: 710, isDemo: true, state: 'active', category: '绿植', title: '【阳台绿植】求换宿舍好养活的多肉拼盘、龟背竹或郁金香种球，拿手冲咖啡壶套装换', content: '梅若书院向阳阳台养护，希望带陶瓷花盆一起交换。', nickname: '梅若园艺社', campus: '梅若书院', stage: '绿植互换', budget: 35, offerText: '提供：法压壶+咖啡豆礼盒', views: 670, replyCount: 8, image: '/assets/amz/quad-community-compact.webp'}
     ];
 
     function wishAuctionCard(w) {
         var isSettled = w.state === 'settled';
         var isMine = state.me && w.userId === state.me.id;
-        var fallbackImgs = ['/assets/amz/quad-wishes.jpg', '/assets/amz/quad-books.jpg', '/assets/amz/quad-digital.jpg', '/assets/amz/quad-dorm.jpg', '/assets/amz/quad-sports.jpg'];
+        var fallbackImgs = ['/assets/amz/quad-wishes-compact.webp', '/assets/amz/quad-books-compact.webp', '/assets/amz/quad-digital-compact.webp', '/assets/amz/quad-dorm-compact.webp', '/assets/amz/quad-sports-compact.webp'];
         var img = w.image || fallbackImgs[Math.abs(Number(w.id || 0)) % fallbackImgs.length];
         var swapLabel = w.offerText ? String(w.offerText).replace(/^提供：/, '拿 ').replace(/^已用：/, '已用 ') : ('心理价 ¥' + (w.budget || 50));
         var btnHtml = isMine
@@ -3693,7 +3701,7 @@
             : '<button type="button" class="clean-act-btn is-amber ' + (isSettled ? 'is-muted' : '') + '" data-act="wish-respond" data-id="' + w.id + '">' + (isSettled ? '查看详情' : (w.isDemo ? '去响应' : '响应')) + '</button>';
         return '<article class="wish-card-clean">'
             + '<div class="clean-card-media" style="cursor:pointer" data-act="wish-respond" data-id="' + w.id + '">'
-            + '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes.jpg\'" alt="' + esc(w.title) + '" loading="lazy">'
+            + '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-wishes-compact.webp\'" alt="' + esc(w.title) + '" loading="lazy">'
             + (isSettled ? '<span class="clean-state-tag is-done">已达成</span>' : '')
             + '</div>'
             + '<div class="clean-card-body">'
@@ -3800,13 +3808,13 @@
         } finally { communityLoading=false; }
     }
     var TIEBA_ROOMS = [
-        {id: 'hall', name: '综合闲置吹水吧', icon: 'fire', cat: '综合', desc: '全校闲置晒单、每日捡漏情报与校园日常讨论', members: 1286, img: '/assets/amz/quad-community.jpg', badge: 'LIVE'},
-        {id: 'digital', name: '北山数码外设吧', icon: 'ai', cat: '数码', desc: '键鼠耳机显示器验机评测、平价数码互换专场', members: 842, img: '/assets/amz/quad-digital.jpg', badge: '99+'},
-        {id: 'books', name: '南山考研教材吧', icon: 'order', cat: '教材', desc: '高数真题笔记漂流、各院系专业课二手教材互换', members: 965, img: '/assets/amz/quad-books.jpg', badge: '64'},
-        {id: 'dorm', name: '松格宿舍好物吧', icon: 'star', cat: '生活', desc: '护眼台灯收纳箱桌搭安利，寝室生活实用好物分享', members: 614, img: '/assets/amz/quad-dorm.jpg', badge: '42'},
-        {id: 'sports', name: '风雨球场运动吧', icon: 'swap', cat: '运动', desc: '羽毛球拍篮球骑行装备约战，当面试拍换器材', members: 538, img: '/assets/amz/quad-sports.jpg', badge: '约球'},
-        {id: 'photo', name: '拍立得与潮玩吧', icon: 'auction', cat: '其他', desc: '相机拍立得相纸流转、盲盒手办端盒拆封互换', members: 472, img: '/assets/amz/quad-auction.jpg', badge: '热'},
-        {id: 'lost', name: '失物招领互助吧', icon: 'pin', cat: '互助', desc: '校园卡雨伞耳机寻主，各书院爱心接力归还', members: 719, img: '/assets/amz/quad-delivery.jpg', badge: '置顶'},
+        {id: 'hall', name: '综合闲置吹水吧', icon: 'fire', cat: '综合', desc: '全校闲置晒单、每日捡漏情报与校园日常讨论', members: 1286, img: '/assets/amz/quad-community-compact.webp', badge: 'LIVE'},
+        {id: 'digital', name: '北山数码外设吧', icon: 'ai', cat: '数码', desc: '键鼠耳机显示器验机评测、平价数码互换专场', members: 842, img: '/assets/amz/quad-digital-compact.webp', badge: '99+'},
+        {id: 'books', name: '南山考研教材吧', icon: 'order', cat: '教材', desc: '高数真题笔记漂流、各院系专业课二手教材互换', members: 965, img: '/assets/amz/quad-books-compact.webp', badge: '64'},
+        {id: 'dorm', name: '松格宿舍好物吧', icon: 'star', cat: '生活', desc: '护眼台灯收纳箱桌搭安利，寝室生活实用好物分享', members: 614, img: '/assets/amz/quad-dorm-compact.webp', badge: '42'},
+        {id: 'sports', name: '风雨球场运动吧', icon: 'swap', cat: '运动', desc: '羽毛球拍篮球骑行装备约战，当面试拍换器材', members: 538, img: '/assets/amz/quad-sports-compact.webp', badge: '约球'},
+        {id: 'photo', name: '拍立得与潮玩吧', icon: 'auction', cat: '其他', desc: '相机拍立得相纸流转、盲盒手办端盒拆封互换', members: 472, img: '/assets/amz/quad-auction-compact.webp', badge: '热'},
+        {id: 'lost', name: '失物招领互助吧', icon: 'pin', cat: '互助', desc: '校园卡雨伞耳机寻主，各书院爱心接力归还', members: 719, img: '/assets/amz/quad-delivery-compact.webp', badge: '置顶'},
         {id: 'game', name: 'ScrapArena街机吧', icon: 'game', cat: '娱乐', desc: '双人同屏格斗约战大厅、战绩晒图与校园排行榜', members: 390, img: '/assets/brand/mascot-box.png', badge: 'PK'}
     ];
     function getAllRooms() {
@@ -3848,7 +3856,7 @@
             id: 1001, roomId: 'hall', tag: '置顶精华', author: '北山书院 电竞阿泽', ava: '北', time: '15 分钟前',
             title: '【晒单互换】大三升级桌面，出九五新罗技 GPW 二代 + 68键机械键盘，或者换 iPad 电容笔',
             body: '成色自己看图，微动清脆盒子和原装伞绳线都在，北山书院一楼大厅可当场连接笔记本试手感，支持三方接力环补差价。',
-            imgs: ['/assets/amz/quad-digital.jpg', '/assets/amz/quad-swap.jpg', '/assets/amz/quad-appraise.jpg'],
+            imgs: ['/assets/amz/quad-digital-compact.webp', '/assets/amz/quad-swap-compact.webp', '/assets/amz/quad-appraise-compact.webp'],
             likes: 128, cat: '数码',
             comments: [
                 {author: '松格小陈', time: '12 分钟前', text: 'GPW 二代白色超耐看！我有一支全新未拆二代电容笔，方便去私聊看看吗？'},
@@ -3859,7 +3867,7 @@
             id: 1002, roomId: 'books', tag: '精华资料', author: '南山书院 上岸学姐小林', ava: '南', time: '42 分钟前',
             title: '【考研飘流】整理全套同济高数+张宇1000题手写笔记，欢迎拿宿舍好物或文具来换',
             body: '成功上岸来还愿啦！笔记分章标注了高频考题型，无乱涂乱画，附送整本英语六级高频词册，图书馆一楼随时交接。',
-            imgs: ['/assets/amz/quad-books.jpg', '/assets/amz/quad-grad.jpg'],
+            imgs: ['/assets/amz/quad-books-compact.webp', '/assets/amz/quad-grad-compact.webp'],
             likes: 94, cat: '教材',
             comments: [
                 {author: '大二考研党', time: '30 分钟前', text: '沾沾学姐上岸喜气！我有一个米家便携榨汁杯和全新荧光笔套装能换吗？'}
@@ -3869,7 +3877,7 @@
             id: 1003, roomId: 'digital', tag: '验机评测', author: '菊轩极客老林', ava: '菊', time: '1 小时前',
             title: '【避坑经验】校内面交二手耳机/键盘必看的 4 个检查步骤（实测有效）',
             body: '1. 先让小唤 AI 估价测个基准区间；2. 耳机当场试降噪和左右耳电量均衡；3. 键盘打开在线轴体测试网页全键按一遍；4. 走换一圈平台记录保信用担保！',
-            imgs: ['/assets/amz/quad-appraise.jpg'],
+            imgs: ['/assets/amz/quad-appraise-compact.webp'],
             likes: 76, cat: '数码',
             comments: [
                 {author: '北山萌新', time: '48 分钟前', text: '收藏了！昨晚刚用这招顺利换到漫步者降噪耳机，超稳。'}
@@ -3879,7 +3887,7 @@
             id: 1004, roomId: 'dorm', tag: '晒单安利', author: '松格桌搭糖糖', ava: '松', time: '2 小时前',
             title: '【宿舍改造】花零元靠以物换物凑齐了护眼台灯+桌面绿植+牛津布收纳箱',
             body: '拿自己闲置的两本专业课书+复古火漆印章礼盒在换一圈换了三件宿舍神器，同寝室友已经全被我安利入坑了。',
-            imgs: ['/assets/amz/quad-dorm.jpg', '/assets/amz/quad-wishes.jpg'],
+            imgs: ['/assets/amz/quad-dorm-compact.webp', '/assets/amz/quad-wishes-compact.webp'],
             likes: 65, cat: '生活',
             comments: []
         },
@@ -3887,7 +3895,7 @@
             id: 1005, roomId: 'sports', tag: '约战换拍', author: '风雨球场科比', ava: '风', time: '3 小时前',
             title: '【今晚7点半】风雨球场3号场约双打，顺便试打这把24磅胜利大鬼斩球拍看谁想换',
             body: '最近换了新拍子，旧的这把手感依然弹，刚换了新吸汗带还送两筒耐打王。球场上边打边试，中意直接发起换物报价！',
-            imgs: ['/assets/amz/quad-sports.jpg'],
+            imgs: ['/assets/amz/quad-sports-compact.webp'],
             likes: 58, cat: '运动',
             comments: [
                 {author: '竹逸羽球社', time: '2 小时前', text: '算我一个！我带斯伯丁篮球下来，咱们当场交流~'}
@@ -3897,7 +3905,7 @@
             id: 1006, roomId: 'photo', tag: '同好互换', author: '爱莲摄影小鹿', ava: '爱', time: '昨天',
             title: '富士 Instax mini11 拍立得换漫步者头戴耳机，额外再塞半盒全新相纸',
             body: '机身完全无划痕，欢迎周末一起在学校樱花大道试拍几张直接成环！',
-            imgs: ['/assets/amz/quad-auction.jpg'],
+            imgs: ['/assets/amz/quad-auction-compact.webp'],
             likes: 49, cat: '其他',
             comments: []
         },
@@ -3905,7 +3913,7 @@
             id: 1007, roomId: 'lost', tag: '失物招领', author: '图书馆值班同学', ava: '图', time: '今天 11:20',
             title: '【招领】一楼自习区靠窗桌面捡到一把黑色全自动晴雨伞 + 绿色校园卡套',
             body: '已经放在图书馆一楼服务台旁边的蓝框里，失主同学可以直接在本贴留言确认特征来认领~',
-            imgs: ['/assets/amz/quad-delivery.jpg'],
+            imgs: ['/assets/amz/quad-delivery-compact.webp'],
             likes: 112, cat: '生活',
             comments: []
         },
@@ -4098,7 +4106,7 @@
             : roomChatHtml;
 
         var centerInnerHtml = '<header class="tieba-bar-header">'
-            + '<div class="tieba-bar-cover"><img src="' + esc(activeRoom.img || '/assets/amz/quad-community.jpg') + '" alt=""></div>'
+            + '<div class="tieba-bar-cover"><img src="' + esc(activeRoom.img || '/assets/amz/quad-community-compact.webp') + '" alt=""></div>'
             + '<div class="tieba-bar-meta">'
             + '<div class="tieba-bar-title-row">'
             + '<h1>' + esc(activeRoom.name) + '</h1>'
@@ -4515,12 +4523,12 @@
         }).join('');
 
         var sampleBenchmarks = [
-            {name: '罗技 GPW 二代无线游戏鼠标', cat: '数码', orig: 599, est: '260 ~ 320', cond: 'light', img: '/assets/amz/quad-digital.jpg'},
-            {name: '2026同济高数+张宇1000题全套', cat: '教材', orig: 128, est: '35 ~ 55', cond: 'light', img: '/assets/amz/quad-books.jpg'},
-            {name: '富士 Instax mini11 拍立得相机', cat: '数码', orig: 520, est: '280 ~ 350', cond: 'new', img: '/assets/amz/quad-auction.jpg'},
-            {name: '米家智能LED长臂护眼台灯 1S', cat: '生活', orig: 149, est: '55 ~ 80', cond: 'light', img: '/assets/amz/quad-dorm.jpg'},
-            {name: '尤尼克斯 24磅碳素羽毛球拍', cat: '运动', orig: 260, est: '110 ~ 145', cond: 'light', img: '/assets/amz/quad-sports.jpg'},
-            {name: '卡西欧 fx-991CN X 函数计算器', cat: '教材', orig: 135, est: '50 ~ 75', cond: 'new', img: '/assets/amz/quad-grad.jpg'}
+            {name: '罗技 GPW 二代无线游戏鼠标', cat: '数码', orig: 599, est: '260 ~ 320', cond: 'light', img: '/assets/amz/quad-digital-compact.webp'},
+            {name: '2026同济高数+张宇1000题全套', cat: '教材', orig: 128, est: '35 ~ 55', cond: 'light', img: '/assets/amz/quad-books-compact.webp'},
+            {name: '富士 Instax mini11 拍立得相机', cat: '数码', orig: 520, est: '280 ~ 350', cond: 'new', img: '/assets/amz/quad-auction-compact.webp'},
+            {name: '米家智能LED长臂护眼台灯 1S', cat: '生活', orig: 149, est: '55 ~ 80', cond: 'light', img: '/assets/amz/quad-dorm-compact.webp'},
+            {name: '尤尼克斯 24磅碳素羽毛球拍', cat: '运动', orig: 260, est: '110 ~ 145', cond: 'light', img: '/assets/amz/quad-sports-compact.webp'},
+            {name: '卡西欧 fx-991CN X 函数计算器', cat: '教材', orig: 135, est: '50 ~ 75', cond: 'new', img: '/assets/amz/quad-grad-compact.webp'}
         ].map(function (b) {
             return '<div class="ai-bench-row">'
                 + '<img src="' + b.img + '" alt="">'
@@ -4706,6 +4714,19 @@
         if (view.name === 'appraise') { renderAppraise(); return; }
         if (view.name === 'landing') { renderLanding(); return; }
         if (view.name === 'login' || view.name === 'register') {
+            if (window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
+                var targetMode = view.name === 'register' ? 'register' : (state.loginMode || 'login');
+                history.replaceState(null, '', '#/home');
+                currentView = { name: 'home', arg: null };
+                try {
+                    await ensureIdleTabData(state.idleTab || 'all');
+                    if (await loadHome(true)) renderHome();
+                } catch (ignore) {
+                    renderHome();
+                }
+                openAuthPopup(targetMode);
+                return;
+            }
             renderLogin(view.name === 'register' ? 'register' : (state.loginMode || 'login'));
             return;
         }
@@ -4806,6 +4827,14 @@
     // ------------------------------------------------------------------ 交互绑定
 
     document.addEventListener('click', async function (ev) {
+        var authLink = ev.target.closest('a[href="#/login"], a[href="#/register"]');
+        if (authLink && window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
+            ev.preventDefault();
+            state.drawerOpen = false;
+            syncAmzDrawer();
+            openAuthPopup(authLink.getAttribute('href') === '#/register' ? 'register' : 'login');
+            return;
+        }
         var jdLink = ev.target.closest('.jd-side-nav a[href^="#/"]');
         if (jdLink) {
             var sideEl = jdLink.closest('.jd-side-nav');
@@ -5069,7 +5098,7 @@
                     title: '发起了校园闲置互换意向卡片',
                     text: '罗技 GPW 二代无线鼠标（95新）换物申请',
                     sub: '预约北山书院面交，点此查看报价',
-                    img: '/assets/amz/quad-digital.jpg',
+                    img: '/assets/amz/quad-digital-compact.webp',
                     to: '#/offers',
                     time: tStr
                 });
@@ -5190,8 +5219,10 @@
             var studentNo = el.form.elements.studentNo.value.trim();
             if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号', 'err'); return; }
             if (!email.reportValidity()) return;
+            var regCapToken = await window.openHumanCaptcha('安全验证 · 发送注册验证码');
+            if (!regCapToken) return;
             await sendEmailCodeWithCooldown(el, 'register-email', function () {
-                return api('/user/register/email/send', {method:'POST', body:{studentNo:studentNo,email:email.value.trim()}});
+                return api('/user/register/email/send', {method:'POST', body:{studentNo:studentNo,email:email.value.trim(),captchaToken:regCapToken}});
             }, '验证码已发送，请查收邮箱', 'ok', el.form?.elements.code);
             return;
         }
@@ -5243,7 +5274,7 @@
         }
         if(act==='home-feed'){
             ev.preventDefault();
-            document.querySelector('.market-feed')?.scrollIntoView({block:'start'});
+            (document.querySelector('.market-feed') || document.querySelector('.amz-shelf-wrap'))?.scrollIntoView({block:'start'});
             return;
         }
         if(act==='shelf-toggle'){
@@ -5356,7 +5387,7 @@
             var quickAmts = [curPrice + inc, curPrice + inc * 2, curPrice + inc * 4];
             var body = '<div class="auc-modal-box">'
                 + '<div class="auc-modal-top">'
-                + '<img src="' + esc(firstImage(auc.image) || '/assets/amz/quad-auction.jpg') + '" alt="">'
+                + '<img src="' + esc(firstImage(auc.image) || '/assets/amz/quad-auction-compact.webp') + '" alt="">'
                 + '<div><span class="tag ' + (auc.state === 'active' ? 'brand' : 'ghost') + '">' + (auc.state === 'active' ? '正在竞拍' : '已结束') + '</span>'
                 + '<h4>' + esc(auc.title) + '</h4>'
                 + '<p class="auc-modal-meta">卖家：' + esc(auc.seller || '校园同学') + ' · 面交：' + esc(auc.campus || '重庆移通学院') + ' · 截止：' + esc(auc.endsAt || '24小时内') + '</p></div></div>'
@@ -5417,7 +5448,7 @@
                 : '<p class="sub" style="margin-top:10px">你当前暂无在架物品，可以直接发布一件同类闲置来响应。</p>';
             openSheet('<div class="wish-modal-box">'
                 + '<h3>响应同学求换心愿</h3>'
-                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(wish.image || '/assets/amz/quad-wishes.jpg') + '" alt=""><div>'
+                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(wish.image || '/assets/amz/quad-wishes-compact.webp') + '" alt=""><div>'
                 + '<h4>' + esc(wish.title) + '</h4>'
                 + '<p class="auc-modal-meta">发布人：' + esc(wish.nickname || '校园同学') + ' · 面交：' + esc(wish.campus || '重庆移通学院') + (wish.offerText ? ' · ' + esc(wish.offerText) : '') + '</p></div></div>'
                 + (wish.content ? '<p class="auc-modal-desc">' + esc(wish.content) + '</p>' : '')
@@ -5455,7 +5486,7 @@
                 : '<p class="sub" style="margin-top:10px">你还没有参与三方环的在架物品，点下方按钮直接带着「' + esc(relay.cat || '其他') + '」分类预填发布！</p>';
             openSheet('<div class="relay-modal-box">'
                 + '<h3>加入三方换物接力</h3>'
-                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(relay.image || '/assets/amz/quad-relay.jpg') + '" alt=""><div>'
+                + '<div class="auc-modal-top" style="margin-top:8px"><img src="' + esc(relay.image || '/assets/amz/quad-relay-compact.webp') + '" alt=""><div>'
                 + '<h4>' + esc(relay.title) + '</h4>'
                 + '<p class="auc-modal-meta">流转路径：' + esc(relay.campus || '校内书院') + ' · 想换：' + esc(relay.want || '任意好物') + ' · 参考估值 ¥' + esc(relay.value || 100) + '</p></div></div>'
                 + pickHtml
@@ -5473,7 +5504,13 @@
             return;
         }
         if (act === 'auction-bid') {
-            if (!readToken() && !state.me) { sessionStorage.setItem('hq.returnTo', '#/auctions'); go('#/login'); return; }
+            if (!readToken() && !state.me) {
+                if (!openAuthPopup('login', '#/auctions')) {
+                    sessionStorage.setItem('hq.returnTo', '#/auctions');
+                    go('#/login');
+                }
+                return;
+            }
             openSheet('<h3>参与竞拍</h3><p class="sub">人民币出价，平台不提供支付。请遵守线下交易约定。</p><form data-form="auction-bid"><input type="hidden" name="id" value="' + esc(el.dataset.id) + '"><div class="field"><label class="label">出价（元）</label><input class="input" name="amount" type="number" min="0.01" step="0.01" required></div><button class="btn btn-primary btn-block" type="submit">确认出价</button></form>'); return;
         }
         if (act === 'review-listing') { await withBusy(el, async function(){ await api('/admin/'+el.dataset.kind+'/'+el.dataset.id+'/'+el.dataset.do,{method:'POST'}); toast(el.dataset.do==='approve'?'审核通过':'已驳回'); await renderAdmin(); }); return; }
@@ -5504,8 +5541,10 @@
         if (act === 'login-email-send') {
             var loginEmail = $('#login-email');
             if (!loginEmail.reportValidity()) return;
+            var lgCapToken = await window.openHumanCaptcha('安全验证 · 发送登录验证码');
+            if (!lgCapToken) return;
             await sendEmailCodeWithCooldown(el, 'login-email', function () {
-                return api('/user/login/email/send', {method:'POST', body:{email:loginEmail.value.trim()}});
+                return api('/user/login/email/send', {method:'POST', body:{email:loginEmail.value.trim(),captchaToken:lgCapToken}});
             }, '如果该邮箱已绑定账号，请查收验证码', undefined, $('#login-code'));
             return;
         }
@@ -5519,7 +5558,12 @@
             writeToken('');
             state.me = null;
             toast('已退出');
-            go('#/login');
+            if (window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
+                await render();
+                openAuthPopup('login');
+            } else {
+                go('#/login');
+            }
             return;
         }
         if (act === 'f-cat' || act === 'f-cond' || act === 'f-trademode' || act === 'f-sort' || act === 'f-spot') {
@@ -5877,7 +5921,7 @@
                     badge: (fd.get('badge') || '').trim() || '新建',
                     desc: (fd.get('desc') || '').trim() || '同学们自主发起的校园兴趣贴吧与闲置交流室',
                     members: 1,
-                    img: '/assets/amz/quad-community.jpg',
+                    img: '/assets/amz/quad-community-compact.webp',
                     custom: true
                 });
                 try { localStorage.setItem('hq.customRooms', JSON.stringify(customArr)); } catch (e) {}
@@ -5987,7 +6031,11 @@
             }
             if (kind === 'login') {
                 var loginPath = {student:'/user/login', email:'/user/login/email/password', code:'/user/login/email/code'}[state.loginMethod || 'student'];
-                var u = await api(loginPath, {method:'POST', body:Object.fromEntries(fd)});
+                var loginBody = Object.fromEntries(fd);
+                var loginCapToken = await window.openHumanCaptcha('登录安全验证');
+                if (!loginCapToken) return;
+                loginBody.captchaToken = loginCapToken;
+                var u = await api(loginPath, {method:'POST', body:loginBody});
                 if (u.token) {
                     writeToken(u.token);
                 }
@@ -6006,14 +6054,23 @@
                 sessionStorage.removeItem('hq.returnTo');
                 go(back);
             } else if (kind === 'register') {
-                await api('/user/register', {method: 'POST', body: {
+                var regCap = await window.openHumanCaptcha('注册安全验证');
+                if (!regCap) return;
+                var regUser = await api('/user/register', {method: 'POST', body: {
                     studentNo: fd.get('studentNo'), nickname: fd.get('nickname'),
                     password: fd.get('password'), college: fd.get('college'), building: fd.get('building'),
-                    email: fd.get('email'), code: fd.get('code')
+                    email: fd.get('email'), code: fd.get('code'), captchaToken: regCap
                 }});
-                toast('注册成功，请登录', 'ok');
-                state.loginMode = 'login';
-                renderLogin('login');
+                if (regUser && regUser.token) {
+                    writeToken(regUser.token);
+                    state.me = regUser;
+                    toast('注册成功，已自动登录', 'ok');
+                    go('#/home');
+                } else {
+                    toast('注册成功，请登录', 'ok');
+                    state.loginMode = 'login';
+                    renderLogin('login');
+                }
             } else if (kind === 'publish') {
                 var tm = Number(fd.get('tradeMode') || state.publish.tradeMode || 4);
                 var pYuan = String(fd.get('priceYuan') || '').trim();

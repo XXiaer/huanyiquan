@@ -1,8 +1,0 @@
-# 数据库连接配置。也可以用环境变量 DB_URL / DB_USER / DB_PASSWORD 覆盖。
-db.url=jdbc:mysql://127.0.0.1:3306/huanyiquan?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-db.user=root
-db.password=ROOT
-db.driver=com.mysql.cj.jdbc.Driver
-
-# 登录凭证的签名密钥。换一个值等于让所有人的登录失效。生产环境请改成随机串。
-app.secret=huanyiquan-local-secret

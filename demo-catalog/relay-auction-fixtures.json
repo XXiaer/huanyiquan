@@ -1,0 +1,278 @@
+{
+  "rings": [
+    {
+      "group": 1,
+      "botA": {
+        "offers": {
+          "title": "高等数学教材",
+          "category": "教材",
+          "image": "/api/file/5e863cfb9113a8b4981c4749dfb26eb4.png"
+        },
+        "wants": "Java 程序设计"
+      },
+      "botB": {
+        "offers": {
+          "title": "Java 程序设计",
+          "category": "教材",
+          "image": "/api/file/93af347804ed0460e16d9ea72035a512.png"
+        },
+        "wants": "计算机网络教材"
+      },
+      "third": {
+        "offers": {
+          "title": "计算机网络教材",
+          "category": "教材",
+          "image": "/api/file/8ab8e0bff15f10f219fa9ad30c2a170b.png"
+        },
+        "wants": "高等数学教材"
+      }
+    },
+    {
+      "group": 2,
+      "botA": {
+        "offers": {
+          "title": "雅思词汇手册",
+          "category": "教材",
+          "image": "/api/file/e806fae08104670b43fa432cc510e904.png"
+        },
+        "wants": "素描基础教材"
+      },
+      "botB": {
+        "offers": {
+          "title": "素描基础教材",
+          "category": "教材",
+          "image": "/api/file/bc78c5c2f0696d35ae00f69bc2301da5.png"
+        },
+        "wants": "无线蓝牙耳机"
+      },
+      "third": {
+        "offers": {
+          "title": "无线蓝牙耳机",
+          "category": "数码",
+          "image": "/api/file/ba0ecb656154d407df76171a3924c6dc.png"
+        },
+        "wants": "雅思词汇手册"
+      }
+    },
+    {
+      "group": 3,
+      "botA": {
+        "offers": {
+          "title": "USB 集线器",
+          "category": "数码",
+          "image": "/api/file/cacabf002851cbb5eb77911d03e10837.png"
+        },
+        "wants": "蓝牙音箱"
+      },
+      "botB": {
+        "offers": {
+          "title": "蓝牙音箱",
+          "category": "数码",
+          "image": "/api/file/f101617bde86adf0f80dc98506c1a9cb.png"
+        },
+        "wants": "平板保护壳"
+      },
+      "third": {
+        "offers": {
+          "title": "平板保护壳",
+          "category": "数码",
+          "image": "/api/file/0c58c50085c96a3681e5f89aca0b6843.png"
+        },
+        "wants": "USB 集线器"
+      }
+    },
+    {
+      "group": 4,
+      "botA": {
+        "offers": {
+          "title": "数位板",
+          "category": "数码",
+          "image": "/api/file/46eb88c665ce65fc6016c4c23f92e39a.png"
+        },
+        "wants": "羽毛球拍"
+      },
+      "botB": {
+        "offers": {
+          "title": "羽毛球拍",
+          "category": "运动",
+          "image": "/api/file/cefa20c9c599ee41b739871a88aceac6.png"
+        },
+        "wants": "排球"
+      },
+      "third": {
+        "offers": {
+          "title": "排球",
+          "category": "运动",
+          "image": "/api/file/346c2a4cadad84151220a69ff7371a95.png"
+        },
+        "wants": "数位板"
+      }
+    },
+    {
+      "group": 5,
+      "botA": {
+        "offers": {
+          "title": "网球拍",
+          "category": "运动",
+          "image": "/api/file/e4c6422930d2d1049a126d006a14053e.png"
+        },
+        "wants": "露营折叠椅"
+      },
+      "botB": {
+        "offers": {
+          "title": "露营折叠椅",
+          "category": "运动",
+          "image": "/api/file/35ef6f4ec77908ed10ade8ef96e12afb.png"
+        },
+        "wants": "护眼台灯"
+      },
+      "third": {
+        "offers": {
+          "title": "护眼台灯",
+          "category": "生活",
+          "image": "/api/file/ff8ab7c141fbe7ffe7e4332b72ad8bf8.png"
+        },
+        "wants": "网球拍"
+      }
+    },
+    {
+      "group": 6,
+      "botA": {
+        "offers": {
+          "title": "床头置物架",
+          "category": "生活",
+          "image": "/api/file/23528e7391d706dcffafb2910cb352cb.png"
+        },
+        "wants": "宿舍地垫"
+      },
+      "botB": {
+        "offers": {
+          "title": "宿舍地垫",
+          "category": "生活",
+          "image": "/api/file/5f49708ddf89f450e2fb70e25c457fe1.png"
+        },
+        "wants": "香薰摆件"
+      },
+      "third": {
+        "offers": {
+          "title": "香薰摆件",
+          "category": "生活",
+          "image": "/api/file/1a8f9e1d7ebe060c159591f78fbe7722.png"
+        },
+        "wants": "床头置物架"
+      }
+    },
+    {
+      "group": 7,
+      "botA": {
+        "offers": {
+          "title": "连帽卫衣",
+          "category": "衣物",
+          "image": "/api/file/841e0f712757e88562c4cd80bb3b7696.png"
+        },
+        "wants": "纯棉衬衫"
+      },
+      "botB": {
+        "offers": {
+          "title": "纯棉衬衫",
+          "category": "衣物",
+          "image": "/api/file/d04b4644bdc81d7cff7c08dcfcea4ea3.png"
+        },
+        "wants": "双肩背包"
+      },
+      "third": {
+        "offers": {
+          "title": "双肩背包",
+          "category": "衣物",
+          "image": "/api/file/0be84829d43fca00d1bbe7eb5d5a61ff.png"
+        },
+        "wants": "连帽卫衣"
+      }
+    },
+    {
+      "group": 8,
+      "botA": {
+        "offers": {
+          "title": "运动外套",
+          "category": "衣物",
+          "image": "/api/file/fd25c4aff57de23a7874018c83b581d3.png"
+        },
+        "wants": "吉他调音器"
+      },
+      "botB": {
+        "offers": {
+          "title": "吉他调音器",
+          "category": "其他",
+          "image": "/api/file/1c7617f320f96420bb7df57e0d87f26f.png"
+        },
+        "wants": "马克笔套装"
+      },
+      "third": {
+        "offers": {
+          "title": "马克笔套装",
+          "category": "其他",
+          "image": "/api/file/7878292f28dfdd05fa62e00460640cc9.png"
+        },
+        "wants": "运动外套"
+      }
+    }
+  ],
+  "auctions": [
+    {
+      "title": "高等数学教材",
+      "category": "教材",
+      "image": "/api/file/5e863cfb9113a8b4981c4749dfb26eb4.png",
+      "startPrice": 8,
+      "hours": 72
+    },
+    {
+      "title": "考研英语单词书",
+      "category": "教材",
+      "image": "/api/file/ba5e16269b0bf9fd15b6113f07df3265.png",
+      "startPrice": 12,
+      "hours": 72
+    },
+    {
+      "title": "无线鼠标",
+      "category": "数码",
+      "image": "/api/file/a1fe979dc6d82669237643369e0fa1cd.png",
+      "startPrice": 15,
+      "hours": 72
+    },
+    {
+      "title": "相机三脚架",
+      "category": "数码",
+      "image": "/api/file/eabf70cfb4cca78e7dfa38ff6bbf6004.png",
+      "startPrice": 19,
+      "hours": 72
+    },
+    {
+      "title": "排球",
+      "category": "运动",
+      "image": "/api/file/346c2a4cadad84151220a69ff7371a95.png",
+      "startPrice": 25,
+      "hours": 72
+    },
+    {
+      "title": "健身哑铃",
+      "category": "运动",
+      "image": "/api/file/698d67a0801023c843601d89b7da5229.png",
+      "startPrice": 29,
+      "hours": 72
+    },
+    {
+      "title": "毛毯",
+      "category": "生活",
+      "image": "/api/file/26847bfeb92b49f80556323bffde1606.png",
+      "startPrice": 39,
+      "hours": 72
+    },
+    {
+      "title": "休闲长裤",
+      "category": "衣物",
+      "image": "/api/file/93a5ba8e2f3d58dc1fe9d643aaf294fd.png",
+      "startPrice": 49,
+      "hours": 72
+    }
+  ]
+}

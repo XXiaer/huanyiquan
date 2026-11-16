@@ -1,0 +1,249 @@
+.hq-cap-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.hq-cap-dialog {
+  width: min(340px, 100%);
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(12, 114, 99, 0.14);
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #111827;
+  box-sizing: border-box;
+  animation: hqCapPop 0.16s ease-out;
+}
+
+@keyframes hqCapPop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.hq-cap-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.hq-cap-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.hq-cap-shield {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #e6f4f1;
+  color: #0c7263;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.hq-cap-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hq-cap-icon-btn {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hq-cap-icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.hq-cap-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e2e8f0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hq-cap-bg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.hq-cap-piece {
+  position: absolute;
+  left: 0;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  will-change: left;
+}
+
+.hq-cap-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(248, 250, 252, 0.9);
+  color: #475569;
+  font-size: 13px;
+}
+
+.hq-cap-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform 0.18s ease;
+}
+
+.hq-cap-tip.show {
+  transform: translateY(0);
+}
+
+.hq-cap-tip.ok {
+  background: rgba(12, 114, 99, 0.92);
+}
+
+.hq-cap-tip.err {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.hq-cap-track {
+  position: relative;
+  height: 44px;
+  margin-top: 12px;
+  border-radius: 22px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.hq-cap-track.err {
+  border-color: #ef4444;
+  animation: hqCapShake 0.34s ease;
+}
+
+.hq-cap-track.ok {
+  border-color: #0c7263;
+  background: #e6f4f1;
+}
+
+@keyframes hqCapShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+.hq-cap-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(12, 114, 99, 0.16);
+  pointer-events: none;
+}
+
+.hq-cap-track.err .hq-cap-fill {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.hq-cap-track-text {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.hq-cap-track.ok .hq-cap-track-text {
+  color: #0c7263;
+  font-weight: 600;
+}
+
+.hq-cap-knob {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  color: #0c7263;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  font-size: 16px;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.hq-cap-knob:active {
+  cursor: grabbing;
+  background: #0c7263;
+  color: #ffffff;
+  border-color: #0c7263;
+}
+
+.hq-cap-track.ok .hq-cap-knob {
+  background: #0c7263;
+  color: #ffffff;
+  border-color: #0c7263;
+}
+
+.hq-cap-track.err .hq-cap-knob {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}

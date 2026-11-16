@@ -112,11 +112,10 @@
         ? (await api.get('/api/item/mine', {status: 1}).catch(() => [])).filter(item => item.allowCycle && !item.isDemo)
         : [];
       view.innerHTML = `
-      <div class="pe-page">
+      <div class="pe-page pe-page--fixed-action">
         <div class="pe-head">
           <button class="x" onclick="closeEditor()">${icon('close', 24)}</button>
           <h1>${itemId ? '编辑闲置' : kind.title}</h1>
-          <button class="pe-submit" id="peSubmit">${itemId ? '保存' : '发布'}</button>
         </div>
         <div class="pe-error" id="peError"></div>
 
@@ -187,6 +186,9 @@
           ${kind.mode !== 2 ? `<div class="pe-switch-row"><span>可小刀</span><span class="switch${state.allowBargain ? ' on' : ''}" id="bargainSw"></span></div>` : ''}
         </div>
         <div class="pe-hint">发布后先过审核与违禁词校验，通过即上架。草稿会自动保存，下次回来可以继续。</div>
+        <footer class="pe-fixed-action">
+          <button class="pe-submit" id="peSubmit">${itemId ? '保存' : '发布'}</button>
+        </footer>
       </div>`;
 
       window.closeEditor = () => {

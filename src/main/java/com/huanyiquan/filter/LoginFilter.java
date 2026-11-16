@@ -31,6 +31,7 @@ public class LoginFilter implements Filter {
     private static final Set<String> OPEN_POST =
             new HashSet<>(Arrays.asList("/api/user/register", "/api/user/register/email/send", "/api/user/login",
                     "/api/user/login/email/send", "/api/user/login/email/code", "/api/user/login/email/password",
+                    "/api/captcha/verify", "/api/auth/qr/create", "/api/auth/qr/exchange",
                     "/api/ai/appraise", "/api/ai/scan-search"));
 
     @Override
@@ -95,7 +96,8 @@ public class LoginFilter implements Filter {
         if (!"GET".equalsIgnoreCase(method)) {
             return false;
         }
-        if (uri.startsWith("/api/file/") || uri.startsWith("/api/meta/")) {
+        if (uri.startsWith("/api/file/") || uri.startsWith("/api/meta/")
+                || "/api/captcha/new".equals(uri) || "/api/auth/qr/status".equals(uri)) {
             return true;
         }
         if ("/api/auction".equals(uri) || "/api/auction/".equals(uri)) return true;

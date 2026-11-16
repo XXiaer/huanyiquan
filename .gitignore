@@ -7,3 +7,9 @@ semantic/.venv/
 semantic/_probe/uploads/
 __pycache__/
 !java/
+.deploy/
+*.pem
+*.key
+.env
+.env.*
+/src/main/resources/db.properties.bak

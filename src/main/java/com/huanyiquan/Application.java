@@ -10,6 +10,7 @@ import com.huanyiquan.servlet.TradeThumbnailsServlet;
 import com.huanyiquan.servlet.AuthEntryServlet;
 import com.huanyiquan.servlet.AdminServlet;
 import com.huanyiquan.servlet.AiServlet;
+import com.huanyiquan.servlet.CaptchaServlet;
 import com.huanyiquan.servlet.ConversationServlet;
 import com.huanyiquan.servlet.WishServlet;
 import com.huanyiquan.servlet.NotificationServlet;
@@ -20,6 +21,7 @@ import com.huanyiquan.servlet.ExchangeServlet;
 import com.huanyiquan.servlet.ItemServlet;
 import com.huanyiquan.servlet.MetaServlet;
 import com.huanyiquan.servlet.OfferServlet;
+import com.huanyiquan.servlet.QrLoginServlet;
 import com.huanyiquan.servlet.ReportServlet;
 import com.huanyiquan.servlet.ReviewServlet;
 import com.huanyiquan.servlet.StaticServlet;
@@ -91,6 +93,10 @@ public final class Application {
         addServlet(ctx, "wishServlet", new WishServlet(), "/api/wish/*");
         addServlet(ctx, "metaServlet", new MetaServlet(), "/api/meta/*");
         addServlet(ctx, "aiServlet", new AiServlet(), "/api/ai/*");
+        addServlet(ctx, "captchaServlet", new CaptchaServlet(), "/api/captcha/new", "/api/captcha/verify");
+        addServlet(ctx, "qrLoginServlet", new QrLoginServlet(),
+                "/api/auth/qr/create", "/api/auth/qr/status", "/api/auth/qr/scan",
+                "/api/auth/qr/confirm", "/api/auth/qr/exchange");
 
         Wrapper upload = addServlet(ctx, "uploadServlet", new UploadServlet(),
                 "/api/upload", "/api/file/*");

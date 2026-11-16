@@ -135,6 +135,7 @@
             </div>
           </div>
           <div class="me-top__acts">
+            <a href="#/scan" aria-label="扫一扫"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px">${icon('scan', 22)}</span><span>扫一扫</span></a>
             <a href="#/help">${serviceIcon('headset', 36)}<span>帮助与客服</span></a>
             <a href="#/settings">${serviceIcon('gear', 36)}<span>设置</span></a>
           </div>
@@ -180,6 +181,7 @@
         </div>
 
         <div class="me-tools hscroll">
+          <a href="#/scan"><i class="c4">${icon('qr', 22)}</i><span>扫码登电脑</span></a>
           <a href="#/refresh"><i class="c1">${serviceIcon('light', 36)}</i><span>一键擦亮</span></a>
           <a href="#/appraise"><i class="c2">${serviceIcon('appraise', 28)}</i><span>闲置估价</span></a>
           <a href="#/credit/${me.id}"><i class="c3">${serviceIcon('shield', 36)}</i><span>信用中心</span></a>
@@ -709,10 +711,12 @@
           bindMobileCodeCountdown(send, 'login-email', '发送验证码');
           send.onclick = async () => {
             if (!emailInput.reportValidity()) return;
+            const captchaToken = await window.openHumanCaptcha('安全验证 · 发送登录验证码');
+            if (!captchaToken) return;
             await runMobileCodeSend(
               send,
               'login-email',
-              () => api.post('/api/user/login/email/send', { email: emailInput.value.trim() }),
+              () => api.post('/api/user/login/email/send', { email: emailInput.value.trim(), captchaToken }),
               () => {
                 toast('如果该邮箱已绑定账号，请查收验证码');
                 form.elements.namedItem('code').focus();
@@ -723,14 +727,17 @@
         }
         const doLogin = async (data) => {
           if (submitting) return;
+          const captchaToken = await window.openHumanCaptcha('登录安全验证');
+          if (!captchaToken) return;
           submitting = true;
           const submit = form.querySelector('[type="submit"]');
           submit.disabled = true;
           try {
-            await api.post(methods[method][1], data);
+            await api.post(methods[method][1], Object.assign({}, data, { captchaToken }));
             window.__me = null;
             toast('登录成功');
-            location.hash = '#/home';
+            const pendingQr = sessionStorage.getItem('hq.pendingQr');
+            location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : '#/home';
           } catch (e) { toast(e.message); }
           finally { submitting = false; submit.disabled = false; }
         };
@@ -771,10 +778,12 @@
         const email = document.getElementById('rgEmail');
         if (!/^[0-9]{10}$/.test(studentNo)) { toast('请输入 10 位学号'); return; }
         if (!email.reportValidity()) return;
+        const captchaToken = await window.openHumanCaptcha('安全验证 · 发送注册验证码');
+        if (!captchaToken) return;
         await runMobileCodeSend(
           send,
           'register-email',
-          () => api.post('/api/user/register/email/send', { studentNo, email: email.value.trim() }),
+          () => api.post('/api/user/register/email/send', { studentNo, email: email.value.trim(), captchaToken }),
           () => {
             toast('验证码已发送，请查收邮箱');
             document.getElementById('rgCode')?.focus();
@@ -793,18 +802,20 @@
         const code = document.getElementById('rgCode').value.trim();
         if (!email.reportValidity()) return;
         if (!/^[0-9]{6}$/.test(code)) { toast('请输入 6 位邮箱验证码'); return; }
+        const captchaToken = await window.openHumanCaptcha('注册安全验证');
+        if (!captchaToken) return;
         const submit = document.getElementById('rgGo');
         submit.disabled = true;
         try {
           await api.post('/api/user/register', {
-            studentNo, nickname, password, email:email.value.trim(), code,
+            studentNo, nickname, password, email:email.value.trim(), code, captchaToken,
             college: document.getElementById('rgCollege').value.trim(),
             building: document.getElementById('rgBuilding').value.trim(),
           });
-          await api.post('/api/user/login', { studentNo, password });
           window.__me = null;
           toast('注册成功，已登录');
-          setTimeout(() => { location.hash = '#/home'; }, 400);
+          const pendingQr = sessionStorage.getItem('hq.pendingQr');
+          setTimeout(() => { location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : '#/home'; }, 400);
         } catch (e) { toast(e.message); }
         finally { submit.disabled = false; }
       });

@@ -90,6 +90,7 @@ public class UploadServlet extends BaseServlet {
         } catch (IOException e) {
             throw new BizException(500, "保存图片失败");
         }
+        thumbnail(target);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("url", "/api/file/" + newName);
         data.put("name", newName);
@@ -113,7 +114,9 @@ public class UploadServlet extends BaseServlet {
         // 过滤器统一设了 UTF-8 编码，二进流要把它从 Content-Type 里摘掉
         File thumbnail = "1".equals(req.getParameter("thumb")) ? thumbnail(file) : null;
         if (thumbnail != null) file = thumbnail;
-        resp.setHeader("Cache-Control", "public, max-age=3600");
+        resp.setHeader("Cache-Control", name.matches("[0-9a-f]{32}\\.(png|jpe?g)")
+                && (!"1".equals(req.getParameter("thumb")) || thumbnail != null)
+                ? "public, max-age=31536000, immutable" : "public, max-age=3600");
         String mime = thumbnail == null && name.endsWith(".png") ? "image/png" : "image/jpeg";
         resp.setContentType(mime);
         resp.setHeader("Content-Type", mime);

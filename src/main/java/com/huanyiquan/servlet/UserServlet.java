@@ -6,6 +6,8 @@ import com.huanyiquan.db.DBUtil;
 import com.huanyiquan.common.Params;
 import com.huanyiquan.common.TokenUtil;
 import com.huanyiquan.entity.User;
+import com.huanyiquan.filter.SecurityFilter;
+import com.huanyiquan.service.CaptchaService;
 import com.huanyiquan.service.ReviewService;
 import com.huanyiquan.service.UserService;
 import com.huanyiquan.service.EmailVerificationService;
@@ -30,6 +32,7 @@ public class UserServlet extends BaseServlet {
         if ("/email/send".equals(path)) { EmailVerificationService.send(uid(req),p.str("email"));ok(resp,null);return; }
         if ("/email/verify".equals(path)) { long user=uid(req);EmailVerificationService.verify(user,p.str("code"));ok(resp,EmailVerificationService.status(user));return; }
         if ("/login".equals(path)) {
+            CaptchaService.consumeTicket(SecurityFilter.clientIp(req), p.str("captchaToken"));
             User u = UserService.login(p.str("studentNo"), p.str("password"));
             HttpSession session = req.getSession(true);
             session.setAttribute("userId", u.id);

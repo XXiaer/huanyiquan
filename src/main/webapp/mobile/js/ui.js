@@ -166,7 +166,7 @@
   };
 
   /* ------------------------------------------------------------- 商品卡 */
-  window.itemCard = function (item) {
+  window.itemCard = function (item, priority = false) {
     const pic = window.catalogThumbnail(api.firstPic(item));
     const price = api.yuan(item.price);
     const credit = creditLabel(item.ownerSellerCredit || item.ownerCredit);
@@ -188,7 +188,7 @@
     return `
       <a class="card" href="#/item/${item.id}">
         <div class="card__pic">
-          <img src="${esc(pic)}" alt="" loading="lazy" decoding="async">
+          <img src="${esc(pic)}" alt="" loading="${priority ? 'eager' : 'lazy'}" fetchpriority="${priority ? 'high' : 'auto'}" decoding="async">
           ${tag}
           ${sold ? `<span class="card__seal"><b>已换出</b><em>SWAPPED</em></span>` : ''}
         </div>
@@ -275,8 +275,8 @@
       heights[i] += 290 + (String(it.title || '').length > 12 ? 34 : 0);
     });
     return `<div class="feed">
-      <div class="feed__col">${cols[0].map(itemCard).join('')}</div>
-      <div class="feed__col">${cols[1].map(itemCard).join('')}</div>
+      <div class="feed__col">${cols[0].map((item, index) => itemCard(item, index === 0)).join('')}</div>
+      <div class="feed__col">${cols[1].map((item, index) => itemCard(item, index === 0)).join('')}</div>
     </div>`;
   };
 

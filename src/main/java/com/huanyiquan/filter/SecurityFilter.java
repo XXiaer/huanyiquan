@@ -29,25 +29,48 @@ public class SecurityFilter implements Filter {
         resp.setHeader("X-Content-Type-Options", "nosniff");
         resp.setHeader("X-Frame-Options", "SAMEORIGIN");
         resp.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        resp.setHeader("Permissions-Policy", "camera=(self)");
 
         String path = req.getRequestURI();
         String method = req.getMethod();
-        if ("POST".equalsIgnoreCase(method) && path != null) {
+        if (path != null) {
             String ip = clientIp(req);
-            if (path.startsWith("/api/ai/")) {
-                if (!RateLimiter.allow(ip + ":ai", 12, ONE_MINUTE_MS)) {
+            if ("GET".equalsIgnoreCase(method) && "/api/captcha/new".equals(path)) {
+                if (!RateLimiter.allow(ip + ":captcha_get", 40, ONE_MINUTE_MS)) {
                     rejectTooMany(resp);
                     return;
                 }
-            } else if (path.startsWith("/api/user/login") || path.startsWith("/api/user/register")) {
-                if (!RateLimiter.allow(ip + ":auth", 20, ONE_MINUTE_MS)) {
+            } else if ("GET".equalsIgnoreCase(method) && "/api/auth/qr/status".equals(path)) {
+                if (!RateLimiter.allow(ip + ":qr_poll", 120, ONE_MINUTE_MS)) {
                     rejectTooMany(resp);
                     return;
                 }
-            } else if ("/api/upload".equals(path)) {
-                if (!RateLimiter.allow(ip + ":upload", 25, ONE_MINUTE_MS)) {
-                    rejectTooMany(resp);
-                    return;
+            } else if ("POST".equalsIgnoreCase(method)) {
+                if ("/api/captcha/verify".equals(path)) {
+                    if (!RateLimiter.allow(ip + ":captcha_verify", 40, ONE_MINUTE_MS)) {
+                        rejectTooMany(resp);
+                        return;
+                    }
+                } else if ("/api/auth/qr/create".equals(path)) {
+                    if (!RateLimiter.allow(ip + ":qr_create", 30, ONE_MINUTE_MS)) {
+                        rejectTooMany(resp);
+                        return;
+                    }
+                } else if (path.startsWith("/api/ai/")) {
+                    if (!RateLimiter.allow(ip + ":ai", 12, ONE_MINUTE_MS)) {
+                        rejectTooMany(resp);
+                        return;
+                    }
+                } else if (path.startsWith("/api/user/login") || path.startsWith("/api/user/register")) {
+                    if (!RateLimiter.allow(ip + ":auth", 20, ONE_MINUTE_MS)) {
+                        rejectTooMany(resp);
+                        return;
+                    }
+                } else if ("/api/upload".equals(path)) {
+                    if (!RateLimiter.allow(ip + ":upload", 25, ONE_MINUTE_MS)) {
+                        rejectTooMany(resp);
+                        return;
+                    }
                 }
             }
         }
@@ -55,7 +78,7 @@ public class SecurityFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    private static String clientIp(HttpServletRequest req) {
+    public static String clientIp(HttpServletRequest req) {
         String xff = req.getHeader("X-Forwarded-For");
         if (xff != null && !xff.trim().isEmpty()) {
             int comma = xff.indexOf(',');

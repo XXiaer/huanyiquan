@@ -29,6 +29,7 @@
   window.openScanSearch = function () {
     openSheet('扫码或拍照搜好物', `
       <div class="scan-sheet">
+        <a class="btn btn--ghost btn--block" href="#/scan" id="goScanLogin">${icon('qr', 18)} 扫一扫登录电脑端 ›</a>
         <label class="scan-sheet__pick">
           <input id="scanFile" type="file" accept="image/*" capture="environment" hidden>
           <img src="assets/brand/mascot-search.png" width="64" height="64" alt="">
@@ -37,6 +38,7 @@
         <div id="scanStatus" class="scan-sheet__status"></div>
       </div>`, {
       onMount(sheet, close) {
+        sheet.querySelector('#goScanLogin')?.addEventListener('click', () => close());
         const input = sheet.querySelector('#scanFile');
         const status = sheet.querySelector('#scanStatus');
         input.addEventListener('change', async () => {
@@ -45,16 +47,22 @@
           status.textContent = '正在识别…';
           try {
             const { dataUrl, img } = await compressImageFile(file, 768);
-            if ('BarcodeDetector' in window) {
-              try {
-                const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'qr_code', 'code_128'] });
-                const codes = await detector.detect(img);
-                if (codes && codes.length && codes[0].rawValue) {
-                  close();
-                  location.hash = '#/search/' + encodeURIComponent(codes[0].rawValue.trim());
-                  return;
-                }
-              } catch (e) { /* 降级走 AI 识图 */ }
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const decoded = typeof window.decodeCanvasQr === 'function' ? await window.decodeCanvasQr(canvas, img) : '';
+            if (decoded) {
+              close();
+              if (typeof window.isDesktopLoginQr === 'function' && window.isDesktopLoginQr(decoded)) {
+                const m = decoded.match(/[?&#]qr=([A-Za-z0-9_-]{12,64})/);
+                const qVal = m ? m[1] : decoded;
+                location.hash = '#/qr-confirm?qr=' + encodeURIComponent(qVal);
+              } else {
+                location.hash = '#/search/' + encodeURIComponent(decoded);
+              }
+              return;
             }
             const res = await api.post('/api/ai/scan-search', { image: dataUrl });
             const kw = (res && res.keyword) || '';
@@ -83,21 +91,19 @@
   /* ============================================================ 首页 */
   const homeTabs = (section = "home") => `<nav class="home-top-tabs" aria-label="校园导航">
     <a href="#/home" ${section === 'home' ? 'aria-current="page"' : ''}>首页</a>
-    <a href="#/idle" ${section === 'idle' ? 'aria-current="page"' : ''}>校园闲置</a>
     <a href="#/community" ${section === 'community' ? 'aria-current="page"' : ''}>集市</a>
-    <a href="#/relay" ${section === 'relay' ? 'aria-current="page"' : ''}>换物接力</a>
   </nav>`;
   window.renderRelayTabs = () => homeTabs("relay");
   const HOME_CATEGORIES = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
   const HOME_SEARCH_TOPICS = ['小家电', '考研资料'];
-  const SERVICES = [
-    { name: '同楼闲置', href: '#/door' },
-    { name: '以物换物', href: '#/home' },
-    { name: '好物估价', href: '#/appraise' },
-    { name: '教材专区', href: '#/category/教材' },
-    { name: '毕业好物', href: '#/search/' + encodeURIComponent('毕业'), resetSearch: true },
-    { name: '寻物启事', href: '#/lost' },
+  const PRIMARY_SERVICES = [
+    { name: '以物换物', href: '#/market', art: 'swap' },
+    { name: '校园拍卖', href: '#/auction', art: 'auction' },
+    { name: '换物接力', href: '#/relay', art: 'swapRing' },
   ];
+  function serviceLink(service, size) {
+    return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}.png" width="${size}" height="${size}" alt=""></i><span>${service.name}</span></a>`;
+  }
   window.__homeChannel = window.__homeChannel || '推荐';
 
   PAGES.home = {
@@ -149,9 +155,11 @@
           }).join('')}
           
         </div>
-        <div class="services" aria-label="校园服务">
-          ${SERVICES.map((s, i) => `<a href="${s.href}" ${s.resetSearch ? 'data-reset-search' : ''}><i><img src="assets/brand/illustrated-${['door', 'swapRing', 'appraise', 'book', 'grad', 'lost'][i]}.png" width="36" height="36" alt=""></i><span>${s.name}</span></a>`).join('')}
-        </div>
+        <nav class="home-primary-services" aria-label="主要功能">
+          ${PRIMARY_SERVICES.map(service => serviceLink(service, 48)).join('')}
+          <img class="home-services-mascot is-first" src="assets/brand/mascot-gap-book.webp" width="28" height="28" alt="" decoding="async">
+          <img class="home-services-mascot is-second" src="assets/brand/mascot-gap-parcel.webp" width="28" height="28" alt="" decoding="async">
+        </nav>
       </div>
 
       <section class="home-feed" aria-label="以物换物"><h1 class="swap-feed-title"><img src="assets/brand/swap-wordmark.webp" width="48" height="12" alt="以物换物"></h1>
@@ -184,12 +192,6 @@
         window.__cleanup = () => clearInterval(tickTimer);
       }
 
-      view.querySelector('[data-reset-search]').addEventListener('click', () => {
-        window.__searchTab = 'all';
-        window.__searchSort = '';
-        window.__searchFilter = {};
-      });
-      view.querySelector('.home-search .scan-btn')?.addEventListener('click', () => window.openScanSearch());
       view.querySelector('.home-search').addEventListener('submit', (event) => {
         event.preventDefault();
         const keyword = event.currentTarget.elements.keyword.value.trim();
@@ -1264,8 +1266,12 @@
   PAGES.auction = {
     tab: 'auction',
     async render(view) {
+      const route = location.hash;
       let list = [];
-      try { list = await api.get('/api/auction') || []; } catch (e) { /* 忽略 */ }
+      let loadError = '';
+      try { list = await api.get('/api/auction') || []; } catch (e) { loadError = e.message; }
+      if (location.hash !== route) return;
+      const filters = this.filters || (this.filters = {keyword:'', state:'', sort:''});
       list = list.filter((a) => a.state === 'active' || a.state === 'ended');
       view.innerHTML = `
       <div class="topbar">
@@ -1273,10 +1279,42 @@
         <div class="topbar__spacer"></div>
         <a class="btn btn--ghost btn--sm" href="#/publish/edit/auction">${icon('auction', 15)}发起拍卖</a>
       </div>
-      <div class="auction-feed">
-        ${list.length ? list.map((a) => `
+      <div class="auction-search-controls">
+        <form class="home-search" role="search">
+          ${icon('search', 19)}<input type="search" name="keyword" value="${esc(filters.keyword)}" placeholder="搜索拍品" aria-label="搜索拍品" maxlength="100">
+          <button type="submit" aria-label="搜索">${icon('search', 20)}</button>
+        </form>
+        <div class="sortbar" role="group" aria-label="排序">
+          ${[['','综合'],['ending','即将结束'],['low','价格从低到高'],['high','价格从高到低']].map(([key,label]) =>
+            `<button type="button" data-auction-sort="${key}" aria-pressed="${filters.sort === key}">${label}</button>`).join('')}
+        </div>
+        <div class="r-chips" role="group" aria-label="拍卖状态">
+          ${[['','全部'],['active','拍卖中'],['ended','已结束']].map(([key,label]) =>
+            `<button class="chip" type="button" data-auction-state="${key}" aria-pressed="${filters.state === key}">${label}</button>`).join('')}
+          <span class="auction-result-count" role="status"></span>
+        </div>
+      </div>
+      <div class="auction-feed"></div>`;
+      const feed = view.querySelector('.auction-feed');
+      const form = view.querySelector('.auction-search-controls form');
+      const count = view.querySelector('.auction-result-count');
+
+      function renderResults() {
+        const keyword = filters.keyword.trim().normalize('NFKC').toLocaleLowerCase();
+        const matches = list.filter(a => (!filters.state || a.state === filters.state)
+          && [a.title,a.description].filter(Boolean).join(' ').normalize('NFKC').toLocaleLowerCase().includes(keyword));
+        if (filters.sort === 'ending') matches.sort((a,b) =>
+          Number(b.state === 'active') - Number(a.state === 'active')
+          || (Date.parse(a.endsAt) || Infinity) - (Date.parse(b.endsAt) || Infinity));
+        if (filters.sort === 'low' || filters.sort === 'high') {
+          const direction = filters.sort === 'low' ? 1 : -1;
+          matches.sort((a,b) => direction * (Number(a.currentPrice) - Number(b.currentPrice)));
+        }
+        count.textContent = loadError ? '' : matches.length + ' 件拍品';
+        feed.innerHTML = loadError ? `<p class="auction-empty" role="alert">${esc(loadError)} <button type="button" data-auction-retry>重试</button></p>`
+          : matches.length ? matches.map((a) => `
           <div class="auction-card">
-            <img src="${esc(a.image || 'assets/brand/placeholder.png')}" alt="" loading="lazy">
+            <img src="${esc(window.catalogThumbnail(a.image || 'assets/brand/placeholder.png'))}" alt="" loading="lazy">
             <div class="main">
               <h3>${esc(a.title)}</h3>
               <div class="now"><b>¥${Number(a.currentPrice).toFixed(0)}</b><span>当前价 | ${a.bidCount} 次出价</span></div>
@@ -1287,9 +1325,43 @@
                   : `<a class="chip" href="${a.itemId ? '#/item/' + Number(a.itemId) : '#/market'}">${a.itemId ? '看看' : '去集市'}</a>`}
               </div>
             </div>
-          </div>`).join('') : mascotEmpty('还没有正在进行的拍卖', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/auction', text: '发起一场' })}
-      </div>`;
-      view.querySelectorAll('[data-bid]').forEach((btn) => btn.addEventListener('click', () => {
+          </div>`).join('') : `<div class="auction-empty">
+            <p>${list.length ? '没有符合条件的拍品' : '暂时没有拍品'}</p>
+            ${list.length ? '<button type="button" data-auction-reset>清除筛选</button>' : '<a href="#/publish/edit/auction">发起拍卖</a>'}
+          </div>`;
+        view.querySelectorAll('[data-auction-sort], [data-auction-state]').forEach(button => {
+          button.setAttribute('aria-pressed', String(button.hasAttribute('data-auction-sort')
+            ? button.dataset.auctionSort === filters.sort : button.dataset.auctionState === filters.state));
+        });
+      }
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        filters.keyword = form.elements.keyword.value;
+        renderResults();
+      });
+      form.elements.keyword.addEventListener('input', () => {
+        filters.keyword = form.elements.keyword.value;
+        renderResults();
+      });
+      view.querySelector('.auction-search-controls').addEventListener('click', event => {
+        const button = event.target.closest('[data-auction-sort], [data-auction-state]');
+        if (!button) return;
+        if (button.hasAttribute('data-auction-sort')) filters.sort = button.dataset.auctionSort;
+        else filters.state = button.dataset.auctionState;
+        renderResults();
+      });
+      renderResults();
+      feed.addEventListener('click', event => {
+        if (event.target.closest('[data-auction-retry]')) { renderRoute(); return; }
+        if (event.target.closest('[data-auction-reset]')) {
+          Object.assign(filters,{keyword:'',state:'',sort:''});
+          form.reset();
+          form.elements.keyword.value = '';
+          renderResults();
+          return;
+        }
+        const btn = event.target.closest('[data-bid]');
+        if (!btn) return;
         const aid = btn.dataset.bid, cur = btn.dataset.cur;
         openSheet('出价', `<div style="font-size:14px;color:var(--ink-500);margin-bottom:10px">${esc(btn.dataset.title)} | 当前价 ¥${Number(cur).toFixed(0)}</div>
           <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px">
@@ -1307,7 +1379,7 @@
             });
           },
         });
-      }));
+      });
     },
   };
 

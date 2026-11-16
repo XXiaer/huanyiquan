@@ -6,6 +6,8 @@
   const ROUTES = [
     [/^\/?$/, 'home', () => ({})],
     [/^\/home$/, 'home', () => ({})],
+    [/^\/scan$/, 'scan', () => ({})],
+    [/^\/qr-confirm(?:\?.*)?$/, 'qrConfirm', () => ({})],
     [/^\/messages$/, 'messages', () => ({})],
     [/^\/chat\/(\d+)$/, 'chat', (m) => ({ id: Number(m[1]) })],
     [/^\/me$/, 'me', () => ({})],
