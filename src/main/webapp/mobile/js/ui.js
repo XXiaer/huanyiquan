@@ -186,9 +186,8 @@
   function realListingPhoto(pic) { return !/(?:demo|sample|placeholder|seed)/i.test(String(pic).split('?')[0]); }
   window.realListingPhoto = realListingPhoto;
   window.itemCard = function (item, priority = false) {
-    const demoPhoto = window.campusExchange.isDemoListing(item) && (item.isDemo || !api.pics(item).some(realListingPhoto));
+    const demoPhoto = window.campusExchange.isDemoListing(item) && !api.pics(item).some(realListingPhoto);
     const pic = demoPhoto ? '' : window.catalogThumbnail(api.firstPic(item));
-    const price = api.yuan(item.price);
     const credit = creditLabel(item.ownerSellerCredit || item.ownerCredit);
     const want = (item.offerCount || 0) + '人想要';
     const sold = item.status === 3;
@@ -204,10 +203,10 @@
     } else if (item.tradeMode === 3) {
       tag = `<span class="card__tag card__tag--auction">${icon('auction', 12)}拍卖中${item.auctionEndsAt ? ' | ' + remainText(item.auctionEndsAt) : ''}</span>`;
     }
-    const swapWant = window.campusExchange.supports(item,2) && (item.wantText || item.expectDesc)
-      ? `<p class="card__want">想换：${esc(String(item.wantText || item.expectDesc).replace(/^想换[:：]?/, ''))}</p>` : '';
+    const swapWant = window.campusExchange.supports(item, 2)
+      ? String(item.wantText || item.expectDesc || '').replace(/^想换[:：]?\s*/, '') : '';
     return `
-      <a class="card" href="#/item/${item.id}">
+      <a class="card card--photo-first" href="#/item/${item.id}">
         <div class="card__pic">
           ${pic ? `<img src="${esc(pic)}" alt="" loading="${priority ? 'eager' : 'lazy'}" fetchpriority="${priority ? 'high' : 'auto'}" decoding="async">` : '<span class="listing-photo-empty">暂无实拍图</span>'}
           ${tag}
@@ -215,13 +214,11 @@
         </div>
         <div class="card__body">
           <h3 class="card__title">${displayItemTitle(item)}</h3>
-          <p class="card__heat">${demo ? (priceText ? '官网参考价' : '仅供浏览') : heatText(item)}</p>
-          ${swapWant}
           <div class="card__price">
-            ${priceText ? `<span class="price"><em>¥</em><b>${priceText}</b></span>` : `<span class="price"><b>想换</b></span>`}
-            ${priceText && item.originalPrice && item.originalPrice > item.price ? `<s>¥${api.yuan(item.originalPrice)}</s>` : ''}
+            ${priceText ? `<span class="price"><em>¥</em><b>${priceText}</b></span>` : `<span class="price"><b>${swapWant ? '想换 ' + esc(swapWant) : '想换'}</b></span>`}
             <span class="card__wantnum">${item.tradeMode === 3 ? (item.auctionBidCount || 0) + ' 次出价' : want}</span>
           </div>
+          ${priceText && swapWant ? `<p class="card__want">想换 ${esc(swapWant)}</p>` : ''}
           <div class="card__seller">
             <span onclick="event.preventDefault();event.stopPropagation();location.hash='#/user/${item.ownerId}'">${avatar({ nickname: item.ownerNickname, id: item.ownerId, avatar: item.ownerAvatar }, 18)}</span>
             <span class="name">${esc(item.ownerNickname || '同学')}</span>
@@ -236,7 +233,7 @@
     const pic = window.catalogThumbnail(api.firstPic(item));
     if (window.campusExchange.isDemoListing(item)) {
       return `<a class="card" href="#/item/${Number(item.id)}">
-        <div class="card__pic">${!item.isDemo && api.pics(item).some(realListingPhoto) ? `<img src="${esc(pic)}" alt="" loading="lazy" decoding="async">` : '<span class="listing-photo-empty">暂无实拍图</span>'}
+        <div class="card__pic">${api.pics(item).some(realListingPhoto) ? `<img src="${esc(pic)}" alt="" loading="lazy" decoding="async">` : '<span class="listing-photo-empty">暂无实拍图</span>'}
         <span class="card__tag card__tag--swap">仅展示</span></div>
         <div class="card__body"><h3 class="card__title">${displayItemTitle(item)}</h3>
         <p class="card__meta">平台示例，无法交易</p></div>

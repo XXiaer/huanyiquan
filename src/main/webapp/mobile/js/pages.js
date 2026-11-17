@@ -1833,7 +1833,7 @@
       }
       const it = data.item;
       const demo = window.campusExchange.isDemoListing(it);
-      const pics = demo && it.isDemo ? [] : api.pics(it).filter(pic => !demo || window.realListingPhoto(pic));
+      const pics = api.pics(it).filter(pic => !demo || window.realListingPhoto(pic));
       const available = !demo && !data.isMine && Number(it.status) === 1;
       const canBuy = available && window.campusExchange.supports(it,1);
       const canSwap = available && window.campusExchange.supports(it,2);

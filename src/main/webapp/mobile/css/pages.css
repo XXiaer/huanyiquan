@@ -2028,3 +2028,21 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .cycle-node b { font-size:13px; }
 .cycle-node small { font-size:11px; color:var(--ink-700); }
 .cycle-return { grid-column:1/-1; border:1px solid var(--green-500); border-top:0; border-radius:0 0 10px 10px; color:var(--green-700); font-size:11px; margin:0 12%; padding:3px; }
+
+/* Photo-first cards keep the core details to at most four rows. */
+.card--photo-first .card__body { padding: 4px 6px 5px; }
+.card--photo-first .card__title {
+    display: block; margin: 0; min-height: 0; line-height: 1.25;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card--photo-first .card__price { margin-top: 2px; min-width: 0; align-items: center; }
+.card--photo-first .card__price .price {
+    display: block; min-width: 0; font-size: 14px; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card--photo-first .card__wantnum { flex: none; white-space: nowrap; }
+.card--photo-first .card__want {
+    display: block; border: 0; margin: 1px 0 0; padding: 0; background: transparent; line-height: 1.2;
+}
+.card--photo-first .card__seller { margin-top: 2px; }
+.card--photo-first .card__seller .badge { height: 15px; }

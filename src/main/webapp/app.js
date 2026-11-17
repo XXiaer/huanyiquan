@@ -665,7 +665,9 @@
         return '<button class="pcard ' + (locked ? 'locked' : '') + '" data-act="go" data-to="#/item/' + it.id + '"><div class="pimg" data-cat="' + esc(it.category) + '">' + face
             + (window.campusExchange.isDemoListing(it) ? '<span class="pbadge">仅展示</span>' : locked ? '<span class="pbadge">' + esc(it.statusText || '已换出') + '</span>' : '') + '</div>'
             + '<div class="pbody"><p class="ptitle">' + esc(it.title) + '</p>'
-            + '<div class="pcard-bottom">' + priceHtml + '</div></div></button>';
+            + '<div class="pcard-bottom">' + priceHtml
+            + '<span class="pcard-seller"><i aria-hidden="true">' + esc((it.ownerNickname || '同学').slice(0, 1)) + '</i>'
+            + '<span>' + esc(it.ownerNickname || '同学') + '</span></span></div></div></button>';
     }
 
     function amzGoldItemCard(it) {
@@ -1099,11 +1101,18 @@
 
 
         var amzHomeTop = '<section class="hq-home-intro" aria-label="了解换一圈">'
-            + '<div><p class="hq-home-kicker">重庆移通学院</p><h1>让闲置换到下一站</h1>'
-            + '<p>用闲置换同校好物，两个人换不成，还能加入三方换物接力。</p>'
-            + '<nav class="hq-home-links" aria-label="校园换物入口"><a href="#/idle">逛集市</a>'
-            + '<a href="#/auctions">校园拍卖</a><a href="#/relay">换物接力</a><a href="#/wishes">心愿单</a></nav></div>'
-            + '<img src="/assets/amz/feature-swap-mascot.webp" width="192" height="150" alt="" decoding="async"></section>';
+            + '<nav class="hq-home-links" aria-label="校园换物入口">'
+            + [
+                ['#/idle', '逛集市', 'swap'],
+                ['#/auctions', '校园拍卖', 'auction'],
+                ['#/relay', '换物接力', 'relay'],
+                ['#/wishes', '心愿单', 'wishes']
+            ].map(function (entry) {
+                return '<a class="hq-home-link hq-home-link--' + entry[2] + '" href="' + entry[0] + '">'
+                    + '<img src="/assets/amz/home-paper-' + entry[2] + '.webp" width="384" height="192" alt="" decoding="async">'
+                    + '<span>' + entry[1] + navIcon('next') + '</span></a>';
+            }).join('')
+            + '</nav></section>';
 
         var homeRecommend = '<section class="market-feed"><div class="feed-heading"><div><h2>以物换物</h2></div><div class="feed-actions"><a class="amz-quad-more" href="#/idle">查看全部商品 ›</a></div></div>'
             + (visibleItems.length ? '<div class="pgrid">' + visibleItems.map(pCard).join('') + '</div>' : emptyState(navIcon('search'), '暂时没有找到好物', '', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
