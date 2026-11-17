@@ -183,7 +183,7 @@ public final class CycleService {
                 continue;
             }
             Item i1 = ItemDao.findById(edge.itemId);
-            if (i1 == null || i1.status != Const.ITEM_ON) {
+            if (i1 == null || i1.status != Const.ITEM_ON || !Boolean.TRUE.equals(i1.allowCycle) || Boolean.TRUE.equals(i1.isDemo)) {
                 continue;
             }
             User b = UserDao.findById(edge.userId);
@@ -196,7 +196,7 @@ public final class CycleService {
                     break;
                 }
                 checked++;
-                if (i2.id.equals(itemId) || i2.id.equals(i1.id)) {
+                if (i2.id.equals(itemId) || i2.id.equals(i1.id) || !Boolean.TRUE.equals(i2.allowCycle) || Boolean.TRUE.equals(i2.isDemo)) {
                     continue;
                 }
                 if (i2.ownerId.equals(userId) || i2.ownerId.equals(edge.userId)) {
@@ -234,6 +234,7 @@ public final class CycleService {
                 + "，" + r.c.nickname + " 把「" + r.i2.title + "」给我");
         m.put("explain", "三个人各出一件、各得一件，任意两人单独谈都谈不成，凑成闭环就都成了");
         m.put("place", suggestPlace(r.a, r.b, r.c));
+        m.put("confirmationHours", Const.CONFIRM_EXPIRE_HOURS);
         return m;
     }
 

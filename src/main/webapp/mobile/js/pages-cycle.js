@@ -18,16 +18,50 @@
   PAGES.cycle = {
     noTab: true,
     async render(view, params) {
+      const route = location.hash;
+      const top = `<div class="topbar"><button type="button" aria-label="返回" class="topbar__back" onclick="smartBack('#/relay')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div>`;
+      view.innerHTML = top + '<p class="hint cycle-mobile" role="status">正在查找可用组合…</p>';
       let rings;
-      try { rings = await api.get('/api/cycle/' + params.id); }
-      catch (error) { view.innerHTML = `<div class="topbar"><button type="button" class="topbar__back" onclick="smartBack('#/me/onshelf')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div><div class="empty">${esc(error.message)}</div>`; return; }
-      view.innerHTML = `<div class="topbar"><button type="button" class="topbar__back" onclick="smartBack('#/me/onshelf')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div>
-        <div style="padding:12px 14px">${rings.length ? rings.map((r, n) => `<div class="community-card" style="margin-bottom:12px"><h3>换法 ${n + 1}</h3><p>我给出 <strong>${esc(r.items?.[0]?.title || "物品")}</strong></p><p>我收到 <strong>${esc(r.items?.[2]?.title || "物品")}</strong></p><p style="margin:12px 0;line-height:1.7">${esc(r.flow || '')}</p><button class="btn btn--block" data-ring="${n}">选择这组换法</button></div>`).join('') : mascotEmpty('暂时没有匹配。可以调整想换的类别，或保留当前意向。', 'assets/brand/mascot-wave-320.webp', { href: '#/item/' + Number(params.id) + '/edit', text: '调整想换条件' }) + '<p style="text-align:center"><a href="#/relay">返回接力，保留当前意向</a></p>'}</div>`;
+      try { rings = await api.get('/api/cycle/' + params.id) || []; }
+      catch (error) {
+        if (route !== location.hash) return;
+        view.innerHTML = top + `<div class="cycle-mobile"><p role="alert">${esc(error.message)}</p><button class="btn btn--ghost" data-cycle-retry>重试</button></div>`;
+        view.querySelector('[data-cycle-retry]').onclick = renderRoute;
+        return;
+      }
+      if (route !== location.hash) return;
+      const countHelp = rings.length > 1 ? '比较每组的物品与参与者，再选一组。' : '目前只有一组满足三人的想换条件。';
+      view.innerHTML = top + `<main class="cycle-mobile">
+        ${rings.length ? `<p class="cycle-note"><strong>找到 ${rings.length} 组换法</strong>，${countHelp}</p>` : ''}
+        ${rings.length ? rings.map((ring, n) => {
+          const users = ring.users || [];
+          const items = ring.items || [];
+          const name = i => i === 0 ? '我' : users[i]?.nickname || '同学';
+          return `<section class="community-card cycle-option">
+            <h2>换法 ${n + 1}</h2>
+            <div class="cycle-duties"><span>我给出<strong>${esc(items[0]?.title || '物品')}</strong></span><span>我收到<strong>${esc(items[2]?.title || '物品')}</strong></span></div>
+            <div class="cycle-graph" aria-label="三方换物方向">
+              ${[0,1,2].map(i => `<div class="cycle-node">${avatar(users[i] || {nickname:name(i)},32)}
+                <b>${esc(name(i))}</b><small>${esc(items[i]?.title || '物品')}</small></div>`).join('')}
+              <span class="cycle-return" aria-hidden="true">第三位同学把物品交回给我</span>
+            </div>
+            <ol class="cycle-flow">${[0,1,2].map(i => {
+              const who = users[i] || {};
+              const meta = [who.building, who.credit != null ? '信用 ' + who.credit : ''].filter(Boolean).join(' | ');
+              return `<li>${avatar(who,32)}<div><b>${esc(name(i))} 将「${esc(items[i]?.title || '物品')}」交给${i === 2 ? '我' : ' ' + esc(name(i+1))}</b>
+                ${meta ? `<small>${esc(meta)}</small>` : ''}</div></li>`;
+            }).join('')}</ol>
+            <p class="cycle-note">发起后物品暂锁，三人须在 ${Number(ring.confirmationHours) || 24} 小时内确认，随后再约面交。</p>
+            <button type="button" class="btn btn--block" data-ring="${n}">选择这组换法</button></section>`;
+        }).join('') : mascotEmpty('暂时没有匹配。可以调整想换类别，或保留当前意向。', 'assets/brand/mascot-wave-320.webp', { href: '#/item/' + Number(params.id) + '/edit', text: '调整想换条件' }) + '<p style="text-align:center"><a href="#/relay">返回接力，保留当前意向</a></p>'}</main>`;
       view.querySelectorAll('[data-ring]').forEach(btn => btn.addEventListener('click', () => {
         const ring = rings[Number(btn.dataset.ring)];
-        confirmSheet('发起三方交换', '发起后物品将锁定，等待三方确认。', '确认发起', async () => {
+        confirmSheet('发起三方交换', '发起后物品将暂时锁定。未在规定时间内获得三人确认，物品会重新上架。', '确认发起', async () => {
+          if (btn.disabled) return;
+          btn.disabled = true;
           try { const result = await api.post('/api/cycle/' + params.id + '/create', { itemIds: ring.itemIds }); location.hash = '#/exchange/' + result.exchangeId; }
           catch (error) { toast(error.message); }
+          finally { btn.disabled = false; }
         });
       }));
     },

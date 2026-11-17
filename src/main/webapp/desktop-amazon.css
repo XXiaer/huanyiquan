@@ -8413,3 +8413,71 @@
         white-space: nowrap;
     }
 }
+
+/* Shared campus identity with the mobile layout, while retaining the desktop workspace. */
+.hq-home-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 154px;
+    gap: 24px;
+    padding: 12px 26px;
+    margin: 12px 0 12px;
+    background: #edf7f3;
+    border: 1px solid #d7ebe4;
+    border-radius: 18px;
+    color: #17322c;
+}
+.hq-home-intro h1 { margin: 4px 0; font-size: clamp(24px, 2.6vw, 36px); line-height: 1.2; }
+.hq-home-intro p { margin: 0; }
+.hq-home-intro .hq-home-kicker { color: #356f64; font-size: 13px; font-weight: 700; }
+.hq-home-intro img { width: 150px; height: 116px; object-fit: cover; object-position: center 46%; border-radius: 14px; }
+.hq-home-links { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.hq-home-links a { color: #0a5c51; background: #fff; border: 1px solid #cae3d9; border-radius: 10px; padding: 5px 10px; font-weight: 700; font-size: 13px; }
+.hq-home-links a:hover, .hq-home-links a:focus-visible { background: #e2f2eb; }
+.hq-ring-option, .hq-auction-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 24px; margin-bottom: 16px; }
+.hq-ring-option .ring { width: min(100%, 500px); aspect-ratio: 1; margin: 0 auto; }
+.hq-ring-copy p { margin-block: 8px; }
+.hq-ring-option .ring-text-thumb { display: grid; place-items: center; color: #0a5c51; background: #e7f3ee; font-size: 18px; font-weight: 800; }
+.hq-auction-detail h1 { margin: 6px 0 12px; }
+.hq-auction-cover { display: grid; place-items: center; width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #f2f7f5; border-radius: 12px; }
+.hq-auction-detail .btn-row { align-items: center; margin-top: 8px; }
+.hq-auction-detail .btn-row input { max-width: 170px; }
+.hq-auction-detail [data-act="copy-auction-link"] { margin-top: 14px; }
+.shelf-no-image { display: grid; place-content: center; justify-items: center; gap: 6px; height: 100%; background: #f2f7f5; color: #356f64; font-size: 12px; }
+.exchange-cancel { color: #9f282d !important; border-color: #d9979a !important; }
+
+@media (min-width: 900px) {
+    body .appbar { background: #fff; color: #17322c; border-bottom: 1px solid #dceae5; }
+    body .appbar .header-nav-wrap { background: #f1f8f5; }
+    body .appbar .brand,
+    body .appbar .brand-name,
+    body .appbar .amz-nav-item b,
+    body .appbar .amz-nav-item small,
+    body .appbar .amz-deliver,
+    body .appbar .amz-deliver b,
+    body .appbar .amz-deliver small,
+    body .appbar .amz-cart-label,
+    body .appbar .amz-cart-ico { color: #17322c !important; }
+    body .appbar .header-search.amz-search { border: 1px solid #c4d9d0; border-radius: 10px !important; }
+    body .appbar .amz-search-cat { background: #edf5f1; }
+    body .appbar .header-search.amz-search button { background: #0a5c51; color: #fff; }
+    body .appbar .header-search.amz-search button svg { color: #fff !important; stroke: #fff !important; }
+    body .appbar .amz-deliver svg { stroke: #356f64 !important; }
+    body .appbar .topnav a { color: #35554c !important; border-radius: 7px; }
+    body .appbar .topnav a.on { background: #dceee6 !important; color: #0a5c51 !important; }
+    body .appbar .notice-count { box-shadow: 0 0 0 1.5px #fff; }
+    body .appbar .notice-link:hover, body .appbar .amz-nav-item:hover, body .appbar .brand:hover { border-color: #c9e0d6; }
+    body .notice-popup { z-index: 80 !important; }
+    .hq-home-intro + .amz-shelf-wrap { margin-top: 0; }
+    .amz-home-layout .market-feed .pimg { max-height: 205px; }
+    .amz-gold-grid, .ali-auction-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .amz-gb-title, .clean-card-title { font-size: 14px; line-height: 1.45; min-height: 2.9em; }
+    .shell.shell-admin { max-width: 1520px !important; }
+    .shell-admin .admin-workspace { grid-template-columns: 196px minmax(0,1fr); }
+    .shell-admin .admin-main { min-width: 0; }
+}
+@media (max-width: 899px) {
+    .hq-auction-detail, .hq-ring-option { grid-template-columns: minmax(0, 1fr); }
+    .hq-home-intro img { display: none; }
+}

@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 /** 报价：发起、收到的、发出的、接受/拒绝/还价/撤回。 */
@@ -23,11 +22,12 @@ public class OfferServlet extends BaseServlet {
         if (segs.isEmpty()) {
             Long itemId = p.lng("itemId");
             Long myItemId = p.lng("myItemId");
-            if (itemId == null || myItemId == null) {
-                throw new BizException(400, "itemId 和 myItemId 都要传");
+            Long amountCents = p.lng("amountCents");
+            if (itemId == null || (myItemId == null) == (amountCents == null)) {
+                throw BizException.badRequest("请选择一件物品换物，或填写面交出价");
             }
-            long offerId = OfferService.create(uid(req), itemId, myItemId, p.str("message"));
-            ok(resp, "已发出报价，等对方回应", Collections.singletonMap("offerId", offerId));
+            ok(resp, "提案已发出，等待对方回应",
+                    OfferService.create(uid(req), itemId, myItemId, amountCents, p.str("message")));
             return;
         }
         if ("handle".equals(segs.get(0))) {
@@ -35,7 +35,7 @@ public class OfferServlet extends BaseServlet {
             if (offerId == null) {
                 throw new BizException(400, "offerId 不能为空");
             }
-            ok(resp, OfferService.handle(uid(req), offerId, p.str("action"), p.lng("myItemId")));
+            ok(resp, OfferService.handle(uid(req), offerId, p.str("action"), p.lng("myItemId"), p.lng("amountCents")));
             return;
         }
         throw notFound();

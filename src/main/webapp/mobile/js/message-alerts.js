@@ -45,15 +45,21 @@
     });
     popup.querySelector('button').addEventListener('click', dismiss);
     document.body.append(popup);
+    const header = document.querySelector('#view .item-detail-top, #view .chat-head, #view .topbar, #view .home-head, #view .pe-head, #view .market-head');
+    if (header) {
+      const firstControls = header.querySelector('.home-search') || header;
+      const bottom = firstControls.getBoundingClientRect().bottom;
+      if (bottom > 0) popup.style.setProperty('--message-popup-top', Math.max(64, Math.ceil(bottom) + 8) + 'px');
+    }
     timer = setTimeout(dismiss, 8000);
   }
 
-  window.refreshMessageAlerts = async function () {
+  window.refreshMessageAlerts = async function (prefetched) {
     if (document.hidden) return;
     if (pending) { queued = true; return; }
     pending = true;
     try {
-      const notices = await api.get('/api/notification');
+      const notices = Array.isArray(prefetched) ? prefetched : await api.get('/api/notification');
       const active = location.hash;
       const system = (Array.isArray(notices) ? notices : []).filter(n => !n.read);
       unread = system.length;
@@ -93,6 +99,10 @@
   };
 
   window.addEventListener('hashchange', dismiss);
+  document.addEventListener('pointerdown', event => {
+    const popup = document.getElementById('messagePopup');
+    if (popup && !popup.contains(event.target)) dismiss();
+  }, {passive:true});
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refreshMessageAlerts();
   });

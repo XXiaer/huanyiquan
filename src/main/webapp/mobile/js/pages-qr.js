@@ -17,6 +17,21 @@
   }
   window.isDesktopLoginQr = isDesktopLoginQr;
 
+  let qrFallback;
+  function loadQrFallback() {
+    if (typeof window.jsQR === 'function') return Promise.resolve(window.jsQR);
+    if (!qrFallback) {
+      qrFallback = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = '/assets/vendor/jsQR.js?v=2.2.0';
+        script.onload = () => resolve(window.jsQR);
+        script.onerror = () => { script.remove(); reject(new Error('扫码组件加载失败')); };
+        document.head.append(script);
+      }).catch(() => { qrFallback = null; return null; });
+    }
+    return qrFallback;
+  }
+
   async function decodeCanvasQr(canvas, imgOrVideo) {
     if ('BarcodeDetector' in window) {
       try {
@@ -27,11 +42,12 @@
         }
       } catch (ignore) {}
     }
-    if (typeof window.jsQR === 'function') {
+    const decoder = await loadQrFallback();
+    if (typeof decoder === 'function') {
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (ctx && canvas.width > 0 && canvas.height > 0) {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = window.jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+        const code = decoder(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
         if (code && code.data) return code.data.trim();
       }
     }

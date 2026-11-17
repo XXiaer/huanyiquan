@@ -15,11 +15,12 @@ import java.util.List;
 public final class OfferDao {
 
     private static final String JOIN_SELECT =
-            "SELECT o.*, ti.title AS t_title, mi.title AS m_title,"
+            "SELECT o.*, ti.title AS t_title, mi.title AS m_title, ex.id AS exchange_id,"
                     + " fu.nickname AS f_nick, fu.credit AS f_credit, tu.nickname AS t_nick"
                     + " FROM `offers` o"
                     + " JOIN `item` ti ON ti.id=o.item_id"
-                    + " JOIN `item` mi ON mi.id=o.my_item_id"
+                    + " LEFT JOIN `item` mi ON mi.id=o.my_item_id"
+                    + " LEFT JOIN `exchange` ex ON ex.offer_id=o.id"
                     + " JOIN `user` fu ON fu.id=o.from_user"
                     + " JOIN `user` tu ON tu.id=o.to_user ";
 
@@ -40,7 +41,10 @@ public final class OfferDao {
         Offer o = new Offer();
         o.id = rs.getLong("id");
         o.itemId = rs.getLong("item_id");
-        o.myItemId = rs.getLong("my_item_id");
+        o.myItemId = rs.getObject("my_item_id", Long.class);
+        o.amountCents = rs.getObject("amount_cents", Long.class);
+        o.conversationId = rs.getObject("conversation_id", Long.class);
+        o.exchangeId = rs.getObject("exchange_id", Long.class);
         o.fromUser = rs.getLong("from_user");
         o.toUser = rs.getLong("to_user");
         o.message = rs.getString("message");
@@ -66,10 +70,10 @@ public final class OfferDao {
         return DBUtil.insert(c,
                 "INSERT INTO `offers`(item_id,my_item_id,from_user,to_user,message,status,parent_id,root_offer_id,"
                         + "target_title_snap,target_thumb_snap,target_cond_snap,my_title_snap,my_thumb_snap,my_cond_snap,"
-                        + "expire_time,create_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        + "expire_time,create_time,amount_cents,conversation_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 o.itemId, o.myItemId, o.fromUser, o.toUser, o.message, o.status, o.parentId, o.rootOfferId,
                 o.targetTitleSnap, o.targetThumbSnap, o.targetCondSnap, o.myTitleSnap, o.myThumbSnap, o.myCondSnap,
-                o.expireTime, LocalDateTime.now());
+                o.expireTime, LocalDateTime.now(), o.amountCents, o.conversationId);
     }
 
     public static void setRootOfferId(Connection c, long id, long rootOfferId) {
@@ -95,16 +99,21 @@ public final class OfferDao {
         return DBUtil.queryOne(JOIN_SELECT + " WHERE o.id=?", LIST_MAP, id);
     }
 
+    public static Offer latestForConversation(long conversationId) {
+        return DBUtil.queryOne(JOIN_SELECT + " WHERE o.conversation_id=? ORDER BY o.id DESC LIMIT 1",
+                LIST_MAP, conversationId);
+    }
+
+    public static boolean hasPending(Connection c, long conversationId, long itemId, long user, long owner) {
+        return DBUtil.count(c, "SELECT COUNT(*) FROM offers WHERE status=? AND expire_time>=NOW()"
+                        + " AND (conversation_id=? OR (conversation_id IS NULL AND item_id=? AND from_user=? AND to_user=?))",
+                Const.OFFER_PENDING, conversationId, itemId, user, owner) > 0;
+    }
+
     /** 在事务内锁定单条报价，返回当前状态用于防并发重复处理 */
     public static Integer lockStatus(Connection c, long id) {
         return DBUtil.queryOne(c, "SELECT status FROM `offers` WHERE id=? FOR UPDATE",
                 rs -> rs.getInt(1), id);
-    }
-
-    /** 同一件目标物品，我方是否已有进行中的报价 */
-    public static boolean existsPending(long itemId, long fromUser) {
-        return DBUtil.count("SELECT COUNT(*) FROM `offers` WHERE item_id=? AND from_user=? AND status=?",
-                itemId, fromUser, Const.OFFER_PENDING) > 0;
     }
 
     public static List<Offer> listReceived(long userId, Integer status) {
@@ -124,11 +133,6 @@ public final class OfferDao {
                 LIST_MAP, userId);
     }
 
-    public static void updateStatus(long id, int status) {
-        DBUtil.update("UPDATE `offers` SET status=?, handle_time=? WHERE id=?",
-                status, LocalDateTime.now(), id);
-    }
-
     public static void updateStatus(Connection c, long id, int status) {
         DBUtil.update(c, "UPDATE `offers` SET status=?, handle_time=? WHERE id=?",
                 status, LocalDateTime.now(), id);
@@ -142,7 +146,7 @@ public final class OfferDao {
     }
 
     /** 某件物品成交后，其他待响应报价自动失效 */
-    public static void invalidateByItems(Connection c, long itemA, long itemB) {
+    public static void invalidateByItems(Connection c, Long itemA, Long itemB) {
         DBUtil.update(c, "UPDATE `offers` SET status=?, handle_time=?"
                         + " WHERE status=? AND (item_id IN (?,?) OR my_item_id IN (?,?))",
                 Const.OFFER_EXPIRED, LocalDateTime.now(), Const.OFFER_PENDING,

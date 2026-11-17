@@ -110,6 +110,15 @@ mysql -u root -p --default-character-set=utf8mb4 huanyiquan < sql/exchange_dispu
 
 > 如需启用拍卖、社区、接力/心愿单、邮箱验证码与双轨交易等完整扩展功能，可按需依次执行 `sql/` 目录下的对应 `.sql` 扩展及迁移脚本（如 `auction.sql`、`community.sql`、`community_exchange.sql`、`wish_relay_migration.sql`、`login_email_migration.sql`、`registration_email_migration.sql`、`social_settings_migration.sql` 等）。
 
+**从 v2.5 升级到 v3.0**
+
+先备份数据库，再执行以下迁移，然后更新应用。脚本可以重复执行。迁移完成后，待交付的交换单需要先由参与者共同确认面交安排，才能确认收货。
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 huanyiquan < sql/conversation_state_migration.sql
+mysql -u root -p --default-character-set=utf8mb4 huanyiquan < sql/offline_sale_v3_migration.sql
+```
+
 ### 2. 配置数据库连接
 
 编辑 [src/main/resources/db.properties](src/main/resources/db.properties)，填入你的 MySQL 地址与凭据；或通过环境变量直接覆盖（推荐生产环境使用）：

@@ -4,24 +4,29 @@ window.exchangeNeedsConfirmation = (exchange) => exchange.type === 3 || exchange
 window.exchangeSummary = function (exchange) {
     const people = exchange.details || [];
     const mine = exchange.mine;
-    const active = exchange.status === 1 || exchange.status === 2;
+    const status = exchange.status;
+    const active = status === 1 || status === 2;
+    const closed = status === 4 || status === 5;
     const isMe = (person) => !!mine && person.userId === mine.userId;
     const match = (field, id, userId) => id == null ? null : people.find(
         (person) => person.userId !== userId && person[field] === id
     );
     const recipientFor = (person) => match('getItemId', person.giveItemId, person.userId);
-    const status = exchange.status;
     const field = status === 1 ? 'confirmed' : 'delivered';
     const pending = active ? people.filter((person) => !isMe(person) && !person[field]) : [];
     const pendingNames = pending.map((person) => person.nickname || '同学').join('、');
-    const pendingFirstMeeting = Boolean(exchange.pendingArrangementId || exchange.pendingArrangement)
-        && !(exchange.confirmedArrangementId || exchange.confirmedArrangement);
+    const confirmedMeeting = Boolean(exchange.confirmedArrangementId || exchange.confirmedArrangement);
+    const proposedMeeting = Boolean(exchange.pendingArrangementId || exchange.pendingArrangement);
+    const cashTrade = Number(exchange.type) === 4;
+    const cashBuyer = cashTrade && !!mine && Number(mine.userId) === Number(exchange.cashBuyerId);
+    const receiptLabel = cashTrade ? (cashBuyer ? '确认收到物品' : '确认收到款项') : '确认收货';
     let next = '';
-    if (status === 2 && mine && !mine.delivered && pendingFirstMeeting) {
-        next = '请先共同确认面交安排。';
-    } else
-        if (active && mine && !mine[field]) {
-        next = status === 1 ? '请确认是否参与这次交换。' : '完成面交并验货后，请确认收货。';
+    if (status === 2 && mine && !mine.delivered && !confirmedMeeting) {
+        next = proposedMeeting
+            ? '等参与者都同意面交安排后，再见面验货。'
+            : '先提议面交时间和地点，等参与者都同意后再见面。';
+    } else if (active && mine && !mine[field]) {
+        next = status === 1 ? '请确认是否参与这次交换。' : '完成面交后，请' + receiptLabel + '。';
     } else if (active) {
         const action = status === 1 ? '确认参与' : '确认收货';
         next = '等待' + (pendingNames ? ' ' + pendingNames + ' ' : '其他参与者') + action + '。';
@@ -36,14 +41,20 @@ window.exchangeSummary = function (exchange) {
         people,
         mine,
         active,
-        needsConfirmation: window.exchangeNeedsConfirmation(exchange),
+        closed,
+        confirmedMeeting,
+        proposedMeeting,
+        cashTrade,
+        cashBuyer,
+        receiptLabel,
+        needsConfirmation: !closed && window.exchangeNeedsConfirmation(exchange),
         isMe,
         next,
         recipient: mine && recipientFor(mine),
         recipientFor,
         sender: mine && match('giveItemId', mine.getItemId, mine.userId),
         canConfirm: status === 1 && !!mine && !mine.confirmed,
-        canReceive: status === 2 && !!mine && !mine.delivered && !pendingFirstMeeting
+        canReceive: status === 2 && !!mine && !mine.delivered && confirmedMeeting
     };
 };
 

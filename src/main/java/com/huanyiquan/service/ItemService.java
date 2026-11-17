@@ -289,7 +289,7 @@ public final class ItemService {
             if (tradeMode == 1 || tradeMode == 2 || tradeMode == 4) {
                 return tradeMode;
             }
-            throw BizException.badRequest("交易方式仅支持：明码标价(1)、以物换物(2)或可买可换(4)");
+            throw BizException.badRequest("请选择出售、以物换物或两者皆可；发拍卖请使用拍卖发布入口");
         }
         boolean hasPrice = price != null && price > 0;
         boolean hasWant = Str.hasText(wantCategory) || Str.hasText(expectDesc) || Str.hasText(wantText);

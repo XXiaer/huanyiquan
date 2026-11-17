@@ -31,8 +31,8 @@ public final class ExchangeDetailDao {
         d.id = rs.getLong("id");
         d.exchangeId = rs.getLong("exchange_id");
         d.userId = rs.getLong("user_id");
-        d.giveItemId = rs.getLong("give_item_id");
-        d.getItemId = rs.getLong("get_item_id");
+        d.giveItemId = rs.getObject("give_item_id", Long.class);
+        d.getItemId = rs.getObject("get_item_id", Long.class);
         d.confirmed = rs.getInt("confirmed");
         d.delivered = rs.getInt("delivered");
         d.confirmTime = rs.getObject("confirm_time", LocalDateTime.class);
@@ -52,8 +52,8 @@ public final class ExchangeDetailDao {
                         + " gi.title AS give_title, gt.title AS get_title"
                         + " FROM `exchange_detail` d"
                         + " JOIN `user` u ON u.id=d.user_id"
-                        + " JOIN `item` gi ON gi.id=d.give_item_id"
-                        + " JOIN `item` gt ON gt.id=d.get_item_id"
+                        + " LEFT JOIN `item` gi ON gi.id=d.give_item_id"
+                        + " LEFT JOIN `item` gt ON gt.id=d.get_item_id"
                         + " WHERE d.exchange_id=? ORDER BY d.id",
                 JOIN_MAP, exchangeId);
     }
@@ -63,8 +63,8 @@ public final class ExchangeDetailDao {
                         + " gi.title AS give_title, gt.title AS get_title"
                         + " FROM `exchange_detail` d"
                         + " JOIN `user` u ON u.id=d.user_id"
-                        + " JOIN `item` gi ON gi.id=d.give_item_id"
-                        + " JOIN `item` gt ON gt.id=d.get_item_id"
+                        + " LEFT JOIN `item` gi ON gi.id=d.give_item_id"
+                        + " LEFT JOIN `item` gt ON gt.id=d.get_item_id"
                         + " WHERE d.exchange_id=? ORDER BY d.id",
                 JOIN_MAP, exchangeId);
     }

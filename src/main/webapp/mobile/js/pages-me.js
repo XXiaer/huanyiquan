@@ -158,7 +158,7 @@
             <span>累计成交 ${me.dealCount || 0} 笔 | 好评率 ${me.goodRate == null ? '—' : me.goodRate + '%'}</span>
           </div>
           <div class="me-deal">
-            <a href="#/me/offers"><i>${serviceIcon('swap', 32)}</i><span>我的报价</span></a>
+            <a href="#/me/offers"><i>${serviceIcon('swap', 32)}</i><span>我的提案</span></a>
             <a href="#/me/exchange"><i>${serviceIcon('exchange', 32)}</i><span>我的交换</span></a>
             <a href="#/me/onshelf"><i>${serviceIcon('bag', 32)}</i><span>我发布的</span>${onShelf ? `<em>${onShelf}</em>` : ''}</a>
             <a href="#/me/sold"><i>${serviceIcon('checkCircle', 32)}</i><span>我卖出的</span>${sold ? `<em>${sold}</em>` : ''}</a>
@@ -180,7 +180,7 @@
           <span class="me-appraise__arrow">${icon('right', 18)}</span>
         </div>
 
-        <div class="me-tools hscroll">
+        <div class="me-tools">
           <a href="#/scan"><i class="c4">${icon('qr', 22)}</i><span>扫码登电脑</span></a>
           <a href="#/refresh"><i class="c1">${serviceIcon('light', 36)}</i><span>一键擦亮</span></a>
           <a href="#/appraise"><i class="c2">${serviceIcon('appraise', 28)}</i><span>闲置估价</span></a>
@@ -232,7 +232,10 @@
     noTab: true,
     async render(view, params) {
       const sub = params.sub || '';
-      if (sub === 'reviews') return PAGES.mineList.render(view, { kind: 'reviews', fromSettings: true });
+      if (sub === 'reviews') {
+        await window.ensureMobilePage('mineList');
+        return PAGES.mineList.render(view, { kind: 'reviews', fromSettings: true });
+      }
       if (sub) return renderSub(view, sub);
       const s = await loadSettings();
       view.innerHTML = `
@@ -619,7 +622,7 @@
       const content = {
         collect: ['个人信息采集清单', `我们采集的信息及用途：\n\n- 学号：用于登录与身份识别，不对外展示\n- 昵称、头像、简介：用于个人主页和商品展示\n- 书院、宿舍楼：用于就近面交与区域筛选\n- 信用分与评价：用于交易可信度展示\n- 商品图片与描述：你主动发布的内容\n\n我们不采集通讯录、精确位置轨迹、相册以外的文件。`],
         share: ['个人信息共享清单', `这些信息会对其他同学可见：\n\n- 昵称、头像、个人简介\n- 书院与宿舍楼（可在隐私设置中关闭）\n- 信用分、买家/卖家信用等级\n- 你发布的商品、评价与社区动态\n\n学号、邮箱、登录凭证不会共享给任何人。管理员仅在处理举报与纠纷时查看必要信息。`],
-        about: ['关于换一圈', `换一圈是重庆移通学院的校园以物换物平台。\n\n我们把「以物换物」做成了一件更轻松的事：发布闲置、提出交换、三方凑成换物环、校内面交、双向评价。\n\n技术栈：原生 HTML/CSS/JS + Java Servlet + MySQL\n联系方式：学生工作处`],
+        about: ['关于换一圈', `换一圈是重庆移通学院的校园以物换物平台。\n\n我们把「以物换物」做成了一件更轻松的事：发布闲置、提出交换、三方凑成换物环、校内面交、双向评价。\n\n联系方式：学生工作处`],
         pact: ['平台公约', `一、真实发布\n商品描述、成色、价格必须真实，图片应为本人实拍。\n\n二、校内面交\n优先选择图书馆、食堂、宿舍楼下等人多的地方，贵重物品当面验货。\n\n三、友善沟通\n不骚扰、不辱骂、不诱导脱离平台交易。\n\n四、禁止内容\n违禁物品、代写代考、刷单套现、虚假信息一律下架并扣除信用分。\n\n五、纠纷处理\n可在私聊页或商品页举报，管理员会在 24 小时内处理。`],
         invite: ['推荐给朋友', `把换一圈分享给同学，一起把闲置盘活。\n\n点击下方按钮复制你的邀请链接。`],
       }[sub];

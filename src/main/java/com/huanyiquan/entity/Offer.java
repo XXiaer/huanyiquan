@@ -10,6 +10,9 @@ public class Offer {
     public Long itemId;
     /** 我拿出去换的物品 */
     public Long myItemId;
+    public Long amountCents;
+    public Long conversationId;
+    public Long exchangeId;
     public Long fromUser;
     public Long toUser;
     public String message;

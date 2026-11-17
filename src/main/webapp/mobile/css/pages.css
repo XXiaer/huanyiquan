@@ -278,15 +278,17 @@
 .conv__mute svg { width: 14px; height: 14px; }
 
 /* 左滑操作 */
-.conv-wrap { position: relative; overflow: hidden; background: #fff; }
+.conv-wrap { --conv-action-width: 168px; position: relative; overflow: hidden; background: #fff; }
 .conv-wrap .conv { position: relative; z-index: 2; transition: transform .22s ease; }
-.conv-wrap.open .conv { transform: translateX(-204px); }
+.conv-wrap.open .conv { transform: translateX(calc(-1 * var(--conv-action-width))); padding-left: calc(var(--conv-action-width) + 8px); }
+.conv-wrap.open .conv__pic, .conv-wrap.open .conv__time { display: none; }
+.conv-wrap.open .conv__text { max-width: 12em; }
 .conv__actions {
   position: absolute; right: 0; top: 0; bottom: 0; z-index: 1;
-  display: flex; width: 204px;
+  display: flex; width: var(--conv-action-width); overflow: hidden; border-radius: 8px;
 }
 .conv__actions button {
-  flex: 1; color: #fff; font-size: 13px; font-weight: 600;
+  flex: 1; color: #fff; font-size: 12px; font-weight: 600; border-inline-start: 1px solid #ffffff40;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
 }
 .conv__actions svg { width: 19px; height: 19px; }
@@ -905,15 +907,16 @@
   height: 18px; padding: 0 5px; border-radius: 4px;
   background: rgba(10,92,81,.86); color: #fff; font-size: 10px; line-height: 18px;
 }
-.pe-title-in {
-  width: 100%; border: 0; outline: none; margin-top: 18px;
-  font-size: 17px; font-weight: 600; padding: 4px 0;
+.pe-field-label { display:block; margin:14px 0 6px; }
+.pe-title-in, .pe-desc-in {
+  width: 100%; border: 1px solid var(--line); background: #f8faf9;
+  border-radius: 10px; font-size: 16px; line-height: 1.55; padding: 10px 12px;
 }
-.pe-desc-in {
-  width: 100%; border: 0; outline: none; resize: none; margin-top: 7px;
-  font-size: 16px; line-height: 1.55; min-height: 190px;
-}
-.pe-desc-in::placeholder, .pe-title-in::placeholder { color: #A9B8B2; }
+.pe-desc-in { resize: vertical; min-height: 96px; }
+.pe-title-in:focus-visible, .pe-desc-in:focus-visible { outline: 2px solid var(--green-500); outline-offset: 1px; }
+.pe-desc-in::placeholder, .pe-title-in::placeholder { color: var(--ink-500); }
+.pe-card [aria-invalid="true"], .pe-row[aria-invalid="true"] { border: 1px solid var(--red-500); }
+.pe-template-label { font-size: 12px; color: var(--ink-500); margin: 7px 0 4px; }
 .pe-tpl { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 3px; opacity: .85; }
 .pe-tpl .chip { height: 28px; font-size: 12px; padding: 0 10px; background: transparent; border: .5px solid var(--line); color: var(--ink-500); }
 .pe-form { background: #fff; border-radius: var(--r-m); margin: 10px 13px; overflow: hidden; }
@@ -1202,11 +1205,11 @@
 .pf-credit__sep { background: var(--line); }
 .message-popup {
   position: fixed;
-  top: calc(var(--safe-top) + 10px);
+  top: var(--message-popup-top, calc(var(--safe-top) + 66px));
   left: 50%;
   transform: translateX(-50%);
   width: min(calc(100% - 24px), 406px);
-  z-index: 200;
+  z-index: 18;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1930,11 +1933,11 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .auction-result-count { margin-left:auto; white-space:nowrap; color:var(--ink-700); font-size:12px; }
 .auction-empty { text-align:center; color:var(--ink-700); padding:36px 14px; }
 .auction-empty button,.auction-empty a { display:inline-block; margin-top:8px; color:#0a5c51; }
-.pe-page--fixed-action { padding-bottom: calc(82px + var(--safe-b, 0px)); }
+.pe-page--fixed-action { padding-bottom: 0; }
 .pe-fixed-action {
-  position: fixed;
+  position: sticky;
   z-index: 12;
-  inset: auto 0 0;
+  bottom: 0;
   width: 100%;
   max-width: var(--page-w, 430px);
   margin-inline: auto;
@@ -1979,3 +1982,49 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .admin-decisions .btn { min-height: 44px; }
 
 .home-service-intro { margin: 6px 14px 10px; color: var(--ink-700); font-size: 13px; line-height: 1.5; text-align: center; }
+
+/* v3.0 | Mobile listing, title and transaction surfaces */
+.home-guest-nav { margin-inline:14px; }
+.home-brand { color:var(--green-700); font-size:24px; font-weight:800; }
+.home-purpose { margin:0 14px 10px; color:var(--ink-700); font-size:13px; line-height:1.45; }
+.mobile-home .home-primary-services { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.home-primary-services a { width:100%; min-width:0; }
+.home-primary-services a small { color:var(--ink-700); font-size:11px; line-height:1.35; white-space:normal; }
+.market-head, .market-results { padding: 10px 13px; }
+.market-title { display:flex; align-items:center; justify-content:space-between; margin:0 0 10px; }
+.market-title h1 { font-size:24px; margin:0; }
+.market-title a { color:var(--green-700); font-size:13px; }
+.market-feedback { color:var(--ink-700); font-size:13px; margin:0 0 8px; }
+.market-feedback:empty { display:none; }
+.market-feedback button { color:var(--green-700); text-decoration:underline; min-height:40px; padding:0 6px; }
+.item-photo-empty, .listing-photo-empty { display:grid; place-items:center; min-height:90px; background:#eff5f2; color:var(--ink-700); font-size:13px; }
+.listing-photo-empty { position:absolute; inset:0; min-height:0; }
+.item-bar-actions { flex:1; min-width:0; display:flex; flex-wrap:wrap; gap:5px; align-items:center; justify-content:flex-end; }
+.item-bar .item-bar-actions .btn { white-space:nowrap; font-size:12px; flex:1; padding-inline:6px; }
+.item-bar .ic { flex:0 0 30px; }
+.auction-detail { padding:0 14px 16px; display:grid; gap:12px; }
+.auction-detail h1 { font-size:22px; line-height:1.35; }
+.auction-detail strong { color:var(--green-700); font-size:24px; }
+.me-tools { display:grid; grid-template-columns:repeat(auto-fit,minmax(59px,1fr)); overflow:visible; gap:6px; }
+.me-tools a { width:auto; min-width:0; }
+.me-tools span { white-space:normal; }
+.exchange-danger { color:var(--red-500); border-color:var(--red-500); }
+.cycle-mobile { padding:12px 14px 20px; }
+.cycle-option { margin-top:12px; padding:14px; }
+.cycle-duties { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0 12px; }
+.cycle-duties span { background:#eef6f2; border-radius:8px; padding:9px; font-size:13px; }
+.cycle-duties strong { display:block; padding-top:3px; overflow-wrap:anywhere; }
+.cycle-flow { list-style:none; display:grid; gap:8px; padding:0; margin:12px 0; }
+.cycle-flow li { display:grid; grid-template-columns:32px minmax(0,1fr); gap:8px; align-items:center; }
+.cycle-flow li b, .cycle-flow li small { display:block; overflow-wrap:anywhere; }
+.cycle-flow li b { font-size:13px; }
+.cycle-flow li small { font-size:12px; color:var(--ink-700); }
+.cycle-note { font-size:13px; color:var(--ink-700); line-height:1.45; margin:10px 0; }
+
+.cycle-graph { display:grid; position:relative; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:16px; row-gap:4px; margin:12px 0; text-align:center; }
+.cycle-node { position:relative; border:1px solid var(--line); border-radius:10px; padding:8px 4px; display:grid; gap:3px; justify-items:center; }
+.cycle-node:not(:nth-child(3))::after { content:'➜'; position:absolute; color:var(--green-700); inset-inline-end:-17px; top:34%; }
+.cycle-node b, .cycle-node small { max-width:100%; overflow-wrap:anywhere; }
+.cycle-node b { font-size:13px; }
+.cycle-node small { font-size:11px; color:var(--ink-700); }
+.cycle-return { grid-column:1/-1; border:1px solid var(--green-500); border-top:0; border-radius:0 0 10px 10px; color:var(--green-700); font-size:11px; margin:0 12%; padding:3px; }

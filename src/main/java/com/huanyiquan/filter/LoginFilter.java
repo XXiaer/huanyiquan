@@ -53,7 +53,7 @@ public class LoginFilter implements Filter {
             return;
         }
 
-        if ("GET".equalsIgnoreCase(req.getMethod()) && uri.matches("^/api/item/\\d+$") && req.getSession(false) == null) {
+        if ("GET".equalsIgnoreCase(req.getMethod()) && uri.matches("^/api/(item|auction)/\\d+$") && req.getSession(false) == null) {
             restore(req); // 公开详情仍应识别带签名凭证的物品所有者
         }
         if (!isOpen(req, uri)) {
@@ -105,7 +105,7 @@ public class LoginFilter implements Filter {
         if ("/api/item/list".equals(uri) || "/api/item".equals(uri)) {
             return true;
         }
-        return uri.matches("^/api/item/\\d+$")
+        return uri.matches("^/api/(item|auction)/\\d+$")
                 || uri.matches("^/api/item/user/\\d+$")
                 || uri.matches("^/api/user/\\d+$")
                 || uri.matches("^/api/user/\\d+/credit$")

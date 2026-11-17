@@ -21,17 +21,48 @@ public final class AuctionService {
    m.put("state",status==0?"pending":status==2?"cancelled":status==3?"rejected":status==4?"settled":end.isAfter(LocalDateTime.now())?"active":"ended"); return m;
   },args);
  }
+ public static Map<String,Object> detail(long id, Long viewer, boolean admin) {
+  List<Map<String,Object>> results = query(
+      "WHERE a.id=? AND (a.status IN (1,2,4) OR a.seller_id=? OR ?=1)", id,viewer,admin?1:0);
+  if (results.isEmpty()) throw BizException.notFound("拍卖不存在或尚未公开");
+  return results.get(0);
+ }
  public static List<Map<String,Object>> list(){return query("WHERE a.status IN (1,2,4)");}
  public static List<Map<String,Object>> mine(long user){return query("WHERE a.seller_id=?",user);}
  public static List<Map<String,Object>> adminList(){return query("");}
  public static long create(long user,String title,String desc,String amount,Integer hours,String image){
+  return create(user,title,desc,amount,hours,image,null);
+ }
+ public static long create(long user,String title,String desc,String amount,Integer hours,String image,String requestKey){
   if(title==null||title.trim().isEmpty()||title.length()>80)throw BizException.badRequest("标题须为 1 至 80 字");
   if(desc!=null&&desc.length()>500)throw BizException.badRequest("描述最多 500 字");
   SensitiveWordDao.check(title.trim(),"拍品标题");
   SensitiveWordDao.check(desc,"拍品描述");
   if(hours==null||hours<1||hours>168)throw BizException.badRequest("拍卖时长为 1 至 168 小时");
-  ImageCheck.requireImages(image); BigDecimal start=money(amount);
-  return DBUtil.insert("INSERT INTO auction(seller_id,title,description,start_price,current_price,ends_at,status,image,duration_hours) VALUES(?,?,?,?,?,?,0,?,?)",user,title.trim(),desc==null?"":desc,start,start,LocalDateTime.now().plusHours(hours),image,hours);
+  ImageCheck.requireImages(image);
+  BigDecimal start=money(amount);
+  String cleanTitle=title.trim();
+  String description=desc==null?"":desc;
+  if(requestKey==null||requestKey.isEmpty()){
+   return DBUtil.insert("INSERT INTO auction(seller_id,title,description,start_price,current_price,ends_at,status,image,duration_hours) VALUES(?,?,?,?,?,?,0,?,?)",
+       user,cleanTitle,description,start,start,LocalDateTime.now().plusHours(hours),image,hours);
+  }
+  if(!requestKey.matches("[A-Za-z0-9_-]{16,80}")) throw BizException.badRequest("发布凭证无效，请重新打开发布页");
+  return DBUtil.tx(c -> {
+   DBUtil.update(c,"INSERT INTO auction(seller_id,title,description,start_price,current_price,ends_at,status,image,duration_hours,request_key)"
+         + " VALUES(?,?,?,?,?,?,0,?,?,?) ON DUPLICATE KEY UPDATE id=id",
+       user,cleanTitle,description,start,start,LocalDateTime.now().plusHours(hours),image,hours,requestKey);
+   Long id=DBUtil.queryOne(c,"SELECT id,title,description,start_price,duration_hours,image FROM auction"
+       + " WHERE seller_id=? AND request_key=?",rs -> {
+    if(!cleanTitle.equals(rs.getString("title"))||!description.equals(rs.getString("description"))
+         ||start.compareTo(rs.getBigDecimal("start_price"))!=0||hours!=rs.getInt("duration_hours")
+         ||!image.equals(rs.getString("image"))) {
+     throw BizException.badRequest("这份拍卖草稿已提交，请到我的拍卖查看");
+    }
+    return rs.getLong("id");
+   }, user,requestKey);
+   return id;
+  });
  }
  public static List<Map<String,Object>> bids(long user,long id){
   Long owner=DBUtil.queryOne("SELECT seller_id FROM auction WHERE id=?",rs->rs.getLong(1),id);

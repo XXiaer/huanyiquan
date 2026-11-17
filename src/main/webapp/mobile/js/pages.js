@@ -52,7 +52,8 @@
             canvas.height = img.naturalHeight || img.height;
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const decoded = typeof window.decodeCanvasQr === 'function' ? await window.decodeCanvasQr(canvas, img) : '';
+            await window.ensureMobilePage('scan');
+            const decoded = await window.decodeCanvasQr(canvas, img);
             if (decoded) {
               close();
               if (typeof window.isDesktopLoginQr === 'function' && window.isDesktopLoginQr(decoded)) {
@@ -94,12 +95,12 @@
   const HOME_CATEGORIES = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
   const HOME_SEARCH_TOPICS = ['小家电', '考研资料'];
   const PRIMARY_SERVICES = [
-    { name: '以物换物', href: '#/market', art: 'swap' },
-    { name: '校园拍卖', href: '#/auction', art: 'auction' },
-    { name: '换物接力', href: '#/relay', art: 'swapRing' },
+    { name: '以物换物', href: '#/market/swap', art: 'swap', note: '拿闲置换好物' },
+    { name: '校园拍卖', href: '#/auction', art: 'auction', note: '为心仪物品出价' },
+    { name: '换物接力', href: '#/relay', art: 'swapRing', note: '两人换不成就凑三人' },
   ];
   function serviceLink(service, size) {
-    return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}-home.webp" width="${size}" height="${size}" alt=""></i><span>${service.name}</span></a>`;
+    return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}-home.webp" width="${size}" height="${size}" alt=""></i><span>${service.name}</span><small>${service.note}</small></a>`;
   }
   window.__homeChannel = window.__homeChannel || '推荐';
 
@@ -113,9 +114,10 @@
       view.innerHTML = `
       <main class="mobile-home"><div class="home-head">
         <div class="home-guest-nav">
-          ${homeTabs()}
+          <b class="home-brand">换一圈</b>
           <a class="home-guest-login" href="#/login" hidden>登录</a>
         </div>
+        <p class="home-purpose">校园闲置以物换物，换不上就找三方接力。</p>
         <form class="home-search" role="search">
           <button type="button" class="scan-btn" aria-label="扫码或拍照搜">${icon('scan', 20)}</button>
           <input name="keyword" type="search" aria-label="搜索校园闲置" placeholder="搜索校园里的好物" maxlength="200">
@@ -197,9 +199,7 @@
         bodyEl.innerHTML = `
           ${showServices ? `<nav class="home-primary-services" aria-label="主要功能" style="margin:6px 12px 2px">
             ${PRIMARY_SERVICES.map(service => serviceLink(service, 48)).join('')}
-            <img class="home-services-mascot is-first" src="assets/brand/mascot-gap-book.webp" width="28" height="28" alt="" decoding="async">
-            <img class="home-services-mascot is-second" src="assets/brand/mascot-gap-parcel.webp" width="28" height="28" alt="" decoding="async">
-          </nav><p class="home-service-intro">用闲置换同校好物，双方换不上时可以试试三方接力。</p>` : ''}
+          </nav>` : ''}
           <div class="home-feed" role="status">正在加载好物…</div>`;
         const feedHost = bodyEl.lastElementChild;
 
@@ -311,6 +311,7 @@
         api.get('/api/conversation'),
       ]);
       notifs = r[0] || [];
+      if (route === location.hash) view.__notices = notifs;
       convs = r[1] || [];
       notifs.filter(n => !n.read && !String(n.target || '').startsWith('#/chat/')).forEach(n => {
         const category = n.category || 'notice';
@@ -485,7 +486,7 @@
           if (dx < -8) {
             moved = true;
             conv.style.transition = 'none';
-            conv.style.transform = `translateX(${Math.max(-204, dx)}px)`;
+            conv.style.transform = `translateX(${Math.max(-168, dx)}px)`;
           }
         }, { passive: true });
         wrap.addEventListener('touchend', (e) => {
@@ -497,6 +498,11 @@
             view.querySelectorAll('.conv-wrap.open').forEach((w) => { if (w !== wrap) w.classList.remove('open'); });
             wrap.classList.add('open');
           } else wrap.classList.remove('open');
+        });
+        wrap.addEventListener('touchcancel', () => {
+          swiping = false;
+          conv.style.transition = '';
+          conv.style.transform = '';
         });
         wrap.querySelectorAll('[data-act]').forEach((btn) => {
           btn.addEventListener('click', async (e) => {
@@ -548,10 +554,11 @@
         tradeMode: conv.tradeMode, status: conv.itemStatus,
       };
       const order = conv.order;
+      const meetingReady = Boolean(order?.confirmedArrangement || order?.confirmedArrangementId);
       const price = api.yuan(item.price);
       const svc = isService(conv);
       const primaryText = order && order.status === 3 ? '去评价'
-        : order && order.status === 2 ? '确认收货'
+        : order && order.status === 2 ? (meetingReady ? '查看收货安排' : '安排面交')
         : order && order.status === 1 ? '确认交换'
         : item.status === 3 ? '去评价'
         : item.tradeMode === 2 ? '发起交换' : '去看看';
@@ -569,7 +576,7 @@
               ${!svc && conv.peerSellerCredit != null ? `<span class="badge">卖家信用${creditLevel(conv.peerSellerCredit)}</span>` : ''}
               ${svc ? '<span class="badge badge--gray">服务号</span>' : ''}
             </div>
-            <div class="chat-head__sub">会员名：${svc ? '官方账号' : String(conv.peer).slice(0, 1) + '***' + String(conv.peerId).slice(-2)}</div>
+            <div class="chat-head__sub">${esc(item.title || (svc ? '官方服务账号' : '校园同学'))}</div>
           </div>
           <button id="chatMore" aria-label="会话选项">${icon('more', 22)}</button>
         </div>
@@ -595,7 +602,7 @@
 
         <p class="chat-safety">建议在校园公共地点面交，验货后再确认。</p>
 
-        ${order && order.status === 2 ? `
+        ${order && order.status === 2 && meetingReady ? `
           <div class="chat-card" id="confirmCard">
             <h4>确认收货</h4>
             <p>请仔细检查商品信息与成色，确认无误后再点确认收货。</p>
@@ -635,24 +642,8 @@
 
       const proposal = view.querySelector('.chat-proposal');
       let currentProposal;
-      let proposalBusy = false;
-      async function refreshProposal() {
-        if (!proposal.isConnected || proposalBusy) return;
-        proposalBusy = true;
-        try {
-          const [sent, received] = await Promise.all([api.get('/api/offer/sent'),api.get('/api/offer/received')]);
+      function updateProposal(next) {
           if (!proposal.isConnected) return;
-          const all = [...(sent || []), ...(received || [])];
-          const samePair = offer => [Number(offer.fromUser), Number(offer.toUser)].includes(Number(myId))
-            && [Number(offer.fromUser), Number(offer.toUser)].includes(Number(peer.id));
-          const scoped = all.filter(offer => samePair(offer) && [Number(offer.itemId),Number(offer.myItemId)].includes(Number(item.id)));
-          for (let length = -1; length !== scoped.length;) {
-            length = scoped.length;
-            const parents = new Set(scoped.map(offer => Number(offer.id)));
-            scoped.push(...all.filter(offer => samePair(offer) && parents.has(Number(offer.parentId)) && !parents.has(Number(offer.id))));
-          }
-          scoped.sort((a,b) => Number(b.id)-Number(a.id));
-          const next = scoped[0];
           if (!next) { proposal.hidden = true; return; }
           if (currentProposal?.id === next.id && currentProposal.status === next.status && proposal.dataset.state === String(next.expireTime ? new Date(next.expireTime).getTime() > Date.now() : true)) return;
           proposal.dataset.state = String(next.expireTime ? new Date(next.expireTime).getTime() > Date.now() : true);
@@ -662,16 +653,23 @@
           const status = pending ? (incoming ? '等你回应' : '等对方回应')
             : ['已过期','已接受','已拒绝','已过期','已撤回','已被新提案替代'][Number(next.status)] || '已处理';
           proposal.hidden = false;
-          proposal.innerHTML = `<header><b>${next.parentId ? '反提案' : '交换提案'}</b><span>${status}</span></header>
-            <p>你给：${esc((incoming ? next.targetTitle : next.myTitle) || '物品')}</p>
-            <p>你收：${esc((incoming ? next.myTitle : next.targetTitle) || '物品')}</p>
+          proposal.innerHTML = `<header><b>${next.amountCents ? '面交出价' : next.parentId ? '换物反提案' : '换物提案'}</b><span>${status}</span></header>
+            ${next.amountCents
+              ? `<p>${esc(next.targetTitle || item.title)} | 面交价 ¥${api.yuan(next.amountCents)}</p>`
+              : `<p>你给：${esc((incoming ? next.targetTitle : next.myTitle) || '物品')}</p>
+                 <p>你收：${esc((incoming ? next.myTitle : next.targetTitle) || '物品')}</p>`}
             ${next.message ? `<p>${esc(next.message)}</p>` : ''}
             ${pending ? (incoming ? '<button data-proposal-action="reject">拒绝</button><button data-proposal-action="counter">修改提案</button><button data-proposal-action="accept">接受</button>' : '<button data-proposal-action="cancel">撤回</button>') : ''}
             <button type="button" data-proposal-action="history">查看历史</button>
+            ${next.exchangeId ? `<a href="#/exchange/${Number(next.exchangeId)}">查看交换单</a>` : ''}
             <a href="#/offers">全部提案</a>`;
-        } catch (error) { /* conversations remain usable if proposals cannot refresh */ }
-        finally { proposalBusy = false; }
       }
+      const refreshProposal = async () => {
+        try {
+          const latest = await api.get('/api/conversation/' + conv.id);
+          updateProposal(latest.offer);
+        } catch (error) { /* The current proposal stays visible on a connection failure. */ }
+      };
       proposal.addEventListener('click', async event => {
         const button = event.target.closest('[data-proposal-action]');
         const offer = currentProposal;
@@ -694,11 +692,19 @@
               <div style="padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;background:${n.isLatest ? '#f4faf8' : '#fff'}">
                 <div style="display:flex;justify-content:space-between;font-size:12px;color:#475569"><b>${esc(n.label)}（${esc(n.fromNickname || '同学')} → ${esc(n.toNickname || '同学')}）</b><span>${esc(n.statusText || '')}</span></div>
                 ${n.diffSummary ? `<div style="margin-top:4px;font-size:12px;color:#0c7263;font-weight:700">${esc(n.diffSummary)}</div>` : ''}
-                <div style="margin-top:5px;font-size:13px">用「<b>${esc(n.myTitle || '物品')}</b>」换「<b>${esc(n.targetTitle || '物品')}</b>」</div>
+                <div style="margin-top:5px;font-size:13px">${n.amountCents ? '面交价 ¥' + api.yuan(n.amountCents) : `用「<b>${esc(n.myTitle || '物品')}</b>」换「<b>${esc(n.targetTitle || '物品')}</b>」`}</div>
                 ${n.message ? `<div style="margin-top:3px;font-size:12px;color:#64748b">${esc(n.message)}</div>` : ''}
               </div>`).join('') || '<div class="empty">暂无历史记录</div>');
           } catch (error) { toast(error.message); }
         } else if (action === 'counter') {
+          if (offer.amountCents) {
+            window.openCashProposal({title:'修改面交出价', description:offer.targetTitle, initial:offer.amountCents,
+              async onSend(amountCents) {
+                await api.post('/api/offer/handle', {offerId:offer.id, action:'counter', amountCents});
+                await refreshProposal();
+              }});
+            return;
+          }
           try {
             const mine = (await api.get('/api/item/mine') || []).filter(row => row.status === 1 && !row.isDemo);
             if (!proposal.isConnected) return;
@@ -710,10 +716,12 @@
               }});
           } catch (error) { toast(error.message); }
         } else if (action === 'accept') {
-          confirmSheet('接受这版提案','确认用「'+offer.targetTitle+'」换「'+offer.myTitle+'」？接受后物品将锁定。','接受并查看交换单',submit);
+          const decision = offer.amountCents ? '确认按 ¥' + api.yuan(offer.amountCents) + ' 校园面交？验货后现场结算。'
+            : '确认用「' + offer.targetTitle + '」换「' + offer.myTitle + '」？接受后物品将锁定。';
+          confirmSheet('接受这版提案',esc(decision),'接受并查看交换单',submit);
         } else submit();
       });
-      refreshProposal();
+      updateProposal(conv.offer);
 
       const body = document.getElementById('chatBody');
       const thread = document.getElementById('chatThread');
@@ -832,10 +840,10 @@
         if (refreshing || !body.isConnected || (!force && (sending || document.hidden))) return;
         refreshing = true;
         try {
-          const thread = await api.get('/api/conversation/' + conv.id);
+          const result = await api.get('/api/conversation/' + conv.id);
           if (!body.isConnected) return;
-          window.refreshMessageAlerts?.();
-          const updates = (thread.messages || []).filter(m => Number(m.id) > latestId);
+          updateProposal(result.offer);
+          const updates = (result.messages || []).filter(m => Number(m.id) > latestId);
           if (!updates.length) return;
           const nearEnd = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 140;
           body.insertAdjacentHTML('beforeend', updates.map(m => renderMessage(m, myId, peer, me)).join(''));
@@ -844,7 +852,7 @@
         } catch (e) { /* Keep the current messages while the connection is unavailable. */ }
         finally { refreshing = false; }
       }
-      const chatTimer = setInterval(() => { refreshMessages(); refreshProposal(); }, 5000);
+      const chatTimer = setInterval(() => refreshMessages(), 5000);
       window.__cleanup = () => {
         clearInterval(chatTimer);
         viewport?.removeEventListener('resize', syncViewport);
@@ -1076,7 +1084,7 @@
 
       document.getElementById('chatPrimary').addEventListener('click', async () => {
         if (order && order.status === 3) { location.hash = '#/user/' + conv.peerId + '/review'; return; }
-        if (order && order.status === 2) { await confirmReceipt(); return; }
+        if (order && order.status === 2) { location.hash = '#/exchange/' + Number(order.exchangeId || order.id); return; }
         if (order && order.status === 1) {
           try { await api.post('/api/exchange/' + order.exchangeId + '/confirm', {}); toast('已确认交换，等待对方确认'); renderRoute(); }
           catch (e) { toast(e.message); }
@@ -1097,7 +1105,8 @@
           });
         } catch (e) { toast(e.message); }
       };
-      if (confirmBtn) confirmBtn.addEventListener('click', confirmReceipt);
+      if (confirmBtn) confirmBtn.addEventListener('click', () => confirmSheet(
+        '确认已收到物品', '请先核对物品。双方均确认后，这笔交易将完成，不能撤回。', '已收到并验货', confirmReceipt));
       const goReview = document.getElementById('goReview');
       if (goReview) goReview.addEventListener('click', () => { location.hash = '#/user/' + conv.peerId + '/review'; });
 
@@ -1467,36 +1476,93 @@
     };
   }
 
+  const marketCache = new Map();
+
   PAGES.market = {
-    tab: 'home',
+    tab: 'market',
     async render(view, params) {
       const route = location.hash;
-      const mode = params.idle ? 1 : 2;
-      const load = page => api.get('/api/item/list', { category: params.category, page, size:40 });
-      let batch;
-      try {
-        if (params.idle) {
-          const res = await load(1);
-          const all = (res && res.list) || [];
-          const priced = all.filter(it => Number(it.tradeMode) !== 3 && Number(it.price) > 0);
-          batch = { rows: priced.length ? priced : all.filter(it => Number(it.tradeMode) !== 3), page: 1, hasMore: Boolean(res && res.hasMore) };
-        } else {
-          batch = await window.campusExchange.browse(load, mode);
-        }
-      }
-      catch (error) { toast(error.message); }
-      if (route !== location.hash) return;
-      const prefix = params.idle ? '#/idle/category/' : '#/category/';
+      const category = params.category || '';
+      const mode = params.mode || 'all';
+      const key = mode + ':' + category;
+      const path = (type, subject) => '#/market' + (type === 'all' && !subject ? '' : '/' + type
+        + (subject ? '/' + encodeURIComponent(subject) : ''));
       view.innerHTML = `
-        ${homeTabs(params.idle ? 'idle' : 'home')}
-        <h1 class="swap-feed-title">${params.idle ? '校园闲置' : '以物换物'}</h1>
-        <div class="r-chips">
-          ${['全部', ...HOME_CATEGORIES].map(c =>
-            `<a class="chip${(params.category || '全部') === c ? ' on' : ''}" href="${prefix + encodeURIComponent(c === '全部' ? '' : c)}">${c}</a>`).join('')}
+        <div class="market-head">
+          <div class="market-title"><h1>集市</h1><a href="#/community">校园社区</a></div>
+          <form class="home-search" role="search">
+            <button type="button" class="scan-btn" aria-label="扫码或拍照搜">${icon('scan',20)}</button>
+            <input type="search" name="keyword" aria-label="搜索校园好物" placeholder="搜台灯、平板或其他校园好物" maxlength="200">
+            <button type="submit" aria-label="搜索">${icon('search',21)}</button>
+          </form>
+          <div class="r-chips" aria-label="交易方式">
+            ${[['all','全部'],['swap','换物'],['sale','出售']].map(([type,label]) =>
+              `<a class="chip${mode === type ? ' on' : ''}" href="${path(type,category)}">${label}</a>`).join('')}
+          </div>
+          <div class="r-chips hscroll" aria-label="商品分类">
+            ${['', ...HOME_CATEGORIES].map(c =>
+              `<a class="chip${category === c ? ' on' : ''}" href="${path(mode,c)}">${c || '全部分类'}</a>`).join('')}
+          </div>
         </div>
-        <div data-swap-results>${batch?.rows.length ? waterfall(batch.rows) : mascotEmpty('这个分类暂时没有物品', 'assets/brand/mascot-wave-320.webp')}</div>
-        ${batch?.hasMore ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}`;
-      bindBrowseMore(view, load, mode, batch);
+        <section class="market-results">
+          <p class="market-feedback" role="status">正在加载好物…</p>
+          <div data-market-results></div>
+          <button class="campus-more" type="button" data-market-more hidden>加载更多</button>
+        </section>`;
+      const form = view.querySelector('form');
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        window.__searchTab = 'all';
+        window.__searchSort = '';
+        window.__searchFilter = { category, tradeMode: mode === 'swap' ? 2 : mode === 'sale' ? 1 : null };
+        const keyword = form.elements.keyword.value.trim();
+        location.hash = keyword ? '#/search/' + encodeURIComponent(keyword) : '#/search';
+      });
+      form.querySelector('.scan-btn').onclick = window.openScanSearch;
+      const results = view.querySelector('[data-market-results]');
+      const feedback = view.querySelector('.market-feedback');
+      const more = view.querySelector('[data-market-more]');
+      const old = marketCache.get(key);
+      let rows = old?.rows || [];
+      function draw() {
+        results.innerHTML = rows.length ? waterfall(rows)
+          : mascotEmpty('这个分类暂时没有物品', 'assets/brand/mascot-wave-320.webp',
+            {href: category || mode !== 'all' ? '#/market' : '#/publish/edit/idle', text: category || mode !== 'all' ? '查看全部' : '发布闲置'});
+      }
+      if (rows.length) draw();
+      let page = 1;
+      const load = async (append = false) => {
+        if (more.disabled) return;
+        more.disabled = true;
+        feedback.textContent = '正在加载好物…';
+        try {
+          let next = page, batch, hits;
+          do {
+            batch = await api.get('/api/item/list', {category, page: next, size: 30});
+            if (route !== location.hash || !results.isConnected) return;
+            hits = (batch?.list || []).filter(item => Number(item.tradeMode) !== 3 &&
+              (mode === 'all' || window.campusExchange.supports(item, mode === 'swap' ? 2 : 1)));
+            next++;
+          } while (!hits.length && batch?.hasMore && next - page < 3);
+          rows = append ? [...rows, ...hits] : hits;
+          page = next;
+          marketCache.set(key, {rows});
+          if (marketCache.size > 12) marketCache.delete(marketCache.keys().next().value);
+          draw();
+          feedback.textContent = '';
+          more.hidden = !batch?.hasMore;
+        } catch (error) {
+          if (!results.isConnected) return;
+          feedback.textContent = rows.length ? '连接失败，正在显示上次加载的物品。' : '网络不给力，没能加载集市。';
+          const retry = document.createElement('button');
+          retry.type = 'button';
+          retry.textContent = '重试';
+          retry.onclick = () => load(append);
+          feedback.append(' ',retry);
+        } finally { more.disabled = false; }
+      };
+      more.onclick = () => load(true);
+      await load();
     },
   };
 
@@ -1554,13 +1620,13 @@
           <div class="auction-card">
             <img src="${esc(window.catalogThumbnail(a.image || 'assets/brand/placeholder.png'))}" alt="" loading="lazy">
             <div class="main">
-              <h3>${esc(a.title)}</h3>
+              <h3><a href="#/auction/${Number(a.id)}">${esc(a.title)}</a></h3>
               <div class="now"><b>¥${Number(a.currentPrice).toFixed(0)}</b><span>当前价 | ${a.bidCount} 次出价</span></div>
               <div class="foot">
                 <span class="time">${a.state === 'active' ? '剩余 ' + remainText(a.endsAt) : '已结束'}</span>
                 ${a.state === 'active'
                   ? `<button class="chip on" data-bid="${a.id}" data-cur="${a.currentPrice}" data-count="${Number(a.bidCount)}" data-title="${esc(a.title)}">出价</button>`
-                  : `<a class="chip" href="${a.itemId ? '#/item/' + Number(a.itemId) : '#/market'}">${a.itemId ? '看看' : '去集市'}</a>`}
+                  : `<a class="chip" href="#/auction/${Number(a.id)}">查看结果</a>`}
               </div>
             </div>
           </div>`).join('') : `<div class="auction-empty">
@@ -1622,6 +1688,60 @@
     },
   };
 
+  PAGES.auctionDetail = {
+    noTab: true,
+    async render(view, params) {
+      const route = location.hash;
+      view.innerHTML = topbar('拍卖详情', {parent:'#/auction'}) + '<p class="auction-empty" role="status">正在加载拍品…</p>';
+      let a;
+      try { a = await api.get('/api/auction/' + params.id); }
+      catch (error) {
+        if (route === location.hash) {
+          view.innerHTML = topbar('拍卖详情', {parent:'#/auction'}) + `<p class="auction-empty">${esc(error.message)} <button type="button" data-retry>重试</button></p>`;
+          view.querySelector('[data-retry]').onclick = () => renderRoute();
+        }
+        return;
+      }
+      if (route !== location.hash) return;
+      const active = a.state === 'active' && !(new Date(a.endsAt).getTime() < Date.now());
+      const images = api.pics({images:a.image});
+      const deadline = new Date(a.endsAt);
+      const ends = Number.isNaN(deadline.getTime()) ? '待确认'
+        : new Intl.DateTimeFormat('zh-CN', {month:'long', day:'numeric', hour:'2-digit',minute:'2-digit'}).format(deadline);
+      view.innerHTML = topbar('拍卖详情', {parent:'#/auction', right:'<button type="button" class="topbar__back" data-share aria-label="分享拍品">' + icon('share',21) + '</button>'}) +
+        `<article class="auction-detail">
+          <h1>${esc(a.title)}</h1>
+          <p><strong>¥${esc(String(a.currentPrice))}</strong> ${Number(a.bidCount) ? Number(a.bidCount) + ' 次出价' : '尚无人出价'}</p>
+          <p>${active ? '截拍时间' : '拍卖截止'} ${esc(ends)}</p>
+          <p>${esc(a.description || '暂无补充说明')}</p>
+          ${active ? '<button type="button" class="btn btn--block" data-detail-bid>出价</button>' : '<p role="status">该拍品当前不能出价。</p>'}
+          <div class="item-detail-photos">${images.length ? images.map((pic,i) => `<img src="${esc(safeMediaUrl(pic))}" alt="拍品图片 ${i + 1}" decoding="async">`).join('') : '<div class="item-photo-empty">暂无实拍图</div>'}</div>
+        </article>`;
+      view.querySelector('[data-share]').onclick = async () => {
+        const url = location.origin + '/#/auction/' + Number(a.id);
+        try { await navigator.clipboard.writeText(url); toast('拍品链接已复制'); }
+        catch (error) { openSheet('分享拍品', `<input class="field" aria-label="拍品链接" value="${esc(url)}" readonly>`); }
+      };
+      view.querySelector('[data-detail-bid]')?.addEventListener('click', () => {
+        const minimum = window.campusExchange.minBid(a.currentPrice, a.bidCount);
+        openSheet('出价', `<form class="proposal-form"><label>出价金额（元）<input name="bid" type="number" min="${minimum}" value="${minimum}" step="0.01" required></label>
+           <p>最低出价 ¥${minimum}</p><button type="submit" class="btn btn--block">确认出价</button></form>`,
+          {onMount(sheet, close) {
+            const form = sheet.querySelector('form');
+            form.onsubmit = async event => {
+              event.preventDefault();
+              const button = form.querySelector('button');
+              if (button.disabled) return;
+              button.disabled = true;
+              try { await api.post('/api/auction/' + Number(a.id) + '/bid', {amount:form.elements.bid.value}); close(); toast('出价成功'); renderRoute(); }
+              catch (error) { toast(error.message); }
+              finally { button.disabled = false; }
+            };
+          }});
+      });
+    },
+  };
+
   /* ============================================================ 商品详情 */
   window.openTradeProposal = function ({title, receive, items, sendLabel, note, onSend}) {
     const photo = item => esc(window.catalogThumbnail(api.firstPic(item)));
@@ -1668,6 +1788,34 @@
       }});
   };
 
+  window.openCashProposal = function ({title, description, initial, fixed = false, note = false, onSend}) {
+    openSheet(title, `<form class="proposal-form">
+      <p>${esc(description || '校园面交')}，当面验货后现场结算。</p>
+      <label>面交金额（元）<input name="amount" type="number" min="0.01" max="100000" step="0.01"
+        value="${api.yuan(initial)}" ${fixed ? 'readonly' : 'required'}></label>
+      ${note ? '<label>留言（选填）<textarea name="message" maxlength="50" rows="2" placeholder="例如 我晚上在图书馆"></textarea></label>' : ''}
+      <p class="proposal-status" role="status"></p>
+      <button class="btn btn--block" type="submit">${fixed ? '发送面交邀请' : '发送出价'}</button>
+    </form>`, {onMount(sheet, close) {
+      const form = sheet.querySelector('form');
+      const submit = form.querySelector('[type=submit]');
+      form.onsubmit = async event => {
+        event.preventDefault();
+        if (submit.disabled) return;
+        const amountCents = Math.round(Number(form.elements.amount.value) * 100);
+        if (!Number.isSafeInteger(amountCents) || amountCents <= 0) return;
+        submit.disabled = true;
+        try {
+          await onSend(amountCents, (form.elements.message?.value || '').trim());
+          close();
+        } catch (error) {
+          form.querySelector('[role=status]').textContent = error.message;
+          submit.disabled = false;
+        }
+      };
+    }});
+  };
+
   PAGES.item = {
     noTab: true,
     async render(view, params) {
@@ -1684,8 +1832,11 @@
         return;
       }
       const it = data.item;
-      const pics = api.pics(it);
       const demo = window.campusExchange.isDemoListing(it);
+      const pics = demo && it.isDemo ? [] : api.pics(it).filter(pic => !demo || window.realListingPhoto(pic));
+      const available = !demo && !data.isMine && Number(it.status) === 1;
+      const canBuy = available && window.campusExchange.supports(it,1);
+      const canSwap = available && window.campusExchange.supports(it,2);
       const price = Number(it.price) > 0 && it.tradeMode !== 2 ? api.yuan(it.price) : '';
       const wants = data.want || {};
       const wantText = it.wantText || wants.expectDesc || it.expectDesc || (wants.wantCategories || []).join("、") || wants.wantCategory || "不限类别";
@@ -1711,7 +1862,7 @@
             <span>${it.viewCount || 0} 浏览</span>
             <span>${it.offerCount || 0} 人想要</span>
             <span>${esc(it.conditionLevel)}</span>
-            ${it.allowBargain ? '<span>可小刀</span>' : ''}
+            ${canBuy && it.allowBargain ? '<span>可议价</span>' : ''}
           </div>
         </div>
         <div class="item-block">
@@ -1735,8 +1886,9 @@
         </div>` : ''}
 
         <div class="item-detail-photos" aria-label="商品图片">
-          ${(pics.length ? pics : ['assets/brand/placeholder.png']).map((pic, i) =>
-            `<img src="${esc(pic)}" alt="${pics.length ? '商品图片 ' + (i + 1) : '暂无商品照片'}" ${i ? 'loading="lazy"' : ''}>`).join('')}
+          ${pics.length ? pics.map((pic, i) =>
+            `<img src="${esc(pic)}" alt="商品图片 ${i + 1}" ${i ? 'loading="lazy"' : ''}>`).join('')
+            : '<div class="item-photo-empty">暂无实拍图</div>'}
         </div>
         ${demo ? '' : `<div class="item-block">
           <div class="item-owner">
@@ -1756,8 +1908,16 @@
         <div class="item-bar">
           <a class="ic" href="#/home">${icon('home', 22)}<span>首页</span></a>
           <button class="ic" id="itemFav">${icon('star', 22)}<span>收藏</span></button>
-          ${demo ? '<span class="badge badge--gray">仅供展示</span>' : `<button class="btn btn--alt" id="itemWant">${isSwap ? '提案交换' : '想要'}</button>
-          <button class="btn" id="itemChat">聊一聊</button>`}
+          ${!demo && !data.isMine ? `<button class="ic" type="button" id="itemReport">${icon('more',22)}<span>举报</span></button>` : ''}
+          ${available && canBuy ? `<button class="ic" type="button" id="itemCashChat">${icon('message',22)}<span>私聊</span></button>` : ''}
+          <div class="item-bar-actions">
+          ${demo ? '<span class="badge badge--gray">仅供展示</span>' : ''}
+          ${data.isMine ? `<a class="btn" href="#/item/${Number(it.id)}/edit">编辑</a>` : ''}
+          ${canSwap ? '<button class="btn btn--alt" id="itemWant">提案换物</button>' : ''}
+          ${canBuy ? `<button class="btn" id="itemBuy">约面交 ¥${price}</button>
+            ${it.allowBargain ? '<button class="btn btn--alt" id="itemOffer">出价</button>' : ''}` : ''}
+          ${available && !canBuy ? '<button class="btn" id="itemChat">聊一聊</button>' : ''}
+          </div>
         </div>
       </div>`;
 
@@ -1807,17 +1967,30 @@
         } catch (e) { toast(e.message); }
       });
 
-      if (demo) return;
-
+      view.querySelector('#itemReport')?.addEventListener('click', () => reportSheet(it.id, 'item'));
+      if (!available) return;
+      const sendTrade = async payload => {
+        const result = await api.post('/api/offer', {itemId:it.id,...payload});
+        toast('提案已发出，等待对方回应');
+        window.__offersMode = 'sent';
+        location.hash = result.conversationId ? '#/chat/' + Number(result.conversationId) : '#/offers';
+      };
+      const sendCash = fixed => {
+        window.openCashProposal({title:fixed ? '按标价约面交' : '发出面交出价', description:it.title, initial:it.price, fixed, note:true,
+          onSend:(amountCents,message) => sendTrade({amountCents,message})});
+      };
+      view.querySelector('#itemBuy')?.addEventListener('click', () => sendCash(true));
+      view.querySelector('#itemOffer')?.addEventListener('click', () => sendCash(false));
       const startChat = async () => {
         try {
           const r = await api.post('/api/conversation/start', { itemId: it.id });
           location.hash = '#/chat/' + r.id;
         } catch (e) { toast(e.message); }
       };
-      document.getElementById('itemChat').addEventListener('click', startChat);
+      document.getElementById('itemChat')?.addEventListener('click', startChat);
+      document.getElementById('itemCashChat')?.addEventListener('click', startChat);
 
-      document.getElementById('itemWant').addEventListener('click', async () => {
+      document.getElementById('itemWant')?.addEventListener('click', async () => {
         const route = location.hash;
         try {
           const list = await api.get('/api/item/mine');
@@ -1834,15 +2007,7 @@
             return;
           }
           window.openTradeProposal({title:'提案交换', receive:it, items:mine, sendLabel:'发出提案', note:true,
-            async onSend(myItemId, message) {
-              await api.post('/api/offer', {itemId:it.id, myItemId, message});
-              toast('提案已发出，等待对方回应');
-              window.__offersMode = 'sent';
-              try {
-                const thread = await api.post('/api/conversation/start', {itemId:it.id});
-                if (location.hash === route) location.hash = '#/chat/' + Number(thread.id);
-              } catch (error) { if (location.hash === route) location.hash = '#/offers'; }
-            }});
+            onSend:(myItemId,message) => sendTrade({myItemId,message})});
         } catch (error) {
           if (error.code === 401 && route === location.hash) location.hash = '#/login';
           else toast(error.message);
@@ -2016,7 +2181,7 @@
         }
         if (tab === 'personal') list = list.filter(i => !window.campusExchange.isDemoListing(i));
         if (filter.area) list = list.filter(i => (i.place || i.ownerBuilding || '').includes(filter.area));
-        if (filter.tradeMode) list = list.filter((i) => i.tradeMode === filter.tradeMode);
+        if (filter.tradeMode) list = list.filter(i => window.campusExchange.supports(i, filter.tradeMode));
         if (filter.meet) list = list.filter((i) => (i.delivery || '仅面交') === '仅面交');
         if (sort === 'price_asc') list = list.slice().sort((a, b) => (a.price || 0) - (b.price || 0));
         if (sort === 'price_desc') list = list.slice().sort((a, b) => (b.price || 0) - (a.price || 0));

@@ -183,8 +183,11 @@
   };
 
   /* ------------------------------------------------------------- 商品卡 */
+  function realListingPhoto(pic) { return !/(?:demo|sample|placeholder|seed)/i.test(String(pic).split('?')[0]); }
+  window.realListingPhoto = realListingPhoto;
   window.itemCard = function (item, priority = false) {
-    const pic = window.catalogThumbnail(api.firstPic(item));
+    const demoPhoto = window.campusExchange.isDemoListing(item) && (item.isDemo || !api.pics(item).some(realListingPhoto));
+    const pic = demoPhoto ? '' : window.catalogThumbnail(api.firstPic(item));
     const price = api.yuan(item.price);
     const credit = creditLabel(item.ownerSellerCredit || item.ownerCredit);
     const want = (item.offerCount || 0) + '人想要';
@@ -206,7 +209,7 @@
     return `
       <a class="card" href="#/item/${item.id}">
         <div class="card__pic">
-          <img src="${esc(pic)}" alt="" loading="${priority ? 'eager' : 'lazy'}" fetchpriority="${priority ? 'high' : 'auto'}" decoding="async">
+          ${pic ? `<img src="${esc(pic)}" alt="" loading="${priority ? 'eager' : 'lazy'}" fetchpriority="${priority ? 'high' : 'auto'}" decoding="async">` : '<span class="listing-photo-empty">暂无实拍图</span>'}
           ${tag}
           ${sold ? `<span class="card__seal"><b>已换出</b><em>SWAPPED</em></span>` : ''}
         </div>
@@ -233,7 +236,7 @@
     const pic = window.catalogThumbnail(api.firstPic(item));
     if (window.campusExchange.isDemoListing(item)) {
       return `<a class="card" href="#/item/${Number(item.id)}">
-        <div class="card__pic"><img src="${esc(pic)}" alt="" loading="lazy" decoding="async">
+        <div class="card__pic">${!item.isDemo && api.pics(item).some(realListingPhoto) ? `<img src="${esc(pic)}" alt="" loading="lazy" decoding="async">` : '<span class="listing-photo-empty">暂无实拍图</span>'}
         <span class="card__tag card__tag--swap">仅展示</span></div>
         <div class="card__body"><h3 class="card__title">${displayItemTitle(item)}</h3>
         <p class="card__meta">平台示例，无法交易</p></div>
@@ -329,7 +332,7 @@
   /* ------------------------------------------------------------- 底部导航 */
   const NAV = [
     { key: 'home', label: '首页', icon: 'home', iconOn: 'homeFill', href: '#/home' },
-    { key: 'community', label: '集市', icon: 'market', iconOn: 'marketFill', href: '#/community' },
+    { key: 'market', label: '集市', icon: 'market', iconOn: 'marketFill', href: '#/market' },
     { key: 'publish', label: '发布', icon: 'publish', href: '#/publish', center: true },
     { key: 'message', label: '消息', icon: 'message', iconOn: 'messageFill', href: '#/messages', badge: true },
     { key: 'me', label: '我的', icon: 'me', iconOn: 'meFill', href: '#/me' },

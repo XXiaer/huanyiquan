@@ -131,6 +131,10 @@
         matchMode: draft.matchMode || 'passive',
         auctionHours: draft.auctionHours || 24,
         auctionStart: draft.auctionStart || '',
+        auctionRequestKey: draft.auctionRequestKey || (kind.mode === 3
+          ? Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2,'0')).join('')
+          : ''),
+
       };
 
       const tradeName = (m) => (m === 4 ? '可买可换（双轨）' : m === 2 ? '仅以物换物' : m === 3 ? '拍卖' : '仅明码标价');
@@ -144,7 +148,7 @@
           <button class="x" onclick="closeEditor()">${icon('close', 24)}</button>
           <h1>${itemId ? '编辑闲置' : kind.title}</h1>
         </div>
-        <div class="pe-error" id="peError"></div>
+        <div class="pe-error" id="peError" role="alert"></div>
 
         <div class="pe-card">
           <div class="pe-pics" id="pePics">
@@ -153,12 +157,15 @@
             </label>
             <input type="file" id="peFile" accept="image/*" multiple hidden>
           </div>
+          <label class="label pe-field-label" for="peTitle">标题</label>
           <input class="pe-title-in" id="peTitle" maxlength="60" placeholder="${kind.mode === 2 ? '想要什么？写清品牌型号' : '标题：品牌型号 + 物品名'}" value="${esc(draft.title || '')}">
           ${kind.mode === 2 ? `<label class="label" for="wishOffer">我拿什么换</label>
             <select class="field" id="wishOffer"><option value="">不关联物品，发布普通心愿</option>
             ${relayItems.map(item => `<option value="${Number(item.id)}">${esc(item.title)}</option>`).join('')}</select>
             <p class="relay-hint">关联自己开启闭环交换的在架物品后，系统会自动寻找三方接力。</p>` : ''}
+          <label class="label pe-field-label" for="peDesc">物品描述</label>
           <textarea class="pe-desc-in" id="peDesc" maxlength="500" placeholder="${kind.mode === 2 ? '想换什么、预算多少、成色要求，都可以写在这里' : '描述一下宝贝的品牌型号、货品来源、入手渠道、有没有瑕疵'}">${esc(draft.desc || '')}</textarea>
+          <p class="pe-template-label">添加描述提示（选填）</p>
           <div class="pe-tpl">
             ${Object.keys(TEMPLATES).map((t) => `<span class="chip" data-tpl="${t}">${t}</span>`).join('')}
           </div>
@@ -239,7 +246,7 @@
           pics: state.pics, category: state.category, price: state.price,
           originalPrice: state.originalPrice, allowBargain: state.allowBargain,
           tradeMode: state.tradeMode, cond: state.cond, place: state.place,
-          delivery: state.delivery, auctionHours: state.auctionHours,
+          delivery: state.delivery, auctionHours: state.auctionHours, auctionRequestKey: state.auctionRequestKey,
           wantText: (document.getElementById('wantText') || {}).value || '',
           wantCategory: state.wantCategories.join(','),
           matchMode: state.matchMode,
@@ -483,26 +490,43 @@
         const desc = document.getElementById('peDesc').value.trim();
         const cateEl = document.getElementById('cateVal');
         const errs = [];
+        const checks = [
+          [document.getElementById('peAdd'), kind.mode === 2 || state.pics.length > 0, '请添加物品图片'],
+          [document.getElementById('peTitle'), !!title, '请填写标题'],
+          [cateEl, !!state.category, '请选择分类'],
+          [document.getElementById('pePrice'), kind.mode === 2 || state.tradeMode === 2 || Number(state.price) > 0,
+            kind.mode === 3 ? '请填写有效的起拍价' : '请填写有效的价格'],
+        ];
         clearError();
-        document.getElementById('peTitle').classList.remove('err');
-        cateEl.classList.remove('err');
-        if (!title) {
-          document.getElementById('peTitle').classList.add('err');
-          errs.push('标题不能为空');
-          document.getElementById('peTitle').focus();
+        let firstInvalid;
+        checks.forEach(([field, valid, message]) => {
+          if (!field) return;
+          field.classList.toggle('err', !valid);
+          field.setAttribute('aria-invalid', String(!valid));
+          if (!valid) { firstInvalid ||= field; errs.push(message); }
+        });
+        if (errs.length) {
+          showError(errs.join('；'));
+          firstInvalid.scrollIntoView({block:'center', behavior:'smooth'});
+          if (firstInvalid.matches('input')) firstInvalid.focus({preventScroll:true});
+          return;
         }
-        if (!state.category) {
-          cateEl.classList.add('err');
-          errs.push('请选择分类');
-        }
-        if (kind.mode !== 2 && state.tradeMode !== 2 && !state.price) errs.push('请填写价格');
-        if (errs.length) { showError(errs.join('；')); return; }
         const btn = document.getElementById('peSubmit');
         btn.disabled = true;
+        let newAuctionId;
         try {
           if (kind.mode === 2) {
             const offeredItemId = Number(document.getElementById('wishOffer').value) || null;
             await api.post('/api/wish', { title, content: desc, category: state.category, offeredItemId });
+          } else if (kind.mode === 3) {
+            saveDraft();
+            const auction = await api.post('/api/auction', {
+              title, description: desc, amount: String(state.price), hours: state.auctionHours,
+              image: state.pics.join(','), requestKey: state.auctionRequestKey,
+              category: state.category, conditionLevel: state.cond,
+              place: state.place,
+            });
+            newAuctionId = Number(auction.id);
           } else {
             const priceCents = state.tradeMode === 2 ? 0 : Math.round(Number(state.price) * 100);
             const origCents = (state.tradeMode !== 2 && state.originalPrice) ? Math.round(Number(state.originalPrice) * 100) : null;
@@ -533,17 +557,7 @@
               location.replace('#/me/onshelf');
               return;
             }
-            const r = await api.post('/api/item', body);
-            if (kind.mode === 3) {
-              await api.post('/api/auction', {
-                itemId: r.itemId,
-                title,
-                description: desc,
-                amount: String(state.price),
-                hours: state.auctionHours,
-                image: state.pics[0] || '',
-              });
-            }
+            await api.post('/api/item', body);
           }
           localStorage.removeItem(draftKey);
           const proposalReturn = sessionStorage.getItem('hq.proposalReturn');
@@ -561,7 +575,7 @@
               <p>${kind.mode === 2 ? '有同学愿意换时，会第一时间通知你。' : '审核通过就上架，同校同学就能看到啦。'}</p>
               <div class="btns">
                 ${relayReturn ? '<a class="btn btn--ghost" href="#/publish/edit/wish?relay=1">返回接力心愿</a>' : `<button class="btn btn--ghost" onclick="location.hash='#/publish/edit/${params.kind}'">再发一件</button>`}
-                <button class="btn" onclick="location.hash='${kind.mode === 2 ? '#/wish' : '#/me/onshelf'}'">${kind.mode === 2 ? '查看心愿' : '查看审核进度'}</button>
+                <button class="btn" onclick="location.hash='${kind.mode === 2 ? '#/wish' : kind.mode === 3 && newAuctionId ? '#/auction/' + newAuctionId : '#/me/onshelf'}'">${kind.mode === 2 ? '查看心愿' : '查看审核进度'}</button>
               </div>
             </div>`;
         } catch (e) {

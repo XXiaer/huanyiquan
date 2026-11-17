@@ -378,24 +378,34 @@
         const mode = window.__offersMode || 'received';
         const rows = mode === 'received' ? received : offers;
         const labels = ['待回应', '已接受', '已拒绝', '已过期', '已撤回', '已还价'];
-        view.innerHTML = `${topbar('我的报价')}${dealTabsHtml('offers')}<div class="m-subpage">
+        view.innerHTML = `${topbar('我的提案')}${dealTabsHtml('offers')}<div class="m-subpage">
           <div class="pf-chips"><button class="chip ${mode === 'received' ? 'on' : ''}" data-offer-tab="received">收到的</button><button class="chip ${mode === 'sent' ? 'on' : ''}" data-offer-tab="sent">发出的</button></div>
           ${rows.length ? rows.map(o => `
             <div class="deal-card">
               <div class="deal-card__head">
-                <b>${esc(o.myTitle || '闲置')} ⇄ ${esc(o.targetTitle || '闲置')}</b>
+                <b>${o.amountCents ? esc(o.targetTitle || '物品') + ' | 面交价 ¥' + api.yuan(o.amountCents) : esc(o.myTitle || '闲置') + ' ⇄ ' + esc(o.targetTitle || '闲置')}</b>
                 <span class="badge ${o.status === 1 ? 'badge--green' : o.status === 0 ? 'badge--orange' : 'badge--gray'}">${esc(labels[o.status] || '已处理')}</span>
               </div>
               ${o.message ? `<div class="deal-card__note">${esc(o.message)}</div>` : ''}
               ${o.status === 0 ? `<div class="deal-card__foot">${mode === 'received' ? `<button class="chip" data-offer-id="${o.id}" data-action="reject">拒绝</button><button class="chip" data-offer-id="${o.id}" data-action="counter">还价</button><button class="chip on" data-offer-id="${o.id}" data-action="accept">接受</button>` : `<button class="chip" data-offer-id="${o.id}" data-action="cancel">撤回</button>`}</div>` : ''}
-            </div>`).join('') : mascotEmpty('这里还没有报价', 'assets/brand/mascot-wave-320.webp', {href:'#/market',text:'去集市看看'})}</div>`;
+            </div>`).join('') : mascotEmpty('这里还没有提案', 'assets/brand/mascot-wave-320.webp', {href:'#/market',text:'去集市看看'})}</div>`;
         view.querySelectorAll('[data-offer-tab]').forEach(b => b.addEventListener('click', () => { window.__offersMode = b.dataset.offerTab; renderRoute(); }));
         view.querySelectorAll('[data-offer-id]').forEach(b => b.addEventListener('click', async () => {
           if (b.dataset.action === 'counter') {
-            let items = []; try { items = await api.get('/api/item/mine') || []; } catch (e) { toast(e.message); return; }
-            items = items.filter(i => i.status === 1 && !i.isDemo);
             const original = rows.find(row => Number(row.id) === Number(b.dataset.offerId));
             if (!original) return;
+            if (original.amountCents) {
+              window.openCashProposal({title:'修改面交出价',description:original.targetTitle,initial:original.amountCents,
+                async onSend(amountCents) {
+                  await api.post('/api/offer/handle', {offerId:original.id,action:'counter',amountCents});
+                  toast('已发出新的面交出价');
+                  window.__offersMode = 'sent';
+                  renderRoute();
+                }});
+              return;
+            }
+            let items = []; try { items = await api.get('/api/item/mine') || []; } catch (e) { toast(e.message); return; }
+            items = items.filter(i => i.status === 1 && !i.isDemo);
             if (!items.length) { toast('请先发布一件在架物品'); return; }
             window.openTradeProposal({title:'修改提案', receive:{title:original.myTitle || '对方的物品'},
               items, sendLabel:'发送反提案',
@@ -420,7 +430,9 @@
           if (b.dataset.action === 'accept') {
             const offer = rows.find(row => Number(row.id) === Number(b.dataset.offerId));
             if (!offer) return;
-            confirmSheet('接受这版提案','确认用「'+offer.targetTitle+'」换「'+offer.myTitle+'」？接受后物品将锁定。','接受并查看交换单',submit);
+            const decision = offer.amountCents ? '确认按 ¥' + api.yuan(offer.amountCents) + ' 校园面交？验货后现场结算。'
+              : '确认用「' + offer.targetTitle + '」换「' + offer.myTitle + '」？接受后物品将锁定。';
+            confirmSheet('接受这版提案',esc(decision),'接受并查看交换单',submit);
           } else await submit();
         }));
         return;
@@ -559,7 +571,8 @@
           <div class="credit-hero">
             <div style="font-size:13px;color:var(--ink-500)">${esc(u ? u.nickname : '')} 的信用分</div>
             <div class="num">${credit}</div>
-            <div class="lv">${lv} | 买家 ${creditLevel(u && u.buyerCredit)} / 卖家 ${creditLevel(u && u.sellerCredit)}</div>
+            <div class="lv">${esc(lv)} | 买家权限 ${u ? (Number(u.credit) >= 60 ? '正常' : '受限') : '暂不可用'} / 卖家权限 ${u ? (Number(u.credit) >= 60 ? '正常' : '受限') : '暂不可用'}</div>
+            ${u && Number(u.credit) < 60 ? '<p class="hint exchange-danger">信用分低于 60 分，暂不能发提案或发布商品。</p>' : ''}
             <div class="tip">初始 80 分 | 完成一次交换 +2 | 好评加分 | 违约 −5</div>
           </div>
           <div class="sect-title" style="padding:4px 0 10px"><h2 style="font-size:16px">信用变动</h2></div>
@@ -791,59 +804,69 @@
       catch (err) { view.innerHTML = mascotEmpty(esc(err.message), 'assets/brand/mascot-wave-320.webp'); return; }
       const summary = window.exchangeSummary(e);
       const { mine, people, recipient, sender } = summary;
+      const closed = e.status === 4 || e.status === 5;
+      const cash = e.type === 4;
+      const deadline = e.confirmExpiresAt ? new Date(e.confirmExpiresAt) : null;
+      const expires = deadline && !Number.isNaN(deadline.getTime())
+        ? new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(deadline) : '';
       const reviewTargets = people.filter((person) => !summary.isMe(person) && (!me || person.userId !== me.id));
       const steps = ['待确认', '待交付', '已完成'];
       const confArr = e.confirmedArrangement || null;
       const pendArr = e.pendingArrangement || null;
-      const meetPlace = confArr ? confArr.place : (e.place || '待约定');
-      const meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
+      const meetPlace = confArr?.place || pendArr?.place || e.place || '待约定';
+      const shownArr = confArr || pendArr;
+      const meetTime = shownArr ? [shownArr.startTime, shownArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
       const meetHint = confArr ? '已约好'
-        : pendArr ? `${pendArr.confirmedByMe ? '等对方确认' : '待你确认'} · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认`
+        : pendArr ? `${pendArr.confirmedByMe ? '已提议，等对方确认' : '已有提议，待你确认'} | ${pendArr.confirmedCount}/${pendArr.needCount} 已确认`
         : e.status === 3 ? '自行约定面交' : '待约面交';
 
       view.innerHTML = `
-        ${topbar('交换单 #' + e.id, { parent: '#/me/exchanges' })}
+        ${topbar('交换单 #' + e.id, { parent: '#/me/exchange', right: '<button class="btn btn--ghost btn--sm" data-refresh-exchange>刷新</button>' })}
         <main class="exchange-mobile">
           <header class="exchange-mobile__status">
-            <p class="exchange-mobile__type">${e.type === 3 ? '三方成环' : '一对一交换'}</p>
+            <p class="exchange-mobile__type">${e.type === 3 ? '三方成环' : cash ? '校园面交' : '一对一交换'}</p>
             <h1>${esc(e.statusText || '交换单')}</h1>
-            <p>${esc(summary.next)}</p>
+            <p>${esc(closed && e.closedByName ? e.closedByName + ' 已退出，本次交换已关闭。' : summary.next)}</p>
+            ${expires && Number(e.status) === 1 ? `<p>确认截止 ${esc(expires)}，超时后物品会重新上架。</p>` : ''}
+            ${cash ? `<p><strong>约定面交价 ¥${api.yuan(e.amountCents)}</strong> | 当面验货后现场结算</p>` : ''}
             ${e.status >= 1 && e.status <= 3 ? `<ol class="exchange-mobile__steps" aria-label="交换进度">
               ${steps.map((label, i) => i === 0 && !summary.needsConfirmation ? '' : `<li class="${e.status >= i + 1 ? 'reached' : ''}" ${e.status === i + 1 ? 'aria-current="step"' : ''}>${label}</li>`).join('')}
             </ol>` : ''}
-            <p class="exchange-mobile__counts">${summary.needsConfirmation ? `已确认 ${e.confirmedCount || 0}/${e.needConfirm || people.length} | ` : ''}已收货 ${e.deliveredCount || 0}/${e.needConfirm || people.length}</p>
+            ${!closed ? `<p class="exchange-mobile__counts">${summary.needsConfirmation ? `已确认 ${e.confirmedCount || 0}/${e.needConfirm || people.length} | ` : ''}已交接 ${e.deliveredCount || 0}/${e.needConfirm || people.length}</p>` : ''}
           </header>
 
-          ${mine ? `<section class="exchange-mobile__handoff" aria-label="我的物品交接">
+          ${mine && !cash ? `<section class="exchange-mobile__handoff" aria-label="我的物品交接">
             <div><span>我给出</span><strong>${esc(mine.giveTitle || '物品')}</strong>
               ${recipient ? `<small>交给 ${esc(recipient.nickname || '同学')}</small>` : ''}</div>
             <div><span>我收到</span><strong>${esc(mine.getTitle || '物品')}</strong>
               ${sender ? `<small>来自 ${esc(sender.nickname || '同学')}</small>` : ''}</div>
           </section>` : ''}
 
-          <section class="exchange-mobile__meet">
+          ${closed ? `<section class="exchange-mobile__meet">
+            <a class="btn" href="${e.type === 3 && mine?.giveItemId ? '#/cycle/' + Number(mine.giveItemId) : e.type === 3 ? '#/relay' : '#/market'}">${e.type === 3 ? '重新找环' : '返回集市'}</a>
+          </section>` : `<section class="exchange-mobile__meet">
             <h2>面交安排 <small style="font-weight:600;color:#0c7263">${esc(meetHint)}</small></h2>
             <p class="exchange-next-step">${summary.canConfirm ? '先确认参与，等所有参与者同意后再交接。'
-              : summary.canReceive ? (confArr ? '在校内公共地点核对物品，实际收到后再确认收货。' : '可先提议面交时间和地点。若已自行约好，请验货后再确认收货。')
+              : summary.canReceive ? '在校内公共地点核对物品，确认完成交接后再操作。'
               : e.status === 2 && mine?.delivered ? '你已确认收到，等待其他参与者确认。'
               : e.status === 3 ? '本次交换已完成。' : ''}</p>
-            ${e.status !== 3 || confArr || e.place || e.dealTime ? `<dl><div><dt>${confArr ? '已定地点' : '地点'}</dt><dd>${esc(meetPlace)}</dd></div>
-              <div><dt>${confArr ? '已定时间' : '时间'}</dt><dd>${esc(meetTime || '待约定')}</dd></div>
+            ${e.status !== 3 || confArr || e.place || e.dealTime ? `<dl><div><dt>${confArr ? '已定地点' : pendArr ? '提议地点' : '地点'}</dt><dd>${esc(meetPlace)}</dd></div>
+              <div><dt>${confArr ? '已定时间' : pendArr ? '提议时间' : '时间'}</dt><dd>${esc(meetTime || '待约定')}</dd></div>
               ${confArr?.note ? `<div><dt>备注</dt><dd>${esc(confArr.note)}</dd></div>` : ''}</dl>` : ''}
             ${pendArr ? `<div style="margin:10px 0 12px;padding:10px 12px;border-radius:10px;background:#f0faf8;border:1px solid #cce7e0;font-size:13px;line-height:1.55">
-              <b>${confArr ? '改期提议 v' : '待确认提议 v'}${Number(pendArr.version)}</b>（${esc(pendArr.proposerName || '同学')} 提出 · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认）<br>
+              <b>${confArr ? '改期提议 v' : '待确认提议 v'}${Number(pendArr.version)}</b>（${esc(pendArr.proposerName || '同学')} 提出 | ${pendArr.confirmedCount}/${pendArr.needCount} 已确认）<br>
               地点：${esc(pendArr.place)}${pendArr.startTime ? ` ｜ 时间：${esc([pendArr.startTime, pendArr.endTime].filter(Boolean).join(' - '))}` : ''}
               ${pendArr.note ? `<br><span style="color:#475569">备注：${esc(pendArr.note)}</span>` : ''}
             </div>` : ''}
             <div class="exchange-mobile__actions">
               ${summary.canConfirm ? '<button class="btn" id="exConfirm">确认参与</button>' : ''}
-              ${summary.canReceive ? '<button class="btn" id="exDone">确认收货</button>' : ''}
+              ${summary.canReceive ? `<button class="btn btn--ghost" id="exDone">${esc(summary.receiptLabel || '确认收货')}</button>` : ''}
               ${e.status === 3 && reviewTargets.length ? '<button class="btn" id="exReview">去评价</button>' : ''}
               ${(e.status === 3 || e.status === 4) ? '<a class="btn btn--ghost" href="#/home">返回主页面</a>' : ''}
               ${summary.active && pendArr && !pendArr.confirmedByMe ? `<button class="btn" id="exArrConfirm" data-ver="${Number(pendArr.version)}">同意安排</button>` : ''}
               ${summary.active ? `<button class="btn btn--ghost" id="exPlace">${pendArr || confArr ? '改个时间或地点' : '提议时间和地点'}</button><button class="exchange-mobile__cancel" id="exCancel">取消交换</button>` : ''}
             </div>
-          </section>
+          </section>`}
 
           <section class="exchange-mobile__people">
             ${window.exchangeDisputeTimeline(e, esc)}
@@ -856,15 +879,15 @@
                 ${avatar({ nickname: d.nickname || '同学', id: d.userId, avatar: d.avatar }, 36)}
                 <div class="main">
                   <b>${esc(d.nickname || '同学')}${summary.isMe(d) ? '（我）' : ''}</b>
-                  <p>给出 ${esc(d.giveTitle || '物品')}${to ? ' 给 ' + esc(summary.isMe(to) ? '我' : to.nickname || '同学') : ''} | 收到 ${esc(d.getTitle || '物品')}</p>
-                  <div class="flags">
+                  <p>${cash ? (Number(d.userId) === Number(e.cashBuyerId) ? '买家' : '出售方') : `给出 ${esc(d.giveTitle || '物品')}${to ? ' 给 ' + esc(summary.isMe(to) ? '我' : to.nickname || '同学') : ''} | 收到 ${esc(d.getTitle || '物品')}`}</p>
+                  ${!closed ? `<div class="flags">
                     ${summary.needsConfirmation ? `<span class="badge ${d.confirmed ? 'badge--green' : 'badge--gray'}">${d.confirmed ? '已确认参与' : '待确认参与'}</span>` : ''}
                     <span class="badge ${d.delivered ? 'badge--green' : 'badge--gray'}">${d.delivered ? '已确认收货' : '待确认收货'}</span>
-                  </div>
+                  </div>` : ''}
                 </div>
               </div>`;
             }).join('')}
-            ${e.type === 3 ? `<a class="btn btn--ghost" href="#/ring/${e.id}">进入三方协商房间</a>` : ''}
+            ${e.type === 3 && !closed ? `<a class="btn btn--ghost" href="#/ring/${e.id}">进入三方协商房间</a>` : ''}
           </section>
         </main>`;
 
@@ -906,7 +929,9 @@
       });
       const doneBtn = document.getElementById('exDone');
       if (doneBtn) doneBtn.addEventListener('click', () => {
-        confirmSheet('确认收货', '确认对方已交付、物品无误？确认后不可撤回。', '确认收货', async () => {
+        const label = summary.receiptLabel || '确认收货';
+        const check = cash && !summary.cashBuyer ? '请确认已在现场收到约定款项。' : '请先验货，并确认已在现场收到商品。';
+        confirmSheet(label, check + '提交后不可撤回，双方确认后这笔交易完成。', label, async () => {
           doneBtn.disabled = true;
           try {
             await api.post('/api/exchange/' + e.id + '/done', {});
@@ -918,7 +943,12 @@
       });
       const reviewBtn = document.getElementById('exReview');
       if (reviewBtn) reviewBtn.addEventListener('click', () => {
-        const review = (target) => window.openReviewUser({ id: target.userId, nickname: target.nickname || '同学', avatar: target.avatar }, e.id);
+        const review = async (target) => {
+          try {
+            await window.ensureMobilePage('profile');
+            window.openReviewUser({ id: target.userId, nickname: target.nickname || '同学', avatar: target.avatar }, e.id);
+          } catch (error) { toast(error.message); }
+        };
         if (reviewTargets.length === 1) { review(reviewTargets[0]); return; }
         openSheet('选择评价对象', reviewTargets.map((target, i) =>
           `<button class="btn btn--block btn--ghost" data-review-target="${i}">${esc(target.nickname || '同学')}</button>`
@@ -933,8 +963,22 @@
       });
       const cancelBtn = document.getElementById('exCancel');
       if (cancelBtn) cancelBtn.addEventListener('click', () => {
-        confirmSheet('取消交换', '取消后相关物品会回到在架状态，参与者可以重新发起交换。', '取消交换', async () => {
-          try { await api.post('/api/exchange/' + e.id + '/cancel', { reason: '双方协商取消' }); toast('已取消'); refresh(); } catch (err) { toast(err.message); }
+        openSheet('是否取消这笔交换？', '<p>确认后物品会重新上架，其他参与者会收到通知。</p>'
+          + '<div class="exchange-mobile__actions"><button type="button" class="btn" data-continue>继续交换</button>'
+          + '<button type="button" class="btn btn--ghost exchange-danger" data-cancel>确认取消这笔交换</button></div>', {
+          closeText:'继续交换',
+          onMount(sheet, close) {
+            sheet.querySelector('[data-continue]').onclick = close;
+            sheet.querySelector('[data-cancel]').onclick = async event => {
+              const button = event.currentTarget;
+              button.disabled = true;
+              try {
+                await api.post('/api/exchange/' + e.id + '/cancel', {reason:'参与者主动取消'});
+                close(); toast('交换已取消'); await refresh();
+              } catch (err) { toast(err.message); }
+              finally { button.disabled = false; }
+            };
+          }
         });
       });
       const arrConfirmBtn = document.getElementById('exArrConfirm');
@@ -981,7 +1025,11 @@
           },
         });
       });
-      if (!window.__cleanup) startLivePoll(refresh, 5000);
+      view.querySelector('[data-refresh-exchange]')?.addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try { await refresh(); } finally { button.disabled = false; }
+      });
     },
   };
 

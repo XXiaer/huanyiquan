@@ -2,6 +2,8 @@ package com.huanyiquan.service;
 import com.huanyiquan.common.BizException;
 import com.huanyiquan.common.ImageCheck;
 import com.huanyiquan.dao.SensitiveWordDao;
+import com.huanyiquan.dao.OfferDao;
+import java.sql.Connection;
 import com.huanyiquan.db.DBUtil;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -11,14 +13,30 @@ public final class ConversationService {
   Map<String,Object> v=DBUtil.queryOne("SELECT owner_id,status,is_demo FROM item WHERE id=? AND deleted=0",rs->{Map<String,Object>m=new HashMap<>();m.put("owner",rs.getLong(1));m.put("status",rs.getInt(2));m.put("demo",rs.getBoolean(3));return m;},item);
   if(v==null||((Number)v.get("status")).intValue()!=1||Boolean.TRUE.equals(v.get("demo")))throw BizException.badRequest("只能联系真实在架物品的发布者");
   long owner=((Number)v.get("owner")).longValue();if(owner==user)throw BizException.badRequest("不能联系自己");
-  DBUtil.update("INSERT INTO item_conversation(item_id,seller_id,buyer_id) VALUES(?,?,?) ON DUPLICATE KEY UPDATE id=id",item,owner,user);
-  long id = DBUtil.queryOne("SELECT id FROM item_conversation WHERE item_id=? AND buyer_id=?",rs->rs.getLong(1),item,user);
-  DBUtil.update("UPDATE item_conversation_state SET hidden=0 WHERE conversation_id=? AND user_id=? AND hidden=1", id, user);
-  return id;
+  return DBUtil.tx(c -> {
+   long id = ensure(c, item, owner, user);
+   DBUtil.update(c,"UPDATE item_conversation_state SET hidden=0 WHERE conversation_id=? AND user_id=? AND hidden=1",id,user);
+   return id;
+  });
+ }
+ static long ensure(Connection c,long item,long seller,long buyer) {
+  DBUtil.update(c,"INSERT INTO item_conversation(item_id,seller_id,buyer_id) VALUES(?,?,?) ON DUPLICATE KEY UPDATE id=id",item,seller,buyer);
+  return DBUtil.queryOne(c,"SELECT id FROM item_conversation WHERE item_id=? AND buyer_id=?",rs->rs.getLong(1),item,buyer);
+ }
+ static void recordProposal(Connection c,long id,long sender,long recipient,String text,String title) {
+  lockConversation(c,id);
+  DBUtil.update(c,"UPDATE item_conversation_state SET hidden=0 WHERE conversation_id=? AND hidden=1",id);
+  DBUtil.insert(c,"INSERT INTO private_message(conversation_id,sender_id,kind,content,image) VALUES(?,?,'text',?,'')",id,sender,text);
+  NotificationService.send(c,recipient,title,text,"#/chat/"+id);
  }
  private static Map<String,Object> thread(long user,long id){
   Map<String,Object>t=DBUtil.queryOne("SELECT c.id,c.item_id,c.seller_id,c.buyer_id,i.title,s.nickname,b.nickname,i.images FROM item_conversation c JOIN item i ON i.id=c.item_id JOIN user s ON s.id=c.seller_id JOIN user b ON b.id=c.buyer_id WHERE c.id=?",rs->{Map<String,Object>m=new LinkedHashMap<>();m.put("id",rs.getLong(1));m.put("itemId",rs.getLong(2));m.put("sellerId",rs.getLong(3));m.put("buyerId",rs.getLong(4));m.put("title",rs.getString(5));m.put("seller",rs.getString(6));m.put("buyer",rs.getString(7));m.put("images",rs.getString(8));return m;},id);
-  if(t==null)throw BizException.notFound("会话不存在");if(((Number)t.get("sellerId")).longValue()!=user&&((Number)t.get("buyerId")).longValue()!=user)throw BizException.forbidden("无权查看会话");return t;
+  if(t==null)throw BizException.notFound("会话不存在");
+  boolean isSeller=((Number)t.get("sellerId")).longValue()==user;
+  if(!isSeller&&((Number)t.get("buyerId")).longValue()!=user)throw BizException.forbidden("无权查看会话");
+  t.put("peerId",t.get(isSeller?"buyerId":"sellerId"));
+  t.put("peer",t.get(isSeller?"buyer":"seller"));
+  return t;
  }
  public static List<Map<String,Object>> list(long user) {
   return DBUtil.query("SELECT c.id,c.item_id,i.title,i.images,c.seller_id,c.buyer_id,"
@@ -72,7 +90,7 @@ public final class ConversationService {
   NotificationService.readTarget(user,"#/chat/"+id);
  }
  public static Map<String,Object> get(long user,long id){
-  Map<String,Object>t=thread(user,id);NotificationService.readTarget(user,"#/chat/"+id);List<Map<String,Object>> ms=DBUtil.query("SELECT m.id,m.sender_id,m.kind,m.content,m.image,m.created_at,u.nickname FROM private_message m JOIN user u ON u.id=m.sender_id WHERE m.conversation_id=? ORDER BY m.id DESC LIMIT 100",rs->{Map<String,Object>m=new LinkedHashMap<>();m.put("id",rs.getLong(1));m.put("senderId",rs.getLong(2));m.put("kind",rs.getString(3));m.put("content",rs.getString(4));m.put("image",rs.getString(5));m.put("createdAt",rs.getObject(6,LocalDateTime.class).toString());m.put("nickname",rs.getString(7));return m;},id);Collections.reverse(ms);t.put("messages",ms);return t;
+  Map<String,Object>t=thread(user,id);NotificationService.readTarget(user,"#/chat/"+id);List<Map<String,Object>> ms=DBUtil.query("SELECT m.id,m.sender_id,m.kind,m.content,m.image,m.created_at,u.nickname FROM private_message m JOIN user u ON u.id=m.sender_id WHERE m.conversation_id=? ORDER BY m.id DESC LIMIT 100",rs->{Map<String,Object>m=new LinkedHashMap<>();m.put("id",rs.getLong(1));m.put("senderId",rs.getLong(2));m.put("kind",rs.getString(3));m.put("content",rs.getString(4));m.put("image",rs.getString(5));m.put("createdAt",rs.getObject(6,LocalDateTime.class).toString());m.put("nickname",rs.getString(7));return m;},id);Collections.reverse(ms);t.put("messages",ms);t.put("offer",OfferDao.latestForConversation(id));return t;
  }
  public static void send(long user,long id,String kind,String content,String image){
   Map<String,Object> t=thread(user,id);String text=content==null?"":content.trim();if(text.length()>500)throw BizException.badRequest("消息最多 500 字");SensitiveWordDao.check(text,"消息");

@@ -13,6 +13,11 @@ public class Exchange {
     public String place;
     public String dealTime;
     public Long offerId;
+    public Long amountCents;
+    public Long cashBuyerId;
+    public Long closedBy;
+    public String closedByName;
+    public LocalDateTime confirmExpiresAt;
     public Long confirmedArrangementId;
     public Long pendingArrangementId;
     public LocalDateTime createTime;

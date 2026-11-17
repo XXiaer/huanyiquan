@@ -26,8 +26,31 @@
     return json.data;
   }
 
-  function renderQrInto(container, payloadText) {
+  let qrLibraryPromise;
+  function loadQrLibrary() {
+    if (typeof window.qrcode === 'function') return Promise.resolve();
+    if (!qrLibraryPromise) {
+      qrLibraryPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = '/assets/vendor/qrcode.js?v=2.2.0';
+        script.onload = resolve;
+        script.onerror = () => {
+          script.remove();
+          reject(new Error('二维码组件加载失败'));
+        };
+        document.head.appendChild(script);
+      }).catch((error) => {
+        qrLibraryPromise = null;
+        throw error;
+      });
+    }
+    return qrLibraryPromise;
+  }
+
+  async function renderQrInto(container, payloadText) {
     if (!container) return;
+    try { await loadQrLibrary(); } catch (ignore) { /* The pairing code is still available. */ }
+    if (!container.isConnected) return;
     if (typeof window.qrcode === 'function') {
       const qr = window.qrcode(0, 'M');
       qr.addData(payloadText);

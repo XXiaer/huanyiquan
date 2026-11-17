@@ -12,6 +12,7 @@ import com.huanyiquan.db.DBUtil;
 import com.huanyiquan.entity.Exchange;
 import com.huanyiquan.entity.ExchangeDetail;
 import com.huanyiquan.entity.Offer;
+import com.huanyiquan.entity.User;
 
 import java.sql.Connection;
 import java.time.LocalDateTime;
@@ -31,18 +32,23 @@ public final class ExchangeService {
     }
 
     /** 一对一报价被接受时调用，必须在调用方的事务里执行 */
-    public static long createOneToOne(Connection c, Offer o) {
+    public static long createOneToOne(Connection c, Offer o, long sellerId) {
         Exchange e = new Exchange();
-        e.type = 1;
+        e.type = o.amountCents == null ? 1 : 4;
         e.status = Const.EX_WAIT_DELIVER;
         e.offerId = o.id;
         long eid = ExchangeDao.insert(c, e);
 
-        insertDetail(c, eid, o.fromUser, o.myItemId, o.itemId);
-        insertDetail(c, eid, o.toUser, o.itemId, o.myItemId);
-
+        if (o.amountCents == null) {
+            insertDetail(c, eid, o.fromUser, o.myItemId, o.itemId);
+            insertDetail(c, eid, o.toUser, o.itemId, o.myItemId);
+            ItemDao.updateStatus(c, o.myItemId, Const.ITEM_LOCKED);
+        } else {
+            long buyerId = o.fromUser == sellerId ? o.toUser : o.fromUser;
+            insertDetail(c, eid, buyerId, null, o.itemId);
+            insertDetail(c, eid, sellerId, o.itemId, null);
+        }
         ItemDao.updateStatus(c, o.itemId, Const.ITEM_LOCKED);
-        ItemDao.updateStatus(c, o.myItemId, Const.ITEM_LOCKED);
         return eid;
     }
 
@@ -110,6 +116,9 @@ public final class ExchangeService {
                                                          String startTime, String endTime, String note) {
         if (Str.isBlank(place)) {
             throw new BizException(400, "面交地点不能为空");
+        }
+        if (Str.isBlank(startTime)) {
+            throw BizException.badRequest("请选择面交时间");
         }
         String cleanPlace = Str.cut(place.trim(), 120);
         String cleanStart = Str.cut(startTime, 40);
@@ -259,10 +268,10 @@ public final class ExchangeService {
             if(lockedStatus==null||lockedStatus!=Const.EX_WAIT_DELIVER)throw BizException.badRequest("交换单状态已变化");
             Long already=DBUtil.queryOne(c,"SELECT delivered FROM exchange_detail WHERE exchange_id=? AND user_id=?",rs->rs.getLong(1),exchangeId,userId);
             if(already==null||already!=0)throw BizException.badRequest("你已经确认过了");
-            long pendingWithoutConfirmed = DBUtil.count(c,
-                    "SELECT COUNT(*) FROM `exchange` WHERE id=? AND pending_arrangement_id IS NOT NULL AND confirmed_arrangement_id IS NULL",
-                    exchangeId);
-            if (pendingWithoutConfirmed > 0) {
+            Long confirmedArrangement = DBUtil.queryOne(c,
+                    "SELECT confirmed_arrangement_id FROM `exchange` WHERE id=?",
+                    rs -> rs.getObject(1, Long.class), exchangeId);
+            if (confirmedArrangement == null) {
                 throw BizException.badRequest("请先共同确认面交安排，再确认收货");
             }
             ExchangeDetailDao.markDelivered(c, exchangeId, userId);
@@ -280,6 +289,7 @@ public final class ExchangeService {
                 ExchangeDao.close(c, exchangeId, Const.EX_DONE);
                 NotificationService.exchange(c,exchangeId,0,"交换已完成","所有参与者已确认交付，可以互相评价。");
                 for (ExchangeDetail d : details) {
+                    if (d.giveItemId == null) continue;
                     ItemDao.updateStatus(c, d.giveItemId, Const.ITEM_SWAPPED);
                     BizLogDao.log(c, userId, "ITEM", d.giveItemId, Const.ITEM_LOCKED,
                             Const.ITEM_SWAPPED, "交换完成，物品已换出");
@@ -309,8 +319,9 @@ public final class ExchangeService {
         if (e.status != Const.EX_WAIT_CONFIRM && e.status != Const.EX_WAIT_DELIVER) {
             throw new BizException(400, "交换单当前状态不能取消");
         }
-        closeAndUnlock(e, Const.EX_INVALID, "用户取消：" + (Str.isBlank(reason) ? "任一方反悔" : reason));
-        NotificationService.exchange(exchangeId,userId,"交换已取消","交换伙伴取消了这笔交换。");
+        User actor = UserDao.findById(userId);
+        closeAndUnlock(e, Const.EX_INVALID, "用户取消：" + (Str.isBlank(reason) ? "主动退出" : Str.cut(reason, 100)),
+                userId, actor == null ? "一位参与者" : actor.nickname);
     }
 
     public static Exchange detail(long userId, long exchangeId) {
@@ -514,7 +525,9 @@ public final class ExchangeService {
                     adminId, explanation, exchangeId);
             ExchangeDao.close(c, exchangeId, target);
             for (ExchangeDetail detail : ExchangeDetailDao.listByExchange(c, exchangeId)) {
-                ItemDao.updateStatus(c, detail.giveItemId, complete ? Const.ITEM_SWAPPED : Const.ITEM_ON);
+                if (detail.giveItemId != null) {
+                    ItemDao.updateStatus(c, detail.giveItemId, complete ? Const.ITEM_SWAPPED : Const.ITEM_ON);
+                }
                 if (complete) {
                     ExchangeDetailDao.markDelivered(c, exchangeId, detail.userId);
                     UserDao.addCredit(c, detail.userId, 2);
@@ -544,10 +557,15 @@ public final class ExchangeService {
 
 
     private static boolean closeAndUnlock(Exchange e, int targetStatus, String reason) {
+        return closeAndUnlock(e, targetStatus, reason, null, null);
+    }
+
+    private static boolean closeAndUnlock(Exchange e, int targetStatus, String reason, Long actor, String actorName) {
         return DBUtil.tx(c -> {
             Integer lockedStatus = DBUtil.queryOne(c, "SELECT status FROM `exchange` WHERE id=? FOR UPDATE",
                     rs -> rs.getInt(1), e.id);
-            if (lockedStatus == null || (lockedStatus != Const.EX_WAIT_CONFIRM && lockedStatus != Const.EX_WAIT_DELIVER)) {
+            if (!Objects.equals(lockedStatus, e.status)
+                    || (lockedStatus != Const.EX_WAIT_CONFIRM && lockedStatus != Const.EX_WAIT_DELIVER)) {
                 throw BizException.badRequest("交换单状态已变化");
             }
             if (ExchangeDetailDao.countDelivered(c, e.id) > 0) {
@@ -564,7 +582,13 @@ public final class ExchangeService {
             }
             List<ExchangeDetail> details = ExchangeDetailDao.listByExchange(c, e.id);
             ExchangeDao.close(c, e.id, targetStatus);
+            if (actor != null) {
+                DBUtil.update(c, "UPDATE `exchange` SET closed_by=? WHERE id=?", actor, e.id);
+                NotificationService.exchange(c, e.id, actor, "交换已取消",
+                        actorName + " 取消了这笔交换。点此查看交换单。");
+            }
             for (ExchangeDetail d : details) {
+                if (d.giveItemId == null) continue;
                 ItemDao.updateStatus(c, d.giveItemId, Const.ITEM_ON);
                 BizLogDao.log(c, null, "ITEM", d.giveItemId, Const.ITEM_LOCKED, Const.ITEM_ON,
                         "交换单失效，物品解锁");
@@ -575,7 +599,7 @@ public final class ExchangeService {
                     BizLogDao.log(c, null, "USER", uid, null, null, "超时未确认交付，信用分 -3");
                 }
             }
-            BizLogDao.log(c, null, "EXCHANGE", e.id, lockedStatus, targetStatus, reason);
+            BizLogDao.log(c, actor, "EXCHANGE", e.id, lockedStatus, targetStatus, reason);
             return true;
         });
     }
