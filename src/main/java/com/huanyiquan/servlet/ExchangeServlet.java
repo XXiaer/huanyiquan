@@ -33,6 +33,11 @@ public class ExchangeServlet extends BaseServlet {
         String action = segs.get(1);
         Params p = Params.of(req);
 
+        if ("dispute".equals(action)) {
+            ExchangeService.submitDispute(uid(req), exchangeId, p.str("statement"));
+            ok(resp, "说明已提交", null);
+            return;
+        }
         if ("confirm".equals(action)) {
             ok(resp, ExchangeService.confirm(uid(req), exchangeId));
             return;

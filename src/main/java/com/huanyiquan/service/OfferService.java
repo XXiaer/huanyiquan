@@ -284,6 +284,13 @@ public final class OfferService {
                     diff = cur.fromNickname + " 把「" + prevTarget + "」换成了「" + curMy + "」";
                 }
             }
+            if (prev != null && !Objects.equals(
+                    prev.message == null ? "" : prev.message.trim(),
+                    cur.message == null ? "" : cur.message.trim())) {
+                String messageChange = Str.isBlank(cur.message) ? "移除了留言"
+                        : Str.isBlank(prev.message) ? "添加了留言" : "修改了留言";
+                diff = diff == null ? messageChange : diff + "，" + messageChange;
+            }
             Map<String, Object> node = new LinkedHashMap<>();
             node.put("id", cur.id);
             node.put("round", i);

@@ -449,10 +449,10 @@
               `<div class="set-row notify-setting"><div><b>${title}</b><small>${detail}</small></div>
               <button class="switch${s[key] !== false ? ' on' : ''}" role="switch" aria-label="${title}" aria-checked="${s[key] !== false}" data-k="${key}"></button></div>`).join('')}
           </div>
-          <div class="label" style="margin-top:18px">自动回复</div>
+          <div class="label" style="margin-top:18px">回复草稿</div>
+          <p class="set-sub__tip">保存后可复制使用，消息需要手动发送。</p>
           <textarea class="field field--area" id="autoReply" placeholder="填写回复草稿">${esc(s.reply || '')}</textarea>
           <button class="btn btn--block" id="notifySave" style="margin-top:14px">保存设置</button>
-          <div class="set-sub__tip">当前只保存回复草稿。</div>
         </div></div>`;
       const next = Object.assign({}, s);
       view.querySelectorAll('[data-k]').forEach((sw) => sw.addEventListener('click', () => {
@@ -736,7 +736,9 @@
             window.__me = null;
             toast('登录成功');
             const pendingQr = sessionStorage.getItem('hq.pendingQr');
-            location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : '#/home';
+            const returnTo = sessionStorage.getItem('hq.mobileReturnTo');
+            sessionStorage.removeItem('hq.mobileReturnTo');
+            location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : (returnTo || '#/home');
           } catch (e) { toast(e.message); }
           finally { submitting = false; submit.disabled = false; }
         };

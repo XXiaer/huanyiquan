@@ -31,6 +31,7 @@ DROP PROCEDURE IF EXISTS hyq_migrate_arr_prop;
 DELIMITER //
 CREATE PROCEDURE hyq_migrate_arr_prop()
 BEGIN
+    DECLARE changed_rows INT DEFAULT 1;
     IF NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exchange' AND COLUMN_NAME = 'confirmed_arrangement_id') THEN
         ALTER TABLE `exchange` ADD COLUMN confirmed_arrangement_id BIGINT DEFAULT NULL COMMENT '当前已双方/三方确认生效的安排 ID';
     END IF;
@@ -59,11 +60,16 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'offers' AND COLUMN_NAME = 'my_cond_snap') THEN
         ALTER TABLE `offers` ADD COLUMN my_cond_snap VARCHAR(30) DEFAULT NULL COMMENT '发起方物品成色快照';
     END IF;
+    UPDATE offers SET root_offer_id = id WHERE parent_id IS NULL;
+    WHILE changed_rows > 0 DO
+        UPDATE offers child
+        JOIN offers parent ON child.parent_id = parent.id
+        SET child.root_offer_id = parent.root_offer_id
+        WHERE parent.root_offer_id IS NOT NULL
+          AND NOT (child.root_offer_id <=> parent.root_offer_id);
+        SET changed_rows = ROW_COUNT();
+    END WHILE;
 END //
 DELIMITER ;
 CALL hyq_migrate_arr_prop();
 DROP PROCEDURE IF EXISTS hyq_migrate_arr_prop;
-
--- 为历史已有报价单回填 root_offer_id
-UPDATE `offers` SET root_offer_id = id WHERE parent_id IS NULL AND root_offer_id IS NULL;
-UPDATE `offers` o JOIN `offers` p ON o.parent_id = p.id SET o.root_offer_id = COALESCE(p.root_offer_id, p.id) WHERE o.root_offer_id IS NULL;

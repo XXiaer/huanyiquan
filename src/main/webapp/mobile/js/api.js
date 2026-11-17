@@ -6,7 +6,7 @@
   const CACHE_TTL = 12000;
 
   function isCacheable(method, path) {
-    return method === 'GET' && !path.startsWith('/api/notification') && !path.startsWith('/api/chat');
+    return method === 'GET' && !path.startsWith('/api/notification') && !path.startsWith('/api/chat') && !path.startsWith('/api/conversation');
   }
 
   function qs(params) {

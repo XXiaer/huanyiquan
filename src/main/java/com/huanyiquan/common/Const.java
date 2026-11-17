@@ -43,6 +43,7 @@ public final class Const {
     public static final int EX_INVALID = 4;
     /** 交换单：已超时关闭 */
     public static final int EX_TIMEOUT = 5;
+    public static final int EX_DISPUTED = 6;
 
     /** 举报：待处理 */
     public static final int REPORT_PENDING = 0;
@@ -134,6 +135,8 @@ public final class Const {
                 return "已完成";
             case EX_INVALID:
                 return "已失效";
+            case EX_DISPUTED:
+                return "争议处理中";
             case EX_TIMEOUT:
                 return "已超时关闭";
             default:

@@ -33,4 +33,5 @@ public class Exchange {
     /** 详情附加：已交付人数 */
     public Long deliveredCount;
     public String statusText;
+    public java.util.Map<String, Object> dispute;
 }

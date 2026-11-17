@@ -12,7 +12,7 @@
       }
       if (location.hash !== route) return;
       const rows = items.map(item => `<a href="#/cycle/${Number(item.id)}"><b>${esc(item.title)}</b><span>查看换法</span></a>`).join('');
-      view.innerHTML = window.renderRelayTabs() + window.campusExchange.relay({wish:'#/publish/edit/wish', rows, fallback});
+      view.innerHTML = window.renderRelayTabs() + window.campusExchange.relay({wish:'#/publish/edit/wish?relay=1', rows, fallback});
     },
   };
   PAGES.cycle = {
@@ -22,7 +22,7 @@
       try { rings = await api.get('/api/cycle/' + params.id); }
       catch (error) { view.innerHTML = `<div class="topbar"><button type="button" class="topbar__back" onclick="smartBack('#/me/onshelf')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div><div class="empty">${esc(error.message)}</div>`; return; }
       view.innerHTML = `<div class="topbar"><button type="button" class="topbar__back" onclick="smartBack('#/me/onshelf')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div>
-        <div style="padding:12px 14px">${rings.length ? rings.map((r, n) => `<div class="community-card" style="margin-bottom:12px"><h3>换法 ${n + 1}</h3><p style="margin:12px 0;line-height:1.7">${esc(r.flow || '')}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${(r.items || []).map(i => `<span class="chip">${esc(i.title)}</span>`).join('')}</div><button class="btn btn--block" data-ring="${n}">选择这组换法</button></div>`).join('') : mascotEmpty('暂时没有找到合适的换法', 'assets/brand/mascot-wave-320.webp', { href: '#/market', text: '去逛逛' })}</div>`;
+        <div style="padding:12px 14px">${rings.length ? rings.map((r, n) => `<div class="community-card" style="margin-bottom:12px"><h3>换法 ${n + 1}</h3><p>我给出 <strong>${esc(r.items?.[0]?.title || "物品")}</strong></p><p>我收到 <strong>${esc(r.items?.[2]?.title || "物品")}</strong></p><p style="margin:12px 0;line-height:1.7">${esc(r.flow || '')}</p><button class="btn btn--block" data-ring="${n}">选择这组换法</button></div>`).join('') : mascotEmpty('暂时没有匹配。可以调整想换的类别，或保留当前意向。', 'assets/brand/mascot-wave-320.webp', { href: '#/item/' + Number(params.id) + '/edit', text: '调整想换条件' }) + '<p style="text-align:center"><a href="#/relay">返回接力，保留当前意向</a></p>'}</div>`;
       view.querySelectorAll('[data-ring]').forEach(btn => btn.addEventListener('click', () => {
         const ring = rings[Number(btn.dataset.ring)];
         confirmSheet('发起三方交换', '发起后物品将锁定，等待三方确认。', '确认发起', async () => {

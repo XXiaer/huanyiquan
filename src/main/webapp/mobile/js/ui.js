@@ -189,12 +189,13 @@
     const credit = creditLabel(item.ownerSellerCredit || item.ownerCredit);
     const want = (item.offerCount || 0) + '人想要';
     const sold = item.status === 3;
+    const demo = window.campusExchange.isDemoListing(item);
     const shownPrice = item.tradeMode === 3 && item.auctionCurrentPrice
       ? item.auctionCurrentPrice : item.price;
-    const priceText = item.isDemo && !window.campusExchange.supports(item,1) ? '' : api.yuan(shownPrice);
+    const priceText = Number(shownPrice) > 0 && item.tradeMode !== 2 ? api.yuan(shownPrice) : '';
     let tag = '';
-    if (item.isDemo) {
-      tag = `<span class="card__tag card__tag--swap">${window.campusExchange.demoLabel(item)}</span>`;
+    if (demo) {
+      tag = `<span class="card__tag card__tag--swap">仅演示</span>`;
     } else if (item.tradeMode === 2) {
       tag = `<span class="card__tag card__tag--swap">${icon('swapRing', 12)}以物换物</span>`;
     } else if (item.tradeMode === 3) {
@@ -211,7 +212,7 @@
         </div>
         <div class="card__body">
           <h3 class="card__title">${displayItemTitle(item)}</h3>
-          <p class="card__heat">${item.isDemo ? (priceText ? '官网参考价' : '仅供浏览') : heatText(item)}</p>
+          <p class="card__heat">${demo ? (priceText ? '官网参考价' : '仅供浏览') : heatText(item)}</p>
           ${swapWant}
           <div class="card__price">
             ${priceText ? `<span class="price"><em>¥</em><b>${priceText}</b></span>` : `<span class="price"><b>想换</b></span>`}
@@ -230,6 +231,14 @@
   /* 搜索结果卡：补充成色/品牌、降价、服务与属地 */
   window.resultCard = function (item) {
     const pic = window.catalogThumbnail(api.firstPic(item));
+    if (window.campusExchange.isDemoListing(item)) {
+      return `<a class="card" href="#/item/${Number(item.id)}">
+        <div class="card__pic"><img src="${esc(pic)}" alt="" loading="lazy" decoding="async">
+        <span class="card__tag card__tag--swap">仅展示</span></div>
+        <div class="card__body"><h3 class="card__title">${displayItemTitle(item)}</h3>
+        <p class="card__meta">平台示例，无法交易</p></div>
+      </a>`;
+    }
     const price = api.yuan(item.price);
     const credit = creditLabel(item.ownerSellerCredit || item.ownerCredit);
     const sold = item.status === 3;

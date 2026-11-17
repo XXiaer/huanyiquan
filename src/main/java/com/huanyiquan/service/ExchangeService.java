@@ -122,7 +122,7 @@ public final class ExchangeService {
             if (exStatus == null) {
                 throw BizException.notFound("交换单不存在");
             }
-            if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
+            if (DBUtil.count(c, "SELECT COUNT(*) FROM exchange_detail WHERE exchange_id=? AND user_id=?", exchangeId, userId) == 0) {
                 throw BizException.forbidden("你不在这个交换单里");
             }
             if (exStatus != Const.EX_WAIT_CONFIRM && exStatus != Const.EX_WAIT_DELIVER) {
@@ -148,7 +148,7 @@ public final class ExchangeService {
             BizLogDao.log(c, userId, "EXCHANGE", exchangeId, exStatus, exStatus,
                     "提议面交安排 v" + nextVer + "：" + cleanPlace);
 
-            return loadArrangement(c, arrId, userId, (int) ExchangeDetailDao.countRows(exchangeId));
+            return loadArrangement(c, arrId, userId, (int) ExchangeDetailDao.countRows(c, exchangeId));
         });
     }
 
@@ -167,7 +167,7 @@ public final class ExchangeService {
             if (exRow == null) {
                 throw BizException.notFound("交换单不存在");
             }
-            if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
+            if (DBUtil.count(c, "SELECT COUNT(*) FROM exchange_detail WHERE exchange_id=? AND user_id=?", exchangeId, userId) == 0) {
                 throw BizException.forbidden("你不在这个交换单里");
             }
             int exStatus = ((Number) exRow.get("status")).intValue();
@@ -204,7 +204,7 @@ public final class ExchangeService {
             DBUtil.update(c, "INSERT INTO exchange_arrangement_confirmation(arrangement_id,user_id) VALUES(?,?)", arrId, userId);
 
             long confirmedCount = DBUtil.count(c, "SELECT COUNT(*) FROM exchange_arrangement_confirmation WHERE arrangement_id=?", arrId);
-            int needCount = (int) ExchangeDetailDao.countRows(exchangeId);
+            int needCount = (int) ExchangeDetailDao.countRows(c, exchangeId);
             boolean allConfirmed = confirmedCount >= needCount;
 
             if (allConfirmed) {
@@ -248,7 +248,7 @@ public final class ExchangeService {
         }
         if (e.createTime != null && e.createTime.plusDays(Const.DELIVER_EXPIRE_DAYS)
                 .isBefore(LocalDateTime.now())) {
-            closeAndUnlock(e, Const.EX_TIMEOUT, "超过 7 天未完成交付，超时关闭");
+            if (!closeAndUnlock(e, Const.EX_TIMEOUT, "超过 7 天未完成交付，超时关闭")) { throw BizException.badRequest("部分交付超时，已转入争议处理"); }
             NotificationService.exchange(exchangeId,0,"交换已超时关闭","交付时间已超时，物品已解锁。");
             throw new BizException(400, "超过 7 天没完成交付，这张单已经关闭了");
         }
@@ -259,6 +259,12 @@ public final class ExchangeService {
             if(lockedStatus==null||lockedStatus!=Const.EX_WAIT_DELIVER)throw BizException.badRequest("交换单状态已变化");
             Long already=DBUtil.queryOne(c,"SELECT delivered FROM exchange_detail WHERE exchange_id=? AND user_id=?",rs->rs.getLong(1),exchangeId,userId);
             if(already==null||already!=0)throw BizException.badRequest("你已经确认过了");
+            long pendingWithoutConfirmed = DBUtil.count(c,
+                    "SELECT COUNT(*) FROM `exchange` WHERE id=? AND pending_arrangement_id IS NOT NULL AND confirmed_arrangement_id IS NULL",
+                    exchangeId);
+            if (pendingWithoutConfirmed > 0) {
+                throw BizException.badRequest("请先共同确认面交安排，再确认收货");
+            }
             ExchangeDetailDao.markDelivered(c, exchangeId, userId);
             NotificationService.exchange(c,exchangeId,userId,"交换单有新进展","有参与者确认了交付。");
             long delivered = ExchangeDetailDao.countDelivered(c, exchangeId);
@@ -312,8 +318,32 @@ public final class ExchangeService {
         if (!ExchangeDetailDao.isMember(exchangeId, userId)) {
             throw BizException.forbidden("只有当事人能看这张交换单");
         }
+        return populateDetail(e, userId);
+    }
+
+    public static Exchange disputeDetail(long exchangeId) {
+        Exchange exchange = populateDetail(mustFind(exchangeId), 0);
+        if (exchange.dispute == null) {
+            throw BizException.notFound("争议不存在");
+        }
+        return exchange;
+    }
+
+    private static Exchange populateDetail(Exchange e, long userId) {
+        long exchangeId = e.id;
         List<ExchangeDetail> details = ExchangeDetailDao.listByExchange(exchangeId);
         e.details = details;
+        e.dispute = DBUtil.queryOne("SELECT opened_by,reason,resolution FROM exchange_dispute WHERE exchange_id=?",
+                rs -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("openedBy", rs.getLong(1));
+                    row.put("reason", rs.getString(2));
+                    row.put("resolution", rs.getString(3));
+                    return row;
+                }, exchangeId);
+        if (e.dispute != null) {
+            e.dispute.put("statements", disputeStatements(exchangeId));
+        }
         e.needConfirm = details.size();
         e.confirmedCount = ExchangeDetailDao.countConfirmed(exchangeId);
         e.deliveredCount = ExchangeDetailDao.countDelivered(exchangeId);
@@ -366,6 +396,7 @@ public final class ExchangeService {
     public static List<Exchange> mine(long userId) {
         List<Exchange> list = ExchangeDao.listByUser(userId);
         for (Exchange e : list) {
+            e.mine = ExchangeDetailDao.findByExchangeAndUser(e.id, userId);
             e.needConfirm = (int) ExchangeDetailDao.countRows(e.id);
             e.confirmedCount = ExchangeDetailDao.countConfirmed(e.id);
             e.deliveredCount = ExchangeDetailDao.countDelivered(e.id);
@@ -391,7 +422,7 @@ public final class ExchangeService {
         for (Exchange e : ExchangeDao.listExpired(Const.EX_WAIT_DELIVER,
                 now.minusDays(Const.DELIVER_EXPIRE_DAYS))) {
             try {
-                closeAndUnlock(e, Const.EX_TIMEOUT, "超过 7 天未完成交付，超时关闭");
+                if (!closeAndUnlock(e, Const.EX_TIMEOUT, "超过 7 天未完成交付，超时关闭")) continue;
                 NotificationService.exchange(e.id,0,"交换已超时关闭","交付时间已超时，物品已解锁。");
             } catch (Exception ex) {
                 System.err.println("[定时任务] 超时关闭 " + e.id + " 失败：" + ex.getMessage());
@@ -420,12 +451,116 @@ public final class ExchangeService {
     }
 
     /** 关闭单据 + 把所有换出物品解锁回在架 + 超时扣分，同事务完成 */
-    private static void closeAndUnlock(Exchange e, int targetStatus, String reason) {
+    public static void submitDispute(long userId, long exchangeId, String statement) {
+        String body = disputeText(statement);
         DBUtil.tx(c -> {
+            Integer status = lockExchange(c, exchangeId);
+            if (DBUtil.count(c, "SELECT COUNT(*) FROM exchange_detail WHERE exchange_id=? AND user_id=?",
+                    exchangeId, userId) == 0) {
+                throw BizException.forbidden("你不在这个交换单里");
+            }
+            if (status == Const.EX_WAIT_CONFIRM || status == Const.EX_WAIT_DELIVER) {
+                DBUtil.update(c, "INSERT INTO exchange_dispute(exchange_id,opened_by,previous_status,reason) VALUES(?,?,?,?)",
+                        exchangeId, userId, status, body);
+                ExchangeDao.updateStatus(c, exchangeId, Const.EX_DISPUTED);
+                BizLogDao.log(c, userId, "EXCHANGE", exchangeId, status, Const.EX_DISPUTED, "用户发起面交争议");
+                NotificationService.exchange(c, exchangeId, userId, "面交争议已受理", "交换暂停，请在交换单补充情况。");
+            } else if (status == Const.EX_DISPUTED) {
+                DBUtil.update(c, "INSERT INTO exchange_dispute_statement(exchange_id,user_id,body) VALUES(?,?,?)",
+                        exchangeId, userId, body);
+            } else {
+                throw BizException.badRequest("当前交换单无法提交争议");
+            }
+            return null;
+        });
+    }
+
+    public static List<Map<String, Object>> disputes() {
+        return DBUtil.query("SELECT exchange_id,opened_by,reason,resolution FROM exchange_dispute ORDER BY resolved_at IS NOT NULL, opened_at DESC LIMIT 100",
+                rs -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("exchangeId", rs.getLong(1));
+                    row.put("openedBy", rs.getLong(2));
+                    row.put("reason", rs.getString(3));
+                    row.put("resolution", rs.getString(4));
+                    return row;
+                });
+    }
+
+    public static List<Map<String, Object>> disputeStatements(long exchangeId) {
+        return DBUtil.query("SELECT user_id,body,created_at FROM exchange_dispute_statement WHERE exchange_id=? ORDER BY id",
+                rs -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("userId", rs.getLong(1));
+                    row.put("body", rs.getString(2));
+                    row.put("createdAt", rs.getString(3));
+                    return row;
+                }, exchangeId);
+    }
+
+    public static void resolveDispute(long adminId, long exchangeId, String outcome, String note) {
+        String explanation = disputeText(note);
+        if (!"cancel".equals(outcome) && !"complete".equals(outcome)) {
+            throw BizException.badRequest("请选择取消交易或确认已完成");
+        }
+        DBUtil.tx(c -> {
+            int status = lockExchange(c, exchangeId);
+            if (status != Const.EX_DISPUTED) {
+                throw BizException.badRequest("争议已处理或不存在");
+            }
+            boolean complete = "complete".equals(outcome);
+            int target = complete ? Const.EX_DONE : Const.EX_INVALID;
+            DBUtil.update(c, "UPDATE exchange_dispute SET resolved_by=?,resolution=?,resolved_at=NOW() WHERE exchange_id=?",
+                    adminId, explanation, exchangeId);
+            ExchangeDao.close(c, exchangeId, target);
+            for (ExchangeDetail detail : ExchangeDetailDao.listByExchange(c, exchangeId)) {
+                ItemDao.updateStatus(c, detail.giveItemId, complete ? Const.ITEM_SWAPPED : Const.ITEM_ON);
+                if (complete) {
+                    ExchangeDetailDao.markDelivered(c, exchangeId, detail.userId);
+                    UserDao.addCredit(c, detail.userId, 2);
+                }
+            }
+            BizLogDao.log(c, adminId, "EXCHANGE", exchangeId, status, target, "争议裁决：" + outcome);
+            NotificationService.exchange(c, exchangeId, 0, "面交争议已处理", "请在交换单查看裁决及理由。");
+            return null;
+        });
+    }
+
+    private static int lockExchange(Connection c, long exchangeId) {
+        Integer status = DBUtil.queryOne(c, "SELECT status FROM `exchange` WHERE id=? FOR UPDATE",
+                rs -> rs.getInt(1), exchangeId);
+        if (status == null) {
+            throw BizException.notFound("交换单不存在");
+        }
+        return status;
+    }
+
+    private static String disputeText(String text) {
+        if (Str.isBlank(text) || text.trim().length() > 1000) {
+            throw BizException.badRequest("请填写 1 到 1000 字的情况说明");
+        }
+        return text.trim();
+    }
+
+
+    private static boolean closeAndUnlock(Exchange e, int targetStatus, String reason) {
+        return DBUtil.tx(c -> {
             Integer lockedStatus = DBUtil.queryOne(c, "SELECT status FROM `exchange` WHERE id=? FOR UPDATE",
                     rs -> rs.getInt(1), e.id);
             if (lockedStatus == null || (lockedStatus != Const.EX_WAIT_CONFIRM && lockedStatus != Const.EX_WAIT_DELIVER)) {
                 throw BizException.badRequest("交换单状态已变化");
+            }
+            if (ExchangeDetailDao.countDelivered(c, e.id) > 0) {
+                if (targetStatus != Const.EX_TIMEOUT) {
+                    throw BizException.badRequest("已有参与者确认收货，请提交面交争议由管理员处理");
+                }
+                String timeoutReason = "部分参与者已确认收货，其他参与者超过交付期限未确认。";
+                DBUtil.update(c, "INSERT INTO exchange_dispute(exchange_id,opened_by,previous_status,reason) VALUES(?,?,?,?)",
+                        e.id, 0L, lockedStatus, timeoutReason);
+                ExchangeDao.updateStatus(c, e.id, Const.EX_DISPUTED);
+                BizLogDao.log(c, null, "EXCHANGE", e.id, lockedStatus, Const.EX_DISPUTED, timeoutReason);
+                NotificationService.exchange(c, e.id, 0, "部分交付待核实", "交易已暂停，请在交换单补充情况。");
+                return false;
             }
             List<ExchangeDetail> details = ExchangeDetailDao.listByExchange(c, e.id);
             ExchangeDao.close(c, e.id, targetStatus);
@@ -441,7 +576,7 @@ public final class ExchangeService {
                 }
             }
             BizLogDao.log(c, null, "EXCHANGE", e.id, lockedStatus, targetStatus, reason);
-            return null;
+            return true;
         });
     }
 }

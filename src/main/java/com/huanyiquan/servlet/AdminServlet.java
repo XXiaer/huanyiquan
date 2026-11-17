@@ -3,6 +3,7 @@ package com.huanyiquan.servlet;
 import com.huanyiquan.common.BizException;
 import com.huanyiquan.common.Params;
 import com.huanyiquan.service.AdminService;
+import com.huanyiquan.service.ExchangeService;
 import com.huanyiquan.service.AuctionService;
 import com.huanyiquan.service.ItemService;
 import com.huanyiquan.dao.ItemDao;
@@ -25,6 +26,10 @@ public class AdminServlet extends BaseServlet {
         if (segs.isEmpty()) {
             throw notFound();
         }
+        if ("exchange-disputes".equals(segs.get(0))) {
+            ok(resp, segs.size() == 1 ? ExchangeService.disputes() : ExchangeService.disputeDetail(segLong(segs, 1)));
+            return;
+        }
         if ("users".equals(segs.get(0))) { ok(resp, AdminService.users(Params.of(req).str("q"))); return; }
         if ("exchanges".equals(segs.get(0))) { ok(resp, AdminService.exchangeRecords()); return; }
         if ("activity".equals(segs.get(0))) { ok(resp, AdminService.activity()); return; }
@@ -45,6 +50,12 @@ public class AdminServlet extends BaseServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> segs = segs(req);
+        if (segs.size() == 2 && "exchange-disputes".equals(segs.get(0))) {
+            Params p = Params.of(req);
+            ExchangeService.resolveDispute(uid(req), segLong(segs, 1), p.str("outcome"), p.str("note"));
+            ok(resp, null);
+            return;
+        }
         if (segs.size() == 3 && "users".equals(segs.get(0))) {
             String action = segs.get(2);
             if ("ban".equals(action)) action = "suspend";

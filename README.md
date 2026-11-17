@@ -104,6 +104,8 @@
 
 ```bash
 mysql -u root -p --default-character-set=utf8mb4 < sql/schema.sql
+mysql -u root -p --default-character-set=utf8mb4 huanyiquan < sql/arrangement_proposal_migration.sql
+mysql -u root -p --default-character-set=utf8mb4 huanyiquan < sql/exchange_dispute_migration.sql
 ```
 
 > 如需启用拍卖、社区、接力/心愿单、邮箱验证码与双轨交易等完整扩展功能，可按需依次执行 `sql/` 目录下的对应 `.sql` 扩展及迁移脚本（如 `auction.sql`、`community.sql`、`community_exchange.sql`、`wish_relay_migration.sql`、`login_email_migration.sql`、`registration_email_migration.sql`、`social_settings_migration.sql` 等）。

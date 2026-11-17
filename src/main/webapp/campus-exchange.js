@@ -17,10 +17,10 @@
     return {1:'示例出售', 2:'示例换物', 4:'可换可售'}[mode(item)] || '示例展示';
   }
 
-  async function browse(load, tradeMode, page = 1) {
+  async function browse(load, tradeMode, page = 1, filter = () => true) {
     for (;;) {
       const result = await load(page);
-      const rows = (result.list || []).filter(item => tradeMode === 2 ? isSwapOnly(item) : supports(item, tradeMode));
+      const rows = (result.list || []).filter(item => filter(item) && (tradeMode === 2 ? isSwapOnly(item) : supports(item, tradeMode)));
       if (rows.length || !result.hasMore) return { rows, page, hasMore: Boolean(result.hasMore) };
       page += 1;
     }
@@ -49,6 +49,18 @@
     </section>`;
   }
 
-  window.campusExchange = {mode, supports, isSwapOnly, demoLabel, browse, relay};
+  function isDemoListing(item) {
+    return Boolean(item.isDemo) || /^【演示】/.test(item.title || '');
+  }
+
+  function isLiveSwap(item) {
+    return !isDemoListing(item) && isSwapOnly(item);
+  }
+
+  function minBid(price, bidCount) {
+    return ((Math.round(Number(price) * 100) + (Number(bidCount) > 0 ? 1 : 0)) / 100).toFixed(2);
+  }
+
+  window.campusExchange = {minBid,mode, supports, isSwapOnly, isDemoListing, isLiveSwap, demoLabel, browse, relay};
 })();
 

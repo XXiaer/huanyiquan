@@ -274,7 +274,7 @@
             return '<article class="jd-history-card">'
                 + '<div class="jd-h-media">'
                 + '<a href="' + href + '" class="jd-h-img-link">'
-                + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy">'
+                + '<img src="' + esc(window.catalogThumbnail(it.images)) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy" decoding="async">'
                 + '</a>'
                 + (it.isSaved ? '<button type="button" class="jd-h-del" data-act="shelf-remove" data-key="' + key + '" data-id="' + Number(it.id) + '" title="移出记录">✕</button>' : '')
                 + '</div>'
@@ -335,7 +335,7 @@
     function thumb(it, cls) {
         var img = firstImage(it.images);
         var inner = img
-            ? '<img src="' + esc(img) + '" alt="' + esc(it.title) + '" loading="lazy" decoding="async">'
+            ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" loading="lazy" decoding="async">'
             : (CAT_ICON[it.category] || navIcon('box'));
         return '<div class="' + (cls || 'thumb') + '" data-cat="' + esc(it.category) + '">' + inner + '</div>';
     }
@@ -725,7 +725,7 @@
 
     function pCard(it, index) {
         var locked = it.status && it.status !== 1, img = firstImage(it.images);
-        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="' + (index === 0 ? 'eager' : 'lazy') + '" fetchpriority="' + (index === 0 ? 'high' : 'auto') + '" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
+        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="" width="300" height="300" loading="' + (index === 0 ? 'eager' : 'lazy') + '" fetchpriority="' + (index === 0 ? 'high' : 'auto') + '" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
         var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
         var hasSwap = window.campusExchange.supports(it, 2);
@@ -747,7 +747,7 @@
 
     function amzGoldItemCard(it) {
         var locked = it.status && it.status !== 1, img = firstImage(it.images);
-        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="' + esc(it.title) + '" width="300" height="300" loading="lazy" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
+        var face = img ? '<img src="' + esc(window.catalogThumbnail(img)) + '" alt="" width="300" height="300" loading="lazy" decoding="async">' : (CAT_ICON[it.category] || CAT_ICON['其他']);
         var mode = window.campusExchange.mode(it);
         var hasPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
         var orig = Number(it.originalPrice || 0);
@@ -1151,6 +1151,7 @@
         var sortVal = h.sort || '';
 
         var visibleItems = h.items.filter(function (it) {
+            if (!idle && !isSearch && !window.campusExchange.isLiveSwap(it)) return false;
             if (minCredit > 0) {
                 var c = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
                 if (c < minCredit) return false;
@@ -1173,11 +1174,7 @@
             ['绿植', '绿植花卉'],
             ['其他', '乐器潮玩']
         ];
-        var mobileCats = categories.map(function (c) {
-            return '<button class="mobile-category ' + (h.category === c[0] ? 'on' : '') + '" data-act="f-cat" data-v="' + esc(c[0]) + '"><b>' + esc(c[1]) + '</b></button>';
-        }).join('');
-        var mobileSearch = '<form class="mobile-search" data-form="search"><a class="mobile-search-icon" href="#/search" aria-label="打开搜索页">' + navIcon('search') + '</a><input name="keyword" aria-label="搜索校园闲置" placeholder="搜搜校园里的闲置好物" value="' + esc(h.keyword) + '"><button type="submit">搜索</button></form>';
-        var mascotImage = '<img src="/assets/brand/mascot-wave-320.webp" width="320" height="320" alt="挥手的换一圈吉祥物猫猫" decoding="async">';
+
 
         // 首页 5:8 彩色大海报横向滑动卡（1:1 对照亚马逊首页：标题直接嵌在左上角，无蒙版/白框）
         var posterStrip = '<section class="amz-poster-strip" aria-label="校园特色频道">'
@@ -1235,7 +1232,6 @@
             + '</div></div>'
             + '</section>';
 
-        var mobile = '<section class="mobile-market"><nav class="home-channels" aria-label="首页频道"><a aria-current="page" href="#/home">首页</a><a href="#/idle">闲置</a><a href="#/community">社区</a><a href="#/idle?tab=auctions">拍卖</a></nav>' + mobileSearch + campusServices() + '<section class="mobile-story mascot-mobile" aria-label="换一圈小唤"><div class="mascot-copy"><h1>好东西，<br>再转一圈。</h1><button data-act="go" data-to="#/publish">发布闲置 ↗</button></div><figure class="mascot-portrait">' + mascotImage + '</figure></section><div class="mobile-categories">' + mobileCats + '</div><div class="mobile-tools"><button data-act="go" data-to="#/idle?tab=auctions"><span>' + navIcon('auction') + '</span><b>校园拍卖</b></button><button data-act="go" data-to="#/idle?tab=wishes"><span>' + navIcon('wish') + '</span><b>求换专区</b></button><button data-act="go" data-to="#/community"><span>' + navIcon('community') + '</span><b>校园社区</b></button><button data-act="go" data-to="#/trade"><span>' + navIcon('trade') + '</span><b>我的交易</b></button></div></section>';
 
         var homeRecommend = '<section class="market-feed"><div class="feed-heading"><div><h2>为你推荐</h2></div><div class="feed-actions"><a class="amz-quad-more" href="#/idle">查看全部闲置 ›</a></div></div>'
             + (visibleItems.length ? '<div class="pgrid">' + visibleItems.map(pCard).join('') + '</div>' : emptyState(navIcon('search'), '暂时没有找到好物', '', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
@@ -1439,11 +1435,11 @@
                 topAs.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#/idle'); });
                 window.scrollTo(window.scrollX, prevBrowseY);
             } else {
-                $('#app').innerHTML = shell('idle', goldShellHtml + mobile);
+                $('#app').innerHTML = shell('idle', goldShellHtml);
             }
             return;
         }
-        $('#app').innerHTML = shell('market', '<div class="market-home amz-home-layout">' + amzHomeTop + mobile + '<div class="amz-shelf-wrap">' + homeRecommend + '</div></div>');
+        $('#app').innerHTML = shell('market', '<div class="market-home amz-home-layout">' + amzHomeTop + '<div class="amz-shelf-wrap">' + homeRecommend + '</div></div>');
     }
 
     function openFilterSheet() {
@@ -1558,9 +1554,10 @@
         var supportsPrice = window.campusExchange.supports(it, 1) && Number(it.price) > 0;
         var supportsSwap = window.campusExchange.supports(it, 2);
 
+        var demo = window.campusExchange.isDemoListing(it);
         var actions;
         var reportBtn = '';
-        if (it.isDemo) {
+        if (demo) {
             actions = '<div class="card card-pad">这是平台演示样品，仅供浏览。</div>';
         } else if (d.isMine) {
             if (it.status === 4) {
@@ -1608,7 +1605,7 @@
             + '<span>' + modeBadgeText + '</span><i>·</i>'
             + '<span>' + esc(it.category) + '</span><i>·</i>'
             + '<span>' + esc(it.conditionLevel) + '</span>'
-            + (it.statusText ? '<i>·</i><span>' + esc(it.statusText) + '</span>' : '')
+            + (demo ? '<span>仅演示</span>' : it.statusText ? '<span>' + esc(it.statusText) + '</span>' : '')
             + '</div></div>'
             + '<hr class="amz-hr">'
             + '<div class="amz-specs">'
@@ -1621,14 +1618,14 @@
             + '<hr class="amz-hr">'
             + '<div class="amz-bullets"><h3>关于此好物</h3><ul>'
             + (it.description ? '<li>' + esc(it.description) + '</li>' : '')
-            + '<li>支持校内公共区域当面验货交接，信用保障交易更放心。</li>'
+            + '<li>面交请约在校内公共区域，到场后先验货，再确认收货。</li>'
             + (d.tip ? '<li>' + esc(d.tip) + '</li>' : '')
             + '</ul></div>'
             + '<hr class="amz-hr">'
             + '<div class="amz-trust-strip">'
-            + '<div><span>' + navIcon('shield') + '</span><b>校内实名认证</b></div>'
+            + '<div><span>' + navIcon('shield') + '</span><b>校内公共点位交接</b></div>'
             + '<div><span>' + navIcon('truck') + '</span><b>当面验货交接</b></div>'
-            + '<div><span>' + navIcon('star') + '</span><b>信用分体系担保</b></div>'
+            + '<div><span>' + navIcon('star') + '</span><b>有问题可在交换单反馈</b></div>'
             + '</div>'
             + '</div>';
 
@@ -1721,7 +1718,7 @@
             + 'placeholder="哪里旧了、配件齐不齐、能不能自提"></textarea>'
             + '<div class="hint" style="display:flex;justify-content:space-between">'
             + '<span>说清楚瑕疵，换得更快</span><span class="counter" id="desc-counter">0 / 300</span></div><div class="chips publish-templates"><button type="button" class="chip" data-act="publish-template" data-v="成色与瑕疵：">成色说明</button><button type="button" class="chip" data-act="publish-template" data-v="入手来源：">入手来源</button><button type="button" class="chip" data-act="publish-template" data-v="转出原因：">转出原因</button></div></div>'
-            + '<div class="field" id="pub-want-section"><label class="label">想换什么 <span class="opt" id="pub-want-req">换物建议填写</span></label><div class="chips" id="want-chips">' + wantChips + '</div>'
+            + '<div class="field" id="pub-want-section"><label class="label">想换什么 <span class="opt" id="pub-want-req">换物必选</span></label><div class="chips" id="want-chips">' + wantChips + '</div>'
             + '<input type="hidden" name="wantCategory">'
             + '<div class="hint">可多选。纯明码标价可不填；勾选想换类别可同时加入三方换物闭环。</div></div>'
             + '<div class="field"><label class="label">交换模式</label><select class="select" name="matchMode" aria-label="交换模式"><option value="passive">参与闭环 | 等待自动匹配提醒</option><option value="active">参与闭环 | 仅主动找环</option><option value="one">仅一对一交换</option></select></div>'
@@ -1979,7 +1976,7 @@
     async function renderOffers() {
         if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('offers', loading());
         var tab = state.offersTab;
-        var list = await api(tab === 'received' ? '/offer/received' : '/offer/sent');
+        var list = await api(tab === 'received' ? '/offer/received' : '/offer/sent', {noCache: true});
         var q = String(state.offersQuery || '').trim().toLowerCase();
         var stFilter = state.offersStatusFilter || 'all';
         var filtered = (list || []).filter(function (o) {
@@ -2038,7 +2035,7 @@
             : '';
 
         var mainHtml = '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的订单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
+            + '<div class="jd-order-title-bar"><h2>我的订单</h2>' + '<button type="button" class="btn btn-ghost btn-sm" data-act="trade-refresh">刷新状态</button>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
@@ -2273,7 +2270,7 @@
 
     async function renderExchanges() {
         if (!markJdWorkspaceBusy()) $('#app').innerHTML = shell('exchange', loading());
-        var list = await api('/exchange/mine');
+        var list = await api('/exchange/mine', {noCache:true});
         var q = String(state.offersQuery || '').trim().toLowerCase();
         var filtered = (list || []).filter(function (e) {
             if (!q) return true;
@@ -2307,7 +2304,7 @@
         }).join('');
 
         var mainHtml = '<div class="jd-order-main">'
-            + '<div class="jd-order-title-bar"><h2>我的交换单</h2>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
+            + '<div class="jd-order-title-bar"><h2>我的交换单</h2>' + '<button type="button" class="btn btn-ghost btn-sm" data-act="trade-refresh">刷新状态</button>' + (q ? '<span>筛选：“' + esc(q) + '”</span>' : '') + '</div>'
             + '<div class="jd-order-panel">'
             + '<div class="jd-order-tabs-row">'
             + '<div class="jd-order-tabs">'
@@ -2345,9 +2342,13 @@
     }
 
     async function renderExchangeDetail(id) {
-        $('#app').innerHTML = shell('exchange', loading());
-        var e = await api('/exchange/' + id);
-        if (currentView.name !== 'exchangeDetail' || currentView.arg !== id) return;
+        var view = currentView;
+        if (view.name !== 'exchangeDetail' || view.arg !== id) return;
+        var main = $('#main-content');
+        var keepPage = main && main.querySelector('.exchange-detail[data-exchange-id="' + id + '"]');
+        if (!keepPage) $('#app').innerHTML = shell('exchange', loading());
+        var e = await api('/exchange/' + id, {noCache:true});
+        if (currentView !== view) return;
         var summary = window.exchangeSummary(e);
         var mine = summary.mine;
         var details = summary.people;
@@ -2396,9 +2397,9 @@
                 + '<button class="btn btn-ghost exchange-cancel" data-act="ex-cancel" data-id="' + e.id + '">取消交换</button>';
         }
 
-        var meetPlace = confArr ? confArr.place : (e.place || '待约定');
-        var meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
-        var meetBadge = confArr ? '<span class="tag brand">已约好</span>' : (pendArr ? '<span class="tag">' + (pendArr.confirmedByMe ? '等对方确认' : '待你确认') + '（' + pendArr.confirmedCount + '/' + pendArr.needCount + '）</span>' : '<span class="tag">待约面交</span>');
+        var meetPlace = confArr ? confArr.place : (e.place || (e.status === 3 ? '未记录' : '待约定'));
+        var meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || (e.status === 3 ? '未记录' : '待约定'));
+        var meetBadge = confArr ? '<span class="tag brand">已约好</span>' : (pendArr ? '<span class="tag">' + (pendArr.confirmedByMe ? '等对方确认' : '待你确认') + '（' + pendArr.confirmedCount + '/' + pendArr.needCount + '）</span>' : '<span class="tag">' + (e.status === 3 ? '自行约定面交' : '待约面交') + '</span>');
         var pendingHtml = pendArr ? ('<div class="exchange-pending-box" style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#f4faf8;border:1px solid #cce7e0;font-size:13px">'
             + '<b>' + (confArr ? '改期提议 v' : '待确认提议 v') + Number(pendArr.version) + '</b>（由 ' + esc(pendArr.proposerName || '同学') + ' 提出 · ' + pendArr.confirmedCount + '/' + pendArr.needCount + ' 已确认）'
             + '<div style="margin-top:4px">地点：' + esc(pendArr.place) + (pendArr.startTime ? ' ｜ 时间：' + esc([pendArr.startTime, pendArr.endTime].filter(Boolean).join(' - ')) : '') + '</div>'
@@ -2411,10 +2412,11 @@
             + '<div><span>我收到</span><strong>' + esc(mine.getTitle || '物品') + '</strong>'
             + (summary.sender ? '<small>来自 ' + esc(summary.sender.nickname || '同学') + '</small>' : '') + '</div></section>' : '';
         var content = '<nav class="amz-breadcrumb" aria-label="面包屑"><a href="#/home">首页</a><span>›</span><a href="#/exchange">我的交换单</a><span>›</span><b>交换单 #' + e.id + '</b></nav>'
-            + '<article class="exchange-detail"><header class="exchange-heading">'
+            + '<article class="exchange-detail" data-exchange-id="' + id + '"><header class="exchange-heading">'
             + '<p class="hint">#' + e.id + ' | ' + (e.type === 3 ? '三方成环' : '一对一交换')
             + (e.createTime ? ' | 创建于 ' + fmtDate(e.createTime) : '') + '</p>'
             + '<h1>' + esc(e.statusText) + '</h1><p class="exchange-next">' + esc(summary.next) + '</p>'
+            + '<button type="button" class="btn btn-ghost btn-sm" data-act="trade-refresh">刷新状态</button>'
             + stepsHtml(e)
             + '<p class="exchange-counts">' + (summary.needsConfirmation
                 ? '已确认 ' + (e.confirmedCount || 0) + '/' + (e.needConfirm || details.length) + ' | ' : '')
@@ -2427,9 +2429,16 @@
             + '<div class="kv"><span class="k">' + (confArr ? '已定时间' : '时间') + '</span><span class="v">' + esc(meetTime || '待约定') + '</span></div>'
             + (confArr && confArr.note ? '<div class="kv"><span class="k">备注</span><span class="v">' + esc(confArr.note) + '</span></div>' : '')
             + pendingHtml
+            + window.exchangeDisputeTimeline(e, esc)
+            + (summary.active || e.status === 6 ? '<button class="btn btn-ghost" data-act="exchange-dispute" data-id="'
+                + Number(e.id) + '">' + (e.status === 6 ? '补充情况' : '提交面交争议') + '</button>' : '')
             + (actions ? '<div class="exchange-actions">' + actions + '</div>' : '') + '</section></div></article>';
 
-        $('#app').innerHTML = shell('trade', content);
+        if (keepPage) {
+            main.innerHTML = content;
+        } else {
+            $('#app').innerHTML = shell('trade', content);
+        }
     }
 
     // ------------------------------------------------------------------ 他人主页
@@ -2672,7 +2681,7 @@
                 return '<article class="jd-history-card">'
                     + '<div class="jd-h-media">'
                     + '<a href="' + href + '" class="jd-h-img-link">'
-                    + '<img src="' + esc(it.images) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy">'
+                    + '<img src="' + esc(window.catalogThumbnail(it.images)) + '" onerror="this.onerror=null;this.src=\'/assets/amz/quad-digital-compact.webp\'" alt="' + esc(it.title) + '" loading="lazy" decoding="async">'
                     + '</a></div>'
                     + '<div class="jd-h-body">'
                     + '<a href="' + href + '" class="jd-h-title">' + esc(it.title) + '</a>'
@@ -3220,16 +3229,17 @@
         noticeTracker.pending=0;closeNoticePopup();
         var popup=document.createElement('div');popup.id='notice-popup';popup.className='notice-popup';popup.setAttribute('role','status');popup.setAttribute('aria-live','polite');
         popup.innerHTML='<span class="notice-popup-icon" aria-hidden="true">'+navIcon('notice')+'</span><div class="notice-popup-content"><strong>您有 '+count+' 条未读消息</strong><span>有新动态，记得查收。</span><a href="#/notifications">查看消息 '+navIcon('arrow')+'</a></div><button type="button" class="notice-popup-close" aria-label="关闭消息提醒">'+navIcon('close')+'</button>';
-        if(notice && notice.target==='#/followers'){
+        if(notice && ['#/followers','#/offers'].includes(notice.target)){
             popup.querySelector('strong').textContent=notice.title;
             popup.querySelector('.notice-popup-content > span').textContent=notice.content;
-            popup.querySelector('a').href='#/followers';
+            popup.querySelector('a').href=notice.target;
         }
         document.body.appendChild(popup);positionNoticePopup();
         popup.querySelector('button').addEventListener('click',closeNoticePopup);
         popup.querySelector('a').addEventListener('click',function(){
-            if(notice && notice.target==='#/followers'){
+            if(notice && ['#/followers','#/offers'].includes(notice.target)){
                 api('/notification/'+Number(notice.id)+'/read',{method:'POST'}).then(refreshNoticeCount).catch(function(){});
+                if (notice.target === '#/offers' && location.hash === '#/offers') { state.offersTab = 'received'; renderOffers().catch(function(error) { toast(error.message, 'err'); }); }
             }
             closeNoticePopup();
         });
@@ -3355,15 +3365,28 @@
             + '<div class="tb-contact-sub"><p>' + esc(latestNotice) + '</p>' + (unreadNoticeCount ? '<em class="tb-unread-dot">' + unreadNoticeCount + '</em>' : '') + '</div>'
             + '</div></button>';
 
+        var unreadChats = new Map();
+        (notices || []).forEach(function (notice) {
+            if (!notice.read && /^#\/chat\/\d+$/.test(notice.target || '')) {
+                unreadChats.set(notice.target, (unreadChats.get(notice.target) || 0) + 1);
+            }
+        });
         var realConvRows = (conversations || []).map(function (c) {
-            var key = 'real:' + Number(c.id);
-            var isAct = activeKey === key;
-            return '<button type="button" class="conversation-row tb-contact-item ' + (isAct ? 'on' : '') + '" data-act="im-select" data-key="' + key + '">'
+            var id = Number(c.id);
+            var key = 'real:' + id;
+            var unread = activeKey === key ? 0 : unreadChats.get('#/chat/' + id);
+            return '<div class="tb-conv-entry" data-conv="' + id + '" data-pinned="' + Boolean(c.pinned) + '">'
+                + '<div class="tb-conv-actions" id="tb-conv-actions-' + id + '">'
+                + '<button type="button" data-act="im-pin">' + (c.pinned ? '取消置顶' : '置顶') + '</button>'
+                + '<button type="button" data-act="im-read">标为已读</button>'
+                + '<button type="button" data-act="im-delete">删除</button></div>'
+                + '<div class="tb-conv-face"><button type="button" class="conversation-row tb-contact-item ' + (activeKey === key ? 'on' : '') + '" data-act="im-select" data-key="' + key + '">'
                 + '<span class="tb-contact-ava tone-emerald">' + esc((c.peer || '同').slice(0, 1)) + '</span>'
                 + '<div class="tb-contact-meta">'
-                + '<div class="tb-contact-top"><b>' + esc(c.peer || '校内同学') + '</b><time>私聊</time></div>'
-                + '<div class="tb-contact-sub"><p>' + esc(c.lastText || c.title || '点击查看私聊记录') + '</p></div>'
-                + '</div></button>';
+                + '<div class="tb-contact-top"><b>' + esc(c.peer || '校内同学') + '</b>' + (c.pinned ? '<time>置顶</time>' : '') + '</div>'
+                + '<div class="tb-contact-sub"><p>' + esc(c.lastText || c.title || '点击查看私聊记录') + '</p>'
+                + (unread ? '<em class="tb-unread-dot">' + unread + '</em>' : '') + '</div>'
+                + '</div></button><button type="button" class="tb-conv-more" data-act="im-more" aria-label="会话操作" aria-expanded="false" aria-controls="tb-conv-actions-' + id + '">⋯</button></div></div>';
         }).join('');
 
         var demoContacts = IM_SEED_THREADS.map(function (c, idx) {
@@ -3560,7 +3583,7 @@
                 btn.classList.toggle('on', hit);
                 if (hit) {
                     var dot = btn.querySelector('.tb-unread-dot');
-                    if (dot && activeKey.indexOf('demo:') === 0) dot.remove();
+                    if (dot) dot.remove();
                 }
             });
         }
@@ -3643,7 +3666,7 @@
         }
     }
 
-    async function renderNotifications(forcedConvId) {
+    async function renderNotifications(forcedConvId, contactsOnly) {
         var existingWin = $('.tb-im-window');
         if (forcedConvId && existingWin) {
             state.activeImKey = 'real:' + Number(forcedConvId);
@@ -3669,7 +3692,7 @@
                 listEl.innerHTML = buildImContactsHtml(notices, conversations, state.activeImKey);
                 listEl.scrollTop = prevLeftY;
             }
-            await patchImRightPanel(state.activeImKey, { notices: notices, scrollBottom: false });
+            if (!contactsOnly) await patchImRightPanel(state.activeImKey, { notices: notices, scrollBottom: false });
             return;
         }
 
@@ -4347,7 +4370,7 @@
 
     var adminSections = [
         ['dashboard','运营概览'], ['items','物品审核'], ['auctions','拍卖管理'],
-        ['report','举报处理'], ['users','账号管理'], ['exchanges','交换记录'], ['activity','操作日志']
+        ['disputes','面交争议'], ['report','举报处理'], ['users','账号管理'], ['exchanges','交换记录'], ['activity','操作日志']
     ];
     var adminRenderVersion = 0;
 
@@ -4365,7 +4388,16 @@
         var tab = state.adminTab;
         var body = '';
 
-        if (tab === 'report') {
+        if (tab === 'disputes') {
+            var disputes = await api('/admin/exchange-disputes');
+            body = disputes.map(function (d) {
+                return '<section class="card card-pad"><h2>交换单 #' + Number(d.exchangeId) + '</h2>'
+                    + '<p>发起人 #' + Number(d.openedBy) + '：' + esc(d.reason) + '</p>'
+                    + (d.resolution ? '<p>裁决：' + esc(d.resolution) + '</p>' : '')
+                    + '<button class="btn btn-ghost" data-act="dispute-review" data-id="' + Number(d.exchangeId)
+                    + '" data-resolved="' + (d.resolution ? 1 : 0) + '">查看说明</button></section>';
+            }).join('') || '<p class="admin-empty">暂无面交争议</p>';
+        } else if (tab === 'report') {
             var reports = await api('/admin/report?status='+state.adminReportStatus);
             var rows = (reports || []).map(function (r) {
                 return '<div class="card card-pad" style="margin-bottom:10px">'
@@ -4400,7 +4432,7 @@
                 }));
         } else if (tab === 'exchanges') {
             var exchanges = await api('/admin/exchanges');
-            var statuses = ['','待确认','待交付','已完成','已失效','已超时关闭'];
+            var statuses = ['','待确认','待交付','已完成','已失效','已超时关闭','争议处理中'];
             body = adminTable(['交换单','类型','状态','面交地点','创建时间'], exchanges.map(function(e) {
                 return ['#'+Number(e.id),e.type === 3 ? '三方成环' : '一对一', statuses[e.status] || '未知',esc(e.place || '待约定'),esc(e.createTime)];
             }));
@@ -4513,7 +4545,7 @@
             + CAMPUS_SPOTS.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('')
             + '<option>校园服务中心</option></select></div>'
             + '<div class="field"><label class="label">约定时间</label>'
-            + '<input class="input" name="startTime" placeholder="例如 明天 14:30 - 15:30" required></div>'
+            + '<input class="input" type="datetime-local" name="startTime" aria-label="面交日期和时间" required></div>'
             + '<div class="field"><label class="label">补充备注 <span class="opt">选填</span></label>'
             + '<input class="input" name="note" maxlength="100" placeholder="例如 穿深色外套，正门台阶旁见"></div>'
             + '<button class="btn btn-primary btn-block" type="submit">提交并通知对方确认</button></form>');
@@ -4899,7 +4931,7 @@
             } else if (view.name === 'itemEdit') {
                 await renderItemEdit(view.arg);
             } else if (view.name === 'publishSuccess') {
-                $('#app').innerHTML=shell('publish','<section class="redesign-page publish-success"><img src="/assets/brand/mascot-success.png" width="144" height="144" alt=""><h1>已提交审核</h1><p>通过后会出现在集市。</p><div class="btn-row"><a class="btn btn-primary" href="#/publish/edit">再发一件</a><a class="btn btn-ghost" href="#/item/'+view.arg+'">去看看</a></div></section>');
+                $('#app').innerHTML=shell('publish','<section class="redesign-page publish-success"><img src="/assets/brand/mascot-success.png" width="144" height="144" alt=""><h1>已提交审核</h1><p>通过后会出现在集市。</p><div class="btn-row"><a class="btn btn-primary" href="#/publish/edit">再发一件</a><a class="btn btn-ghost" href="#/me/items">查看审核进度</a></div></section>');
             } else if (view.name === 'publishEntry') {
                 renderPublishEntry();
             } else if (view.name === 'publish') {
@@ -4940,10 +4972,11 @@
     var desktopLiveTimer = null;
     function setupDesktopLivePoll(view) {
         if (desktopLiveTimer) { clearInterval(desktopLiveTimer); desktopLiveTimer = null; }
-        var liveNames = ['exchangeDetail', 'exchange', 'offers', 'notifications', 'meSub', 'admin', 'me'];
+        var liveNames = ['notifications', 'meSub', 'admin', 'me'];
         if (!view || liveNames.indexOf(view.name) < 0) return;
+        if (view.name === 'meSub' && ['auctions', 'reviews'].includes(view.arg)) return;
         desktopLiveTimer = setInterval(function () {
-            if (document.hidden) return;
+            if (document.hidden || imSwipe || $('.tb-conv-entry.is-open')) return;
             var modal = document.getElementById('modal');
             if (modal && modal.innerHTML.trim()) return;
             var ae = document.activeElement;
@@ -4953,6 +4986,71 @@
             }
         }, 6000);
     }
+
+    var imSwipe = null;
+    var imDraggedRow = null;
+
+    function setImMenu(row, open) {
+        document.querySelectorAll('.tb-conv-entry.is-open').forEach(function (other) {
+            if (other === row && open) return;
+            other.classList.remove('is-open');
+            other.querySelector('.tb-conv-more').setAttribute('aria-expanded', 'false');
+        });
+        if (!row || !open) return;
+        row.classList.add('is-open');
+        row.querySelector('.tb-conv-more').setAttribute('aria-expanded', 'true');
+    }
+
+    document.addEventListener('pointerdown', function (ev) {
+        imDraggedRow = null;
+        var row = ev.target.closest('.tb-conv-entry');
+        if (!row) setImMenu(null, false);
+        var face = ev.target.closest('.tb-conv-entry .tb-contact-item');
+        if (!face || ev.button !== 0 || !ev.isPrimary) return;
+        imSwipe = { row: row, face: face, x: ev.clientX, y: ev.clientY, pointer: ev.pointerId, moved: false };
+    });
+
+    document.addEventListener('pointermove', function (ev) {
+        var swipe = imSwipe;
+        if (!swipe || swipe.pointer !== ev.pointerId) return;
+        var dx = ev.clientX - swipe.x;
+        if (!swipe.moved) {
+            if (Math.abs(ev.clientY - swipe.y) > 10 && Math.abs(ev.clientY - swipe.y) > Math.abs(dx)) {
+                imSwipe = null;
+                return;
+            }
+            if (Math.abs(dx) < 10) return;
+            swipe.moved = true;
+            swipe.face.setPointerCapture(ev.pointerId);
+        }
+        var width = swipe.row.querySelector('.tb-conv-actions').offsetWidth;
+        var offset = (swipe.row.classList.contains('is-open') ? -width : 0) + dx;
+        swipe.row.classList.add('is-dragging');
+        swipe.row.style.setProperty('--conv-shift', Math.max(-width, Math.min(0, offset)) + 'px');
+    });
+
+    function finishImSwipe(ev) {
+        var swipe = imSwipe;
+        if (!swipe || swipe.pointer !== ev.pointerId) return;
+        imSwipe = null;
+        if (!swipe.moved) return;
+        swipe.row.classList.remove('is-dragging');
+        swipe.row.style.removeProperty('--conv-shift');
+        if (ev.type === 'pointercancel') return;
+        imDraggedRow = swipe.row;
+        var dx = ev.clientX - swipe.x;
+        if (Math.abs(dx) >= 36) setImMenu(swipe.row, dx < 0);
+    }
+
+    document.addEventListener('pointerup', finishImSwipe);
+    document.addEventListener('pointercancel', finishImSwipe);
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Escape') return;
+        var row = $('.tb-conv-entry.is-open');
+        if (!row) return;
+        if (row.contains(document.activeElement)) row.querySelector('.tb-conv-more').focus();
+        setImMenu(null, false);
+    });
 
     // ------------------------------------------------------------------ 交互绑定
 
@@ -4976,6 +5074,60 @@
         var el = ev.target.closest('[data-act]');
         if (!el) return;
         var act = el.dataset.act;
+        if (act === 'trade-refresh') {
+            await withBusy(el, async function () {
+                if (currentView.name === 'exchangeDetail') await renderExchangeDetail(currentView.arg);
+                else if (currentView.name === 'exchange') await renderExchanges();
+                else if (currentView.name === 'offers') await renderOffers();
+            });
+            return;
+        }
+        if (act === 'exchange-dispute') {
+            openSheet('<h3>说明面交情况</h3><p>提交后，交易将暂停并交由管理员处理。</p>'
+                + '<label for="dispute-statement">情况说明</label><textarea id="dispute-statement" class="textarea" maxlength="1000"></textarea>'
+                + '<button class="btn btn-primary" data-act="submit-exchange-dispute" data-id="' + Number(el.dataset.id) + '">提交说明</button>');
+            return;
+        }
+        if (act === 'submit-exchange-dispute') {
+            var statement = $('#dispute-statement').value.trim();
+            if (!statement) { toast('请填写情况说明', 'err'); return; }
+            await withBusy(el, async function () {
+                await api('/exchange/' + Number(el.dataset.id) + '/dispute', {method:'POST', body:{statement:statement}});
+                closeSheet();
+                await renderExchangeDetail(Number(el.dataset.id));
+            });
+            return;
+        }
+        if (act === 'dispute-review') {
+            var disputeId = Number(el.dataset.id);
+            var exchange = await api('/admin/exchange-disputes/' + disputeId, {noCache:true});
+            var meeting = exchange.confirmedArrangement;
+            var handoffs = (exchange.details || []).map(function (person) {
+                return '<li>' + esc(person.nickname || '参与者') + ' | 给出 ' + esc(person.giveTitle || '物品')
+                    + ' | ' + (person.delivered ? '已确认收货' : '未确认收货') + '</li>';
+            }).join('');
+            openSheet('<h3>交换单 #' + disputeId + '</h3>'
+                + '<p>已确认面交安排：' + (meeting ? esc([meeting.place,meeting.startTime,meeting.note].filter(Boolean).join(' | ')) : '暂无') + '</p>'
+                + '<ul>' + handoffs + '</ul>' + window.exchangeDisputeTimeline(exchange, esc)
+                + (exchange.status !== 6 ? '' :
+                '<label for="dispute-resolution-note">裁决理由（交易参与者可见）</label><textarea id="dispute-resolution-note" class="textarea" maxlength="1000"></textarea>'
+                + '<button class="btn" data-act="dispute-resolve" data-id="' + disputeId + '" data-outcome="cancel">取消交易并解锁</button>'
+                + '<button class="btn" data-act="dispute-resolve" data-id="' + disputeId + '" data-outcome="complete">确认交换完成</button>'));
+            return;
+        }
+        if (act === 'dispute-resolve') {
+            if (el.dataset.outcome === 'cancel' && !confirm('请确认双方已归还已交付物品，再取消交易并重新上架。')) return;
+            var note = $('#dispute-resolution-note').value.trim();
+            if (!note) { toast('请填写裁决理由', 'err'); return; }
+            await withBusy(el, async function () {
+                await api('/admin/exchange-disputes/' + Number(el.dataset.id), {
+                    method:'POST', body:{outcome:el.dataset.outcome, note:note}
+                });
+                closeSheet();
+                await renderAdmin();
+            });
+            return;
+        }
 
         if (act === 'scroll-top') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5150,7 +5302,60 @@
             else await renderOffers();
             return;
         }
+        if (act === 'im-more') {
+            var moreRow = el.closest('.tb-conv-entry');
+            setImMenu(moreRow, !moreRow.classList.contains('is-open'));
+            return;
+        }
+        if (['im-pin', 'im-read', 'im-delete', 'im-delete-confirm'].includes(act)) {
+            var actionRow = el.closest('.tb-conv-entry');
+            var id = Number(actionRow ? actionRow.dataset.conv : el.dataset.id);
+            if (act === 'im-delete') {
+                openSheet('<h3>删除会话</h3><p class="sub">删除后会话会从你的列表消失，对方仍保留聊天记录。</p>'
+                    + '<button type="button" class="btn btn-primary" data-act="im-delete-confirm" data-id="' + id + '">删除</button>');
+                return;
+            }
+            await withBusy(el, async function () {
+                var path = '/conversation/' + id;
+                var removedActive = false;
+                if (act === 'im-delete-confirm') {
+                    await api(path, {method:'DELETE'});
+                    closeSheet();
+                    var deletedRow = $('.tb-conv-entry[data-conv="' + id + '"]');
+                    if (deletedRow) deletedRow.remove();
+                    removedActive = state.activeImKey === 'real:' + id;
+                    if (removedActive) state.activeImKey = 'notices';
+                    if (location.hash === '#/chat/' + id) {
+                        history.replaceState(null, '', '#/notifications');
+                        currentView = parseRoute();
+                    }
+                    toast('已删除会话', 'ok');
+                } else if (act === 'im-pin') {
+                    var pinned = actionRow.dataset.pinned !== 'true';
+                    await api(path + '/pin', {method:'POST', body:{pinned:pinned}});
+                    toast(pinned ? '已置顶' : '已取消置顶', 'ok');
+                } else {
+                    await api(path + '/read', {method:'POST'});
+                    toast('已标为已读', 'ok');
+                }
+                if (['notifications', 'chat', 'chats'].includes(currentView.name)) {
+                    await renderNotifications(null, !removedActive);
+                    if (act !== 'im-pin') refreshNoticeCount();
+                }
+            });
+            return;
+        }
         if (act === 'im-select') {
+            var clickedRow = el.closest('.tb-conv-entry');
+            if (ev.detail && imDraggedRow && imDraggedRow === clickedRow) {
+                imDraggedRow = null;
+                return;
+            }
+            if (clickedRow && clickedRow.classList.contains('is-open')) {
+                setImMenu(null, false);
+                return;
+            }
+            setImMenu(null, false);
             var nextKey = el.dataset.key || ('demo:' + Number(el.dataset.idx || 0));
             state.activeImKey = nextKey;
             if (nextKey.indexOf('demo:') === 0) {
@@ -5513,6 +5718,7 @@
             var curPrice = dBidState ? dBidState.currentPrice : Number(auc.selectedAmount || auc.currentPrice || 1);
             var bidCount = dBidState ? dBidState.bidCount : Number(auc.bidCount || 0);
             var topBidder = dBidState ? dBidState.bidder : (auc.winner || auc.bidder || '暂无出价');
+            var minimum = window.campusExchange.minBid(curPrice, bidCount);
             var inc = curPrice >= 100 ? 10 : 5;
             var quickAmts = [curPrice + inc, curPrice + inc * 2, curPrice + inc * 4];
             var body = '<div class="auc-modal-box">'
@@ -5540,11 +5746,11 @@
                 } else {
                     body += '<form data-form="auction-bid" style="margin-top:12px">'
                         + '<input type="hidden" name="id" value="' + aid + '">'
-                        + '<div class="field"><label class="label">出价金额（元）<span class="opt">须高于当前价 ¥' + esc(curPrice) + '</span></label>'
+                        + '<div class="field"><label class="label">出价金额（元）<span class="opt">最低可出价 ¥' + esc(minimum) + '</span></label>'
                         + '<div class="chips" style="margin-bottom:8px">' + quickAmts.map(function (v) {
                             return '<button type="button" class="chip" data-act="fill-bid-amt" data-v="' + v + '">出价 ¥' + v + '</button>';
                         }).join('') + '</div>'
-                        + '<input class="input" id="modal-bid-amt" name="amount" type="number" min="' + (curPrice + 0.01) + '" step="0.01" value="' + (curPrice + inc) + '" required></div>'
+                        + '<input class="input" id="modal-bid-amt" name="amount" type="number" min="' + minimum + '" step="0.01" value="' + minimum + '" required></div>'
                         + '<button class="btn btn-primary btn-block" type="submit">确认提交出价</button></form>';
                 }
             } else {
@@ -5879,7 +6085,7 @@
                 var r = await api('/exchange/' + el.dataset.id + (act === 'ex-confirm' ? '/confirm' : '/done'),
                     {method: 'POST'});
                 toast(r && r.msg || '已确认', 'ok');
-                await render();
+                await renderExchangeDetail(Number(el.dataset.id));
             });
             return;
         }
@@ -5888,7 +6094,7 @@
             await withBusy(el, async function () {
                 await api('/exchange/' + el.dataset.id + '/cancel', {method: 'POST', body: {reason: '当事人取消'}});
                 toast('已取消', 'ok');
-                await render();
+                await renderExchangeDetail(Number(el.dataset.id));
             });
             return;
         }
@@ -5914,7 +6120,7 @@
             await withBusy(el, async function () {
                 await api('/exchange/' + exId + '/arrangements/' + ver + '/confirm', { method: 'POST' });
                 toast('已同意面交安排', 'ok');
-                await render();
+                await renderExchangeDetail(exId);
             });
             return;
         }
@@ -6271,11 +6477,11 @@
                 go(editing?'#/item/'+editing:'#/publish/success/'+r.itemId);
             } else if (kind === 'place') {
                 await api('/exchange/' + fd.get('exchangeId') + '/arrangements', {method: 'POST', body: {
-                    place: fd.get('place'), startTime: fd.get('startTime'), note: fd.get('note')
+                    place: fd.get('place'), startTime: fd.get('startTime').replace('T', ' ') + ' ' + new Date(fd.get('startTime')).toLocaleDateString('zh-CN', {weekday:'short'}), note: fd.get('note')
                 }});
                 closeSheet();
                 toast('已提议面交安排，等待对方确认', 'ok');
-                await render();
+                await renderExchangeDetail(Number(fd.get('exchangeId')));
             } else if (kind === 'review') {
                 await api('/review', {method: 'POST', body: {
                     exchangeId: Number(fd.get('exchangeId')),
@@ -6285,7 +6491,7 @@
                 }});
                 closeSheet();
                 toast('评价成功', 'ok');
-                await render();
+                await renderExchangeDetail(Number(fd.get('exchangeId')));
             } else if (kind === 'profile') {
                 await api('/user/me', {method: 'PUT', body: {
                     nickname: fd.get('nickname'), college: fd.get('college'), building: fd.get('building')

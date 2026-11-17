@@ -99,7 +99,7 @@
     { name: '换物接力', href: '#/relay', art: 'swapRing' },
   ];
   function serviceLink(service, size) {
-    return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}.png" width="${size}" height="${size}" alt=""></i><span>${service.name}</span></a>`;
+    return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}-home.webp" width="${size}" height="${size}" alt=""></i><span>${service.name}</span></a>`;
   }
   window.__homeChannel = window.__homeChannel || '推荐';
 
@@ -193,6 +193,16 @@
           return;
         }
 
+        const showServices = channel === '推荐';
+        bodyEl.innerHTML = `
+          ${showServices ? `<nav class="home-primary-services" aria-label="主要功能" style="margin:6px 12px 2px">
+            ${PRIMARY_SERVICES.map(service => serviceLink(service, 48)).join('')}
+            <img class="home-services-mascot is-first" src="assets/brand/mascot-gap-book.webp" width="28" height="28" alt="" decoding="async">
+            <img class="home-services-mascot is-second" src="assets/brand/mascot-gap-parcel.webp" width="28" height="28" alt="" decoding="async">
+          </nav><p class="home-service-intro">用闲置换同校好物，双方换不上时可以试试三方接力。</p>` : ''}
+          <div class="home-feed" role="status">正在加载好物…</div>`;
+        const feedHost = bodyEl.lastElementChild;
+
         const load = (page) => {
           const q = { page, size: 40 };
           if (isCategory) q.category = channel;
@@ -201,16 +211,10 @@
         };
 
         let list = [];
-        let deals = [];
         let batch;
         try {
-          const [d, dd] = await Promise.all([
-            window.campusExchange.browse(load, 2),
-            channel === '推荐' ? api.get('/api/item/deals', { size: 8 }).catch(() => []) : Promise.resolve([]),
-          ]);
-          batch = d;
-          list = d.rows || [];
-          deals = (dd || []).filter(window.campusExchange.isSwapOnly);
+          batch = await window.campusExchange.browse(load, 2, 1, window.campusExchange.isLiveSwap);
+          list = batch.rows || [];
         } catch (e) { toast(e.message); }
         if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
 
@@ -232,33 +236,31 @@
           feed = list.slice().sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)));
         }
 
-        const showServices = channel === '推荐';
         const emptyAction = channel === '关注'
           ? { href: '#/community', text: '去社区发现同学' }
           : (isCategory ? { href: '#/publish/edit/idle', text: '发布「' + channel + '」闲置' } : null);
 
-        bodyEl.innerHTML = `
-          ${showServices ? `<nav class="home-primary-services" aria-label="主要功能" style="margin:6px 12px 2px">
-            ${PRIMARY_SERVICES.map(service => serviceLink(service, 48)).join('')}
-            <img class="home-services-mascot is-first" src="assets/brand/mascot-gap-book.webp" width="28" height="28" alt="" decoding="async">
-            <img class="home-services-mascot is-second" src="assets/brand/mascot-gap-parcel.webp" width="28" height="28" alt="" decoding="async">
-          </nav>` : ''}
+        feedHost.removeAttribute('role');
+        feedHost.outerHTML = `
           <section class="home-feed" aria-label="${esc(channel)}">
             ${showServices
               ? '<h1 class="swap-feed-title"><img src="assets/brand/swap-wordmark.webp" width="48" height="12" alt="以物换物"></h1>'
               : `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px 10px"><b style="font-size:15px;color:var(--ink-900)">${esc(channel)}</b><span style="font-size:12px;color:var(--ink-400)">共 ${feed.length} 件好物</span></div>`}
             <div data-swap-results>${feed.length ? waterfall(feed) : mascotEmpty(followHint || ('暂时没有「' + channel + '」相关好物'), 'assets/brand/mascot-wave-320.webp', emptyAction)}</div>
             ${batch?.hasMore && channel !== '关注' ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}
-          </section>
-          ${deals.length ? `<div class="deal-ticker">
-            <span class="label">${icon('fire', 12)}成交动态</span>
-            <div class="rail" id="dealTicker"></div>
-          </div>` : ''}`;
+          </section>`;
 
-        bindBrowseMore(bodyEl, load, 2, batch, channel === '新发');
+        bindBrowseMore(bodyEl, load, 2, batch, channel === '新发', window.campusExchange.isLiveSwap);
 
+        if (!showServices) return;
+        const deals = (await api.get('/api/item/deals', { size: 8 }).catch(() => []) || [])
+          .filter(window.campusExchange.isLiveSwap);
+        if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
         if (deals.length) {
-          const ticker = document.getElementById('dealTicker');
+          bodyEl.insertAdjacentHTML('beforeend', `<div class="deal-ticker">
+            <span class="label">${icon('fire', 12)}成交动态</span><div class="rail" id="dealTicker"></div>
+          </div>`);
+          const ticker = bodyEl.querySelector('#dealTicker');
           let ti = 0;
           const renderTicker = () => {
             if (!ticker || !document.body.contains(ticker)) return;
@@ -334,7 +336,7 @@
       const older = [];
       convs.forEach((c) => {
         const t = c.lastAt ? new Date(String(c.lastAt).replace('T', ' ').replace(/-/g, '/')).getTime() : 0;
-        (now - t > 30 * 86400 * 1000 ? older : recent).push(c);
+        (!c.pinned && now - t > 30 * 86400 * 1000 ? older : recent).push(c);
       });
 
       view.innerHTML = `
@@ -407,7 +409,7 @@
               <div class="conv__time">${fmtTime(c.lastAt)}</div>
             </div>
             ${c.unread ? `<span class="conv__badge">${c.unread > 99 ? '99+' : c.unread}</span>` : ''}
-            <img class="conv__pic" src="${api.firstPic({ images: c.images })}" alt="">
+            <img class="conv__pic" src="${esc(window.catalogThumbnail(api.firstPic({ images: c.images })))}" alt="" loading="lazy" decoding="async">
           </a>
         </div>`;
       }
@@ -457,8 +459,10 @@
               const read = convs.filter((c) => !c.unread && !c.pinned);
               if (!read.length) { toast('没有可清理的会话'); return; }
               confirmSheet('清理已读会话', `将删除 ${read.length} 个已读会话（置顶会话保留）。`, '清理', async () => {
-                for (const c of read) { try { await api.del('/api/conversation/' + c.id); } catch (e) { /* 忽略 */ } }
-                toast('已清理'); renderRoute();
+                const results = await Promise.allSettled(read.map(c => api.del('/api/conversation/' + c.id)));
+                const failed = results.filter(result => result.status === 'rejected').length;
+                toast(failed ? `已清理 ${read.length - failed} 个，${failed} 个未删除，请重试` : '已清理');
+                if (location.hash === route) renderRoute();
               });
             });
             sheet.querySelector('[data-m="settings"]').addEventListener('click', () => { close(); location.hash = '#/settings/notify'; });
@@ -504,8 +508,16 @@
               if (act === 'read') { await api.post('/api/conversation/' + cid + '/read', {}); toast('已标为已读'); }
               if (act === 'del') {
                 confirmSheet('删除会话', '删除后只会从你的列表消失，对方仍保留聊天记录。', '删除', async () => {
-                  await api.del('/api/conversation/' + cid);
-                  toast('已删除'); renderRoute();
+                  try {
+                    await api.del('/api/conversation/' + cid);
+                    toast('已删除会话');
+                    if (location.hash === route) {
+                      wrap.remove();
+                      renderRoute();
+                    }
+                  } catch (err) {
+                    toast(err.message || '删除失败，请重试');
+                  }
                 });
                 return;
               }
@@ -564,7 +576,7 @@
 
         <div class="chat-thread" id="chatThread">
         <div class="chat-item" id="chatItem">
-          <img class="chat-item__pic" src="${api.firstPic(item)}" alt="">
+          <img class="chat-item__pic" src="${esc(window.catalogThumbnail(api.firstPic(item)))}" alt="" decoding="async">
           <div class="chat-item__main">
             <div class="chat-item__title">${esc(item.title || '关联物品')}</div>
             <div class="chat-item__meta">${[item.tradeMode === 2 ? '以物换物' : price ? '¥' + price : '', orderStateText].filter(Boolean).map(esc).join(' | ')}</div>
@@ -958,7 +970,7 @@
                 const mine = (list || []).filter((i) => i.status === 1);
                 openSheet('发送我的宝贝', mine.length ? mine.map((i) => `
                   <div class="list-block" data-send="${i.id}" style="margin:0 -18px;padding-left:18px;padding-right:18px">
-                    <img src="${api.firstPic(i)}" alt="">
+                    <img src="${esc(window.catalogThumbnail(api.firstPic(i)))}" alt="" loading="lazy" decoding="async">
                     <div class="main"><b>${esc(i.title)}</b><p>${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '想换'}</p></div>
                     ${icon('right', 16)}
                   </div>`).join('') : '<div class="empty">你还没有在架的宝贝<div style="margin-top:14px"><a class="btn" href="#/publish/edit/idle">去发布一件</a></div></div>', {
@@ -992,7 +1004,7 @@
                   if (peerItems.length === 1) { startProposal(peerItems[0]).catch(e => toast(e.message)); return; }
                   openSheet('选择想换对方的哪件物品', peerItems.map((i) => `
                     <div class="list-block" data-peer-item="${i.id}" style="margin:0 -18px;padding-left:18px;padding-right:18px">
-                      <img src="${api.firstPic(i)}" alt="">
+                      <img src="${esc(window.catalogThumbnail(api.firstPic(i)))}" alt="" loading="lazy" decoding="async">
                       <div class="main"><b>${esc(i.title)}</b><p>${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '以物换物'}</p></div>
                       ${icon('right', 16)}
                     </div>`).join(''), {
@@ -1436,7 +1448,7 @@
   }
 
   /* ============================================================ 集市 / 分类 */
-  function bindBrowseMore(view, load, mode, batch, newest = false) {
+  function bindBrowseMore(view, load, mode, batch, newest = false, filter) {
     const button = view.querySelector('[data-swap-more]');
     const results = view.querySelector('[data-swap-results]');
     if (!button) return;
@@ -1444,7 +1456,7 @@
     button.onclick = async () => {
       button.disabled = true;
       try {
-        batch = await window.campusExchange.browse(load, mode, batch.page + 1);
+        batch = await window.campusExchange.browse(load, mode, batch.page + 1, filter);
         if (!results.isConnected) return;
         rows = rows.concat(batch.rows);
         if (newest) rows.sort((a,b) => String(b.createTime).localeCompare(String(a.createTime)));
@@ -1547,7 +1559,7 @@
               <div class="foot">
                 <span class="time">${a.state === 'active' ? '剩余 ' + remainText(a.endsAt) : '已结束'}</span>
                 ${a.state === 'active'
-                  ? `<button class="chip on" data-bid="${a.id}" data-cur="${a.currentPrice}" data-title="${esc(a.title)}">出价</button>`
+                  ? `<button class="chip on" data-bid="${a.id}" data-cur="${a.currentPrice}" data-count="${Number(a.bidCount)}" data-title="${esc(a.title)}">出价</button>`
                   : `<a class="chip" href="${a.itemId ? '#/item/' + Number(a.itemId) : '#/market'}">${a.itemId ? '看看' : '去集市'}</a>`}
               </div>
             </div>
@@ -1589,12 +1601,13 @@
         const btn = event.target.closest('[data-bid]');
         if (!btn) return;
         const aid = btn.dataset.bid, cur = btn.dataset.cur;
+        const minimum = window.campusExchange.minBid(cur, btn.dataset.count);
         openSheet('出价', `<div style="font-size:14px;color:var(--ink-500);margin-bottom:10px">${esc(btn.dataset.title)} | 当前价 ¥${Number(cur).toFixed(0)}</div>
           <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px">
             <span style="font-size:22px;color:var(--orange-700);font-weight:800">¥</span>
-            <input id="bidIn" type="number" min="${Number(cur) + 1}" value="${Number(cur) + 10}" style="border:0;outline:none;font-size:24px;font-weight:700;width:100%">
+            <input id="bidIn" type="number" aria-label="出价金额" step="0.01" min="${minimum}" value="${minimum}" style="border:0;outline:none;font-size:24px;font-weight:700;width:100%">
           </div>
-          <button class="btn btn--block" style="margin-top:18px" id="bidGo">确认出价</button>`, {
+          <p class="hint">最低可出价 ¥${minimum}</p><button class="btn btn--block" style="margin-top:18px" id="bidGo">确认出价</button>`, {
           onMount(sheet, close) {
             sheet.querySelector('#bidGo').addEventListener('click', async () => {
               const amount = sheet.querySelector('#bidIn').value;
@@ -1672,7 +1685,8 @@
       }
       const it = data.item;
       const pics = api.pics(it);
-      const price = it.isDemo && !window.campusExchange.supports(it,1) ? '' : api.yuan(it.price);
+      const demo = window.campusExchange.isDemoListing(it);
+      const price = Number(it.price) > 0 && it.tradeMode !== 2 ? api.yuan(it.price) : '';
       const wants = data.want || {};
       const wantText = it.wantText || wants.expectDesc || it.expectDesc || (wants.wantCategories || []).join("、") || wants.wantCategory || "不限类别";
       const isSwap = it.tradeMode === 2 || (!it.tradeMode && !price);
@@ -1689,10 +1703,10 @@
           <div class="item-price__row">
             ${price ? `<span class="price"><em>¥</em><b>${price}</b></span>` : `<span class="price item-want"><small>想换</small><b>${esc(wantText)}</b></span>`}
             ${price && it.originalPrice && it.originalPrice > it.price ? `<s>¥${api.yuan(it.originalPrice)}</s>` : ''}
-            ${it.isDemo && price ? '<span class="badge badge--gray">官网参考价</span>' : ''}
+            ${demo && price ? '<span class="badge badge--gray">官网参考价</span>' : ''}
             ${auction ? `<span class="badge badge--orange">拍卖中 | 当前 ¥${Number(auction.currentPrice).toFixed(0)}</span>` : ''}
           </div>
-          ${it.isDemo && price && window.campusExchange.supports(it,2) ? `<p class="item-price__meta">想换：${esc(wantText)}</p>` : ''}
+          ${demo && price && window.campusExchange.supports(it,2) ? `<p class="item-price__meta">想换：${esc(wantText)}</p>` : ''}
           <div class="item-price__meta">
             <span>${it.viewCount || 0} 浏览</span>
             <span>${it.offerCount || 0} 人想要</span>
@@ -1705,9 +1719,9 @@
           <p>${esc(it.description || '同学没写描述，可以直接问问。')}</p>
           <div class="item-tags">
             <span class="badge badge--gray">${esc(it.category)}</span>
-            <span class="badge badge--gray">${it.isDemo ? window.campusExchange.demoLabel(it) : isSwap ? '以物换物' : it.tradeMode === 3 ? '拍卖' : '出售'}</span>
+            <span class="badge badge--gray">${demo ? "仅演示" : isSwap ? '以物换物' : it.tradeMode === 3 ? '拍卖' : '出售'}</span>
             ${it.brand ? `<span class="badge badge--gray">${esc(it.brand)}</span>` : ''}
-            ${it.isDemo ? '' : `<span class="badge badge--green">${esc(it.delivery || '仅面交')}</span>`}
+            ${demo ? '' : `<span class="badge badge--green">${esc(it.delivery || '仅面交')}</span>`}
           </div>
         </div>
         ${auction ? `<div class="item-block">
@@ -1724,7 +1738,7 @@
           ${(pics.length ? pics : ['assets/brand/placeholder.png']).map((pic, i) =>
             `<img src="${esc(pic)}" alt="${pics.length ? '商品图片 ' + (i + 1) : '暂无商品照片'}" ${i ? 'loading="lazy"' : ''}>`).join('')}
         </div>
-        ${it.isDemo ? '' : `<div class="item-block">
+        ${demo ? '' : `<div class="item-block">
           <div class="item-owner">
             <span onclick="location.hash='#/user/${it.ownerId}'">${avatar({ nickname: it.ownerNickname, id: it.ownerId, avatar: it.ownerAvatar }, 44)}</span>
             <div class="item-owner__main">
@@ -1742,7 +1756,7 @@
         <div class="item-bar">
           <a class="ic" href="#/home">${icon('home', 22)}<span>首页</span></a>
           <button class="ic" id="itemFav">${icon('star', 22)}<span>收藏</span></button>
-          ${it.isDemo ? '<span class="badge badge--gray">仅供展示</span>' : `<button class="btn btn--alt" id="itemWant">${isSwap ? '提案交换' : '想要'}</button>
+          ${demo ? '<span class="badge badge--gray">仅供展示</span>' : `<button class="btn btn--alt" id="itemWant">${isSwap ? '提案交换' : '想要'}</button>
           <button class="btn" id="itemChat">聊一聊</button>`}
         </div>
       </div>`;
@@ -1753,7 +1767,7 @@
           const other = (items || []).filter((row) => Number(row.id) !== Number(it.id)).slice(0, 8);
           if (!sellerList.isConnected || !other.length) return;
           sellerList.innerHTML = `<h2>发布者的在架物品</h2><div class="item-seller-rail">${other.map((row) =>
-            `<a href="#/item/${Number(row.id)}"><img src="${esc(api.firstPic(row))}" alt="" loading="lazy"><span>${displayItemTitle(row)}</span></a>`).join('')}</div>`;
+            `<a href="#/item/${Number(row.id)}"><img src="${esc(window.catalogThumbnail(api.firstPic(row)))}" alt="" loading="lazy" decoding="async"><span>${displayItemTitle(row)}</span></a>`).join('')}</div>`;
         }).catch(() => {});
       }
       const related = view.querySelector('.item-related');
@@ -1793,7 +1807,7 @@
         } catch (e) { toast(e.message); }
       });
 
-      if (it.isDemo) return;
+      if (demo) return;
 
       const startChat = async () => {
         try {
@@ -1837,12 +1851,13 @@
 
       if (auction) {
         document.getElementById('itemBid').addEventListener('click', () => {
+          const minimum = window.campusExchange.minBid(auction.currentPrice, auction.bidCount);
           openSheet('出价', `<div style="font-size:14px;color:var(--ink-500);margin-bottom:10px">当前价 ¥${Number(auction.currentPrice).toFixed(0)}</div>
             <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px">
               <span style="font-size:22px;color:var(--orange-700);font-weight:800">¥</span>
-              <input id="bidIn" type="number" value="${Number(auction.currentPrice) + 10}" style="border:0;outline:none;font-size:24px;font-weight:700;width:100%">
+              <input id="bidIn" type="number" aria-label="出价金额" step="0.01" min="${minimum}" value="${minimum}" style="border:0;outline:none;font-size:24px;font-weight:700;width:100%">
             </div>
-            <button class="btn btn--block" style="margin-top:18px" id="bidGo">确认出价</button>`, {
+            <p class="hint">最低可出价 ¥${minimum}</p><button class="btn btn--block" style="margin-top:18px" id="bidGo">确认出价</button>`, {
             onMount(sheet, close) {
               sheet.querySelector('#bidGo').addEventListener('click', async () => {
                 try {
@@ -1924,7 +1939,7 @@
       <div class="s-bought">
         ${items.slice(0, 6).map((it) => `
           <a href="#/item/${it.id}">
-            <img src="${api.firstPic(it)}" alt="">
+            <img src="${esc(window.catalogThumbnail(api.firstPic(it)))}" alt="" loading="lazy" decoding="async">
             <b>${esc(it.title)}</b>
             <span>${api.yuan(it.price) ? '¥' + api.yuan(it.price) : '想换'}</span>
           </a>`).join('')}
@@ -1935,7 +1950,7 @@
         <div class="s-cats">
           ${groups[c].slice(0, 4).map((it) => `
             <a href="#/item/${it.id}">
-              <img src="${api.firstPic(it)}" alt="">
+              <img src="${esc(window.catalogThumbnail(api.firstPic(it)))}" alt="" loading="lazy" decoding="async">
               <b>${esc(it.title.length > 6 ? it.title.slice(0, 6) : it.title)}</b>
               <span>${it.viewCount || 0} 人在搜</span>
             </a>`).join('')}
@@ -1999,7 +2014,7 @@
             list = d.list || [];
           } catch (e2) { toast(e2.message); }
         }
-        if (tab === 'personal') list = list.filter(i => !i.isDemo);
+        if (tab === 'personal') list = list.filter(i => !window.campusExchange.isDemoListing(i));
         if (filter.area) list = list.filter(i => (i.place || i.ownerBuilding || '').includes(filter.area));
         if (filter.tradeMode) list = list.filter((i) => i.tradeMode === filter.tradeMode);
         if (filter.meet) list = list.filter((i) => (i.delivery || '仅面交') === '仅面交');
@@ -2007,6 +2022,9 @@
         if (sort === 'price_desc') list = list.slice().sort((a, b) => (b.price || 0) - (a.price || 0));
         if (sort === 'new') list = list.slice().sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)));
         if (sort === 'drop') list = list.slice().sort((a, b) => ((b.originalPrice || 0) - (b.price || 0)) - ((a.originalPrice || 0) - (a.price || 0)));
+        if (tab !== 'personal') {
+          list.sort((a, b) => Number(window.campusExchange.isDemoListing(a)) - Number(window.campusExchange.isDemoListing(b)));
+        }
       } else {
         try { users = await api.get('/api/social/users', { q: kw }) || []; } catch (e) { /* 忽略 */ }
       }
@@ -2026,7 +2044,7 @@
             ${icon('right', 16)}
           </a>`).join('') : mascotEmpty('没找到这个同学', 'assets/brand/mascot-wave-320.webp');
       } else {
-        bodyHtml = `<div class="r-feed-wrap">${list.length ? waterfallWith(list, resultCard) : mascotEmpty('没找到「' + esc(kw) + '」，换个说法试试', 'assets/brand/mascot-wave-320.webp')}</div>`;
+        bodyHtml = `<div class="r-feed-wrap">${list.length ? waterfallWith(list, resultCard) : mascotEmpty('暂无符合条件的「' + esc(kw) + '」', 'assets/brand/mascot-wave-320.webp', {href: '#/publish/edit/wish?want=' + encodeURIComponent(kw), text: '发布求换心愿'})}</div>`;
       }
 
       view.innerHTML = `

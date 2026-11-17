@@ -1495,7 +1495,7 @@
 
     .amz-acct-dropdown {
         position: absolute;
-        top: calc(100% + 2px);
+        top: calc(100% - 1px);
         right: -28px;
         width: 396px;
         background: #FFFFFF;
@@ -1508,8 +1508,7 @@
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transform: translateY(4px);
-        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+        transition: opacity 0.16s ease, visibility 0.16s ease;
     }
 
     .amz-acct-wrap:hover .amz-acct-dropdown,
@@ -1517,7 +1516,6 @@
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
-        transform: translateY(0);
     }
 
     .amz-pop-arrow {
@@ -4359,11 +4357,66 @@
 
     .tb-contact-list {
         flex: 1;
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: max-content;
+        align-content: start;
         overflow-y: auto;
         overflow-x: hidden;
         padding: 4px 6px 12px;
         border: 0 !important;
         background: transparent !important;
+    }
+
+    .tb-conv-entry {
+        --conv-actions-width: min(176px, 78%);
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+    .tb-conv-face {
+        position: relative;
+        display: flex;
+        background: #fff;
+        transform: translateX(var(--conv-shift, 0));
+        transition: transform .18s ease;
+        touch-action: pan-y;
+        user-select: none;
+    }
+    .tb-conv-entry.is-open .tb-conv-face { transform: translateX(var(--conv-shift, calc(-1 * var(--conv-actions-width)))); }
+    .tb-conv-entry.is-dragging .tb-conv-face { transition: none; }
+    .tb-conv-face .tb-contact-item { flex: 1; min-width: 0; }
+    .tb-conv-more {
+        flex: 0 0 32px;
+        border: 0;
+        background: transparent;
+        color: #43544f;
+        font-size: 19px;
+        cursor: pointer;
+    }
+    .tb-conv-more:hover, .tb-conv-more:focus-visible { background: #edf4f1; }
+    .tb-conv-actions {
+        position: absolute;
+        inset: 0 0 0 auto;
+        width: var(--conv-actions-width);
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        visibility: hidden;
+    }
+    .tb-conv-entry.is-open .tb-conv-actions,
+    .tb-conv-entry.is-dragging .tb-conv-actions { visibility: visible; }
+    .tb-conv-actions button {
+        border: 0;
+        padding: 4px 2px;
+        color: #fff;
+        background: #52766c;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .tb-conv-actions button[data-act="im-read"] { background: #0a5c51; }
+    .tb-conv-actions button[data-act="im-delete"] { background: #b6333a; }
+    .tb-conv-actions button:is(:hover, :focus-visible) { box-shadow: inset 0 0 0 2px #fff; }
+    @media (prefers-reduced-motion: reduce) {
+        .tb-conv-face { transition: none; }
     }
 
     .tb-contact-item {

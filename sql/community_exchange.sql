@@ -4,6 +4,13 @@ CREATE TABLE IF NOT EXISTS item_conversation (
  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  UNIQUE KEY item_buyer (item_id,buyer_id), KEY chat_seller (seller_id,id), KEY chat_buyer (buyer_id,id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS item_conversation_state (
+ conversation_id BIGINT NOT NULL,
+ user_id BIGINT NOT NULL,
+ pinned TINYINT(1) NOT NULL DEFAULT 0,
+ hidden TINYINT(1) NOT NULL DEFAULT 0,
+ PRIMARY KEY (conversation_id,user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS private_message (
  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
  conversation_id BIGINT NOT NULL, sender_id BIGINT NOT NULL,

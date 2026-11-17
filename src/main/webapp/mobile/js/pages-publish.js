@@ -10,7 +10,7 @@
       <div class="pub-page">
         <div class="pub-hero">
           <h1>闲置别吃灰<br><em>换一圈</em>看看</h1>
-          <img class="pub-hero__mascot" src="assets/brand/mascot-publish-box.png" alt="猫猫抱着箱子">
+          <img class="pub-hero__mascot" src="assets/brand/mascot-publish-box.webp" alt="猫猫抱着箱子">
         </div>
 
         <div class="pub-sec">
@@ -70,7 +70,24 @@
   PAGES.publishEdit = {
     noTab: true,
     async render(view, params) {
-      if (params.kind === 'wish') { renderWish(view); return; }
+      if (params.kind === 'wish') {
+        const route = location.hash;
+        const relay = new URLSearchParams(route.split('?')[1]).get('relay') === '1';
+        let offered = [];
+        if (relay) {
+          try {
+            offered = (await api.get('/api/item/mine', {status: 1}))
+              .filter(item => item.allowCycle && !window.campusExchange.isDemoListing(item));
+          } catch (error) {
+            if (error.code !== 401) throw error;
+            sessionStorage.setItem('hq.mobileReturnTo', route);
+            location.replace('#/login');
+            return;
+          }
+        }
+        if (location.hash === route) renderWish(view, relay, offered);
+        return;
+      }
       const kind = KIND[params.kind] || KIND.idle;
       const itemId = params.itemId;
       const draftKey = itemId ? 'draft:item:' + itemId : 'draft:' + params.kind;
@@ -106,7 +123,7 @@
         price: draft.price || '',
         originalPrice: draft.originalPrice || '',
         allowBargain: draft.allowBargain !== false,
-        tradeMode: Number(draft.tradeMode || (kind.mode === 1 ? 4 : kind.mode)),
+        tradeMode: Number(draft.tradeMode || (kind.mode === 1 ? 2 : kind.mode)),
         cond: draft.cond || '九成新',
         place: draft.place || settings.meet || myPlaces[0] || '图书馆门口',
         delivery: draft.delivery || settings.delivery || '仅面交',
@@ -152,6 +169,12 @@
             <span>分类</span>
             <span class="pe-row__v ${state.category ? 'on' : 'err'}" id="cateVal">${esc(state.category || '请选择')}${icon('right', 16)}</span>
           </div>
+          ${kind.mode === 1 ? `
+          <div class="pe-row" id="peTrade">
+            <span>交易方式</span>
+            <span class="pe-row__v on" id="tradeVal">${tradeName(state.tradeMode)}${icon('right', 16)}</span>
+          </div>
+          ` : ''}
           ${kind.mode !== 2 ? `
           <div class="pe-row" id="pePrice" style="display:${state.tradeMode === 2 ? 'none' : 'flex'}">
             <span>价格${kind.mode === 3 ? '（起拍价）' : ''}</span>
@@ -162,10 +185,6 @@
             <span class="pe-row__v ${state.originalPrice ? 'on' : ''}" id="origVal">${state.originalPrice ? '¥' + state.originalPrice : '选填'}${icon('right', 16)}</span>
           </div>` : ''}
           ${kind.mode === 1 ? `
-          <div class="pe-row" id="peTrade">
-            <span>交易方式</span>
-            <span class="pe-row__v on" id="tradeVal">${tradeName(state.tradeMode)}${icon('right', 16)}</span>
-          </div>
           <div class="pe-row" id="peWantCategoryRow" style="display:${state.tradeMode === 1 ? 'none' : 'flex'}">
             <span>想换类别</span>
             <span class="pe-row__v ${state.wantCategories.length ? 'on' : ''}" id="wantCatVal">${state.wantCategories.length ? esc(state.wantCategories.join('、')) : '可多选（选填）'}${icon('right', 16)}</span>
@@ -534,14 +553,15 @@
             location.replace(proposalReturn);
             return;
           }
+          const relayReturn = params.kind === 'idle' && new URLSearchParams(location.hash.split('?')[1]).get('relay') === '1';
           view.innerHTML = `
             <div class="pe-success">
               <img src="assets/brand/mascot-check.png" alt="换一圈吉祥物">
               <h2>${kind.mode === 2 ? '心愿已发布' : '已提交审核'}</h2>
               <p>${kind.mode === 2 ? '有同学愿意换时，会第一时间通知你。' : '审核通过就上架，同校同学就能看到啦。'}</p>
               <div class="btns">
-                <button class="btn btn--ghost" onclick="location.hash='#/publish/edit/${params.kind}'">再发一件</button>
-                <button class="btn" onclick="location.hash='${kind.mode === 2 ? '#/wish' : '#/me/onshelf'}'">去看看</button>
+                ${relayReturn ? '<a class="btn btn--ghost" href="#/publish/edit/wish?relay=1">返回接力心愿</a>' : `<button class="btn btn--ghost" onclick="location.hash='#/publish/edit/${params.kind}'">再发一件</button>`}
+                <button class="btn" onclick="location.hash='${kind.mode === 2 ? '#/wish' : '#/me/onshelf'}'">${kind.mode === 2 ? '查看心愿' : '查看审核进度'}</button>
               </div>
             </div>`;
         } catch (e) {
@@ -553,20 +573,27 @@
   };
 
   /* ============================================================ 发心愿 */
-  function renderWish(view) {
+  function renderWish(view, relay, offered) {
     const draft = JSON.parse(localStorage.getItem('draft:wish') || '{}');
+    const wanted = new URLSearchParams(location.hash.split('?')[1]).get('want');
+    if (wanted && !draft.title) draft.title = wanted.slice(0, 100);
     view.innerHTML = `
       <div class="pe-page">
         <div class="pe-head">
-          <button class="x" onclick="smartBack('#/publish')">${icon('close', 24)}</button>
-          <h1>发心愿</h1>
-          <button class="pe-submit" id="wishSubmit">发布</button>
+          <button class="x" aria-label="返回" onclick="smartBack('#/publish')">${icon('close', 24)}</button>
+          <h1>${relay ? "发布接力心愿" : "发心愿"}</h1>
+          <button class="pe-submit" id="wishSubmit" ${relay && !offered.length ? "disabled" : ""}>发布</button>
         </div>
         <div class="pe-card">
           <div style="display:flex;align-items:center;gap:10px;padding:2px 0 10px">
             <img src="assets/brand/mascot-wave-320.webp" style="width:58px;height:58px;object-fit:contain" alt="">
             <div style="font-size:13px;color:var(--ink-500);line-height:1.5">把想要的东西挂出来，<br>有同学愿意换时会通知你。</div>
           </div>
+          ${relay ? `<label for="wishOffered">我拿什么换</label>
+            <select id="wishOffered"><option value="">选择可接力的在架物品</option>
+            ${offered.map(item => `<option value="${Number(item.id)}" ${Number(draft.offeredItemId) === Number(item.id) ? 'selected' : ''}>${esc(item.title)}</option>`).join('')}</select>
+            ${offered.length ? '' : '<p>发布时开启换物接力，审核通过后即可选择。 <a href="#/publish/edit/idle?relay=1">去发布物品</a></p>'}
+            <label for="wishTitle">我想要什么</label>` : ''}
           <input class="pe-title-in" id="wishTitle" maxlength="100" placeholder="想要什么？比如：一台宿舍静音小冰箱" value="${esc(draft.title || '')}">
           <textarea class="pe-desc-in" id="wishDesc" style="min-height:150px" maxlength="500" placeholder="补充预算、成色要求、你愿意拿什么换…">${esc(draft.content || '')}</textarea>
         </div>
@@ -584,7 +611,9 @@
       title: document.getElementById('wishTitle').value,
       content: document.getElementById('wishDesc').value,
       category,
+      offeredItemId: Number(document.getElementById('wishOffered')?.value || 0),
     }));
+    document.getElementById('wishOffered')?.addEventListener('change', save);
     ['wishTitle', 'wishDesc'].forEach((id) => document.getElementById(id).addEventListener('input', save));
     document.getElementById('wishCate').addEventListener('click', () => {
       openSheet('选择分类', `<div class="pe-chips">${CATEGORIES.map((c) => `<span class="chip${c === category ? ' on' : ''}" data-v="${c}">${c}</span>`).join('')}</div>`, {
@@ -599,23 +628,29 @@
         },
       });
     });
-    document.getElementById('wishSubmit').addEventListener('click', async () => {
+    const submit = document.getElementById('wishSubmit');
+    submit.addEventListener('click', async () => {
       const title = document.getElementById('wishTitle').value.trim();
       const content = document.getElementById('wishDesc').value.trim();
       if (!title) { toast('写一下想要什么'); return; }
       if (!category) { toast('选个分类'); return; }
       try {
-        await api.post('/api/wish', { title, content, category });
+        const offeredItemId = Number(document.getElementById('wishOffered')?.value || 0);
+        if (relay && !offeredItemId) { toast('请选一件你愿意交换的物品'); return; }
+        submit.disabled = true;
+        submit.textContent = '发布中…';
+        await api.post('/api/wish', { title, content, category, ...(relay ? {offeredItemId} : {}) });
         localStorage.removeItem('draft:wish');
         view.innerHTML = `<div class="pe-success">
           <img src="assets/brand/mascot-wave-320.webp" alt="">
           <h2>心愿已发布</h2>
           <p>有同学愿意换时，会第一时间通知你。</p>
           <div class="btns">
-            <button class="btn btn--ghost" onclick="location.hash='#/publish/edit/wish'">再发一个</button>
+            <button class="btn btn--ghost" onclick="renderRoute()">再发一个</button>
             <button class="btn" onclick="location.hash='#/wish'">去看看</button>
           </div></div>`;
       } catch (e) { toast(e.message); }
+      finally { submit.disabled = false; submit.textContent = '发布'; }
     });
   }
 

@@ -444,10 +444,10 @@
                 <span>${esc(e.dealTime || '时间待约定')}</span>
               </div>
               <div class="deal-card__foot deal-card__foot--split">
-                <span class="deal-card__meta">${window.exchangeNeedsConfirmation(e) ? `确认 ${e.confirmedCount || 0}/${e.needConfirm || 0} | ` : ''}收货 ${e.deliveredCount || 0}/${e.needConfirm || 0}</span>
+                <span class="deal-card__meta">${e.status === 2 && e.mine?.delivered ? "你已确认收货 | " : e.status === 2 && !window.exchangeSummary(e).canReceive ? "面交安排待确认 | " : ""}${window.exchangeNeedsConfirmation(e) ? `确认 ${e.confirmedCount || 0}/${e.needConfirm || 0} | ` : ''}收货 ${e.deliveredCount || 0}/${e.needConfirm || 0}</span>
                 <div style="display:flex;gap:6px">
-                  ${e.status === 1 ? `<button class="chip on" data-confirm="${e.id}">确认参与</button>` : ''}
-                  ${e.status === 2 ? `<button class="chip on" data-done="${e.id}">确认收货</button>` : ''}
+                  ${window.exchangeSummary(e).canConfirm ? `<button class="chip on" data-confirm="${e.id}">确认参与</button>` : ''}
+                  ${window.exchangeSummary(e).canReceive ? `<button class="chip on" data-done="${e.id}">确认收货</button>` : ''}
                   <a class="chip" href="#/exchange/${e.id}">详情</a>
                 </div>
               </div>
@@ -799,7 +799,7 @@
       const meetTime = confArr ? [confArr.startTime, confArr.endTime].filter(Boolean).join(' - ') : (e.dealTime || '待约定');
       const meetHint = confArr ? '已约好'
         : pendArr ? `${pendArr.confirmedByMe ? '等对方确认' : '待你确认'} · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认`
-        : '待约面交';
+        : e.status === 3 ? '自行约定面交' : '待约面交';
 
       view.innerHTML = `
         ${topbar('交换单 #' + e.id, { parent: '#/me/exchanges' })}
@@ -824,12 +824,12 @@
           <section class="exchange-mobile__meet">
             <h2>面交安排 <small style="font-weight:600;color:#0c7263">${esc(meetHint)}</small></h2>
             <p class="exchange-next-step">${summary.canConfirm ? '先确认参与，等所有参与者同意后再交接。'
-              : summary.canReceive ? '在校内公共地点核对物品，实际收到后再确认收货。'
+              : summary.canReceive ? (confArr ? '在校内公共地点核对物品，实际收到后再确认收货。' : '可先提议面交时间和地点。若已自行约好，请验货后再确认收货。')
               : e.status === 2 && mine?.delivered ? '你已确认收到，等待其他参与者确认。'
               : e.status === 3 ? '本次交换已完成。' : ''}</p>
-            <dl><div><dt>${confArr ? '已定地点' : '地点'}</dt><dd>${esc(meetPlace)}</dd></div>
+            ${e.status !== 3 || confArr || e.place || e.dealTime ? `<dl><div><dt>${confArr ? '已定地点' : '地点'}</dt><dd>${esc(meetPlace)}</dd></div>
               <div><dt>${confArr ? '已定时间' : '时间'}</dt><dd>${esc(meetTime || '待约定')}</dd></div>
-              ${confArr?.note ? `<div><dt>备注</dt><dd>${esc(confArr.note)}</dd></div>` : ''}</dl>
+              ${confArr?.note ? `<div><dt>备注</dt><dd>${esc(confArr.note)}</dd></div>` : ''}</dl>` : ''}
             ${pendArr ? `<div style="margin:10px 0 12px;padding:10px 12px;border-radius:10px;background:#f0faf8;border:1px solid #cce7e0;font-size:13px;line-height:1.55">
               <b>${confArr ? '改期提议 v' : '待确认提议 v'}${Number(pendArr.version)}</b>（${esc(pendArr.proposerName || '同学')} 提出 · ${pendArr.confirmedCount}/${pendArr.needCount} 已确认）<br>
               地点：${esc(pendArr.place)}${pendArr.startTime ? ` ｜ 时间：${esc([pendArr.startTime, pendArr.endTime].filter(Boolean).join(' - '))}` : ''}
@@ -846,6 +846,8 @@
           </section>
 
           <section class="exchange-mobile__people">
+            ${window.exchangeDisputeTimeline(e, esc)}
+            ${summary.active || e.status === 6 ? `<button class="btn btn--ghost" id="exDispute">${e.status === 6 ? '补充情况' : '提交面交争议'}</button>` : ''}
             <h2>参与者</h2>
             ${people.map((d) => {
               const to = summary.recipientFor(d);
@@ -866,7 +868,32 @@
           </section>
         </main>`;
 
-      const refresh = () => renderRoute();
+      const route = location.hash;
+      const refresh = () => location.hash === route && PAGES.exchangeDetail.render(view, params);
+      const disputeBtn = document.getElementById('exDispute');
+      if (disputeBtn) disputeBtn.addEventListener('click', () => {
+        openSheet('说明面交情况', `
+          <p>${e.status === 6 ? '补充说明会显示在交换单。' : '提交后，交易将暂停并交由管理员处理。'}</p>
+          <label for="exDisputeText">情况说明</label>
+          <textarea id="exDisputeText" class="pe-desc-in" maxlength="1000"></textarea>
+          <button class="btn btn--block" id="exDisputeSubmit">提交说明</button>`, {
+          onMount(sheet, close) {
+            const submit = sheet.querySelector('#exDisputeSubmit');
+            submit.addEventListener('click', async () => {
+              const statement = sheet.querySelector('#exDisputeText').value.trim();
+              if (!statement) { toast('请填写情况说明'); return; }
+              submit.disabled = true;
+              try {
+                await api.post('/api/exchange/' + e.id + '/dispute', { statement });
+                close();
+                toast('说明已提交');
+                await refresh();
+              } catch (err) { toast(err.message); }
+              finally { submit.disabled = false; }
+            });
+          },
+        });
+      });
       const confirmBtn = document.getElementById('exConfirm');
       if (confirmBtn) confirmBtn.addEventListener('click', async () => {
         confirmBtn.disabled = true;
@@ -926,29 +953,35 @@
           <div class="label">校内公共点位</div>
           <div class="pe-chips" id="exPlaces">${['图书馆门口', '缤果大街', '紫荆 3 号楼', '紫荆 5 号楼', '体育馆'].map((p, i) => `<span class="chip${i === 0 ? ' on' : ''}" data-v="${p}">${p}</span>`).join('')}</div>
           <div class="label" style="margin-top:16px">时间</div>
-          <div class="pe-chips" id="exTimes">${['今天 18:30', '明天 12:30', '明天 18:30', '周末 10:00'].map((p, i) => `<span class="chip${i === 1 ? ' on' : ''}" data-v="${p}">${p}</span>`).join('')}</div>
+          <input type="datetime-local" id="exTimes" aria-label="面交日期和时间">
           <div class="label" style="margin-top:16px">备注（选填）</div>
           <input id="exArrNote" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--line);border-radius:10px;box-sizing:border-box" maxlength="100" placeholder="例如 在北门台阶旁见">
           <button class="btn btn--block" style="margin-top:18px" id="exPlaceGo">提交并通知对方确认</button>`, {
           onMount(sheet, close) {
-            ['exPlaces', 'exTimes'].forEach((id) => sheet.querySelectorAll('#' + id + ' .chip').forEach((c) => c.addEventListener('click', () => {
+            ['exPlaces'].forEach((id) => sheet.querySelectorAll('#' + id + ' .chip').forEach((c) => c.addEventListener('click', () => {
               sheet.querySelectorAll('#' + id + ' .chip').forEach((x) => x.classList.remove('on')); c.classList.add('on');
             })));
-            sheet.querySelector('#exPlaceGo').addEventListener('click', async () => {
+            const submit = sheet.querySelector('#exPlaceGo');
+            submit.addEventListener('click', async () => {
               const place = sheet.querySelector('#exPlaces .chip.on').dataset.v;
-              const startTime = sheet.querySelector('#exTimes .chip.on').dataset.v;
+              const selected = sheet.querySelector('#exTimes').value;
+              if (!selected) { toast('请选择面交日期和时间'); return; }
+              const startTime = selected.replace('T', ' ') + ' ' + new Date(selected).toLocaleDateString('zh-CN', {weekday:'short'});
               const note = (sheet.querySelector('#exArrNote')?.value || '').trim();
+              submit.disabled = true;
+              submit.textContent = '提交中…';
               try {
                 await api.post('/api/exchange/' + e.id + '/arrangements', { place, startTime, note });
                 close();
                 toast('已提交提议，等待对方确认');
                 refresh();
               } catch (err) { toast(err.message); }
+              finally { submit.disabled = false; submit.textContent = '提交并通知对方确认'; }
             });
           },
         });
       });
-      startLivePoll(refresh, 5000);
+      if (!window.__cleanup) startLivePoll(refresh, 5000);
     },
   };
 

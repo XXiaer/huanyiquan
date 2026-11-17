@@ -18,7 +18,7 @@
     [/^\/search$/, 'searchLanding', () => ({})],
     [/^\/search\/(.+)$/, 'searchResult', (m) => ({ kw: safeDecode(m[1]) })],
     [/^\/publish$/, 'publishEntry', () => ({})],
-    [/^\/publish\/edit\/(\w+)$/, 'publishEdit', (m) => ({ kind: m[1] })],
+    [/^\/publish\/edit\/(\w+)(?:\?(?:relay=1|want=[^#]*))?$/, 'publishEdit', (m) => ({ kind: m[1] })],
     [/^\/item\/(\d+)\/edit$/, 'publishEdit', (m) => ({ kind: 'idle', itemId: Number(m[1]) })],
     [/^\/item\/(\d+)$/, 'item', (m) => ({ id: Number(m[1]) })],
     [/^\/ring\/(\d+)$/, 'ringChat', (m) => ({ id: Number(m[1]) })],
@@ -53,7 +53,7 @@
     [/^\/users$/, 'users', () => ({ kw: '' })],
     [/^\/users\/(.+)$/, 'users', (m) => ({ kw: safeDecode(m[1]) })],
     [/^\/refresh$/, 'refreshPick', () => ({})],
-    [/^\/admin$/, 'admin', () => ({ tab: 'items' })],
+    [/^\/admin$/, 'admin', () => ({ tab: 'overview' })],
     [/^\/admin\/(\w+)$/, 'admin', (m) => ({ tab: m[1] })],
   ];
 
