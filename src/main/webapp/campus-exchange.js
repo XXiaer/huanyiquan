@@ -20,7 +20,8 @@
   async function browse(load, tradeMode, page = 1, filter = () => true) {
     for (;;) {
       const result = await load(page);
-      const rows = (result.list || []).filter(item => filter(item) && (tradeMode === 2 ? isSwapOnly(item) : supports(item, tradeMode)));
+      const rows = (result.list || []).filter(item => filter(item)
+        && (!tradeMode || (tradeMode === 2 ? isSwapOnly(item) : supports(item, tradeMode))));
       if (rows.length || !result.hasMore) return { rows, page, hasMore: Boolean(result.hasMore) };
       page += 1;
     }

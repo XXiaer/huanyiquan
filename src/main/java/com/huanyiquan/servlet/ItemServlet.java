@@ -62,7 +62,13 @@ public class ItemServlet extends BaseServlet {
             return;
         }
         if ("deals".equals(segs.get(0))) { ok(resp, ItemDao.recentDeals(Params.of(req).intOf("size", 8))); return; }
-        if ("search".equals(segs.get(0))) { Params p=Params.of(req); ok(resp,SemanticSearchService.search(p.str("q"),p.str("category"),p.str("conditionLevel"),p.intOf("page",1),p.intOf("size",20))); return; }
+        if ("search".equals(segs.get(0))) {
+            Params p = Params.of(req);
+            ok(resp, SemanticSearchService.search(p.str("q"), p.str("category"),
+                    p.str("conditionLevel", p.str("condition")), p.str("building"),
+                    p.intOf("tradeMode", 0), p.str("sort"), p.intOf("page", 1), p.intOf("size", 20)));
+            return;
+        }
         if ("mine".equals(segs.get(0))) {
             Params p = Params.of(req);
             Integer status = p.intOf("status", null);

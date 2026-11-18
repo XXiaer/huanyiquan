@@ -124,7 +124,12 @@ def main():
                 "schema.sql", "auction.sql", "auction_review_migration.sql",
                 "item_review_timer_migration.sql", "community.sql", "notifications_demo.sql",
                 "community_exchange.sql", "account_wish_migration.sql",
-                "social_settings_migration.sql", "wish_relay_migration.sql")) + "\n"
+                "social_settings_migration.sql", "wish_relay_migration.sql")) + """
+USE huanyiquan;
+ALTER TABLE item ADD COLUMN price INT, ADD COLUMN original_price INT,
+    ADD COLUMN trade_mode INT, ADD COLUMN place VARCHAR(120), ADD COLUMN want_text VARCHAR(255),
+    ADD COLUMN brand VARCHAR(90), ADD COLUMN delivery VARCHAR(40), ADD COLUMN allow_bargain TINYINT;
+"""
         subprocess.run(cli, input=script.encode("utf-8"), check=True, capture_output=True,
                        creationflags=NO_WINDOW)
         seed_env = dict(os.environ, DB_URL="jdbc:mysql://127.0.0.1:%d/huanyiquan" % db_port,
@@ -186,21 +191,33 @@ def main():
         code, data = search(base, q="机械键盘", category="教材", page=1, size=20)
         check("q=机械键盘 category=教材 应为空", code == 0 and data["list"] == [], "total=%s" % data.get("total"))
 
+        for query, title, forbidden in (
+            ("宿舍照明", "台灯", ("灯罩",)),
+            ("必须是机械键盘", "机械键盘", ("钢琴",)),
+        ):
+            code, data = search(base, q=query)
+            titles = [row["title"] for row in data["list"]]
+            check(query + " matches product titles", code == 0 and bool(titles)
+                  and all(title in hit and not any(word in hit for word in forbidden) for hit in titles),
+                  str(titles))
+
         print("\n[4] 真实用户发布的商品（非示例）能被搜到")
         subprocess.run(cli, input=("USE huanyiquan; INSERT INTO item(owner_id,title,category,"
                                    "condition_level,description,images,expect_desc,status,is_demo,"
                                    "offer_count,view_count,deleted) VALUES(1,'iPhone 13 128G 国行',"
                                    "'数码','九成新','自用一年，电池健康 92%%，想换个平板','','换平板',"
-                                   "1,0,0,0,0);").encode("utf-8"),
+                                   "1,0,0,0,0),"
+                                   "(1,'iPhone 130 保护壳','数码','九成新','','','',1,0,0,0,0),"
+                                   "(1,'iPhone 13 手机壳','数码','九成新','','','',1,0,0,0,0);").encode("utf-8"),
                        check=True, capture_output=True, creationflags=NO_WINDOW)
         found = []
         for _ in range(30):
             code, data = search(base, q="iPhone 13", page=1, size=20)
             found = [i["title"] for i in (data["list"] if code == 0 else [])]
-            if found:
+            if "iPhone 13 128G 国行" in found:
                 break
             time.sleep(1)
-        check("q=iPhone 13 命中真实商品", bool(found), "%s" % found)
+        check("q=iPhone 13 命中真实商品、排除配件与其他型号", found == ["iPhone 13 128G 国行"], "%s" % found)
 
         print("\n[5] 同一批查询：旧配置(0.35 无相对截断) vs 新配置(0.45/0.05)")
         queries = ["机械键盘", "高等数学课本", "考研", "书", "运动", "电饭煲", "投影仪"]

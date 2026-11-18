@@ -3,7 +3,7 @@ from decimal import Decimal
 import re
 import unicodedata
 
-_FILLER = re.compile(r'^(?:我想找|我想买|我想要|我需要|帮我找|想找|想买|想要|有没有|求购)+')
+_FILLER = re.compile(r'^(?:我想找|我想买|我想要|我需要|帮我找|想找|想买|想要|有没有|求购|必须是|必须要|一定要)+')
 _SUFFIX = re.compile(r'(?:有没有|有吗|吗|呢|谢谢)$')
 _WORDS = re.compile(r'[a-z]+|[0-9]+|[\u3400-\u9fff]+')
 
@@ -62,13 +62,55 @@ def parse_intent(query):
     return phrase, min(limits) if limits else None, mode
 
 
-def allows(price, trade_mode, is_demo, budget, mode):
+def allows(price, trade_mode, budget, mode):
     priced = price is not None and price > 0
-    can_sell = trade_mode == 1 or (is_demo and trade_mode == 4)
-    can_swap = trade_mode == 2 or (is_demo and trade_mode == 4)
+    trade_mode = trade_mode or (4 if priced else 2)
+    can_sell = trade_mode in (1, 4)
     return ((mode != 1 or (can_sell and priced))
-            and (mode != 2 or can_swap)
+            and (mode != 2 or trade_mode in (2, 4))
+            and (mode != 4 or trade_mode == 4)
             and (budget is None or (can_sell and priced and price <= budget)))
+
+
+# Require evidence in the listing title for common product intents. Descriptions
+# can mention compatibility or the item the seller wants in exchange.
+_PRODUCT_INTENTS = (
+    (('平板电脑', '平板', 'ipad'), '平板电脑|平板|ipad|matepad|galaxytab',
+     '支架|平板架|保护壳|保护套|保护膜|贴膜|钢化膜|配件|充电器|平板包|收纳包|(?<![带配含赠])键盘|触控笔'),
+    (('机械键盘',), '机械键盘|机械轴键盘|热插拔键盘', '钢琴|电子琴|键帽|轴体|配件'),
+    (('静音键盘', '宿舍安静打字'), '静音键盘|静音机械键盘|静音轴键盘', '钢琴|电子琴|键帽|配件'),
+    (('键盘',), '键盘', '钢琴|电子琴|键帽|轴体|配件'),
+    (('iphone', '手机'), 'iphone|手机', '手机壳|支架|保护壳|保护套|贴膜|钢化膜|配件|充电器'),
+    (('笔记本电脑', '游戏本'), '笔记本电脑|游戏本|macbook|拯救者|天选|暗影精灵',
+     '支架|保护套|收纳包|电脑包|配件|电源适配器|散热底座'),
+    (('羽毛球拍',), '羽毛球拍|羽拍', '课程|资料|教学|拍套|手胶|拍线|配件'),
+    (('宿舍照明', '自习照明', '台灯', '阅读灯', '桌面照明'), '台灯|阅读灯|桌灯|书桌灯',
+     '灯罩|灯泡|底座|灯杆|配件'),
+    (('小家电',), '电饭煲|电煮锅|小烤箱|微波炉|风扇|吹风机|空气炸锅|烧水壶|电水壶|加湿器|吸尘器',
+     '说明书|配件|滤芯|插座|开关'),
+    (('考研资料', '考研教材', '考研书'), '考研', '展示|参考图'),
+    (('日用品', '生活用品', '宿舍用品', '宿舍生活'),
+     '清洁|洗衣|消毒|纸巾|卫生纸|拖把|扫把|毛巾|牙刷|牙膏|香皂|洗手|洗发|沐浴|衣架|收纳|水杯|保温杯|杯碟|碗|拖鞋|脸盆|垃圾袋|湿巾|枕套|床单',
+     '住宅|客房|商铺|护栏|车位|展示|参考图|空间参考'),
+)
+_ACCESSORY = re.compile('支架|平板架|手机壳|保护壳|保护套|保护膜|贴膜|钢化膜|配件|充电器|平板包|电脑包|收纳包|键帽|轴体|触控笔|拍套|手胶|拍线|灯罩|灯泡|底座|滤芯')
+_MATCHERS = [(aliases, re.compile(include), re.compile(exclude)) for aliases, include, exclude in _PRODUCT_INTENTS]
+
+
+def product_intent(phrase):
+    """Return the explicit product family, unless the user is looking for an accessory."""
+    normalized = query_phrase(phrase)
+    if _ACCESSORY.search(normalized):
+        return None
+    # Prefer a specific noun in mixed queries (e.g. 平板电脑带键盘).
+    for aliases, include, exclude in _MATCHERS:
+        if any(alias in normalized for alias in aliases):
+            return include, exclude
+    return None
+
+
+def product_matches(intent, title):
+    return not intent or (bool(intent[0].search(title)) and not intent[1].search(title))
 
 _MODEL = re.compile(r'(?<![a-z0-9])(?:[a-z]{1,6}[- ]?\d{3,5}[a-z]{0,3}|(?:iphone|ipad)\s*\d{1,2})(?![a-z0-9])', re.I)
 _CAPACITY = re.compile(r'(\d+(?:\.\d+)?)\s*(tb|gb|t|g)(?![a-z0-9])', re.I)
@@ -78,6 +120,11 @@ _PURPOSES = {
     '图书馆自习照明': ('护眼台灯', '台灯'),
     '通勤听歌': ('蓝牙耳机', '无线耳机'),
 }
+
+
+def model_names(text):
+    source = unicodedata.normalize('NFKC', text or '')
+    return tuple(dict.fromkeys(normalize(match.group()) for match in _MODEL.finditer(source)))
 
 
 def capacity_gb(number, unit):
@@ -94,7 +141,7 @@ def understand(query):
         storage = field.lower() in ('硬盘', '存储', 'ssd') or (field == '内存' and amount >= 256)
         capacity = ('storage' if storage else 'memory', amount)
         phrase = _MINIMUM.sub(' ', phrase).strip(' ，,、')
-    models = tuple(dict.fromkeys(normalize(m.group()) for m in _MODEL.finditer(phrase)))
+    models = model_names(phrase)
     expansions = ()
     for purpose, choices in _PURPOSES.items():
         if purpose in normalize(phrase):

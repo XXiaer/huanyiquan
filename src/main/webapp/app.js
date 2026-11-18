@@ -1075,7 +1075,7 @@
         var sortVal = h.sort || '';
 
         var visibleItems = h.items.filter(function (it) {
-            if (!idle && !isSearch && !window.campusExchange.isLiveSwap(it)) return false;
+            if (!idle && !isSearch && !h.category && !window.campusExchange.isLiveSwap(it)) return false;
             if (minCredit > 0) {
                 var c = it.ownerCredit === undefined || it.ownerCredit === null ? 80 : Number(it.ownerCredit);
                 if (c < minCredit) return false;
@@ -1096,7 +1096,7 @@
             ['运动', '运动户外'],
             ['衣物', '服饰穿搭'],
             ['绿植', '绿植花卉'],
-            ['其他', '乐器潮玩']
+            ['其他', '其他闲置']
         ];
 
 
@@ -1104,7 +1104,7 @@
             + '<a class="hq-home-hero" href="#/relay">'
             + '<div class="hq-home-hero-copy"><h1>三人成环</h1><p>三位同学，各换到想要的闲置。</p>'
             + '<span class="hq-home-hero-action">找我的换物环' + navIcon('next') + '</span></div>'
-            + '<img src="/assets/amz/home-spotlight-relay.webp" width="450" height="304" alt="" decoding="async"></a>'
+            + '<img src="/assets/amz/home-spotlight-relay-scene.webp" width="580" height="290" alt="" decoding="async"></a>'
             + '<nav class="hq-home-links" aria-label="快捷入口">'
             + [
                 ['#/idle', '逛集市', 'market', '发现校园闲置'],
@@ -1143,7 +1143,7 @@
                 { kind: 'cat', v: '运动', label: '运动户外', active: h.category === '运动' },
                 { kind: 'cat', v: '衣物', label: '服饰穿搭', active: h.category === '衣物' },
                 { kind: 'cat', v: '绿植', label: '绿植花卉', active: h.category === '绿植' },
-                { kind: 'cat', v: '其他', label: '乐器潮玩', active: h.category === '其他' }
+                { kind: 'cat', v: '其他', label: '其他闲置', active: h.category === '其他' }
             ];
             var pillRailHtml = '<div class="amz-pill-rail-wrap">'
                 + '<button type="button" class="amz-pill-arrow" data-act="pill-scroll" data-dir="-1" aria-label="向左滚动">‹</button>'
@@ -1364,7 +1364,7 @@
         if (h.category) params += '&category=' + encodeURIComponent(h.category);
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
         if (Number(h.tradeMode) > 0) params += '&tradeMode=' + Number(h.tradeMode);
-        else if (['#/home', '#/market'].includes((location.hash || '#/home').split('?')[0])) params += '&tradeMode=2';
+        else if (!h.category && ['#/home', '#/market'].includes((location.hash || '#/home').split('?')[0])) params += '&tradeMode=2';
         if (h.sort) params += '&sort=' + encodeURIComponent(h.sort);
         if (h.campusSpot) params += '&building=' + encodeURIComponent(h.campusSpot);
         var baseLoadHash = (location.hash || '#/home').split('?')[0];

@@ -19,7 +19,7 @@
   SEMANTIC_REFRESH_SECONDS         重建索引间隔，默认 30
 """
 import os, time, json, threading, hashlib, urllib.parse, pathlib
-from retrieval import allows, fuse, lexical_tier, normalize, product_specs, query_phrase, understand
+from retrieval import allows, fuse, lexical_tier, model_names, normalize, product_intent, product_matches, product_specs, query_phrase, understand
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import numpy as np
 import pymysql
@@ -49,7 +49,7 @@ session = ort.InferenceSession(str(MODEL_DIR / 'model.onnx'), sess_options=opts,
 tokenizer = Tokenizer.from_file(str(MODEL_DIR / 'tokenizer.json'))
 tokenizer.enable_truncation(max_length=128); tokenizer.enable_padding()
 input_names = {x.name for x in session.get_inputs()}
-lock = threading.RLock(); cache = {}; index_ids = []; index_titles = []; index_attributes = []; index_specs = []; index_filters = []; index_vectors = None; index_dim = None; ready = False; last_error = ''
+lock = threading.RLock(); cache = {}; index_ids = []; index_titles = []; index_models = []; index_attributes = []; index_specs = []; index_filters = []; index_vectors = None; index_dim = None; ready = False; last_error = ''
 
 def embed(texts):
     global index_dim
@@ -65,7 +65,7 @@ def embed(texts):
         return out
 
 def refresh():
-    global index_ids,index_titles,index_attributes,index_specs,index_filters,index_vectors,ready,last_error
+    global index_ids,index_titles,index_models,index_attributes,index_specs,index_filters,index_vectors,ready,last_error
     try:
         con=pymysql.connect(host=DB_HOST,port=DB_PORT,user=DB_USER,password=DB_PASSWORD,database=DB_NAME,charset='utf8mb4',connect_timeout=5)
         try:
@@ -74,9 +74,9 @@ def refresh():
                 rows=cur.fetchall()
                 cur.execute("SHOW COLUMNS FROM item")
                 columns={row[0] for row in cur.fetchall()}
-                fields=[name if name in columns else default for name,default in
-                        (('price','NULL'),('trade_mode','NULL'),('is_demo','0'))]
-                cur.execute('SELECT id,' + ','.join(fields) + ' FROM item WHERE status=1 AND deleted=0')
+                fields=['i.' + name if name in columns else default for name,default in
+                        (('price','NULL'),('trade_mode','NULL'),('place','NULL'))]
+                cur.execute('SELECT i.id,' + ','.join(fields) + ',u.building FROM item i LEFT JOIN `user` u ON u.id=i.owner_id WHERE i.status=1 AND i.deleted=0')
                 attributes={row[0]: row[1:] for row in cur.fetchall()}
         finally: con.close()
         missing=[]; pending=[]
@@ -88,7 +88,8 @@ def refresh():
         ids=[r[0] for r in rows];matrix=np.stack([cache[id][1] for id in ids]) if ids else np.empty((0,index_dim or 1),dtype=np.float32)
         with lock:
             index_ids=ids; index_titles=[normalize(r[1]) for r in rows]; index_vectors=matrix
-            index_attributes=[attributes.get(id, (None, None, 0)) for id in ids]
+            index_models=[set(model_names(row[1])) for row in rows]
+            index_attributes=[attributes.get(id, (None, None, None, None)) for id in ids]
             index_specs=[product_specs(row[1],row[3]) for row in rows]
             index_filters=[(row[2],row[5]) for row in rows]
             ready=True; last_error=''
@@ -103,19 +104,21 @@ def worker():
     while True:
         refresh();time.sleep(REFRESH_SECONDS)
 
-def rank(query, intent=None, category="", condition=""):
+def rank(query, intent=None, category="", condition="", trade_mode=0, building=""):
     phrase, budget, mode, models, capacity, expansions = intent or understand(query)
-    broad_category = {'日用品': '生活', '生活用品': '生活', '宿舍用品': '生活', '宿舍生活': '生活'}.get(query_phrase(phrase))
-    if broad_category and category and category != broad_category:
-        return []
-    if broad_category:
-        category, phrase = broad_category, ''
+    product = product_intent(phrase)
     with lock:
-        ids, titles, matrix, attributes, specs, filters = index_ids, index_titles, index_vectors, index_attributes, index_specs, index_filters
-    eligible = [i for i, values in enumerate(attributes) if allows(*values, budget, mode)
+        ids, titles, title_models = index_ids, index_titles, index_models
+        matrix, attributes, specs, filters = index_vectors, index_attributes, index_specs, index_filters
+    requested_models = set(models)
+    eligible = [i for i, (price, item_mode, place, owner_building) in enumerate(attributes)
+                if allows(price, item_mode, budget, mode)
+                and (not trade_mode or allows(price, item_mode, None, trade_mode))
+                and (not building or owner_building == building or building in (place or ''))
                 and (not category or filters[i][0] == category)
                 and (not condition or filters[i][1] == condition)
-                and (not models or any(lexical_tier(model, titles[i]) for model in models))
+                and product_matches(product, titles[i])
+                and (not requested_models or not requested_models.isdisjoint(title_models[i]))
                 and (not capacity or specs[i].get(capacity[0], 0) >= capacity[1])]
     if not eligible:
         return []
@@ -125,9 +128,10 @@ def rank(query, intent=None, category="", condition=""):
     scores = (matrix @ np.asarray(vectors).T).max(axis=1)
     order = sorted(eligible, key=lambda i: -float(scores[i]))
     cutoff = max(FLOOR, float(scores[order[0]]) - MARGIN)
-    semantic = [i for i in order[:KEEP] if scores[i] >= cutoff]
+    semantic = [i for i in order[:KEEP] if product or scores[i] >= cutoff]
     normalized = query_phrase(phrase)
-    lexical = [(i, max(lexical_tier(term, titles[i]) for term in (normalized, *models, *map(normalize, expansions)))) for i in eligible]
+    terms = (normalized, *map(normalize, expansions))
+    lexical = [(i, max(2 if requested_models else 0, *(lexical_tier(term, titles[i]) for term in terms))) for i in eligible]
     lexical = sorted(((i, tier) for i, tier in lexical if tier), key=lambda row: (-row[1], -float(scores[row[0]])))[:KEEP]
     return [(ids[i], float(scores[i])) for i in fuse(semantic, lexical)[:KEEP]]
 
@@ -149,8 +153,15 @@ class Handler(BaseHTTPRequestHandler):
                     if mode: conditions.append('可换物' if mode == 2 else '可出售')
                     if models and (len(models) > 1 or budget is not None or capacity or mode): conditions.append('型号：' + ' 或 '.join(models))
                     if capacity: conditions.append(('硬盘' if capacity[0] == 'storage' else '内存') + f'至少 {capacity[1]} GB')
-                    result = {'results': [{'id': i, 'score': s} for i, s in rank(q, intent, params.get("category", [""])[0], params.get("condition", [""])[0])],
-                              'conditions': conditions}
+                    category = params.get("category", [""])[0]
+                    condition = params.get("condition", [""])[0]
+                    mode_filter = params.get("tradeMode", [""])[0]
+                    trade_mode = int(mode_filter) if mode_filter in ('1', '2', '4') else 0
+                    building = params.get("building", [""])[0]
+                    hits = rank(q, intent, category, condition, trade_mode, building)
+                    result = {'results': [{'id': i, 'score': s} for i, s in hits],
+                              'conditions': conditions,
+                              'strict': bool(product_intent(intent[0]) or models or conditions)}
                     code = 200
                 except Exception as e: result={'error':type(e).__name__+': '+str(e)};code=503
         else:result={'error':'not found'};code=404

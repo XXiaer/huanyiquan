@@ -96,6 +96,11 @@
   const HOME_SEARCH_TOPICS = ['小家电', '考研资料'];
   const HOME_WISH_FILTERS = [['all', '全部'], ['relay', '可接力'], ...HOME_CATEGORIES.map(category => [category, category])];
 
+  function searchSuggestion(label) {
+    const route = HOME_CATEGORIES.includes(label) ? 'category' : 'search';
+    return `<a class="chip" href="#/${route}/${encodeURIComponent(label)}">${esc(label)}</a>`;
+  }
+
   function homeWishCard(wish) {
     const nickname = wish.nickname || '同学';
     const category = wish.category === '全部' ? '' : wish.category;
@@ -246,17 +251,20 @@
           <div class="home-feed" role="status">正在加载好物…</div>`;
         const feedHost = bodyEl.lastElementChild;
 
+        const browseMode = isCategory || isTopic ? 0 : 2;
+        const eligible = browseMode ? window.campusExchange.isLiveSwap
+          : item => Number(item.tradeMode) !== 3 && (!isCategory || item.category === channel);
         const load = (page) => {
           const q = { page, size: 40 };
           if (isCategory) q.category = channel;
-          if (isTopic) q.keyword = channel;
+          if (isTopic) return api.get('/api/item/search', { ...q, q: channel });
           return api.get('/api/item/list', q);
         };
 
         let list = [];
         let batch;
         try {
-          batch = await window.campusExchange.browse(load, 2, 1, window.campusExchange.isLiveSwap);
+          batch = await window.campusExchange.browse(load, browseMode, 1, eligible);
           list = batch.rows || [];
         } catch (e) { toast(e.message); }
         if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
@@ -281,7 +289,8 @@
 
         const emptyAction = channel === '关注'
           ? { href: '#/community', text: '去社区发现同学' }
-          : (isCategory ? { href: '#/publish/edit/idle', text: '发布「' + channel + '」闲置' } : null);
+          : (isCategory ? { href: '#/publish/edit/idle', text: '发布「' + channel + '」闲置' }
+            : (isTopic ? { href: '#/publish/edit/wish?want=' + encodeURIComponent(channel), text: '发布求换心愿' } : null));
 
         feedHost.removeAttribute('role');
         feedHost.outerHTML = `
@@ -293,7 +302,7 @@
             ${batch?.hasMore && channel !== '关注' ? '<button class="campus-more" data-swap-more>加载更多</button>' : ''}
           </section>`;
 
-        bindBrowseMore(bodyEl, load, 2, batch, channel === '新发', window.campusExchange.isLiveSwap);
+        bindBrowseMore(bodyEl, load, browseMode, batch, channel === '新发', eligible);
 
         if (!showServices) return;
         const deals = (await api.get('/api/item/deals', { size: 8 }).catch(() => []) || [])
@@ -1581,7 +1590,9 @@
         try {
           let next = page, batch, hits;
           do {
-            batch = await api.get('/api/item/list', {category, page: next, size: 30});
+            batch = await api.get('/api/item/list', {
+              category, page: next, size: 30, tradeMode: mode === 'swap' ? 2 : mode === 'sale' ? 1 : null
+            });
             if (route !== location.hash || !results.isConnected) return;
             hits = (batch?.list || []).filter(item => Number(item.tradeMode) !== 3 &&
               (mode === 'all' || window.campusExchange.supports(item, mode === 'swap' ? 2 : 1)));
@@ -2125,7 +2136,7 @@
       </div>
       <div class="s-chips" id="guessChips">
         ${['教材', '数码', '运动', '生活', '绿植', '宿舍神器', '换季衣物', '考研资料', '运动装备', '二手书', '小家电']
-          .map((c) => `<a class="chip" href="#/category/${encodeURIComponent(c)}">${c}</a>`).join('')}
+          .map(searchSuggestion).join('')}
       </div>
 
       <div class="s-history-head"><h2>热搜榜</h2></div>
@@ -2184,7 +2195,7 @@
       document.getElementById('refreshGuess').addEventListener('click', () => {
         const pool = ['教材', '数码', '运动', '生活', '绿植', '宿舍神器', '运动装备', '二手书'];
         const pick = pool.sort(() => Math.random() - 0.5).slice(0, 8);
-        document.getElementById('guessChips').innerHTML = pick.map((c) => `<a class="chip" href="#/category/${encodeURIComponent(c)}">${c}</a>`).join('');
+        document.getElementById('guessChips').innerHTML = pick.map(searchSuggestion).join('');
       });
       view.querySelectorAll('.s-tabrow a').forEach((a) => a.addEventListener('click', () => {
         const t = a.textContent.trim();
@@ -2211,7 +2222,8 @@
       let conditions = [];
 
       if (tab !== 'users') {
-        const query = { page: 1, size: 40, category: filter.category, conditionLevel: filter.condition };
+        const query = { page: 1, size: 40, category: filter.category, conditionLevel: filter.condition,
+          tradeMode: filter.tradeMode, building: filter.area };
         try {
           const d = await api.get('/api/item/search', { ...query, q: kw });
           list = d.list || [];
@@ -2223,7 +2235,7 @@
           } catch (e2) { toast(e2.message); }
         }
         if (tab === 'personal') list = list.filter(i => !window.campusExchange.isDemoListing(i));
-        if (filter.area) list = list.filter(i => (i.place || i.ownerBuilding || '').includes(filter.area));
+        if (filter.area) list = list.filter(i => i.ownerBuilding === filter.area || (i.place || '').includes(filter.area));
         if (filter.tradeMode) list = list.filter(i => window.campusExchange.supports(i, filter.tradeMode));
         if (filter.meet) list = list.filter((i) => (i.delivery || '仅面交') === '仅面交');
         if (sort === 'price_asc') list = list.slice().sort((a, b) => (a.price || 0) - (b.price || 0));

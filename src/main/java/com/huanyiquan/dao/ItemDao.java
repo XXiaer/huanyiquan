@@ -7,6 +7,8 @@ import com.huanyiquan.entity.Item;
 import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +82,14 @@ public final class ItemDao {
 
     public static Item findById(long id) {
         return DBUtil.queryOne(BASE_SELECT + " AND i.id=?", MAP, id);
+    }
+
+    public static List<Item> findOnShelfByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) return List.of();
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        List<Object> args = new ArrayList<>(ids);
+        args.add(Const.ITEM_ON);
+        return DBUtil.query(BASE_SELECT + " AND i.id IN (" + placeholders + ") AND i.status=?", MAP, args.toArray());
     }
 
     /** 事务内读，保证读到的是同一笔事务里的状态 */
