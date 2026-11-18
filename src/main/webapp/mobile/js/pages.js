@@ -110,7 +110,7 @@
       <h3>${esc(wish.title || '求换好物')}</h3>
       ${wish.content ? `<p class="mobile-wish__description">${esc(wish.content)}</p>` : ''}
       <div class="mobile-wish__exchange"><span>期望交换</span>
-        ${wish.offeredItemId ? `<a href="#/item/${Number(wish.offeredItemId)}">三方接力 / 可换物品</a>` : '<strong>物品互换</strong>'}
+        ${wish.offeredItemId ? `<strong>三方接力</strong><a class="home-wish__swap" href="#/item/${Number(wish.offeredItemId)}">换这个</a>` : '<strong>物品互换</strong>'}
       </div>
       <footer class="mobile-wish__footer">
         ${wish.userId ? `<a class="home-wish__author" href="#/user/${Number(wish.userId)}">${author}</a>` : `<span class="home-wish__author">${author}</span>`}

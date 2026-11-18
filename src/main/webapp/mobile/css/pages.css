@@ -2102,3 +2102,8 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .home-wish__author { display: flex; align-items: center; gap: 5px; min-width: 0; min-height: 40px; color: inherit; }
 .home-wish__author .avt { flex: none; }
 .home-wishes .mobile-wish__footer time { margin-left: auto; }
+.home-wishes .mobile-wish__exchange { align-items: center; }
+.mobile-wish__exchange .home-wish__swap {
+  display: inline-flex; align-items: center; min-height: 40px; margin-left: auto; padding: 0 12px;
+  border: 1px solid #b7d9cd; border-radius: 999px; text-decoration: none; font-size: 13px;
+}
