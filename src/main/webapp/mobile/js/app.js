@@ -76,7 +76,8 @@
     if (!scripts.has(file)) {
       scripts.set(file, new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/mobile/js/' + file + '.js?v=3.0.0';
+        const version = file === 'pages-misc' ? '3.1.2' : '3.0.0';
+        script.src = '/mobile/js/' + file + '.js?v=' + version;
         script.onload = resolve;
         script.onerror = () => {
           scripts.delete(file);
