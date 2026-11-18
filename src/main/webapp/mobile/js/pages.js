@@ -94,6 +94,30 @@
   window.renderRelayTabs = () => '';
   const HOME_CATEGORIES = ['教材', '数码', '运动', '生活', '衣物', '绿植', '其他'];
   const HOME_SEARCH_TOPICS = ['小家电', '考研资料'];
+  const HOME_WISH_FILTERS = [['all', '全部'], ['relay', '可接力'], ...HOME_CATEGORIES.map(category => [category, category])];
+
+  function homeWishCard(wish) {
+    const nickname = wish.nickname || '同学';
+    const category = wish.category === '全部' ? '' : wish.category;
+    const created = wish.createdAt || wish.createTime;
+    const dateLabel = fmtTime(created);
+    const author = `${avatar({ nickname, id: wish.userId, avatar: wish.avatar }, 17)}<span class="mobile-wish__nickname">${esc(nickname)}</span>`;
+    return `<article class="mobile-wish">
+      <div class="home-wish__labels">
+        <span class="mobile-wish__kind">求换</span>
+        ${category ? `<span class="home-wish__category">${esc(category)}</span>` : ''}
+      </div>
+      <h3>${esc(wish.title || '求换好物')}</h3>
+      ${wish.content ? `<p class="mobile-wish__description">${esc(wish.content)}</p>` : ''}
+      <div class="mobile-wish__exchange"><span>期望交换</span>
+        ${wish.offeredItemId ? `<a href="#/item/${Number(wish.offeredItemId)}">三方接力 / 可换物品</a>` : '<strong>物品互换</strong>'}
+      </div>
+      <footer class="mobile-wish__footer">
+        ${wish.userId ? `<a class="home-wish__author" href="#/user/${Number(wish.userId)}">${author}</a>` : `<span class="home-wish__author">${author}</span>`}
+        ${dateLabel ? `<time datetime="${esc(created)}">${esc(dateLabel)}</time>` : ''}
+      </footer>
+    </article>`;
+  }
   const PRIMARY_SERVICES = [
     { name: '以物换物', href: '#/market/swap', art: 'swap', note: '拿闲置换好物' },
     { name: '校园拍卖', href: '#/auction', art: 'auction', note: '为心仪物品出价' },
@@ -167,31 +191,50 @@
         const isTopic = HOME_SEARCH_TOPICS.includes(channel);
 
         if (channel === '心愿单') {
-          let wishes = [];
-          try { wishes = await api.get('/api/wish') || []; } catch (e) { toast(e.message); }
+          let wishes;
+          let wishError;
+          try { wishes = await api.get('/api/wish') || []; } catch (error) { wishError = error; }
           if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
+          const needsLogin = wishError?.code === 401;
+          const publishHref = needsLogin ? '#/login' : '#/publish/edit/wish';
           bodyEl.innerHTML = `
-            <section class="home-feed" style="padding-top:10px">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 4px 12px">
+            <section class="mobile-wishes home-wishes" aria-labelledby="homeWishTitle">
+              <header class="mobile-wishes__header">
                 <div>
-                  <b style="font-size:16px;color:var(--ink-900)">校园求换心愿单</b>
-                  <p style="font-size:12px;color:var(--ink-500);margin-top:2px">看看同学们都在求换什么好物</p>
+                  <h2 id="homeWishTitle">校园求换心愿单</h2>
+                  <p>看看同学们都想换什么</p>
                 </div>
-                <a class="btn" style="padding:7px 14px;font-size:13px" href="#/publish/edit/wish">+ 发心愿</a>
-              </div>
-              ${wishes.length ? wishes.map((w) => `
-                <a class="community-card" href="${w.userId ? '#/user/' + Number(w.userId) : '#/wish'}" style="display:block;margin-bottom:10px;text-decoration:none">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                    <b style="font-size:15px;color:var(--ink-900)">${esc(w.title || '求换好物')}</b>
-                    <span class="badge badge--green">${esc(w.category || '全部')}</span>
-                  </div>
-                  ${w.content ? `<p style="margin-top:6px;font-size:13px;color:var(--ink-600);line-height:1.5">${esc(w.content)}</p>` : ''}
-                  <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-400)">
-                    <span>${esc(w.nickname || '移通同学')}</span>
-                    <span>${w.createTime ? fmtTime(w.createTime) : '刚刚'}</span>
-                  </div>
-                </a>`).join('') : mascotEmpty('还没有求换心愿，发一条试试吧', 'assets/brand/mascot-wave-320.webp', { href: '#/publish/edit/wish', text: '去发心愿' })}
+                <a class="mobile-wishes__publish" href="${publishHref}">${needsLogin ? '登录后发布' : '发布求换心愿'}</a>
+              </header>
+              ${wishError ? '' : `<div class="mobile-wishes__filters" aria-label="筛选心愿">
+                ${HOME_WISH_FILTERS.map(([key, label]) => `<button type="button" data-wish-filter="${key}" aria-pressed="${key === 'all'}">${label}</button>`).join('')}
+              </div>`}
+              <div class="mobile-wishes__feed" data-home-wishes></div>
             </section>`;
+          const feed = bodyEl.querySelector('[data-home-wishes]');
+          if (wishError) {
+            feed.innerHTML = needsLogin
+              ? '<div class="mobile-wishes__empty"><p>登录后查看同学们的心愿</p><a href="#/login">去登录</a></div>'
+              : '<div class="mobile-wishes__empty"><p>心愿加载失败</p><button type="button">重新加载</button></div>';
+            feed.querySelector('button')?.addEventListener('click', () => renderChannelContent(channel));
+            return;
+          }
+          const filterButtons = bodyEl.querySelectorAll('[data-wish-filter]');
+          const showWishes = (filter) => {
+            filterButtons.forEach(button => button.setAttribute('aria-pressed', button.dataset.wishFilter === filter));
+            const shown = wishes.filter(wish => filter === 'all' || (filter === 'relay' ? !!wish.offeredItemId : wish.category === filter));
+            feed.innerHTML = shown.length ? shown.map(homeWishCard).join('') : filter === 'all'
+              ? '<div class="mobile-wishes__empty"><p>还没有求换心愿</p><a href="#/publish/edit/wish">去发心愿</a></div>'
+              : '<div class="mobile-wishes__empty"><p>这个分类还没有心愿</p><button type="button" data-show-all-wishes>查看全部</button></div>';
+          };
+          filterButtons.forEach(button => button.addEventListener('click', () => showWishes(button.dataset.wishFilter)));
+          feed.addEventListener('click', event => {
+            if (event.target.closest('[data-show-all-wishes]')) {
+              showWishes('all');
+              filterButtons[0].focus();
+            }
+          });
+          showWishes('all');
           return;
         }
 

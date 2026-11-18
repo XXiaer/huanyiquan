@@ -2088,3 +2088,17 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .mobile-wishes__empty { padding: 32px 12px; text-align: center; background: #fff; border-radius: 12px; }
 .mobile-wishes__empty p { margin: 0 0 8px; }
 .mobile-wishes__empty a, .mobile-wishes__empty button { display: inline-grid; place-items: center; min-height: 40px; color: #0a5c51; }
+
+.home-wishes .mobile-wishes__header {
+  grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px 14px;
+}
+.home-wishes .mobile-wishes__header h2 { margin: 0; color: #152d24; font-size: 18px; }
+.home-wishes .mobile-wishes__publish { white-space: nowrap; }
+.home-wishes .mobile-wishes__filters { border-bottom: 1px solid #edf0ed; }
+.home-wishes .mobile-wishes__filters button { padding-inline: 8px; }
+.home-wish__labels { display: flex; align-items: flex-start; gap: 8px; }
+.home-wish__category { margin: 3px 10px 0 auto; color: #52665c; font-size: 11px; }
+.home-wishes .mobile-wish h3 { margin: 5px 11px 2px; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+.home-wish__author { display: flex; align-items: center; gap: 5px; min-width: 0; min-height: 40px; color: inherit; }
+.home-wish__author .avt { flex: none; }
+.home-wishes .mobile-wish__footer time { margin-left: auto; }
