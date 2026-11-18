@@ -1100,17 +1100,20 @@
         ];
 
 
-        var amzHomeTop = '<section class="hq-home-intro" aria-label="了解换一圈">'
-            + '<nav class="hq-home-links" aria-label="校园换物入口">'
+        var amzHomeTop = '<section class="hq-home-intro" aria-label="校园换物入口">'
+            + '<a class="hq-home-hero" href="#/relay">'
+            + '<div class="hq-home-hero-copy"><h1>三人成环</h1><p>三位同学，各换到想要的闲置。</p>'
+            + '<span class="hq-home-hero-action">找我的换物环' + navIcon('next') + '</span></div>'
+            + '<img src="/assets/amz/home-spotlight-relay.webp" width="450" height="304" alt="" decoding="async"></a>'
+            + '<nav class="hq-home-links" aria-label="快捷入口">'
             + [
-                ['#/idle', '逛集市', 'swap', 'home-loop-market-v1'],
-                ['#/auctions', '校园拍卖', 'auction'],
-                ['#/relay', '换物接力', 'relay', 'home-loop-relay-v1'],
-                ['#/wishes', '心愿单', 'wishes']
+                ['#/idle', '逛集市', 'market', '发现校园闲置'],
+                ['#/auctions', '校园拍卖', 'auction', '出价竞拍好物'],
+                ['#/wishes', '心愿单', 'wishes', '发布求换需求']
             ].map(function (entry) {
-                return '<a class="hq-home-link hq-home-link--' + entry[2] + '" href="' + entry[0] + '">'
-                    + '<img src="/assets/amz/' + (entry[3] || 'home-paper-' + entry[2]) + '.webp" width="384" height="192" alt="" decoding="async">'
-                    + '<span>' + entry[1] + navIcon('next') + '</span></a>';
+                return '<a class="hq-home-link" href="' + entry[0] + '">'
+                    + '<img src="/assets/amz/home-spotlight-' + entry[2] + '.webp" width="144" height="144" alt="" decoding="async">'
+                    + '<strong>' + entry[1] + '</strong><small>' + entry[3] + '</small></a>';
             }).join('')
             + '</nav></section>';
 
