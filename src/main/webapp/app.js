@@ -1103,13 +1103,13 @@
         var amzHomeTop = '<section class="hq-home-intro" aria-label="了解换一圈">'
             + '<nav class="hq-home-links" aria-label="校园换物入口">'
             + [
-                ['#/idle', '逛集市', 'swap'],
+                ['#/idle', '逛集市', 'swap', 'home-loop-market-v1'],
                 ['#/auctions', '校园拍卖', 'auction'],
-                ['#/relay', '换物接力', 'relay'],
+                ['#/relay', '换物接力', 'relay', 'home-loop-relay-v1'],
                 ['#/wishes', '心愿单', 'wishes']
             ].map(function (entry) {
                 return '<a class="hq-home-link hq-home-link--' + entry[2] + '" href="' + entry[0] + '">'
-                    + '<img src="/assets/amz/home-paper-' + entry[2] + '.webp" width="384" height="192" alt="" decoding="async">'
+                    + '<img src="/assets/amz/' + (entry[3] || 'home-paper-' + entry[2]) + '.webp" width="384" height="192" alt="" decoding="async">'
                     + '<span>' + entry[1] + navIcon('next') + '</span></a>';
             }).join('')
             + '</nav></section>';

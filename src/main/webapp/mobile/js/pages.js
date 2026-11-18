@@ -121,7 +121,7 @@
   const PRIMARY_SERVICES = [
     { name: '以物换物', href: '#/market/swap', art: 'swap', note: '拿闲置换好物' },
     { name: '校园拍卖', href: '#/auction', art: 'auction', note: '为心仪物品出价' },
-    { name: '换物接力', href: '#/relay', art: 'swapRing', note: '两人换不成就凑三人' },
+    { name: '换物接力', href: '#/relay', art: 'swapRing-loop-v1', note: '三人成环，互换闲置' },
   ];
   function serviceLink(service, size) {
     return `<a href="${service.href}"><i><img src="assets/brand/illustrated-${service.art}-home.webp" width="${size}" height="${size}" alt=""></i><span>${service.name}</span><small>${service.note}</small></a>`;
