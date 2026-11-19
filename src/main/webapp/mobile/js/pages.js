@@ -1514,7 +1514,15 @@
     const results = view.querySelector('[data-swap-results]');
     if (!button) return;
     let rows = batch.rows.slice();
+    const observer = window.IntersectionObserver ? new IntersectionObserver((entries, watcher) => {
+      if (!button.isConnected) { watcher.disconnect(); return; }
+      if (!button.disabled && !button.hidden && entries.some(entry => entry.isIntersecting)) button.click();
+    }, {rootMargin: '0px 0px 100px 0px'}) : null;
+    const cleanup = window.__cleanup;
+    window.__cleanup = () => { observer?.disconnect(); cleanup?.(); };
     button.onclick = async () => {
+      if (button.disabled) return;
+      observer?.unobserve(button);
       button.disabled = true;
       try {
         batch = await window.campusExchange.browse(load, mode, batch.page + 1, filter);
@@ -1523,9 +1531,11 @@
         if (newest) rows.sort((a,b) => String(b.createTime).localeCompare(String(a.createTime)));
         results.innerHTML = waterfall(rows);
         button.hidden = !batch.hasMore;
+        if (!button.hidden) observer?.observe(button);
       } catch (error) { toast(error.message); }
       finally { button.disabled = false; }
     };
+    observer?.observe(button);
   }
 
   const marketCache = new Map();
@@ -1583,8 +1593,17 @@
       }
       if (rows.length) draw();
       let page = 1;
+      const observer = window.IntersectionObserver ? new IntersectionObserver((entries, watcher) => {
+        if (!more.isConnected || location.hash !== route) { watcher.disconnect(); return; }
+        if (entries.some(entry => entry.isIntersecting) && !more.disabled && !more.hidden) {
+          watcher.unobserve(more);
+          load(true);
+        }
+      }, {rootMargin: '0px 0px 100px 0px'}) : null;
+      window.__cleanup = () => observer?.disconnect();
       const load = async (append = false) => {
         if (more.disabled) return;
+        observer?.unobserve(more);
         more.disabled = true;
         feedback.textContent = '正在加载好物…';
         try {
@@ -1605,6 +1624,7 @@
           draw();
           feedback.textContent = '';
           more.hidden = !batch?.hasMore;
+          if (!more.hidden) observer?.observe(more);
         } catch (error) {
           if (!results.isConnected) return;
           feedback.textContent = rows.length ? '连接失败，正在显示上次加载的物品。' : '网络不给力，没能加载集市。';

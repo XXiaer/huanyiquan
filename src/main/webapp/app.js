@@ -84,7 +84,6 @@
         home: {category: '', condition: '', tradeMode: 0, sort: '', campusSpot: readSavedCampusSpot(), minCredit: 0, maxPrice: 2000, keyword: '', page: 1, items: [], total: 0, hasMore: false},
         idleTab: 'all',
         idleCache: {auctions: null, myRelay: null, wishes: null, myShelf: null},
-        sideMoreCats: false,
         publishImages: [],
         _pickedOfferItemId: 0,
         offersTab: 'received',
@@ -540,13 +539,17 @@
             +'<button class="tab tab-fab'+(active==='publish'?' on':'')+'"'+(active==='publish'?' aria-current="page"':'')+' data-act="go" data-to="#/publish"><span class="fab">'+navIcon('add')+'</span><span>发布</span></button>'
             +t('notifications','notice','消息')+t('me','me','我的')+'</nav>';
     }
-    function topnav(active) {
+    function topnavSection(active) {
         if(active==='home')active='market';
         if(active==='idle'){
             var t = state.idleTab || 'all';
             active = t === 'auctions' ? 'auctions' : (t === 'relay' ? 'relay' : (t === 'wishes' ? 'wishes' : 'idle'));
         }
         if(active==='offers'||active==='exchange')active='trade';
+        return active;
+    }
+    function topnav(active) {
+        active = topnavSection(active);
         var items=[
             ['#/market','market','首页'],
             ['#/idle','idle','集市'],
@@ -700,7 +703,6 @@
             + '<div class="amz-gb-price-row">' + priceLine + '</div>'
             + '<a class="amz-gb-title" href="#/item/' + Number(it.id) + '" title="' + esc(it.title) + '">' + esc(it.title) + '</a>'
             + '<div class="amz-gb-rating"><span class="amz-stars">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + '</span><span>' + esc(it.conditionLevel || '九成新') + '</span></div>'
-            + '<a class="amz-gb-link" href="#/item/' + Number(it.id) + '">查看好物详情</a>'
             + '</article>';
     }
 
@@ -1121,56 +1123,20 @@
             + (visibleItems.length ? '<div class="pgrid">' + visibleItems.map(pCard).join('') + '</div>' : emptyState(navIcon('search'), '暂时没有找到好物', '', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>'))
             + (h.hasMore ? '<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>' : '') + '</section>';
 
-        // ---------------- 校园闲置 / 搜索：1:1 亚马逊今日优惠（Goldbox）集成版 ----------------
         var inIdleBrowse = idle || isSearch || h.category || h.condition || tmVal || sortVal || h.campusSpot || minCredit || (maxPrice > 0 && maxPrice < 2000);
         if (inIdleBrowse) {
-            var promoBannerHtml = '<section class="amz-gold-banner" aria-label="换一圈专场活动">'
-                + '<div class="amz-gold-banner-copy">'
-                + '<h1>' + (isSearch ? '搜索：' + esc(h.keyword || '校园好物') : '校园集市') + '</h1>'
-                + '</div>'
-                + '<img class="amz-gold-banner-art" src="/assets/amz/idle-promo-banner-compact.webp" alt="换一圈吉祥物小唤风">'
-                + '</section>';
-
-            // 亚马逊「玩具与游戏」同款胶囊横向滑动栏（集成 拍卖 / 接力 / 求换 + 分类入口）
-            var pillItems = [
-                { kind: 'tab', v: 'all', label: '全部闲置', active: activeTab === 'all' && !h.category },
-                { kind: 'tab', v: 'auctions', label: '校园拍卖', active: activeTab === 'auctions' },
-                { kind: 'tab', v: 'relay', label: '换物接力', active: activeTab === 'relay' },
-                { kind: 'tab', v: 'wishes', label: '求换专区', active: activeTab === 'wishes' },
-                { kind: 'cat', v: '教材', label: '图书教材', active: h.category === '教材' },
-                { kind: 'cat', v: '数码', label: '数码设备', active: h.category === '数码' },
-                { kind: 'cat', v: '生活', label: '宿舍生活', active: h.category === '生活' },
-                { kind: 'cat', v: '运动', label: '运动户外', active: h.category === '运动' },
-                { kind: 'cat', v: '衣物', label: '服饰穿搭', active: h.category === '衣物' },
-                { kind: 'cat', v: '绿植', label: '绿植花卉', active: h.category === '绿植' },
-                { kind: 'cat', v: '其他', label: '其他闲置', active: h.category === '其他' }
-            ];
-            var pillRailHtml = '<div class="amz-pill-rail-wrap">'
-                + '<button type="button" class="amz-pill-arrow" data-act="pill-scroll" data-dir="-1" aria-label="向左滚动">‹</button>'
-                + '<div class="amz-pill-rail" id="amz-pill-rail">'
-                + pillItems.map(function (p) {
-                    return '<button type="button" class="amz-pill-btn' + (p.active ? ' on' : '') + '" data-act="idle-pill" data-kind="' + p.kind + '" data-v="' + esc(p.v) + '">' + esc(p.label) + '</button>';
-                }).join('')
-                + '</div>'
-                + '<button type="button" class="amz-pill-arrow" data-act="pill-scroll" data-dir="1" aria-label="向右滚动">›</button>'
-                + '</div>';
-
-            // 左侧亚马逊极简纯白单选筛选列（无灰框/胶囊框堆砌）
-            var catLimit = state.sideMoreCats ? categories.length : 5;
-            var leftSidebarHtml = '<aside class="amz-gold-sidebar" aria-label="筛选条件">'
-                + '<div class="amz-gs-group"><h3>专区频道</h3>'
-                + [['all', '全部闲置'], ['auctions', '校园拍卖'], ['relay', '换物接力'], ['wishes', '求换专区']].map(function (t) {
-                    var on = activeTab === t[0];
-                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="idle-tab" data-v="' + t[0] + '"><i class="amz-gs-dot"></i><span>' + t[1] + '</span></button>';
-                }).join('')
-                + '</div>'
-                + '<div class="amz-gs-group"><h3>部门分类</h3>'
-                + categories.slice(0, catLimit).map(function (c) {
-                    var on = h.category === c[0];
-                    return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-cat" data-v="' + esc(c[0]) + '"><i class="amz-gs-dot"></i><span>' + esc(c[1]) + '</span></button>';
-                }).join('')
-                + '<button type="button" class="amz-gs-more" data-act="side-more-cats">' + (state.sideMoreCats ? '▴ 收起分类' : '▾ 查看更多') + '</button>'
-                + '</div>'
+            var channelsHtml = '<nav class="market-channels" aria-label="集市频道">'
+                + [['all', '全部商品'], ['auctions', '校园拍卖'], ['relay', '换物接力'], ['wishes', '心愿单']].map(function (tab) {
+                    var selected = activeTab === tab[0];
+                    return '<button type="button" data-act="idle-pill" data-kind="tab" data-v="' + tab[0]
+                        + '" aria-pressed="' + selected + '">' + tab[1] + '</button>';
+                }).join('') + '</nav>';
+            var categoriesHtml = '<div class="market-categories" aria-label="商品分类"><strong>分类</strong>'
+                + categories.map(function (category) {
+                    return '<button type="button" data-act="f-cat" data-v="' + esc(category[0]) + '" aria-pressed="'
+                        + (h.category === category[0]) + '">' + esc(category[1]) + '</button>';
+                }).join('') + '</div>';
+            var filtersHtml = '<details class="market-advanced"' + ($('.market-advanced[open]') ? ' open' : '') + '><summary>筛选条件</summary><div class="market-filter-panel">'
                 + (activeTab === 'all'
                     ? '<div class="amz-gs-group"><h3>交易方式</h3>'
                       + [[0, '全部方式'], [1, '明码标价'], [2, '以物换物'], [4, '可买可换']].map(function (t) {
@@ -1207,7 +1173,7 @@
                     return '<button type="button" class="amz-gs-radio' + (on ? ' on' : '') + '" data-act="f-spot" data-v="' + esc(sp[0]) + '"><i class="amz-gs-dot"></i><span>' + esc(sp[1]) + '</span></button>';
                 }).join('')
                 + '</div>'
-                + '</aside>';
+                + '</div></details>';
 
             // 计算当前专场卡片列表
             var gridToolbarHtml = '';
@@ -1291,39 +1257,66 @@
                     + '</div></div>';
                 cardsHtml = visibleItems.length
                     ? visibleItems.map(amzGoldItemCard).join('')
-                    : emptyState(isSearch ? '<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">' : navIcon('search'), '暂时没有找到好物', '换个搜索词或调整左侧筛选条件试试', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>');
+                    : emptyState(isSearch ? '<img class="search-empty-mascot" src="/assets/brand/mascot-search.png" width="110" height="110" alt="">' : navIcon('search'), '暂时没有找到好物', '换个搜索词或调整筛选条件试试', '<button class="btn btn-primary btn-sm" data-act="go" data-to="#/publish">发布闲置</button>');
                 moreHtml = h.hasMore ? '<div class="feed-more"><button class="btn btn-ghost" data-act="load-more">加载更多</button></div>' : '';
             }
 
             var mainContentHtml = '<div class="amz-gold-main">'
-                + gridToolbarHtml
+                + '<div class="market-controls">' + gridToolbarHtml + filtersHtml + '</div>'
                 + '<div class="amz-gold-grid">' + cardsHtml + '</div>'
                 + moreHtml
                 + '</div>';
 
             var goldShellHtml = '<div class="amz-goldbox-page desktop-market">'
-                + promoBannerHtml
-                + pillRailHtml
-                + '<div class="amz-gold-body">' + leftSidebarHtml + mainContentHtml + '</div>'
+                + channelsHtml + categoriesHtml
+                + '<div class="amz-gold-body">' + mainContentHtml + '</div>'
                 + '</div>';
 
             if (isSearch) {
                 renderSearchPage(goldShellHtml);
+                watchMoreItems();
                 return;
             }
             var prevBrowseY = window.scrollY;
             var prevGoldPage = $('.amz-goldbox-page');
             if (prevGoldPage && $('.shell')) {
                 prevGoldPage.outerHTML = goldShellHtml;
-                var topAs = document.querySelectorAll('.topnav a');
-                topAs.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#/idle'); });
+                var activeHref = '#/' + topnavSection('idle');
+                document.querySelectorAll('.topnav a').forEach(function (link) {
+                    var selected = link.getAttribute('href') === activeHref;
+                    link.classList.toggle('on', selected);
+                    if (selected) link.setAttribute('aria-current', 'page');
+                    else link.removeAttribute('aria-current');
+                });
                 window.scrollTo(window.scrollX, prevBrowseY);
             } else {
                 $('#app').innerHTML = shell('idle', goldShellHtml);
             }
+            watchMoreItems();
             return;
         }
         $('#app').innerHTML = shell('market', '<div class="market-home amz-home-layout">' + amzHomeTop + '<div class="amz-shelf-wrap">' + homeRecommend + '</div></div>');
+        watchMoreItems();
+    }
+
+    var moreItemsObserver;
+    var loadingMoreItems = false;
+    function watchMoreItems() {
+        if (moreItemsObserver) moreItemsObserver.disconnect();
+        var button = $('[data-act="load-more"]');
+        if (!button || !window.IntersectionObserver) return;
+        var route = location.hash;
+        moreItemsObserver = new IntersectionObserver(function (entries, observer) {
+            if (!button.isConnected || location.hash !== route) {
+                observer.disconnect();
+                return;
+            }
+            if (!loadingMoreItems && entries.some(function (entry) { return entry.isIntersecting; })) {
+                observer.disconnect();
+                button.click();
+            }
+        }, {rootMargin: '0px 0px 100px 0px'});
+        moreItemsObserver.observe(button);
     }
 
     function openFilterSheet() {
@@ -1354,13 +1347,15 @@
         var token=++homeLoadToken;
         if (homeRequest) homeRequest.abort();
         homeRequest = new AbortController();
-        var options = {signal: homeRequest.signal};
+        var options = {signal: homeRequest.signal, noCache: true};
         var h = state.home;
         if (reset) {
+            if (moreItemsObserver) moreItemsObserver.disconnect();
+            h.hasMore = false;
             h.page = 1;
             h.items = [];
         }
-        var params = '?page=' + h.page + '&size=20';
+        var params = '?page=' + h.page + '&size=24';
         if (h.category) params += '&category=' + encodeURIComponent(h.category);
         if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
         if (Number(h.tradeMode) > 0) params += '&tradeMode=' + Number(h.tradeMode);
@@ -4548,6 +4543,9 @@
         if (hash !== prevHash) {
             state._lastHash = hash;
             var qs = qIdx >= 0 ? new URLSearchParams(hash.slice(qIdx + 1)) : null;
+            if (['#/home', '#/market'].includes(base) && !qs && !['#/home', '#/market'].includes(prevHash)) {
+                Object.assign(state.home, {category: '', condition: '', tradeMode: 0, sort: '', minCredit: 0, maxPrice: 2000});
+            }
             if (qs && qs.has('cat')) {
                 state.home.category = qs.get('cat') || '';
                 state.home.minCredit = 0;
@@ -4556,7 +4554,7 @@
             }
             if (qs && qs.has('tab')) {
                 state.idleTab = qs.get('tab') || 'all';
-            } else if (base === '#/idle' && !qs) {
+            } else if (['#/idle', '#/search', '#/home', '#/market'].includes(base)) {
                 state.idleTab = 'all';
             }
             if (qs && qs.has('room')) {
@@ -4575,6 +4573,7 @@
     }
 
     async function render() {
+        if (moreItemsObserver) moreItemsObserver.disconnect();
         if (communityTimer) { clearInterval(communityTimer); communityTimer = null; }
         if (roomTimer) { clearInterval(roomTimer); roomTimer = null; }
         if (imPollTimer) { clearInterval(imPollTimer); imPollTimer = null; }
@@ -4621,18 +4620,20 @@
             if (view.name === 'email') { await renderEmail(); } else if (view.name === 'settings') {
                 renderSettings();
             } else if (view.name === 'home') {
+                var browseRoute = location.hash;
                 if ((location.hash || '').split('?')[0] === '#/search' && !state.home.keyword) { renderSearchPage(''); }
                 else {
                     await ensureIdleTabData(state.idleTab || 'all');
-                    if (await loadHome(true)) renderHome();
+                    if (location.hash === browseRoute && await loadHome(true) && location.hash === browseRoute) renderHome();
                 }
             } else if (view.name === 'auctions' || view.name === 'relay' || view.name === 'wishes') {
                 if (window.innerWidth >= 900) {
                     var targetIdleTab = view.name;
                     state.idleTab = targetIdleTab;
                     currentView = { name: 'home', arg: null };
+                    var channelRoute = location.hash;
                     await ensureIdleTabData(targetIdleTab);
-                    if (await loadHome(true)) renderHome();
+                    if (location.hash === channelRoute) renderHome();
                 } else {
                     if (view.name === 'auctions') await renderAuctions();
                     else if (view.name === 'relay') await renderRelay();
@@ -4860,43 +4861,13 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
-        if (act === 'pill-scroll') {
-            var pRail = $('#amz-pill-rail');
-            if (pRail) pRail.scrollBy({ left: Number(el.dataset.dir || 1) * 340, behavior: 'smooth' });
-            return;
-        }
-        if (act === 'idle-tab') {
-            state.idleTab = el.dataset.v || 'all';
-            await withBusy(el, async function () {
-                await ensureIdleTabData(state.idleTab);
-                if (state.idleTab === 'all' && (!state.home.items || !state.home.items.length)) await loadHome(true);
-                renderHome();
-            });
-            return;
-        }
         if (act === 'idle-pill') {
-            var pKind = el.dataset.kind;
-            var pVal = el.dataset.v || '';
-            if (pKind === 'tab') {
-                if (pVal === 'all') {
-                    state.idleTab = 'all';
-                    state.home.category = '';
-                } else {
-                    state.idleTab = pVal;
-                }
-                await ensureIdleTabData(state.idleTab);
-                if (state.idleTab === 'all' && (!state.home.items || !state.home.items.length)) await loadHome(true);
-                renderHome();
-            } else {
-                state.home.category = (state.home.category === pVal ? '' : pVal);
-                if (state.idleTab === 'all') await loadHome(true);
-                renderHome();
+            var channel = el.dataset.v;
+            var target = {all: '#/idle', auctions: '#/auctions', relay: '#/relay', wishes: '#/wishes'}[channel];
+            if (target) {
+                state.home.category = '';
+                go(target);
             }
-            return;
-        }
-        if (act === 'side-more-cats') {
-            state.sideMoreCats = !state.sideMoreCats;
-            renderHome();
             return;
         }
         if (act === 'open-wish-modal') {
@@ -5500,7 +5471,8 @@
             var feed = $('.market-feed');
             if (feed) {
                 feed.setAttribute('aria-busy', 'true');
-                feed.querySelector('.feed-count').textContent = '正在筛选…';
+                var count = feed.querySelector('.feed-count');
+                if (count) count.textContent = '正在筛选…';
             }
             var request = loadHome(true);
             var filterToken = homeLoadToken;
@@ -5509,7 +5481,8 @@
             } catch (error) {
                 if (filterToken === homeLoadToken && currentView.name === 'home') {
                     state.home[key] = previous;
-                    if (feed?.isConnected) feed.querySelector('.feed-count').textContent = '筛选失败';
+                    var count = feed?.querySelector('.feed-count');
+                    if (count) count.textContent = '筛选失败';
                     toast(error.message || '筛选失败，请重试', 'err');
                 }
             } finally {
@@ -5522,9 +5495,27 @@
             return;
         }
         if (act === 'load-more') {
+            if (loadingMoreItems || !state.home.hasMore || currentView.name !== 'home') return;
+            if (moreItemsObserver) moreItemsObserver.disconnect();
+            var previousPage = state.home.page;
+            var moreRoute = location.hash;
+            loadingMoreItems = true;
             state.home.page += 1;
+            var nextPage = loadHome(false);
+            var moreToken = homeLoadToken;
             await withBusy(el, async function () {
-                if(await loadHome(false)) renderHome();
+                try {
+                    if (await nextPage && location.hash === moreRoute) {
+                        var scrollY = window.scrollY;
+                        renderHome();
+                        window.scrollTo(window.scrollX, scrollY);
+                    }
+                } catch (error) {
+                    if (moreToken === homeLoadToken && location.hash === moreRoute) state.home.page = previousPage;
+                    throw error;
+                } finally {
+                    loadingMoreItems = false;
+                }
             });
             return;
         }

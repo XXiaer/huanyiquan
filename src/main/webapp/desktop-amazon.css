@@ -7489,7 +7489,7 @@
     }
     .amz-gold-body {
         display: grid;
-        grid-template-columns: 215px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 18px;
         padding: 14px 14px 0;
         align-items: start;
@@ -8516,7 +8516,7 @@
     body .appbar .header-search.amz-search button svg { color: #fff !important; stroke: #fff !important; }
     body .appbar .amz-deliver svg { stroke: #356f64 !important; }
     body .appbar .topnav a { color: #35554c !important; border-radius: 7px; }
-    body .appbar .topnav a.on { background: #dceee6 !important; color: #0a5c51 !important; }
+    body .appbar .topnav a.on { background: transparent !important; color: #0a5c51 !important; font-weight: 800; box-shadow: inset 0 -2px currentColor; }
     body .appbar .notice-count { box-shadow: 0 0 0 1.5px #fff; }
     body .appbar .notice-link:hover, body .appbar .amz-nav-item:hover, body .appbar .brand:hover { border-color: #c9e0d6; }
     body .notice-popup { z-index: 80 !important; }
@@ -8531,7 +8531,7 @@
     .amz-home-layout .market-feed .pcard-seller i { flex: none; display: grid; place-items: center; width: 14px; height: 14px; background: #eeefef; border-radius: 50%; font-style: normal; }
     .amz-home-layout .market-feed .pcard-seller span { min-width: 0; max-width: 88px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .amz-home-layout .market-feed .feed-heading { padding-block: 6px; margin-bottom: 6px; }
-    .amz-gold-grid, .ali-auction-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ali-auction-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .amz-gb-title, .clean-card-title { font-size: 14px; line-height: 1.45; min-height: 2.9em; }
     .shell.shell-admin { max-width: 1520px !important; }
     .shell-admin .admin-workspace { grid-template-columns: 196px minmax(0,1fr); }
@@ -8542,3 +8542,43 @@
 }
 
 .pcard-seller { display: none; }
+
+/* Market filters sit above the full-width catalogue. */
+.market-channels, .market-categories {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e7e7e7;
+}
+.market-channels button, .market-categories button {
+    border: 0;
+    padding: 7px 3px;
+    background: transparent;
+    color: #34413d;
+}
+.market-channels button { font-size: 15px; }
+.market-categories strong { margin-right: 8px; }
+.market-channels button[aria-pressed="true"], .market-categories button[aria-pressed="true"] {
+    color: #087164;
+    font-weight: 800;
+    box-shadow: inset 0 -2px currentColor;
+}
+.market-controls { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.market-controls .amz-gb-toolbar { flex: 1 1 auto; }
+.market-advanced { flex: 0 0 auto; }
+.market-advanced[open] { flex-basis: 100%; }
+.market-advanced summary {
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid #dce5e0;
+    border-radius: 8px;
+}
+.market-advanced[open] summary { width: fit-content; }
+.market-filter-panel { display: flex; flex-wrap: wrap; padding: 14px 0; gap: 12px 28px; }
+@media (min-width: 1200px) {
+    .amz-goldbox-page .amz-gold-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+.amz-goldbox-page .amz-gb-card:has(.amz-gb-rating) .amz-gb-title { min-height: 0; }
