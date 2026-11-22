@@ -1298,6 +1298,7 @@
         </div>
 
         <div class="circle-body">
+          <button type="button" class="city-wheel-entry" data-city-wheel aria-haspopup="dialog" aria-label="城市转盘"><span class="city-wheel-entry-icon" aria-hidden="true"></span><span><b>城市转盘</b><small>随机抽一座城市</small></span></button>
           <div class="circle-promo-grid">
             <section class="circle-promo circle-promo--pink">
               <div class="circle-promo__hd">
