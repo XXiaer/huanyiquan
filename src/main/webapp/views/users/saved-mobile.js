@@ -28,9 +28,9 @@ PAGES.follows = {
   tab: 'me',
   async render(view, params) {
     const followers = params.followers;
-    const route = location.hash;
+    const route = siteRoutes.current();
     const list = await api.get(followers ? '/api/social/followers' : '/api/social/follow') || [];
-    if (location.hash !== route) return;
+    if (siteRoutes.current() !== route) return;
     view.innerHTML = `
         ${topbar(followers ? '谁关注了我' : '我的关注')}
         <nav class="r-chips" aria-label="关注列表"><a class="chip ${followers ? '' : 'on'}" href="#/follows">我的关注</a><a class="chip ${followers ? 'on' : ''}" href="#/followers">关注我的</a></nav>

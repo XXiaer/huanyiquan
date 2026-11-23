@@ -53,7 +53,8 @@ const shellActions = {
     },
     "go": async ({ event: ev, element: el }) => {
         ev.preventDefault();
-        go(el.dataset.to);
+        if (/^返回/.test(el.textContent.trim())) siteRoutes.go(el.dataset.to);
+        else siteRoutes.go(el.dataset.to, { newTab: true });
         return;
     },
     "open-report": async ({ element: el }) => {

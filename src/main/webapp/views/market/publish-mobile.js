@@ -71,7 +71,7 @@
     noTab: true,
     async render(view, params) {
       if (params.kind === 'wish') {
-        const route = location.hash;
+        const route = siteRoutes.current();
         const relay = new URLSearchParams(route.split('?')[1]).get('relay') === '1';
         let offered = [];
         if (relay) {
@@ -81,11 +81,11 @@
           } catch (error) {
             if (error.code !== 401) throw error;
             sessionStorage.setItem('hq.mobileReturnTo', route);
-            location.replace('#/login');
+            siteRoutes.replace('#/login');
             return;
           }
         }
-        if (location.hash === route) renderWish(view, relay, offered);
+        if (siteRoutes.current() === route) renderWish(view, relay, offered);
         return;
       }
       const kind = KIND[params.kind] || KIND.idle;
@@ -554,7 +554,7 @@
               await api.put('/api/item/' + itemId, body);
               localStorage.removeItem(draftKey);
               toast('已保存');
-              location.replace('#/me/onshelf');
+              siteRoutes.replace('#/me/onshelf');
               return;
             }
             await api.post('/api/item', body);
@@ -564,18 +564,18 @@
           if (params.kind === 'idle' && /^#\/item\/\d+$/.test(proposalReturn || '')) {
             sessionStorage.removeItem('hq.proposalReturn');
             toast('已提交审核，通过后可以用它发提案');
-            location.replace(proposalReturn);
+            siteRoutes.replace(proposalReturn);
             return;
           }
-          const relayReturn = params.kind === 'idle' && new URLSearchParams(location.hash.split('?')[1]).get('relay') === '1';
+          const relayReturn = params.kind === 'idle' && new URLSearchParams(siteRoutes.current().split('?')[1]).get('relay') === '1';
           view.innerHTML = `
             <div class="pe-success">
               <img src="assets/brand/mascot-check.png" alt="换一圈吉祥物">
               <h2>${kind.mode === 2 ? '心愿已发布' : '已提交审核'}</h2>
               <p>${kind.mode === 2 ? '有同学愿意换时，会第一时间通知你。' : '审核通过就上架，同校同学就能看到啦。'}</p>
               <div class="btns">
-                ${relayReturn ? '<a class="btn btn--ghost" href="#/publish/edit/wish?relay=1">返回接力心愿</a>' : `<button class="btn btn--ghost" onclick="location.hash='#/publish/edit/${params.kind}'">再发一件</button>`}
-                <button class="btn" onclick="location.hash='${kind.mode === 2 ? '#/wish' : kind.mode === 3 && newAuctionId ? '#/auction/' + newAuctionId : '#/me/onshelf'}'">${kind.mode === 2 ? '查看心愿' : '查看审核进度'}</button>
+                ${relayReturn ? '<a class="btn btn--ghost" href="#/publish/edit/wish?relay=1">返回接力心愿</a>' : `<button class="btn btn--ghost" onclick="siteRoutes.go('#/publish/edit/${params.kind}')">再发一件</button>`}
+                <button class="btn" onclick="siteRoutes.go('${kind.mode === 2 ? '#/wish' : kind.mode === 3 && newAuctionId ? '#/auction/' + newAuctionId : '#/me/onshelf'}')">${kind.mode === 2 ? '查看心愿' : '查看审核进度'}</button>
               </div>
             </div>`;
         } catch (e) {
@@ -589,7 +589,7 @@
   /* ============================================================ 发心愿 */
   function renderWish(view, relay, offered) {
     const draft = JSON.parse(localStorage.getItem('draft:wish') || '{}');
-    const wanted = new URLSearchParams(location.hash.split('?')[1]).get('want');
+    const wanted = new URLSearchParams(siteRoutes.current().split('?')[1]).get('want');
     if (wanted && !draft.title) draft.title = wanted.slice(0, 100);
     view.innerHTML = `
       <div class="pe-page">
@@ -661,7 +661,7 @@
           <p>有同学愿意换时，会第一时间通知你。</p>
           <div class="btns">
             <button class="btn btn--ghost" onclick="renderRoute()">再发一个</button>
-            <button class="btn" onclick="location.hash='#/wish'">去看看</button>
+            <button class="btn" onclick="siteRoutes.go('#/wish')">去看看</button>
           </div></div>`;
       } catch (e) { toast(e.message); }
       finally { submit.disabled = false; submit.textContent = '发布'; }

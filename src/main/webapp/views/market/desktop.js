@@ -78,7 +78,7 @@ async function ensureIdleTabData(tab, forceRefresh) {
 
 function renderHome() {
     var h = state.home;
-    var baseHash = (location.hash || '#/home').split('?')[0];
+    var baseHash = (siteRoutes.current() || '#/home').split('?')[0];
     var idle = baseHash === '#/idle' || baseHash === '#/auctions' || baseHash === '#/relay' || baseHash === '#/wishes';
     var isSearch = baseHash === '#/search';
     var minCredit = Number(h.minCredit || 0);
@@ -316,9 +316,9 @@ function watchMoreItems() {
     if (moreItemsObserver) moreItemsObserver.disconnect();
     var button = $('[data-act="load-more"]');
     if (!button || !window.IntersectionObserver) return;
-    var route = location.hash;
+    var route = siteRoutes.current();
     moreItemsObserver = new IntersectionObserver(function (entries, observer) {
-        if (!button.isConnected || location.hash !== route) {
+        if (!button.isConnected || siteRoutes.current() !== route) {
             observer.disconnect();
             return;
         }
@@ -372,10 +372,10 @@ async function loadHome(reset) {
     if (h.category) params += '&category=' + encodeURIComponent(h.category);
     if (h.condition) params += '&conditionLevel=' + encodeURIComponent(h.condition);
     if (Number(h.tradeMode) > 0) params += '&tradeMode=' + Number(h.tradeMode);
-    else if (!h.category && ['#/home', '#/market'].includes((location.hash || '#/home').split('?')[0])) params += '&tradeMode=2';
+    else if (!h.category && ['#/home', '#/market'].includes((siteRoutes.current() || '#/home').split('?')[0])) params += '&tradeMode=2';
     if (h.sort) params += '&sort=' + encodeURIComponent(h.sort);
     if (h.campusSpot) params += '&building=' + encodeURIComponent(h.campusSpot);
-    var baseLoadHash = (location.hash || '#/home').split('?')[0];
+    var baseLoadHash = (siteRoutes.current() || '#/home').split('?')[0];
     if (baseLoadHash !== '#/search') {
         try {
             var dataList = await api('/item/list' + params, options);

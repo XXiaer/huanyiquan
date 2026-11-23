@@ -1,4 +1,5 @@
 export const routes = [
+    [/^#\/community\/city-wheel$/, function () { return 'cityWheel'; }],
     [/^#\/appraise(?:\?.*)?$/, function () { return 'appraise'; }],
     [/^#\/followers$/, function () { return 'followers'; }],
     [/^#\/home(?:\?.*)?$/, function () { return 'home'; }],
@@ -18,6 +19,7 @@ export const routes = [
     [/^#\/item\/(\d+)\/edit$/, function (m) { return 'itemEdit'; }],
     [/^#\/publish$/, function () { return 'publishEntry'; }],
     [/^#\/publish\/success\/(\d+)$/, function () { return 'publishSuccess'; }],
+    [/^#\/publish\/edit\/wish(?:\?.*)?$/, function () { return 'wishCreate'; }],
     [/^#\/publish\/edit$/, function () { return 'publish'; }],
     [/^#\/offers$/, function () { return 'offers'; }],
     [/^#\/trade$/, function () { return 'offers'; }],

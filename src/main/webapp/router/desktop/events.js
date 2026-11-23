@@ -12,7 +12,7 @@ import { homeActions } from "../../views/home/desktop-handlers.js";
 import { marketActions, marketForms } from "../../views/market/desktop-handlers.js";
 import { messagesActions } from "../../views/messages/desktop-handlers.js";
 import { ordersActions, ordersForms } from "../../views/orders/desktop-handlers.js";
-import { checkChain, openAuthPopup } from "../../views/users/auth-desktop.js";
+import { checkChain } from "../../views/users/auth-desktop.js";
 import { usersActions, usersForms } from "../../views/users/desktop-handlers.js";
 
 function bindSheetKeys() {
@@ -43,20 +43,6 @@ const clickHandlers = new Map(Object.entries(Object.assign({}, ordersActions, ad
 const formHandlers = new Map(Object.entries(Object.assign({}, ordersForms, communityForms, marketForms, usersForms, shellForms, adminForms)));
 
 async function handleDesktopClick(ev) {
-    var authLink = ev.target.closest('a[href="#/login"], a[href="#/register"]');
-    if (authLink && window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
-        ev.preventDefault();
-        openAuthPopup(authLink.getAttribute('href') === '#/register' ? 'register' : 'login');
-        return;
-    }
-    var jdLink = ev.target.closest('.jd-side-nav a[href^="#/"]');
-    if (jdLink) {
-        var sideEl = jdLink.closest('.jd-side-nav');
-        state._jdPendingScroll = { winY: window.scrollY, sideY: sideEl ? sideEl.scrollTop : 0 };
-        ev.preventDefault();
-        go(jdLink.getAttribute('href'));
-        return;
-    }
     var el = ev.target.closest('[data-act]');
     if (!el) return;
     var act = el.dataset.act;

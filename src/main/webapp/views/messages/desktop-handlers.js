@@ -31,8 +31,8 @@ const messagesActions = {
                 if (deletedRow) deletedRow.remove();
                 removedActive = state.activeImKey === 'real:' + id;
                 if (removedActive) state.activeImKey = 'notices';
-                if (location.hash === '#/chat/' + id) {
-                    history.replaceState(null, '', '#/notifications');
+                if (siteRoutes.current() === '#/chat/' + id) {
+                    siteRoutes.replaceState('#/notifications');
                     desktopRuntime.currentView = parseRoute();
                 }
                 toast('已删除会话', 'ok');

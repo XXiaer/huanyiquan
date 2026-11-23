@@ -33,9 +33,9 @@ window.openScanSearch = function () {
             if (typeof window.isDesktopLoginQr === 'function' && window.isDesktopLoginQr(decoded)) {
               const m = decoded.match(/[?&#]qr=([A-Za-z0-9_-]{12,64})/);
               const qVal = m ? m[1] : decoded;
-              location.hash = '#/qr-confirm?qr=' + encodeURIComponent(qVal);
+              siteRoutes.go('#/qr-confirm?qr=' + encodeURIComponent(qVal));
             } else {
-              location.hash = '#/search/' + encodeURIComponent(decoded);
+              siteRoutes.go('#/search/' + encodeURIComponent(decoded));
             }
             return;
           }
@@ -43,7 +43,7 @@ window.openScanSearch = function () {
           const kw = (res && res.keyword) || '';
           if (!kw) throw new Error('未能识别出物品');
           close();
-          location.hash = '#/search/' + encodeURIComponent(kw);
+          siteRoutes.go('#/search/' + encodeURIComponent(kw));
         } catch (e) {
           status.textContent = e.message || '识别失败，请重试';
         }

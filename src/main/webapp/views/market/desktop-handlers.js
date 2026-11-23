@@ -19,7 +19,7 @@ import {
     renderSearchPage,
 } from "./desktop.js";
 import { markMultiWant, savePublishDraft, syncPublishTradeMode } from "./publish-desktop.js";
-import { DEMO_WISHES, openWishCreateSheet, renderWishes } from "./wishes-desktop.js";
+import { DEMO_WISHES, renderWishes } from "./wishes-desktop.js";
 import { renderRelay } from "../orders/relay-desktop.js";
 import { openAuthPopup } from "../users/auth-desktop.js";
 import { shelfRead, shelfRemember, shelfWrite } from "../users/saved-desktop.js";
@@ -35,8 +35,7 @@ const marketActions = {
         return;
     },
     "open-wish-modal": async () => {
-        await ensureIdleTabData('wishes');
-        openWishCreateSheet();
+        siteRoutes.go('#/publish/edit/wish', {newTab:true});
         return;
     },
     "idle-quick-fav": async ({ element: el }) => {
@@ -132,7 +131,7 @@ const marketActions = {
     "search-term": async ({ element: el }) => {
         state.home.keyword=el.dataset.v;
         rememberSearch(state.home.keyword);
-        if(await loadHome(true))renderHome();
+        siteRoutes.go('#/search?q=' + encodeURIComponent(state.home.keyword));
         return;
     },
     "estimate": async () => { openEstimate();return; },
@@ -140,7 +139,7 @@ const marketActions = {
         state.home.keyword=el.dataset.v;
         state.home.category='';
         state.home.condition='';
-        go('#/search');
+        siteRoutes.go('#/search?q=' + encodeURIComponent(state.home.keyword));
         return;
     },
     "home-feed": async ({ event: ev }) => {
@@ -287,20 +286,20 @@ const marketActions = {
         if (desktopRuntime.loadingMoreItems || !state.home.hasMore || desktopRuntime.currentView.name !== 'home') return;
         if (moreItemsObserver) moreItemsObserver.disconnect();
         var previousPage = state.home.page;
-        var moreRoute = location.hash;
+        var moreRoute = siteRoutes.current();
         desktopRuntime.loadingMoreItems = true;
         state.home.page += 1;
         var nextPage = loadHome(false);
         var moreToken = homeLoadToken;
         await withBusy(el, async function () {
             try {
-                if (await nextPage && location.hash === moreRoute) {
+                if (await nextPage && siteRoutes.current() === moreRoute) {
                     var scrollY = window.scrollY;
                     renderHome();
                     window.scrollTo(window.scrollX, scrollY);
                 }
             } catch (error) {
-                if (moreToken === homeLoadToken && location.hash === moreRoute) state.home.page = previousPage;
+                if (moreToken === homeLoadToken && siteRoutes.current() === moreRoute) state.home.page = previousPage;
                 throw error;
             } finally {
                 desktopRuntime.loadingMoreItems = false;
@@ -343,7 +342,7 @@ marketActions["f-spot"] = marketActions["f-cat"];
 marketActions["p-cond"] = marketActions["p-cat"];
 
 const marketForms = {
-    "wish-new": async ({ data: fd }) => {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});closeSheet();toast('求换已发布');if($('.amz-goldbox-page')){await ensureIdleTabData('wishes',true);renderHome();}else{await renderWishes();}return;},
+    "wish-new": async ({ data: fd }) => {await api('/wish',{method:'POST',body:{title:fd.get('title'),category:fd.get('category'),content:fd.get('content'),offeredItemId:Number(fd.get('offeredItemId'))||null}});closeSheet();toast('求换已发布');if(desktopRuntime.currentView.name==='wishCreate'){go('#/wishes');}else if($('.amz-goldbox-page')){await ensureIdleTabData('wishes',true);renderHome();}else{await renderWishes();}return;},
     "auction-new": async ({ data: fd }) => {
         if (!state.publishImages.length) throw new ApiError('请上传拍品图片'); await api('/auction', {method:'POST', body:{title:fd.get('title'), description:fd.get('description'), amount:fd.get('amount'), hours:fd.get('hours'), image:state.publishImages.join(',')}}); toast('已提交审核'); go('#/auction/mine'); return;
     },
@@ -432,7 +431,9 @@ const marketForms = {
         if (fd.has('category')) state.home.category = fd.get('category') || '';
         state.home.keyword = (fd.get('keyword') || '').trim();
         rememberSearch(state.home.keyword);
-        if(location.hash!=='#/search'){go('#/search');}else if(await loadHome(true)){renderHome();}
+        const params = new URLSearchParams({q: state.home.keyword});
+        if (state.home.category) params.set('cat', state.home.category);
+        siteRoutes.go('#/search?' + params);
     },
 };
 

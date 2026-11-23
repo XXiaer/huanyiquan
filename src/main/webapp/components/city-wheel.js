@@ -36,7 +36,7 @@
         return catalogRequest;
     }
 
-    function createDialog() {
+    function createDialog(host) {
         const element = document.createElement('dialog');
         element.className = 'city-wheel-dialog';
         element.setAttribute('aria-labelledby', 'city-wheel-title');
@@ -70,7 +70,11 @@
             cancelAnimationFrame(frame);
             if (opener?.isConnected) opener.focus({preventScroll: true});
         });
-        document.body.append(element);
+        if (host) {
+            element.classList.add('city-wheel-standalone-dial');
+            element.querySelector('.city-wheel-close').hidden = true;
+            host.append(element);
+        } else document.body.append(element);
         return element;
     }
 
@@ -104,8 +108,8 @@
         ctx.stroke();
     }
 
-    async function open(button) {
-        if (!dialog) dialog = createDialog();
+    async function open(button, host) {
+        if (!dialog) dialog = createDialog(host);
         if (dialog.open) return;
         opener = button;
         const ticket = ++session;
@@ -115,7 +119,8 @@
         const city = dialog.querySelector('[data-wheel-city]');
         const status = dialog.querySelector('.city-wheel-status');
         const spin = dialog.querySelector('.city-wheel-spin');
-        dialog.showModal();
+        if (host) dialog.show();
+        else dialog.showModal();
         count.textContent = '正在加载城市名单…';
         region.textContent = '全国城市';
         city.textContent = '下一站？';
@@ -135,7 +140,7 @@
             spin.onclick = () => {
                 const trigger = opener;
                 dialog.close();
-                open(trigger);
+                open(trigger, host);
             };
             return;
         }
@@ -193,6 +198,12 @@
             frame = requestAnimationFrame(tick);
         };
     }
+
+    window.renderCityWheelPage = host => {
+        host.classList.add('city-wheel-standalone');
+        host.innerHTML = '<a href="#/community" data-same-tab class="city-wheel-back">返回校园社区</a>';
+        open(host.querySelector('a'), host);
+    };
 
     document.addEventListener('click', event => {
         const button = event.target.closest('[data-city-wheel]');

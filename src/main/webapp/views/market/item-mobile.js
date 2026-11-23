@@ -18,6 +18,7 @@ PAGES.item = {
       return;
     }
     const it = data.item;
+    document.title = it.title + ' | 换一圈';
     const demo = window.campusExchange.isDemoListing(it);
     const pics = api.pics(it).filter(pic => !demo || window.realListingPhoto(pic));
     const available = !demo && !data.isMine && Number(it.status) === 1;
@@ -78,7 +79,7 @@ PAGES.item = {
         </div>
         ${demo ? '' : `<div class="item-block">
           <div class="item-owner">
-            <span onclick="location.hash='#/user/${it.ownerId}'">${avatar({ nickname: it.ownerNickname, id: it.ownerId, avatar: it.ownerAvatar }, 44)}</span>
+            <span onclick="siteRoutes.go('#/user/${it.ownerId}')">${avatar({ nickname: it.ownerNickname, id: it.ownerId, avatar: it.ownerAvatar }, 44)}</span>
             <div class="item-owner__main">
               <div class="item-owner__name">${esc(it.ownerNickname || '同学')}
                 ${credit ? `<span class="badge badge--orange">${credit.text}</span>` : ''}
@@ -131,7 +132,7 @@ PAGES.item = {
         </div>`, {
         onMount(sheet, close) {
           sheet.querySelector('[data-m="share"]').addEventListener('click', async () => {
-            const url = location.origin + '/#/item/' + it.id;
+            const url = location.origin + '/item/' + it.id;
             try { await navigator.clipboard.writeText(url); close(); toast('宝贝链接已复制'); } catch (e) { close(); toast(url); }
           });
           sheet.querySelector('[data-m="report"]').addEventListener('click', () => { close(); reportSheet(it.id, 'item'); });
@@ -159,7 +160,7 @@ PAGES.item = {
       const result = await api.post('/api/offer', {itemId:it.id,...payload});
       toast('提案已发出，等待对方回应');
       window.__offersMode = 'sent';
-      location.hash = result.conversationId ? '#/chat/' + Number(result.conversationId) : '#/offers';
+      siteRoutes.go(result.conversationId ? '#/chat/' + Number(result.conversationId) : '#/offers');
     };
     const sendCash = fixed => {
       window.openCashProposal({title:fixed ? '按标价约面交' : '发出面交出价', description:it.title, initial:it.price, fixed, note:true,
@@ -170,17 +171,17 @@ PAGES.item = {
     const startChat = async () => {
       try {
         const r = await api.post('/api/conversation/start', { itemId: it.id });
-        location.hash = '#/chat/' + r.id;
+        siteRoutes.go('#/chat/' + r.id);
       } catch (e) { toast(e.message); }
     };
     document.getElementById('itemChat')?.addEventListener('click', startChat);
     document.getElementById('itemCashChat')?.addEventListener('click', startChat);
 
     document.getElementById('itemWant')?.addEventListener('click', async () => {
-      const route = location.hash;
+      const route = siteRoutes.current();
       try {
         const list = await api.get('/api/item/mine');
-        if (route !== location.hash) return;
+        if (route !== siteRoutes.current()) return;
         const mine = (list || []).filter(i => i.status === 1 && !i.isDemo && i.id !== it.id);
         if (!mine.length) {
           openSheet('提案交换', '<p>先发布一件物品，审核通过后就可以用它发提案。</p><a class="btn btn--block" href="#/publish/edit/idle" data-proposal-return>去发布</a>',
@@ -195,7 +196,7 @@ PAGES.item = {
         window.openTradeProposal({title:'提案交换', receive:it, items:mine, sendLabel:'发出提案', note:true,
           onSend:(myItemId,message) => sendTrade({myItemId,message})});
       } catch (error) {
-        if (error.code === 401 && route === location.hash) location.hash = '#/login';
+        if (error.code === 401 && route === siteRoutes.current()) siteRoutes.go('#/login');
         else toast(error.message);
       }
     });

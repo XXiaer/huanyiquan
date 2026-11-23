@@ -15,7 +15,7 @@ function isService(c) {
 PAGES.messages = {
   tab: 'message',
   async render(view) {
-    const route = location.hash;
+    const route = siteRoutes.current();
     let notifs = [];
     let convs = [];
     let summary = { trade: 0, notice: 0, follow: 0, total: 0 };
@@ -24,7 +24,7 @@ PAGES.messages = {
       api.get('/api/conversation'),
     ]);
     notifs = r[0] || [];
-    if (route === location.hash) view.__notices = notifs;
+    if (route === siteRoutes.current()) view.__notices = notifs;
     convs = r[1] || [];
     notifs.filter(n => !n.read && !String(n.target || '').startsWith('#/chat/')).forEach(n => {
       const category = n.category || 'notice';
@@ -38,7 +38,7 @@ PAGES.messages = {
     summary.total = notifs.filter(n => !n.read).length;
     const blocked = JSON.parse(localStorage.getItem('blocked') || '[]').map((x) => Number(x.id));
     if (blocked.length) convs = convs.filter((c) => blocked.indexOf(Number(c.peerId)) < 0);
-    if (route !== location.hash) return;
+    if (route !== siteRoutes.current()) return;
     const unreadDot = count => '<i class="msg-unread-dot" role="img" aria-label="有未读消息"' + (count ? '' : ' hidden') + '></i>';
 
     const byCat = (c) => notifs.filter(n => (n.category || 'notice') === c && !String(n.target || '').startsWith('#/chat/'));
@@ -132,7 +132,7 @@ PAGES.messages = {
     renderTabbar('message', window.__unread);
 
     view.querySelectorAll('[data-go]').forEach((row) => {
-      row.addEventListener('click', () => { location.hash = row.dataset.go; });
+      row.addEventListener('click', () => { siteRoutes.go(row.dataset.go); });
     });
     document.getElementById('msgSearch').addEventListener('click', () => {
       openSheet('搜索消息', `<input class="field" id="convSearch" placeholder="搜昵称或消息关键词" autocomplete="off">
@@ -149,7 +149,7 @@ PAGES.messages = {
                   ${icon('right', 16)}
                 </div>`).join('') : '<div class="empty" style="padding:26px 0">没有匹配的会话</div>';
             box.querySelectorAll('[data-c]').forEach((row) => row.addEventListener('click', () => {
-              close(); location.hash = '#/chat/' + row.dataset.c;
+              close(); siteRoutes.go('#/chat/' + row.dataset.c);
             }));
           };
           draw('');
@@ -157,7 +157,7 @@ PAGES.messages = {
         },
       });
     });
-    document.getElementById('msgSet').addEventListener('click', () => { location.hash = '#/settings/notify'; });
+    document.getElementById('msgSet').addEventListener('click', () => { siteRoutes.go('#/settings/notify'); });
     document.getElementById('msgManage').addEventListener('click', () => {
       openSheet('消息管理', `<div class="set-card">
           <div class="set-row" data-m="read">全部标为已读<span class="set-row__arrow">${icon('checkCircle', 18)}</span></div>
@@ -176,10 +176,10 @@ PAGES.messages = {
               const results = await Promise.allSettled(read.map(c => api.del('/api/conversation/' + c.id)));
               const failed = results.filter(result => result.status === 'rejected').length;
               toast(failed ? `已清理 ${read.length - failed} 个，${failed} 个未删除，请重试` : '已清理');
-              if (location.hash === route) renderRoute();
+              if (siteRoutes.current() === route) renderRoute();
             });
           });
-          sheet.querySelector('[data-m="settings"]').addEventListener('click', () => { close(); location.hash = '#/settings/notify'; });
+          sheet.querySelector('[data-m="settings"]').addEventListener('click', () => { close(); siteRoutes.go('#/settings/notify'); });
         },
       });
     });
@@ -230,7 +230,7 @@ PAGES.messages = {
                 try {
                   await api.del('/api/conversation/' + cid);
                   toast('已删除会话');
-                  if (location.hash === route) {
+                  if (siteRoutes.current() === route) {
                     wrap.remove();
                     renderRoute();
                   }
@@ -392,7 +392,7 @@ PAGES.chat = {
         button.disabled = true;
         try {
           const result = await api.post('/api/offer/handle',{offerId:offer.id,action});
-          if (action === 'accept' && result?.exchangeId) location.hash = '#/exchange/' + Number(result.exchangeId);
+          if (action === 'accept' && result?.exchangeId) siteRoutes.go('#/exchange/' + Number(result.exchangeId));
           else refreshProposal();
         } catch (error) { toast(error.message); refreshProposal(); }
         finally { button.disabled = false; }
@@ -451,9 +451,9 @@ PAGES.chat = {
     scrollToLatest();
     body.addEventListener('click', (e) => {
       const card = e.target.closest('[data-ex]');
-      if (card) { location.hash = '#/exchange/' + card.dataset.ex; return; }
+      if (card) { siteRoutes.go('#/exchange/' + card.dataset.ex); return; }
       const itemCard = e.target.closest('[data-item]');
-      if (itemCard && Number(itemCard.dataset.item) > 0) { location.hash = '#/item/' + itemCard.dataset.item; return; }
+      if (itemCard && Number(itemCard.dataset.item) > 0) { siteRoutes.go('#/item/' + itemCard.dataset.item); return; }
       const copyBtn = e.target.closest('[data-copy]');
       if (copyBtn) {
         const val = copyBtn.dataset.copy || '';
@@ -483,7 +483,7 @@ PAGES.chat = {
 
     function renderMessage(m, mineId, peerObj, meObj) {
       const mine = m.senderId === mineId;
-      const peerAv = `<span onclick="event.stopPropagation();location.hash='#/user/${peerObj.id}'">${avatar(peerObj, 36)}</span>`;
+      const peerAv = `<span onclick="event.stopPropagation();siteRoutes.go('#/user/${peerObj.id}')">${avatar(peerObj, 36)}</span>`;
       const card = (html) => mine
         ? `<div class="bubble-row bubble-row--me">${avatar(meObj || '我', 36)}<div class="bubble-wrap">${html}</div></div>`
         : `<div class="bubble-row">${peerAv}<div class="bubble-wrap">${html}</div></div>`;
@@ -795,15 +795,15 @@ PAGES.chat = {
     });
 
     document.getElementById('chatPrimary').addEventListener('click', async () => {
-      if (order && order.status === 3) { location.hash = '#/user/' + conv.peerId + '/review'; return; }
-      if (order && order.status === 2) { location.hash = '#/exchange/' + Number(order.exchangeId || order.id); return; }
+      if (order && order.status === 3) { siteRoutes.go('#/user/' + conv.peerId + '/review'); return; }
+      if (order && order.status === 2) { siteRoutes.go('#/exchange/' + Number(order.exchangeId || order.id)); return; }
       if (order && order.status === 1) {
         try { await api.post('/api/exchange/' + order.exchangeId + '/confirm', {}); toast('已确认交换，等待对方确认'); renderRoute(); }
         catch (e) { toast(e.message); }
         return;
       }
-      if (item.status === 3) { location.hash = '#/user/' + conv.peerId + '/review'; return; }
-      location.hash = '#/item/' + item.id;
+      if (item.status === 3) { siteRoutes.go('#/user/' + conv.peerId + '/review'); return; }
+      siteRoutes.go('#/item/' + item.id);
     });
     const confirmBtn = document.getElementById('confirmReceipt');
     const confirmReceipt = async () => {
@@ -813,14 +813,14 @@ PAGES.chat = {
         await renderRoute();
         successSheet('交换完成', '双方已确认交付，信用分已结算。去给对方一个评价吧。', {
           text: '去评价',
-          onClick: () => { location.hash = '#/user/' + conv.peerId + '/review'; },
+          onClick: () => { siteRoutes.go('#/user/' + conv.peerId + '/review'); },
         });
       } catch (e) { toast(e.message); }
     };
     if (confirmBtn) confirmBtn.addEventListener('click', () => confirmSheet(
       '确认已收到物品', '请先核对物品。双方均确认后，这笔交易将完成，不能撤回。', '已收到并验货', confirmReceipt));
     const goReview = document.getElementById('goReview');
-    if (goReview) goReview.addEventListener('click', () => { location.hash = '#/user/' + conv.peerId + '/review'; });
+    if (goReview) goReview.addEventListener('click', () => { siteRoutes.go('#/user/' + conv.peerId + '/review'); });
 
     document.getElementById('chatMore').addEventListener('click', () => {
       openSheet('聊天设置', `<div class="set-card">
@@ -829,7 +829,7 @@ PAGES.chat = {
           <div class="set-row" data-m="report">举报<span class="set-row__arrow">${icon('right', 16)}</span></div>
         </div>`, {
         onMount(sheet, close) {
-          sheet.querySelector('[data-m="profile"]').addEventListener('click', () => { close(); location.hash = '#/user/' + conv.peerId; });
+          sheet.querySelector('[data-m="profile"]').addEventListener('click', () => { close(); siteRoutes.go('#/user/' + conv.peerId); });
           sheet.querySelector('[data-m="mute"]').addEventListener('click', async () => {
             try { await api.post('/api/conversation/' + conv.id + '/mute', { muted: !conv.muted }); close(); toast(!conv.muted ? '已开启免打扰' : '已取消免打扰'); renderRoute(); } catch (e) { toast(e.message); }
           });

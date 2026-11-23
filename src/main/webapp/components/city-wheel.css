@@ -73,3 +73,10 @@ html:has(.city-wheel-dialog[open]) { overflow:hidden; }
 .city-wheel-entry:focus-visible,.city-wheel-close:focus-visible,.city-wheel-spin:focus-visible {
     outline:2px solid #0a5c51; outline-offset:3px;
 }
+
+.city-wheel-standalone { max-width:560px; margin:0 auto; padding:20px 14px 36px; }
+.city-wheel-back { display:inline-block; margin:0 0 12px; color:#0a5c51; }
+.city-wheel-standalone .city-wheel-standalone-dial {
+    position:relative; inset:auto; width:100%; max-height:none; margin:0; border:1px solid #dce7e2;
+}
+.city-wheel-standalone .city-wheel-close[hidden] { display:none; }

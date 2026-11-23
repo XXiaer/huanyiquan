@@ -62,6 +62,17 @@ public class StaticServlet extends HttpServlet {
             return;
         }
 
+        if (PageRoutes.matches(uri)) {
+            File entry = new File(root, PageRoutes.entry(req, uri));
+            if (!entry.isFile()) {
+                sendNotFound(resp, "页面不存在");
+                return;
+            }
+            resp.setHeader("Vary", "User-Agent, Sec-CH-UA-Mobile");
+            writeFile(entry, resp);
+            return;
+        }
+
         File file = resolve(uri);
         if (file != null && file.isDirectory()) {
             File dirIndex = new File(file, SPA_ENTRY[0]);
@@ -77,19 +88,16 @@ public class StaticServlet extends HttpServlet {
             }
         }
         if (file == null || !file.isFile()) {
-            // 前端用 hash 路由，正常不走这里；兜底回首页，避免刷新 404
-            file = new File(root, SPA_ENTRY[0]);
-            if (!file.isFile()) {
-                sendNotFound(resp, "页面不存在");
-                return;
-            }
+            sendNotFound(resp, "页面不存在");
+            return;
         }
         writeFile(file, resp);
     }
 
     private void sendNotFound(HttpServletResponse resp, String msg) throws IOException {
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        JsonUtil.write(resp, Result.fail(404, msg));
+        resp.setContentType("application/json;charset=UTF-8");
+        JsonUtil.MAPPER.writeValue(resp.getOutputStream(), Result.fail(404, msg));
     }
 
     private File resolve(String uri) throws IOException {

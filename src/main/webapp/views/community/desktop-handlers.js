@@ -18,20 +18,14 @@ import { renderMeSub } from "../users/account-desktop.js";
 
 const communityActions = {
     "comm-room": async ({ element: el }) => {
-        state.commRoom = el.dataset.room || 'hall';
-        await renderCommunity();
-        return;
+        siteRoutes.go('#/community?room=' + encodeURIComponent(el.dataset.room || 'hall'), {newTab:true});
     },
     "comm-tab": async ({ element: el }) => {
-        state.commTab = el.dataset.v || 'posts';
-        await renderCommunity();
-        return;
+        const params = new URLSearchParams({room: state.commRoom || 'hall', section: el.dataset.v || 'posts'});
+        siteRoutes.go('#/community?' + params);
     },
     "open-room": async ({ element: el }) => {
-        state.commRoom = el.dataset.room || 'hall';
-        state.commTab = 'posts';
-        go('#/community');
-        return;
+        siteRoutes.go('#/community?room=' + encodeURIComponent(el.dataset.room || 'hall'), {newTab:true});
     },
     "toggle-follow-room": async ({ element: el }) => {
         var rId = el.dataset.room;

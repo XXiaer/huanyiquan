@@ -10,10 +10,10 @@
   PAGES.admin = {
     noTab: true,
     async render(view, params) {
-      const route = location.hash;
+      const route = siteRoutes.current();
       let me = window.__me;
       if (!me) { try { me = await api.get('/api/user/me'); window.__me = me; } catch (e) { me = null; } }
-      if (location.hash !== route) return;
+      if (siteRoutes.current() !== route) return;
       if (!me || Number(me.role) !== 1) {
         view.innerHTML = `<div class="admin-denied">
           <img src="assets/brand/mascot-wave-320.webp" alt="">
@@ -68,7 +68,7 @@
             try {
               const id = Number(button.dataset.dispute);
               const exchange = await api.get('/api/admin/exchange-disputes/' + id);
-              if (!button.isConnected || location.hash !== route) return;
+              if (!button.isConnected || siteRoutes.current() !== route) return;
               const meeting = exchange.confirmedArrangement;
               openSheet('交换单 #' + id, `
                 <p>面交约定：${meeting ? esc([meeting.place, meeting.startTime, meeting.note].filter(Boolean).join(' | ')) : '暂无'}</p>
@@ -92,7 +92,7 @@
                     try {
                       await api.post('/api/admin/exchange-disputes/' + id, {outcome, note});
                       close(); toast('裁决已提交');
-                      if (location.hash === route) renderRoute();
+                      if (siteRoutes.current() === route) renderRoute();
                     } catch (error) { toast(error.message); }
                     finally { controls.forEach(control => control.disabled = false); }
                   });

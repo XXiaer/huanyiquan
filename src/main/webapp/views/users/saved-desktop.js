@@ -34,7 +34,7 @@ function shelfCard(it, key) {
 }
 
 function renderShelf() {
-    var key = location.hash === '#/history' ? 'history' : 'favorites';
+    var key = siteRoutes.current() === '#/history' ? 'history' : 'favorites';
     var savedItems = shelfRead(key);
     var displayList = savedItems;
     var cards = displayList.map(function (it) { return shelfCard(it, key); }).join('');

@@ -255,7 +255,7 @@
         if (closed) return;
         qrState = data;
         if (pairEl) pairEl.textContent = data.pairCode || '------';
-        const qrUrl = location.origin + '/mobile/index.html#/qr-confirm?qr=' + encodeURIComponent(data.qrId);
+        const qrUrl = location.origin + '/login/qr-confirm?qr=' + encodeURIComponent(data.qrId);
         renderQrInto(box, qrUrl);
 
         pollTimer = setInterval(async () => {

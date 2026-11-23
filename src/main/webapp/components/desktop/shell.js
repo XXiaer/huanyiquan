@@ -83,7 +83,7 @@ function topnavSection(active) {
 function topnav(active) {
     active = topnavSection(active);
     var items=[
-        ['#/market','market','首页'],
+        ['#/home','market','首页'],
         ['#/idle','idle','集市'],
         ['#/wishes','wishes','心愿单'],
         ['#/appraise','appraise','AI 估价'],
@@ -139,7 +139,7 @@ function shell(active,content) {
     var currentSpot=state.home.campusSpot || readSavedCampusSpot() || '重庆移通学院';
     return '<a class="skip-link" href="#main-content" data-act="skip-main">跳到主要内容</a><div class="site-utility"><div><span>重庆移通学院 | 校园换物社区</span><span><a href="#/notifications">消息通知</a><a href="#/me">个人中心</a></span></div></div>'
         +'<header class="appbar"><div class="appbar-inner">'
-        +'<a class="brand" href="#/market">'+logoMarkup()+'<span class="brand-word"><span class="brand-name">换一圈</span><svg class="brand-smile" viewBox="0 0 80 14" fill="none"><path d="M4 3c20 10 50 10 70 0" stroke="#f08c1a" stroke-width="2.8" stroke-linecap="round"/><path d="M68 1l7 2-4 6" stroke="#f08c1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>'
+        +'<a class="brand" href="#/home">'+logoMarkup()+'<span class="brand-word"><span class="brand-name">换一圈</span><svg class="brand-smile" viewBox="0 0 80 14" fill="none"><path d="M4 3c20 10 50 10 70 0" stroke="#f08c1a" stroke-width="2.8" stroke-linecap="round"/><path d="M68 1l7 2-4 6" stroke="#f08c1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>'
         +'<button type="button" class="amz-deliver" data-act="open-campus-picker" title="选择校内常去面交点">'+navIcon('pin')+'<span><small>面交至</small><b id="amz-campus-label">'+esc(currentSpot)+'</b></span></button>'
         +search
         +'<div class="header-actions">'

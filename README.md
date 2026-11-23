@@ -97,6 +97,12 @@
 
 桌面端由 `router/desktop/index.js` 启动，路由配置在 `routes.js`，点击和表单交给各业务目录里的 `desktop-handlers.js`。手机端由 `router/mobile.js` 启动，按当前路由加载对应页面模块。通用组件和工具放在 `components/` 与 `utils/`。
 
+### 页面地址
+
+业务页面使用语义路径。例：`/market`、`/item/101`、`/auctions/101`、`/exchanges/101`、`/community/city-wheel`、`/account/settings`。集合使用复数，动态 ID 放在资源后，搜索词和筛选项放在查询参数中。商品详情沿用约定的 `/item/{id}`。
+
+常规导航与商品卡片默认打开新标签页，搜索提交、返回和交易流程衔接在当前标签页继续。双端共享同一公开地址，旧 Hash 链接由前端适配。Servlet 只对定义过的业务路径返回入口，缺失资源和未知路径返回 HTTP 404。
+
 ---
 
 ## 快速开始

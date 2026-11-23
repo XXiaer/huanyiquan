@@ -67,18 +67,18 @@ async function api(path, opt) {
         writeToken('');
         if (opt.optionalAuth) throw new ApiError((data && data.msg) || '请先登录', 401);
         if (window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
-            if (location.hash && location.hash !== '#/login' && location.hash !== '#/register') {
-                sessionStorage.setItem('hq.returnTo', location.hash);
+            if (siteRoutes.current() && siteRoutes.current() !== '#/login' && siteRoutes.current() !== '#/register') {
+                sessionStorage.setItem('hq.returnTo', siteRoutes.current());
             }
             openAuthPopup('login');
             throw new ApiError((data && data.msg) || '请先登录', 401);
         }
         // 记下当前页面，重新登录后跳回来
-        if (location.hash && location.hash !== '#/login') {
-            sessionStorage.setItem('hq.returnTo', location.hash);
+        if (siteRoutes.current() && siteRoutes.current() !== '#/login') {
+            sessionStorage.setItem('hq.returnTo', siteRoutes.current());
         }
-        if (location.hash !== '#/login') {
-            location.hash = '#/login';
+        if (siteRoutes.current() !== '#/login') {
+            siteRoutes.go('#/login');
         }
         throw new ApiError((data && data.msg) || '登录状态已失效，请重新登录', 401);
     }

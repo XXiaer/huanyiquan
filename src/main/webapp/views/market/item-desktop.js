@@ -12,6 +12,7 @@ async function renderItem(id) {
     var d = await api('/item/' + id);
     if (desktopRuntime.currentView.name!=='item' || desktopRuntime.currentView.arg!==id) return;
     var it = d.item;
+    document.title = it.title + ' | 换一圈';
     shelfRemember('history',it);
     var imgs = String(it.images || '').split(',').map(function (url) { return url.trim(); }).filter(firstDisplayImage);
     var img = imgs[0] || '';

@@ -127,7 +127,7 @@
       `;
 
       view.querySelectorAll('[data-share-profile]').forEach((btn) => btn.addEventListener('click', async () => {
-        const url = location.origin + '/#/user/' + u.id;
+        const url = location.origin + '/users/' + u.id;
         if (navigator.share) { try { await navigator.share({ title: u.nickname + ' 的换一圈主页', url }); return; } catch (e) { /* 取消 */ } }
         try { await navigator.clipboard.writeText(url); toast('主页链接已复制'); } catch (e) { toast('链接：' + url); }
       }));
@@ -144,7 +144,7 @@
       });
 
       const editBtn = document.getElementById('pfEdit');
-      if (editBtn) editBtn.addEventListener('click', () => { location.hash = '#/settings/profile'; });
+      if (editBtn) editBtn.addEventListener('click', () => { siteRoutes.go('#/settings/profile'); });
 
       const bioMore = document.getElementById('pfBioMore');
       if (bioMore) bioMore.addEventListener('click', () => {
@@ -161,7 +161,7 @@
       if (reviewBtn) reviewBtn.addEventListener('click', () => openReview(u));
 
       const creditBar = document.getElementById('pfCredit');
-      if (creditBar) creditBar.addEventListener('click', () => { location.hash = '#/credit/' + u.id; });
+      if (creditBar) creditBar.addEventListener('click', () => { siteRoutes.go('#/credit/' + u.id); });
 
       const searchTab = view.querySelector('.pf-tabrow .srch');
       if (searchTab) searchTab.addEventListener('click', (event) => {
@@ -179,7 +179,7 @@
                   <div class="main"><b>${esc(i.title)}</b><p>${api.yuan(i.price) ? '¥' + api.yuan(i.price) : '想换'} | ${esc(i.conditionLevel)}</p></div>
                   ${icon('right', 16)}
                 </div>`).join('') : '<div class="empty" style="padding:26px 0">没有匹配的宝贝</div>';
-              box.querySelectorAll('[data-item]').forEach((row) => row.addEventListener('click', () => { close(); location.hash = '#/item/' + row.dataset.item; }));
+              box.querySelectorAll('[data-item]').forEach((row) => row.addEventListener('click', () => { close(); siteRoutes.go('#/item/' + row.dataset.item); }));
             };
             draw('');
             sheet.querySelector('#pfSearchIn').addEventListener('input', (e) => draw(e.target.value));
@@ -227,7 +227,7 @@
     const good = (r.score || 0) >= 4;
     return `<div class="review-row" data-role="${esc(r.role || '')}" data-score="${r.score}" data-img="${r.image ? '1' : ''}" data-imp="${esc(r.impression || '')}">
       <div class="review-row__top">
-        <span onclick="location.hash='#/user/${r.fromUser || 1}'">${avatar({ nickname: r.fromNickname || '同学', id: r.fromUser || 1, avatar: r.fromAvatar }, 34)}</span>
+        <span onclick="siteRoutes.go('#/user/${r.fromUser || 1}')">${avatar({ nickname: r.fromNickname || '同学', id: r.fromUser || 1, avatar: r.fromAvatar }, 34)}</span>
         <span class="badge badge--blue">${r.role === 'buyer' ? '买家' : '卖家'}</span>
         <span class="review-row__name">${esc(r.fromNickname || '同学')}</span>
         <span class="badge ${good ? 'badge--orange' : 'badge--gray'} review-row__result">${icon(good ? 'me' : 'info', 12)}${good ? '好评' : '中评'}</span>

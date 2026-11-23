@@ -26,7 +26,7 @@ import {
     renderPublish,
     renderPublishEntry,
 } from "../../views/market/publish-desktop.js";
-import { renderWishes } from "../../views/market/wishes-desktop.js";
+import { renderWishCreate, renderWishes } from "../../views/market/wishes-desktop.js";
 import { imSwipe, renderNotifications } from "../../views/messages/desktop.js";
 import {
     closeNoticePopup,
@@ -38,20 +38,20 @@ import { renderExchangeDetail, renderExchanges } from "../../views/orders/deskto
 import { renderOffers } from "../../views/orders/offers-desktop.js";
 import { renderCycle, renderRelay } from "../../views/orders/relay-desktop.js";
 import { renderMeSub } from "../../views/users/account-desktop.js";
-import { openAuthPopup, renderEmail, renderLogin } from "../../views/users/auth-desktop.js";
+import { renderEmail, renderLogin } from "../../views/users/auth-desktop.js";
 import { renderFollowers, renderMe, renderSettings, renderUser } from "../../views/users/desktop.js";
 import { renderShelf } from "../../views/users/saved-desktop.js";
 
 function go(hash) {
-    if (location.hash === hash) {
+    if (siteRoutes.current() === hash) {
         render();
     } else {
-        location.hash = hash;
+        siteRoutes.go(hash);
     }
 }
 
 function parseRoute() {
-    var hash = location.hash || '#/home';
+    var hash = siteRoutes.current() || '#/home';
     var qIdx = hash.indexOf('?');
     var base = qIdx >= 0 ? hash.slice(0, qIdx) : hash;
     var prevHash = state._lastHash || '';
@@ -72,8 +72,10 @@ function parseRoute() {
         } else if (['#/idle', '#/search', '#/home', '#/market'].includes(base)) {
             state.idleTab = 'all';
         }
-        if (qs && qs.has('room')) {
-            state.commRoom = qs.get('room') || 'hall';
+        if (base === '#/search' && qs && qs.has('q')) state.home.keyword = qs.get('q').trim();
+        if (base === '#/community') {
+            state.commRoom = qs?.get('room') || 'hall';
+            state.commTab = qs?.get('section') === 'chat' ? 'chat' : 'posts';
         }
     }
     for (var i = 0; i < routes.length; i++) {
@@ -95,23 +97,15 @@ async function render() {
     var view = parseRoute();
     desktopRuntime.currentView = view;
 
+    if (view.name === 'cityWheel') {
+        $('#app').innerHTML = shell('community', '<main id="city-wheel-page"></main>');
+        window.renderCityWheelPage($('#city-wheel-page'));
+        return;
+    }
     if (view.name === 'shelf') { renderShelf();return; }
     if (view.name === 'appraise') { renderAppraise(); return; }
     if (view.name === 'landing') { renderLanding(); return; }
     if (view.name === 'login' || view.name === 'register') {
-        if (window.innerWidth >= 768 && typeof window.openDesktopAuthModal === 'function') {
-            var targetMode = view.name === 'register' ? 'register' : (state.loginMode || 'login');
-            history.replaceState(null, '', '#/home');
-            desktopRuntime.currentView = { name: 'home', arg: null };
-            try {
-                await ensureIdleTabData(state.idleTab || 'all');
-                if (await loadHome(true)) renderHome();
-            } catch (ignore) {
-                renderHome();
-            }
-            openAuthPopup(targetMode);
-            return;
-        }
         renderLogin(view.name === 'register' ? 'register' : (state.loginMode || 'login'));
         return;
     }
@@ -135,20 +129,20 @@ async function render() {
         if (view.name === 'email') { await renderEmail(); } else if (view.name === 'settings') {
             renderSettings();
         } else if (view.name === 'home') {
-            var browseRoute = location.hash;
-            if ((location.hash || '').split('?')[0] === '#/search' && !state.home.keyword) { renderSearchPage(''); }
+            var browseRoute = siteRoutes.current();
+            if ((siteRoutes.current() || '').split('?')[0] === '#/search' && !state.home.keyword) { renderSearchPage(''); }
             else {
                 await ensureIdleTabData(state.idleTab || 'all');
-                if (location.hash === browseRoute && await loadHome(true) && location.hash === browseRoute) renderHome();
+                if (siteRoutes.current() === browseRoute && await loadHome(true) && siteRoutes.current() === browseRoute) renderHome();
             }
         } else if (view.name === 'auctions' || view.name === 'relay' || view.name === 'wishes') {
             if (window.innerWidth >= 900) {
                 var targetIdleTab = view.name;
                 state.idleTab = targetIdleTab;
                 desktopRuntime.currentView = { name: 'home', arg: null };
-                var channelRoute = location.hash;
+                var channelRoute = siteRoutes.current();
                 await ensureIdleTabData(targetIdleTab);
-                if (location.hash === channelRoute) renderHome();
+                if (siteRoutes.current() === channelRoute) renderHome();
             } else {
                 if (view.name === 'auctions') await renderAuctions();
                 else if (view.name === 'relay') await renderRelay();
@@ -179,6 +173,8 @@ async function render() {
             $('#app').innerHTML=shell('publish','<section class="redesign-page publish-success"><img src="/assets/brand/mascot-success.png" width="144" height="144" alt=""><h1>已提交审核</h1><p>通过后会出现在集市。</p><div class="btn-row"><a class="btn btn-primary" href="#/publish/edit">再发一件</a><a class="btn btn-ghost" href="#/me/items">查看审核进度</a></div></section>');
         } else if (view.name === 'publishEntry') {
             renderPublishEntry();
+        } else if (view.name === 'wishCreate') {
+            await renderWishCreate();
         } else if (view.name === 'publish') {
             renderPublish();
         } else if (view.name === 'offers') {
@@ -235,7 +231,8 @@ function setupDesktopLivePoll(view) {
 
 function startDesktopRouter() {
     window.addEventListener('hashchange', function () {
-        if (location.hash === '#/notifications') { noticeTracker.pending = 0; closeNoticePopup(); }
+        if (siteRoutes.canonicalize()) return;
+        if (siteRoutes.current() === '#/notifications') { noticeTracker.pending = 0; closeNoticePopup(); }
         var prevViewName = desktopRuntime.currentView ? desktopRuntime.currentView.name : '';
         var nextView = parseRoute();
         var meGroup = ['me', 'meSub', 'offers', 'exchange', 'shelf'];
@@ -248,7 +245,7 @@ function startDesktopRouter() {
     });
     setInterval(refreshNoticeCount,15000);
     (async function boot() {
-        if (!location.hash) { location.hash = '#/home'; return; }
+        if (!siteRoutes.current()) { $('#app').textContent = '找不到此页面'; return; }
         await render();
     })();
 }

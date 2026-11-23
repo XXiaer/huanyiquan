@@ -32,7 +32,8 @@ PAGES.community = {
     const joined = new Set(JSON.parse(localStorage.getItem('hq.circles') || '["教材","数码"]'));
     const todayKey = new Date().toISOString().slice(0, 10);
     let checkedIn = localStorage.getItem('hq.circleCheckin') === todayKey;
-    let activeCircle = window.__activeCircle || 'all';
+    const selected = new URL(location.href).searchParams.get('circle');
+    const activeCircle = CAMPUS_CIRCLES.some(c => c.id === selected) ? selected : 'all';
 
     const renderCommunityPosts = (rows) => {
       const filtered = activeCircle === 'all' ? rows : rows.filter(r =>
@@ -90,7 +91,7 @@ PAGES.community = {
         </div>
 
         <div class="circle-body">
-          <button type="button" class="city-wheel-entry" data-city-wheel aria-haspopup="dialog" aria-label="城市转盘"><span class="city-wheel-entry-icon" aria-hidden="true"></span><span><b>城市转盘</b><small>随机抽一座城市</small></span></button>
+          <a href="#/community/city-wheel" class="city-wheel-entry" aria-label="城市转盘"><span class="city-wheel-entry-icon" aria-hidden="true"></span><span><b>城市转盘</b><small>随机抽一座城市</small></span></a>
           <div class="circle-promo-grid">
             <section class="circle-promo circle-promo--pink">
               <div class="circle-promo__hd">
@@ -172,7 +173,7 @@ PAGES.community = {
     view.querySelector('.circle-search')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const kw = e.currentTarget.elements.keyword.value.trim();
-      location.hash = kw ? '#/search/' + encodeURIComponent(kw) : '#/search';
+      siteRoutes.go(kw ? '#/search/' + encodeURIComponent(kw) : '#/search');
     });
 
     const doCheckin = () => {
@@ -205,10 +206,7 @@ PAGES.community = {
     view.querySelectorAll('[data-join]').forEach(b => b.addEventListener('click', () => toggleJoin(b.dataset.join)));
 
     view.querySelectorAll('[data-circle]').forEach(b => b.addEventListener('click', () => {
-      activeCircle = b.dataset.circle;
-      window.__activeCircle = activeCircle;
-      view.querySelectorAll('[data-circle]').forEach(x => x.classList.toggle('on', x.dataset.circle === activeCircle));
-      document.getElementById('communityPosts').innerHTML = renderCommunityPosts(list);
+      siteRoutes.go('#/community?circle=' + encodeURIComponent(b.dataset.circle), {newTab:true});
     }));
 
     const open = () => openComposer();
@@ -237,7 +235,7 @@ PAGES.community = {
 PAGES.communityGame = {
   noTab: true,
   render(view) {
-    view.innerHTML = `${topbar('Scrap Arena', { onBack: "location.replace('#/community')" })}
+    view.innerHTML = `${topbar('Scrap Arena', { onBack: "siteRoutes.replace('#/community')" })}
         <section class="arcade-page">
           <iframe src="/scrap-arena/index.html" title="Scrap Arena" allow="fullscreen"></iframe>
           <p>同屏双人键盘对战。点击游戏画面后按 Enter 开始。</p>

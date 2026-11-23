@@ -36,7 +36,7 @@ const marketCache = new Map();
 PAGES.market = {
   tab: 'market',
   async render(view, params) {
-    const route = location.hash;
+    const route = siteRoutes.current();
     const category = params.category || '';
     const mode = params.mode || 'all';
     const key = mode + ':' + category;
@@ -71,7 +71,7 @@ PAGES.market = {
       window.__searchSort = '';
       window.__searchFilter = { category, tradeMode: mode === 'swap' ? 2 : mode === 'sale' ? 1 : null };
       const keyword = form.elements.keyword.value.trim();
-      location.hash = keyword ? '#/search/' + encodeURIComponent(keyword) : '#/search';
+      siteRoutes.go(keyword ? '#/search/' + encodeURIComponent(keyword) : '#/search');
     });
     form.querySelector('.scan-btn').onclick = window.openScanSearch;
     const results = view.querySelector('[data-market-results]');
@@ -87,7 +87,7 @@ PAGES.market = {
     if (rows.length) draw();
     let page = 1;
     const observer = window.IntersectionObserver ? new IntersectionObserver((entries, watcher) => {
-      if (!more.isConnected || location.hash !== route) { watcher.disconnect(); return; }
+      if (!more.isConnected || siteRoutes.current() !== route) { watcher.disconnect(); return; }
       if (entries.some(entry => entry.isIntersecting) && !more.disabled && !more.hidden) {
         watcher.unobserve(more);
         load(true);
@@ -105,7 +105,7 @@ PAGES.market = {
           batch = await api.get('/api/item/list', {
             category, page: next, size: 30, tradeMode: mode === 'swap' ? 2 : mode === 'sale' ? 1 : null
           });
-          if (route !== location.hash || !results.isConnected) return;
+          if (route !== siteRoutes.current() || !results.isConnected) return;
           hits = (batch?.list || []).filter(item => Number(item.tradeMode) !== 3 &&
             (mode === 'all' || window.campusExchange.supports(item, mode === 'swap' ? 2 : 1)));
           next++;

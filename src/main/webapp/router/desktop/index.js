@@ -4,8 +4,12 @@ import { bindMessageGestures } from "../../views/messages/desktop.js";
 import { bindNoticePopup } from "../../views/messages/notices-desktop.js";
 import { initializeTheme } from "../../views/users/desktop.js";
 
-initializeTheme();
-bindNoticePopup();
-bindMessageGestures();
-bindDesktopInteractions();
-startDesktopRouter();
+if (!siteRoutes.canonicalize()) {
+    siteRoutes.title();
+    siteRoutes.watchLinks();
+    initializeTheme();
+    bindNoticePopup();
+    bindMessageGestures();
+    bindDesktopInteractions();
+    startDesktopRouter();
+}

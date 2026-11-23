@@ -12,7 +12,7 @@
   }
 
   window.updateUnreadBadge = function () {
-    const link = document.querySelector('#tabbar a[href="#/messages"]');
+    const link = document.querySelector('#tabbar a[data-page-route="#/messages"], #tabbar a[href="#/messages"]');
     if (!link) return;
     link.querySelector('.tabbar__badge')?.remove();
     link.setAttribute('aria-label', unread ? '消息，' + unread + ' 条未读' : '消息');
@@ -60,7 +60,7 @@
     pending = true;
     try {
       const notices = Array.isArray(prefetched) ? prefetched : await api.get('/api/notification');
-      const active = location.hash;
+      const active = siteRoutes.current();
       const system = (Array.isArray(notices) ? notices : []).filter(n => !n.read);
       unread = system.length;
       updateUnreadBadge();
@@ -83,9 +83,9 @@
       else if (!alerts.some(a => a.key === document.getElementById("messagePopup")?.dataset.alertKey)) dismiss();
     } catch (e) {
       if (e.code === 401) {
-        if (/^#\/(?:messages|notifications(?:\/\w+)?|followers|chat\/\d+)$/.test(location.hash)) {
+        if (/^#\/(?:messages|notifications(?:\/\w+)?|followers|chat\/\d+)$/.test(siteRoutes.current())) {
           document.getElementById('view').replaceChildren();
-          location.replace('#/login');
+          siteRoutes.replace('#/login');
         }
         previous.clear();
         unread = 0;

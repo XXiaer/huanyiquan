@@ -39,7 +39,7 @@ function positionNoticePopup() {
 }
 
 function showNoticePopup(count, notice) {
-    if(!count || location.hash==='#/notifications')return;
+    if(!count || siteRoutes.current()==='#/notifications')return;
     if(document.hidden || !document.querySelector('.appbar .notice-link')) { noticeTracker.pending=count;noticeTracker.pendingNotice=notice;return; }
     noticeTracker.pending=0;closeNoticePopup();
     var popup=document.createElement('div');popup.id='notice-popup';popup.className='notice-popup';popup.setAttribute('role','status');popup.setAttribute('aria-live','polite');
@@ -54,7 +54,7 @@ function showNoticePopup(count, notice) {
     popup.querySelector('a').addEventListener('click',function(){
         if(notice && ['#/followers','#/offers'].includes(notice.target)){
             api('/notification/'+Number(notice.id)+'/read',{method:'POST'}).then(refreshNoticeCount).catch(function(){});
-            if (notice.target === '#/offers' && location.hash === '#/offers') { state.offersTab = 'received'; renderOffers().catch(function(error) { toast(error.message, 'err'); }); }
+            if (notice.target === '#/offers' && siteRoutes.current() === '#/offers') { state.offersTab = 'received'; renderOffers().catch(function(error) { toast(error.message, 'err'); }); }
         }
         closeNoticePopup();
     });

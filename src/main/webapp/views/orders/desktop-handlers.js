@@ -86,7 +86,7 @@ const ordersActions = {
     },
     "open-cash-offer": async ({ element: el }) => {
         if (!readToken() && !state.me) {
-            if (!openAuthPopup('login', location.hash)) go('#/login');
+            if (!openAuthPopup('login', siteRoutes.current())) go('#/login');
             return;
         }
         var price = Number(el.dataset.price);

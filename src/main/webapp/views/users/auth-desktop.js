@@ -169,10 +169,10 @@ function openAuthPopup(mode, returnTo) {
                 toast('欢迎回来，' + (state.me && state.me.nickname ? state.me.nickname : '同学'), 'ok');
                 var back = sessionStorage.getItem('hq.returnTo');
                 sessionStorage.removeItem('hq.returnTo');
-                if (back && back !== '#/login' && back !== '#/register' && back !== location.hash) {
+                if (back && back !== '#/login' && back !== '#/register' && back !== siteRoutes.current()) {
                     go(back);
-                } else if (location.hash === '#/login' || location.hash === '#/register') {
-                    history.replaceState(null, '', '#/home');
+                } else if (siteRoutes.current() === '#/login' || siteRoutes.current() === '#/register') {
+                    siteRoutes.replaceState('#/home');
                     await render();
                 } else {
                     await render();

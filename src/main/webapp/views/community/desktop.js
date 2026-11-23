@@ -377,7 +377,7 @@ async function renderCommunity() {
         + '<main class="qq-chan-center">' + centerInnerHtml + '</main>'
 
         + '<aside class="qq-chan-right" aria-label="频道侧栏">'
-        + '<button type="button" class="city-wheel-entry" data-city-wheel aria-haspopup="dialog" aria-label="城市转盘"><span class="city-wheel-entry-icon" aria-hidden="true"></span><span><b>城市转盘</b><small>随机抽一座城市</small></span></button>'
+        + '<a href="#/community/city-wheel" class="city-wheel-entry" aria-label="城市转盘"><span class="city-wheel-entry-icon" aria-hidden="true"></span><span><b>城市转盘</b><small>随机抽一座城市</small></span></a>'
         + '<div class="qq-side-card qq-arcade-box">'
         + '<h3>Scrap Arena 街机</h3>'
         + '<img class="qq-arcade-mascot" src="/assets/brand/mascot-wave-320.webp" alt="小唤" width="96" height="96">'

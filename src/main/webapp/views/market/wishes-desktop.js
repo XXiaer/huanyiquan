@@ -1,32 +1,23 @@
-import { openSheet } from "../../components/desktop/sheet.js";
 import { shell } from "../../components/desktop/shell.js";
 import { go } from "../../router/desktop/navigation.js";
 import { desktopRuntime, state } from "../../router/desktop/state.js";
 import { api, readToken } from "../../utils/desktop/api.js";
 import { CATS } from "../../utils/desktop/catalog.js";
 import { $, esc } from "../../utils/desktop/dom.js";
-import { openAuthPopup } from "../users/auth-desktop.js";
 
-function openWishCreateSheet() {
-    if (!readToken() && !state.me) {
-        if (!openAuthPopup('login', '#/idle?tab=wishes')) {
-            sessionStorage.setItem('hq.returnTo', '#/idle?tab=wishes');
-            go('#/login');
-        }
-        return;
-    }
-    var myItems = (state.idleCache.myShelf || []);
+async function renderWishCreate() {
+    const myItems = await api('/item/mine?status=1').catch(() => []);
     var offerOptions = myItems.map(function (item) {
         return '<option value="' + Number(item.id) + '">' + esc(item.title) + '</option>';
     }).join('');
-    openSheet('<h3>发布求换心愿</h3>'
+    $('#app').innerHTML = shell('wishes', '<main class="redesign-page"><h1>发布求换心愿</h1>'
         + '<form data-form="wish-new" style="margin-top:12px">'
         + '<div class="field"><label class="label">我想换</label><input class="input" name="title" maxlength="100" placeholder="高数习题集 / 罗技鼠标" required></div>'
         + '<div class="field"><label class="label">分类</label><select class="select" name="category"><option value="">全部类别</option>' + CATS.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></div>'
         + '<div class="field"><label class="label">我拿什么换（选填）</label><select class="select" name="offeredItemId"><option value="">不关联在架物品</option>' + offerOptions + '</select></div>'
         + '<div class="field"><label class="label">备注</label><input class="input" name="content" maxlength="500" placeholder="成色要求或交接书院（选填）"></div>'
         + '<button class="btn btn-primary btn-block" type="submit">发布求换心愿</button>'
-        + '</form>');
+        + '</form></main>');
 }
 
 var DEMO_WISHES = [
@@ -135,4 +126,4 @@ async function renderWishes() {
     $('#app').innerHTML = shell('wishes', content);
 }
 
-export { DEMO_WISHES, openWishCreateSheet, renderWishes, wishAuctionCard };
+export { DEMO_WISHES, renderWishCreate, renderWishes, wishAuctionCard };

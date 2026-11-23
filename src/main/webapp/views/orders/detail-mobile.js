@@ -102,8 +102,8 @@ PAGES.exchangeDetail = {
           </section>
         </main>`;
 
-    const route = location.hash;
-    const refresh = () => location.hash === route && PAGES.exchangeDetail.render(view, params);
+    const route = siteRoutes.current();
+    const refresh = () => siteRoutes.current() === route && PAGES.exchangeDetail.render(view, params);
     const disputeBtn = document.getElementById('exDispute');
     if (disputeBtn) disputeBtn.addEventListener('click', () => {
       openSheet('说明面交情况', `
