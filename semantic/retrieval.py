@@ -126,6 +126,11 @@ _PURPOSES = {
     '图书馆自习照明': ('护眼台灯', '台灯'),
     '通勤听歌': ('蓝牙耳机', '无线耳机'),
 }
+_DORM_BROWSE_QUERIES = frozenset((
+    '宿舍', '寝室', '学生', '新生', '大学生', '大一新生',
+    '学生宿舍', '学生寝室', '学生用品', '大学生用品', '新生用品',
+    '新生入学', '开学', '开学用品', '开学必备', '新生必备',
+))
 
 
 def model_names(text):
@@ -147,6 +152,8 @@ def understand(query):
         storage = field.lower() in ('硬盘', '存储', 'ssd') or (field == '内存' and amount >= 256)
         capacity = ('storage' if storage else 'memory', amount)
         phrase = _MINIMUM.sub(' ', phrase).strip(' ，,、')
+    if query_phrase(phrase) in _DORM_BROWSE_QUERIES:
+        phrase = '宿舍用品'
     models = model_names(phrase)
     expansions = ()
     for purpose, choices in _PURPOSES.items():
