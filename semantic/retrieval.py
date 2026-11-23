@@ -74,6 +74,11 @@ def allows(price, trade_mode, budget, mode):
 
 # Require evidence in the listing title for common product intents. Descriptions
 # can mention compatibility or the item the seller wants in exchange.
+_DAILY_GOODS = (
+    '清洁|洗衣|消毒|纸巾|卫生纸|拖把|扫把|毛巾|牙刷|牙膏|香皂|洗手|洗发|沐浴|衣架|收纳|'
+    '水杯|保温杯|杯碟|碗|拖鞋|脸盆|垃圾袋|湿巾|枕套|床单'
+)
+_LIVING_EXCLUSIONS = '住宅|客房|商铺|护栏|车位|展示|参考图|空间参考'
 _PRODUCT_INTENTS = (
     (('平板电脑', '平板', 'ipad'), '平板电脑|平板|ipad|matepad|galaxytab',
      '支架|平板架|保护壳|保护套|保护膜|贴膜|钢化膜|配件|充电器|平板包|收纳包|(?<![带配含赠])键盘|触控笔'),
@@ -89,9 +94,10 @@ _PRODUCT_INTENTS = (
     (('小家电',), '电饭煲|电煮锅|小烤箱|微波炉|风扇|吹风机|空气炸锅|烧水壶|电水壶|加湿器|吸尘器',
      '说明书|配件|滤芯|插座|开关'),
     (('考研资料', '考研教材', '考研书'), '考研', '展示|参考图'),
-    (('日用品', '生活用品', '宿舍用品', '宿舍生活'),
-     '清洁|洗衣|消毒|纸巾|卫生纸|拖把|扫把|毛巾|牙刷|牙膏|香皂|洗手|洗发|沐浴|衣架|收纳|水杯|保温杯|杯碟|碗|拖鞋|脸盆|垃圾袋|湿巾|枕套|床单',
-     '住宅|客房|商铺|护栏|车位|展示|参考图|空间参考'),
+    (('宿舍用品', '宿舍生活', '宿舍好物', '宿舍必备'),
+     _DAILY_GOODS + '|台灯|阅读灯|桌灯|风扇|吹风机|电水壶|插线板|插排|排插|蚊帐|床帘|被套|枕头|床垫',
+     _LIVING_EXCLUSIONS + '|灯罩|灯泡|灯杆|配件'),
+    (('日用品', '生活用品'), _DAILY_GOODS, _LIVING_EXCLUSIONS),
 )
 _ACCESSORY = re.compile('支架|平板架|手机壳|保护壳|保护套|保护膜|贴膜|钢化膜|配件|充电器|平板包|电脑包|收纳包|键帽|轴体|触控笔|拍套|手胶|拍线|灯罩|灯泡|底座|滤芯')
 _MATCHERS = [(aliases, re.compile(include), re.compile(exclude)) for aliases, include, exclude in _PRODUCT_INTENTS]
@@ -99,7 +105,7 @@ _MATCHERS = [(aliases, re.compile(include), re.compile(exclude)) for aliases, in
 
 def product_intent(phrase):
     """Return the explicit product family, unless the user is looking for an accessory."""
-    normalized = query_phrase(phrase)
+    normalized = query_phrase(phrase).replace('寝室', '宿舍')
     if _ACCESSORY.search(normalized):
         return None
     # Prefer a specific noun in mixed queries (e.g. 平板电脑带键盘).
