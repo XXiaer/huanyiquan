@@ -1,3 +1,6 @@
+import '../components/mobile/scan-search.js';
+import '../components/mobile/trade-proposal.js';
+
 /* 路由与启动 */
 (function () {
   function safeDecode(s) {
@@ -59,34 +62,51 @@
   ];
 
   const routeScripts = new Map([
-    ...['me','settings','login','register'].map(name => [name,'pages-me']),
-    ...['profile'].map(name => [name,'pages-profile']),
-    ...['publishEntry','publishEdit'].map(name => [name,'pages-publish']),
-    ...['relay','cycle','ringChat'].map(name => [name,'pages-cycle']),
-    ...['scan','qrConfirm'].map(name => [name,'pages-qr']),
-    ...['wish','notifications','appraise','mineList','collection','history','follows','creditCenter',
-      'helpCenter','doorService','lostFound','marketQuote','users','exchangeDetail','refreshPick'].map(name => [name,'pages-misc']),
-    ['admin','pages-admin'],
+    ['home', '../views/home/mobile.js'],
+    ...['messages', 'chat'].map(name => [name, '../views/messages/mobile.js']),
+    ...['community', 'communityGame'].map(name => [name, '../views/community/mobile.js']),
+    ['market', '../views/market/mobile.js'],
+    ...['auction', 'auctionDetail'].map(name => [name, '../views/market/auction-mobile.js']),
+    ['item', '../views/market/item-mobile.js'],
+    ...['searchLanding', 'searchResult'].map(name => [name, '../views/market/search-mobile.js']),
+    ...['me', 'settings', 'login', 'register'].map(name => [name, '../views/users/mobile.js']),
+    ['profile', '../views/users/profile-mobile.js'],
+    ...['publishEntry', 'publishEdit'].map(name => [name, '../views/market/publish-mobile.js']),
+    ...['relay', 'cycle', 'ringChat'].map(name => [name, '../views/orders/relay-mobile.js']),
+    ...['scan', 'qrConfirm'].map(name => [name, '../views/users/qr-mobile.js']),
+    ['wish', '../views/market/wishes-mobile.js'],
+    ['notifications', '../views/messages/notices-mobile.js'],
+    ['appraise', '../views/market/appraise-mobile.js'],
+    ['mineList', '../views/orders/mobile.js'],
+    ...['collection', 'history', 'follows'].map(name => [name, '../views/users/saved-mobile.js']),
+    ['creditCenter', '../views/users/credit-mobile.js'],
+    ...['helpCenter', 'doorService', 'lostFound'].map(name => [name, '../views/services/mobile.js']),
+    ['marketQuote', '../views/market/quote-mobile.js'],
+    ['users', '../views/users/directory-mobile.js'],
+    ['exchangeDetail', '../views/orders/detail-mobile.js'],
+    ['refreshPick', '../views/market/refresh-mobile.js'],
+    ['admin', '../views/admin/mobile.js'],
   ]);
+
   const scripts = new Map();
+  const retries = new Map();
+  window.PAGES = window.PAGES || {};
+  window.renderRelayTabs = () => '';
 
   window.ensureMobilePage = function (name) {
     const file = routeScripts.get(name);
     if (!file || window.PAGES[name]) return Promise.resolve();
+
     if (!scripts.has(file)) {
-      scripts.set(file, new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        const version = file === 'pages-misc' ? '3.1.2' : '3.0.0';
-        script.src = '/mobile/js/' + file + '.js?v=' + version;
-        script.onload = resolve;
-        script.onerror = () => {
-          scripts.delete(file);
-          script.remove();
-          reject(new Error('页面组件加载失败，请重试'));
-        };
-        document.head.append(script);
+      const url = new URL(file, import.meta.url);
+      if (retries.has(file)) url.searchParams.set('retry', retries.get(file));
+      scripts.set(file, import(url.href).catch(cause => {
+        scripts.delete(file);
+        retries.set(file, (retries.get(file) || 0) + 1);
+        throw new Error('页面组件加载失败，请重试', { cause });
       }));
     }
+
     return scripts.get(file);
   };
 

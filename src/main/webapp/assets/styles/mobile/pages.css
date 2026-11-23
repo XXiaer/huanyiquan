@@ -1370,7 +1370,7 @@ html:has(.chat-page), body:has(.chat-page) { overflow: hidden; }
 .member-banner {
   position: relative;
   aspect-ratio: 7.65;
-  background: #f8dfe5 url("../assets/brand/member-banner-designs.webp") 50% 4% / 130.7% auto no-repeat;
+  background: #f8dfe5 url("/mobile/assets/brand/member-banner-designs.webp") 50% 4% / 130.7% auto no-repeat;
 }
 .member-banner::before {
   content: "";

@@ -19,7 +19,7 @@
 
     function loadCatalog() {
         if (!catalogRequest) {
-            catalogRequest = fetch('/city-wheel-cities.json?v=2')
+            catalogRequest = fetch('/assets/data/china-cities.json?v=2')
                 .then(response => {
                     if (!response.ok) throw new Error('City catalog unavailable');
                     return response.json();
