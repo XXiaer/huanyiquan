@@ -194,7 +194,7 @@
         ${feed.length ? waterfall(feed) : mascotEmpty('还没有推荐的宝贝', 'assets/brand/mascot-wave-320.webp')}
       </div>`;
 
-      document.getElementById('meAppraise').addEventListener('click', () => { siteRoutes.go('#/appraise'); });
+      document.getElementById('meAppraise').addEventListener('click', () => { location.hash = '#/appraise'; });
     },
   };
 
@@ -241,7 +241,7 @@
       view.innerHTML = `
       <div class="set-page">
         <div class="topbar">
-          <button class="topbar__back" onclick="siteRoutes.replace('#/me')">${icon('back', 22)}</button>
+          <button class="topbar__back" onclick="location.replace('#/me')">${icon('back', 22)}</button>
           <div class="set-topbar-title">设置</div>
           <div style="width:28px"></div>
         </div>
@@ -268,7 +268,7 @@
       </div>`;
 
       view.querySelectorAll('[data-href]').forEach((row) => {
-        row.addEventListener('click', () => { siteRoutes.go(row.dataset.href);
+        row.addEventListener('click', () => { location.hash = row.dataset.href;
           history.replaceState({ settingsParent: true }, ''); });
       });
       const sw = view.querySelector('[data-teen]');
@@ -281,14 +281,14 @@
       });
       document.getElementById('logout').addEventListener('click', () => {
         confirmSheet('退出登录', '退出后需要重新用学号登录。', '退出', async () => {
-          try { await api.post('/api/user/logout'); window.__me = null; toast('已退出登录'); setTimeout(() => { siteRoutes.go('#/login'); }, 400); } catch (e) { toast(e.message); }
+          try { await api.post('/api/user/logout'); window.__me = null; toast('已退出登录'); setTimeout(() => { location.hash = '#/login'; }, 400); } catch (e) { toast(e.message); }
         });
       });
     },
   };
 
   window.returnToSettings = function () {
-    siteRoutes.replace('#/settings');
+    location.replace('#/settings');
   };
 
   function subHead(title) {
@@ -633,7 +633,7 @@
         </div></div>`;
       if (sub === 'invite') {
         document.getElementById('copyInvite').addEventListener('click', () => {
-          const url = location.origin + '/?from=' + (me ? me.id : '');
+          const url = location.origin + '/#/home?from=' + (me ? me.id : '');
           navigator.clipboard.writeText(url).then(() => toast('邀请链接已复制')).catch(() => toast(url));
         });
       }
@@ -741,7 +741,7 @@
             const pendingQr = sessionStorage.getItem('hq.pendingQr');
             const returnTo = sessionStorage.getItem('hq.mobileReturnTo');
             sessionStorage.removeItem('hq.mobileReturnTo');
-            siteRoutes.go(pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : (returnTo || '#/home'));
+            location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : (returnTo || '#/home');
           } catch (e) { toast(e.message); }
           finally { submitting = false; submit.disabled = false; }
         };
@@ -819,7 +819,7 @@
           window.__me = null;
           toast('注册成功，已登录');
           const pendingQr = sessionStorage.getItem('hq.pendingQr');
-          setTimeout(() => { siteRoutes.go(pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : '#/home'); }, 400);
+          setTimeout(() => { location.hash = pendingQr ? ('#/qr-confirm?qr=' + encodeURIComponent(pendingQr)) : '#/home'; }, 400);
         } catch (e) { toast(e.message); }
         finally { submit.disabled = false; }
       });

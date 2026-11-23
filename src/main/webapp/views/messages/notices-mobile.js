@@ -12,9 +12,9 @@ PAGES.notifications = {
   noTab: true,
   async render(view, params) {
     const cat = params.cat || '';
-    const route = siteRoutes.current();
+    const route = location.hash;
     let list = await api.get('/api/notification') || [];
-    if (siteRoutes.current() !== route) return;
+    if (location.hash !== route) return;
     if (cat) list = list.filter((n) => (n.category || 'notice') === cat);
     view.innerHTML = `
       ${topbar(cat ? CAT_NAME[cat] || '通知' : '通知消息', { parent: '#/messages', white: true, right: `<button id="readAll" style="font-size:13px;color:var(--green-700)">全部已读</button>` })}
@@ -38,7 +38,7 @@ PAGES.notifications = {
       const id = row.dataset.id;
       try { await api.post('/api/notification/' + id + '/read', {}); } catch (e) { /* 忽略 */ }
       const t = row.dataset.target;
-      if (t && t !== siteRoutes.current()) siteRoutes.go(t);
+      if (t && t !== location.hash) location.hash = t;
       else renderRoute();
     }));
     startLivePoll(() => renderRoute(), 6000);

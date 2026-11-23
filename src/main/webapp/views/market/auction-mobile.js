@@ -5,11 +5,11 @@ const PAGES = window.PAGES;
 PAGES.auction = {
   tab: 'auction',
   async render(view) {
-    const route = siteRoutes.current();
+    const route = location.hash;
     let list = [];
     let loadError = '';
     try { list = await api.get('/api/auction') || []; } catch (e) { loadError = e.message; }
-    if (siteRoutes.current() !== route) return;
+    if (location.hash !== route) return;
     const filters = this.filters || (this.filters = {keyword:'', state:'', sort:''});
     list = list.filter((a) => a.state === 'active' || a.state === 'ended');
     view.innerHTML = `
@@ -126,18 +126,18 @@ PAGES.auction = {
 PAGES.auctionDetail = {
   noTab: true,
   async render(view, params) {
-    const route = siteRoutes.current();
+    const route = location.hash;
     view.innerHTML = topbar('拍卖详情', {parent:'#/auction'}) + '<p class="auction-empty" role="status">正在加载拍品…</p>';
     let a;
     try { a = await api.get('/api/auction/' + params.id); }
     catch (error) {
-      if (route === siteRoutes.current()) {
+      if (route === location.hash) {
         view.innerHTML = topbar('拍卖详情', {parent:'#/auction'}) + `<p class="auction-empty">${esc(error.message)} <button type="button" data-retry>重试</button></p>`;
         view.querySelector('[data-retry]').onclick = () => renderRoute();
       }
       return;
     }
-    if (route !== siteRoutes.current()) return;
+    if (route !== location.hash) return;
     const active = a.state === 'active' && !(new Date(a.endsAt).getTime() < Date.now());
     const images = api.pics({images:a.image});
     const deadline = new Date(a.endsAt);
@@ -153,7 +153,7 @@ PAGES.auctionDetail = {
           <div class="item-detail-photos">${images.length ? images.map((pic,i) => `<img src="${esc(safeMediaUrl(pic))}" alt="拍品图片 ${i + 1}" decoding="async">`).join('') : '<div class="item-photo-empty">暂无实拍图</div>'}</div>
         </article>`;
     view.querySelector('[data-share]').onclick = async () => {
-      const url = location.origin + '/auctions/' + Number(a.id);
+      const url = location.origin + '/#/auction/' + Number(a.id);
       try { await navigator.clipboard.writeText(url); toast('拍品链接已复制'); }
       catch (error) { openSheet('分享拍品', `<input class="field" aria-label="拍品链接" value="${esc(url)}" readonly>`); }
     };

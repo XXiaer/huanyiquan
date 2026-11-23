@@ -139,9 +139,9 @@
         stopCamera();
         if (isDesktopLoginQr(rawValue)) {
           const qrVal = extractQrValue(rawValue);
-          siteRoutes.go('#/qr-confirm?qr=' + encodeURIComponent(qrVal));
+          location.hash = '#/qr-confirm?qr=' + encodeURIComponent(qrVal);
         } else {
-          siteRoutes.go('#/search/' + encodeURIComponent(rawValue));
+          location.hash = '#/search/' + encodeURIComponent(rawValue);
         }
       }
 
@@ -264,7 +264,7 @@
   PAGES.qrConfirm = {
     noTab: true,
     async render(view) {
-      const hash = siteRoutes.current() || '';
+      const hash = location.hash || '';
       const qIdx = hash.indexOf('?');
       const qs = qIdx >= 0 ? new URLSearchParams(hash.slice(qIdx + 1)) : new URLSearchParams();
       const rawQr = qs.get('qr') || sessionStorage.getItem('hq.pendingQr') || '';
@@ -288,7 +288,7 @@
       } catch (e) {
         sessionStorage.setItem('hq.pendingQr', rawQr);
         toast('请先在手机端登录，再授权桌面端');
-        siteRoutes.go('#/login');
+        location.hash = '#/login';
         return;
       }
 
@@ -330,7 +330,7 @@
         try {
           await api.post('/api/auth/qr/confirm', { qrId: scanInfo.qrId, action: 'confirm' });
           toast('已授权桌面端登录');
-          siteRoutes.go('#/me');
+          location.hash = '#/me';
         } catch (err) {
           toast(err.message || '确认失败');
           okBtn.disabled = false;
@@ -343,7 +343,7 @@
           await api.post('/api/auth/qr/confirm', { qrId: scanInfo.qrId, action: 'cancel' });
         } catch (ignore) {}
         toast('已取消桌面端登录');
-        siteRoutes.go('#/me');
+        location.hash = '#/me';
       });
     },
   };

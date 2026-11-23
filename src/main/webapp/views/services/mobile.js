@@ -63,7 +63,7 @@ PAGES.helpCenter = {
     document.getElementById('helpChat').addEventListener('click', async () => {
       try {
         const r = await api.post('/api/conversation/start', { itemId: 37 });
-        siteRoutes.go('#/chat/' + r.id);
+        location.hash = '#/chat/' + r.id;
       } catch (e) { toast(e.message); }
     });
   },

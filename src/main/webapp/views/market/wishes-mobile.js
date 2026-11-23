@@ -3,15 +3,15 @@ const PAGES = window.PAGES;
 PAGES.wish = {
   tab: 'me',
   async render(view) {
-    const route = siteRoutes.current();
+    const route = location.hash;
     const me = window.__me || await api.get('/api/user/me').catch(error => {
       if (error.code === 401) return null;
       throw error;
     });
-    if (siteRoutes.current() !== route) return;
+    if (location.hash !== route) return;
     if (me) window.__me = me;
     let wishes = me ? await api.get('/api/wish') || [] : [];
-    if (siteRoutes.current() !== route) return;
+    if (location.hash !== route) return;
     let mineOnly = true;
     let filter = 'all';
     const filters = [['all', '全部'], ['relay', '可接力'], ['教材', '教材'], ['数码', '数码'], ['运动', '运动'], ['生活', '生活'], ['衣物', '衣物'], ['其他', '其他']];
@@ -85,7 +85,7 @@ PAGES.wish = {
       const id = Number(button.dataset.closeWish);
       try {
         await api.post('/api/wish/' + id + '/close', {});
-        if (!feed.isConnected || siteRoutes.current() !== route) return;
+        if (!feed.isConnected || location.hash !== route) return;
         wishes = wishes.filter(wish => Number(wish.id) !== id);
         draw();
         toast('心愿已关闭');

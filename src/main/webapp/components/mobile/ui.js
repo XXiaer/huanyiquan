@@ -139,7 +139,7 @@
     return Number(u.credit) || 0;
   };
   window.smartBack = function (parentHash) {
-    siteRoutes.replace(parentHash || '#/home');
+    location.replace(parentHash || '#/home');
   };
   window.startLivePoll = function (fn, intervalMs) {
     const prev = window.__cleanup;
@@ -220,7 +220,7 @@
           </div>
           ${priceText && swapWant ? `<p class="card__want">想换 ${esc(swapWant)}</p>` : ''}
           <div class="card__seller">
-            <span onclick="event.preventDefault();event.stopPropagation();siteRoutes.go('#/user/${item.ownerId}')">${avatar({ nickname: item.ownerNickname, id: item.ownerId, avatar: item.ownerAvatar }, 18)}</span>
+            <span onclick="event.preventDefault();event.stopPropagation();location.hash='#/user/${item.ownerId}'">${avatar({ nickname: item.ownerNickname, id: item.ownerId, avatar: item.ownerAvatar }, 18)}</span>
             <span class="name">${esc(item.ownerNickname || '同学')}</span>
             ${credit ? `<span class="badge ${credit.cls}">${credit.text}</span>` : ''}
           </div>
@@ -268,7 +268,7 @@
             <span>先验货再确认</span>
           </div>
           <div class="card__seller">
-            <span onclick="event.preventDefault();event.stopPropagation();siteRoutes.go('#/user/${item.ownerId}')">${avatar({ nickname: item.ownerNickname, id: item.ownerId, avatar: item.ownerAvatar }, 18)}</span>
+            <span onclick="event.preventDefault();event.stopPropagation();location.hash='#/user/${item.ownerId}'">${avatar({ nickname: item.ownerNickname, id: item.ownerId, avatar: item.ownerAvatar }, 18)}</span>
             <span class="name">${esc(item.ownerNickname || '同学')}</span>
             <span class="badge badge--gray">${esc(item.ownerBuilding || '校内')}</span>
             ${credit ? `<span class="badge ${credit.cls}">${credit.text}</span>` : ''}
@@ -360,7 +360,7 @@
       </a>`;
     }).join('');
     bar.querySelectorAll('[data-href]').forEach((b) => {
-      b.addEventListener('click', () => { siteRoutes.go(b.dataset.href, {newTab:true}); });
+      b.addEventListener('click', () => { location.hash = b.dataset.href; });
     });
     bar.querySelectorAll('.tabbar__item').forEach((a) => {
       const svg = a.querySelector('svg');

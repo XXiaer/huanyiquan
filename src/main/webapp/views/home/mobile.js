@@ -53,7 +53,7 @@ window.__homeChannel = window.__homeChannel || '推荐';
 PAGES.home = {
   tab: 'home',
   async render(view) {
-    const route = siteRoutes.current();
+    const route = location.hash;
     const allChannels = ['关注', '推荐', '新发', '心愿单', ...HOME_CATEGORIES, ...HOME_SEARCH_TOPICS];
     if (!allChannels.includes(window.__homeChannel)) window.__homeChannel = '推荐';
 
@@ -90,7 +90,7 @@ PAGES.home = {
       window.__searchTab = 'all';
       window.__searchSort = '';
       window.__searchFilter = {};
-      siteRoutes.go(keyword ? '#/search/' + encodeURIComponent(keyword) : '#/search');
+      location.hash = keyword ? '#/search/' + encodeURIComponent(keyword) : '#/search';
     });
 
     const bodyEl = document.getElementById('homeDynamicBody');
@@ -116,7 +116,7 @@ PAGES.home = {
         let wishes;
         let wishError;
         try { wishes = await api.get('/api/wish') || []; } catch (error) { wishError = error; }
-        if (seq !== channelSeq || siteRoutes.current() !== route || !bodyEl.isConnected) return;
+        if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
         const needsLogin = wishError?.code === 401;
         const publishHref = needsLogin ? '#/login' : '#/publish/edit/wish';
         bodyEl.innerHTML = `
@@ -184,7 +184,7 @@ PAGES.home = {
         batch = await window.campusExchange.browse(load, browseMode, 1, eligible);
         list = batch.rows || [];
       } catch (e) { toast(e.message); }
-      if (seq !== channelSeq || siteRoutes.current() !== route || !bodyEl.isConnected) return;
+      if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
 
       let feed = list;
       let followHint = '';
@@ -199,7 +199,7 @@ PAGES.home = {
           feed = [];
           followHint = e && e.code === 401 ? '登录后即可查看关注同学的上新动态' : '暂无关注动态';
         }
-        if (seq !== channelSeq || siteRoutes.current() !== route || !bodyEl.isConnected) return;
+        if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
       } else if (channel === '新发') {
         feed = list.slice().sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)));
       }
@@ -224,7 +224,7 @@ PAGES.home = {
       if (!showServices) return;
       const deals = (await api.get('/api/item/deals', { size: 8 }).catch(() => []) || [])
         .filter(window.campusExchange.isLiveSwap);
-      if (seq !== channelSeq || siteRoutes.current() !== route || !bodyEl.isConnected) return;
+      if (seq !== channelSeq || location.hash !== route || !bodyEl.isConnected) return;
       if (deals.length) {
         bodyEl.insertAdjacentHTML('beforeend', `<div class="deal-ticker">
             <span class="label">${icon('fire', 12)}成交动态</span><div class="rail" id="dealTicker"></div>

@@ -3,14 +3,14 @@
   PAGES.relay = {
     tab: 'home',
     async render(view) {
-      const route = siteRoutes.current();
+      const route = location.hash;
       let items = [];
       let fallback = '<p>还没有可接力的在架物品。</p><a href="#/publish/edit/idle">去发布物品</a>';
       try { items = (await api.get('/api/item/mine', {status:1})).filter(item => item.allowCycle && !item.isDemo); }
       catch (error) {
         fallback = error.code === 401 ? '<p>登录后可查看自己的接力物品。</p><a href="#/login">去登录</a>' : `<p role="status">${esc(error.message)}</p>`;
       }
-      if (siteRoutes.current() !== route) return;
+      if (location.hash !== route) return;
       const rows = items.map(item => `<a href="#/cycle/${Number(item.id)}"><b>${esc(item.title)}</b><span>查看换法</span></a>`).join('');
       view.innerHTML = window.renderRelayTabs() + window.campusExchange.relay({wish:'#/publish/edit/wish?relay=1', rows, fallback});
     },
@@ -18,18 +18,18 @@
   PAGES.cycle = {
     noTab: true,
     async render(view, params) {
-      const route = siteRoutes.current();
+      const route = location.hash;
       const top = `<div class="topbar"><button type="button" aria-label="返回" class="topbar__back" onclick="smartBack('#/relay')">${icon('back',22)}</button><div class="set-topbar-title">寻找换物环</div></div>`;
       view.innerHTML = top + '<p class="hint cycle-mobile" role="status">正在查找可用组合…</p>';
       let rings;
       try { rings = await api.get('/api/cycle/' + params.id) || []; }
       catch (error) {
-        if (route !== siteRoutes.current()) return;
+        if (route !== location.hash) return;
         view.innerHTML = top + `<div class="cycle-mobile"><p role="alert">${esc(error.message)}</p><button class="btn btn--ghost" data-cycle-retry>重试</button></div>`;
         view.querySelector('[data-cycle-retry]').onclick = renderRoute;
         return;
       }
-      if (route !== siteRoutes.current()) return;
+      if (route !== location.hash) return;
       const countHelp = rings.length > 1 ? '比较每组的物品与参与者，再选一组。' : '目前只有一组满足三人的想换条件。';
       view.innerHTML = top + `<main class="cycle-mobile">
         ${rings.length ? `<p class="cycle-note"><strong>找到 ${rings.length} 组换法</strong>，${countHelp}</p>` : ''}
@@ -59,7 +59,7 @@
         confirmSheet('发起三方交换', '发起后物品将暂时锁定。未在规定时间内获得三人确认，物品会重新上架。', '确认发起', async () => {
           if (btn.disabled) return;
           btn.disabled = true;
-          try { const result = await api.post('/api/cycle/' + params.id + '/create', { itemIds: ring.itemIds }); siteRoutes.go('#/exchange/' + result.exchangeId); }
+          try { const result = await api.post('/api/cycle/' + params.id + '/create', { itemIds: ring.itemIds }); location.hash = '#/exchange/' + result.exchangeId; }
           catch (error) { toast(error.message); }
           finally { btn.disabled = false; }
         });

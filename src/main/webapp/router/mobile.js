@@ -31,7 +31,7 @@ import '../components/mobile/trade-proposal.js';
     [/^\/idle$/, 'market', () => ({ mode: 'sale' })],
     [/^\/idle\/category\/(.*)$/, 'market', m => ({ mode: 'sale', category: safeDecode(m[1]) })],
     [/^\/market(?:\/(all|swap|sale)(?:\/([^/]+))?)?$/, 'market', m => ({ mode: m[1], category: m[2] ? safeDecode(m[2]) : '' })],
-    [/^\/community(?:\?.*)?$/, 'community', () => ({})],
+    [/^\/community$/, 'community', () => ({})],
     [/^\/community\/game$/, 'communityGame', () => ({})],
     [/^\/auctions?$/, 'auction', () => ({})],
     [/^\/auction\/(\d+)$/, 'auctionDetail', m => ({id: Number(m[1])})],
@@ -114,12 +114,12 @@ import '../components/mobile/trade-proposal.js';
   let navigation = 0;
 
   function resolve() {
-    const hash = (siteRoutes.current() || '').replace(/^#/, '') || '/home';
+    const hash = location.hash.replace(/^#/, '') || '/home';
     for (const [re, name, arg] of ROUTES) {
       const m = hash.match(re);
       if (m) return { name, params: arg(m), hash };
     }
-    return { name: 'missing', params: {}, hash };
+    return { name: 'home', params: {}, hash };
   }
 
   async function renderRoute() {
@@ -149,11 +149,6 @@ import '../components/mobile/trade-proposal.js';
       }
     }
     if (sequence !== navigation) return;
-    if (siteRoutes.current() === '#/community/city-wheel') {
-      renderTabbar('community', window.__unread || 0);
-      window.renderCityWheelPage(view);
-      return;
-    }
     const page = window.PAGES[name];
     if (!page) {
       view.innerHTML = `<div class="empty">
@@ -173,7 +168,7 @@ import '../components/mobile/trade-proposal.js';
     } catch (e) {
       if (sequence !== navigation || hash !== resolve().hash) return;
       if (e.code === 401 && ['messages','notifications','follows'].includes(name)) {
-        siteRoutes.replace('#/login');
+        location.replace('#/login');
         return;
       }
       console.error(e);
@@ -189,13 +184,16 @@ import '../components/mobile/trade-proposal.js';
   }
 
   window.renderRoute = renderRoute;
-  window.addEventListener('hashchange', () => {
-    if (!siteRoutes.canonicalize()) renderRoute();
-  });
-  window.addEventListener('DOMContentLoaded', () => {
-    if (siteRoutes.canonicalize()) return;
-    siteRoutes.title();
-    siteRoutes.watchLinks();
+  window.addEventListener('hashchange', renderRoute);
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!['/mobile', '/mobile/', '/mobile/index.html'].includes(location.pathname)) {
+      await import('./site-routes.js');
+      const route = siteRoutes.current();
+      const hash = route === '#/community/city-wheel' ? '#/community' : (route || '#/home');
+      location.replace('/mobile/index.html' + hash);
+      return;
+    }
+    if (!location.hash) location.hash = '#/home';
     renderRoute();
   });
 })();

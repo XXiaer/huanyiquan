@@ -92,7 +92,7 @@ PAGES.searchLanding = {
       const h = JSON.parse(localStorage.getItem('searchHistory') || '[]');
       h.unshift(kw);
       localStorage.setItem('searchHistory', JSON.stringify([...new Set(h)].slice(0, 12)));
-      siteRoutes.go('#/search/' + encodeURIComponent(kw));
+      location.hash = '#/search/' + encodeURIComponent(kw);
     };
     document.getElementById('sGo').addEventListener('click', go);
     document.getElementById('sInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
@@ -111,7 +111,7 @@ PAGES.searchLanding = {
       const t = a.textContent.trim();
       view.querySelectorAll('.s-tabrow a').forEach((x) => x.classList.remove('on'));
       a.classList.add('on');
-      if (t !== '我常换的') siteRoutes.go('#/category/' + encodeURIComponent(t));
+      if (t !== '我常换的') location.hash = '#/category/' + encodeURIComponent(t);
     }));
   },
 };
@@ -246,7 +246,7 @@ PAGES.searchResult = {
     document.getElementById('chipCat')?.addEventListener('click', () => document.getElementById('rFilter')?.click());
     document.getElementById('rClear').addEventListener('click', () => { document.getElementById('rInput').value = ''; });
     document.getElementById('rInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') siteRoutes.go('#/search/' + encodeURIComponent(e.target.value.trim()));
+      if (e.key === 'Enter') location.hash = '#/search/' + encodeURIComponent(e.target.value.trim());
     });
     document.getElementById('rSub').addEventListener('click', () => {
       const subs = JSON.parse(localStorage.getItem('searchSubs') || '[]');

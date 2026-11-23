@@ -178,7 +178,7 @@ PAGES.mineList = {
           b.disabled = true;
           try {
             const result = await api.post('/api/offer/handle', {offerId:Number(b.dataset.offerId),action:b.dataset.action});
-            if (b.dataset.action === 'accept' && result?.exchangeId) siteRoutes.go('#/exchange/' + Number(result.exchangeId));
+            if (b.dataset.action === 'accept' && result?.exchangeId) location.hash = '#/exchange/' + Number(result.exchangeId);
             else { toast('操作成功'); renderRoute(); }
           } catch (error) { toast(error.message); }
           finally { b.disabled = false; }
@@ -251,7 +251,7 @@ function reviewRowSimple(r) {
   const good = (r.score || 0) >= 4;
   return `<div class="review-row">
       <div class="review-row__top">
-        <span onclick="siteRoutes.go('#/user/${r.fromUser || 1}')">${avatar({ nickname: r.fromNickname || '同学', id: r.fromUser || 1, avatar: r.fromAvatar }, 34)}</span>
+        <span onclick="location.hash='#/user/${r.fromUser || 1}'">${avatar({ nickname: r.fromNickname || '同学', id: r.fromUser || 1, avatar: r.fromAvatar }, 34)}</span>
         <span class="badge badge--blue">${r.role === 'buyer' ? '买家' : '卖家'}</span>
         <span class="review-row__name">${esc(r.fromNickname || '同学')}</span>
         <span class="badge ${good ? 'badge--orange' : 'badge--gray'} review-row__result">${good ? '好评' : '中评'}</span>

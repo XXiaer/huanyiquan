@@ -26,7 +26,7 @@ PAGES.users = {
         </div>`;
     const go = () => {
       const v = document.getElementById('uInput').value.trim();
-      siteRoutes.go(v ? '#/users/' + encodeURIComponent(v) : '#/users');
+      location.hash = v ? '#/users/' + encodeURIComponent(v) : '#/users';
     };
     document.getElementById('uGo').addEventListener('click', go);
     document.getElementById('uInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
